@@ -600,7 +600,8 @@ export const m = {
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
-        '确认恢复默认？': 'Are you sure to restore defaults?'
+        '确认恢复默认？': 'Are you sure to restore defaults?',
+        '确认清空该系统的权限？': 'Are you sure to clear the permissions for this system?',
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -821,7 +822,10 @@ export const m = {
         '请先勾选批量操作的对象': 'Please check the objects for batch operations first',
         '跨系统全选': 'Cross system all selection',
         '批量退出用户组': 'Multi-exit user group',
-        '退出用户组名': 'Exit user group name'
+        '退出用户组名': 'Exit user group name',
+        '未勾选用户组，无法选择退出': 'User group not selected, unable to choose to exit',
+        '未勾选自定义操作选前，无法选择删除': 'Before selecting the custom operation, deletion cannot be selected',
+        '清空后，该系统的所有操作权限和资源实例权限都会被清空。': 'After clearing, all operation permissions and resource instance permissions of the system will be cleared.'
     },
     permTemplate: {
         '模板名': 'Template name',

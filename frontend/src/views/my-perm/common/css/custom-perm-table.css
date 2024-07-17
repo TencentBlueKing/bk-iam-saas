@@ -1,5 +1,4 @@
 .custom-perm-table-wrapper {
-  min-height: 101px;
   .related-condition-list {
     flex: 1;
     display: flex;
@@ -77,27 +76,41 @@
   }
   /deep/ .bk-table {
     border: none;
-    .bk-table-fixed-header-wrapper {
-      th {
-        /* &:first-child { */
-          .cell {
-            padding-left: 32px;
-          }
-        /* } */
-      }
+    .bk-table-fixed,
+    .bk-table-fixed-right {
+      border-bottom: 0;
     }
-    .bk-table-fixed-body-wrapper {
-      tr {
-        &:hover {
-          background-color: transparent;
-          & > td {
-            background-color: transparent;
+    &-fixed-header-wrapper {
+      th {
+        &:nth-child(1) {
+          .cell {
+            padding-left: 28px;
+          }
+        }
+        &:nth-child(2) {
+          .cell {
+            padding-left: 44px;
           }
         }
       }
-      td .cell,
-      th .cell {
-        padding-left: 32px;
+    }
+    &-fixed-body-wrapper {
+      td, th {
+        &:nth-child(1) {
+          .cell {
+            padding-left: 28px;
+          }
+        }
+        &:nth-child(2) {
+          .cell {
+            padding-left: 44px;
+          }
+        }
+        &.is-last {
+          .cell {
+            padding-right: 10px;
+          }
+        }
       }
     }
     .iam-perm-table-cell-cls {
@@ -113,6 +126,16 @@
       }
       .empty-text {
         padding: 0 20px;
+      }
+    }
+    .custom-actions-item {
+      &:not(&:last-child) {
+        margin-left: 8px;
+      }
+    }
+    &.is-hide-pagination {
+      .bk-table-pagination-wrapper {
+        display: none;
       }
     }
   }
@@ -160,7 +183,6 @@
         color: #ffb848;
       }
     }
-  
   }
   .operate-buttons {
     margin-top: 34px;

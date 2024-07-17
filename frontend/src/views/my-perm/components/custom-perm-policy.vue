@@ -64,12 +64,17 @@
         <CustomPermTable
           class="iam-perm-edit-table"
           :ref="`customPermTable_${sys.id}_${mode}`"
-          :key="sys.id"
           :mode="mode"
+          :key="sys.id"
           :system-id="sys.id"
+          :pagination="sys.pagination"
           :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
           :is-search-perm="isSearchPerm"
+          @on-select-perm="handleSelectPerm"
+          @on-update-pagination="handleUpdatePagination(...arguments, sys)"
+          @on-page-change="handlePageChange(...arguments, sys)"
+          @on-limit-page="handleLimitChange(...arguments, sys)"
           @on-delete-action="handleDeleteAction(...arguments, sysIndex)"
         />
       </CustomPermSystemPolicy>
@@ -90,6 +95,7 @@
 </template>
 
 <script>
+  import { uniqWith, isEqual } from 'lodash';
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
   import { bus } from '@/common/bus';
@@ -158,6 +164,7 @@
         isAllSystem: false,
         isDisabledOperate: false,
         systemPolicyList: [],
+        curSelectedGroup: [],
         emptyPolicyData: {
           type: 'empty',
           text: '暂无数据',
@@ -175,7 +182,8 @@
     watch: {
       list: {
         handler (v) {
-          this.formatSystemData(v);
+          this.curSelectedGroup = [];
+          this.handleGetSystemData(v);
         },
         immediate: true
       },
@@ -183,15 +191,7 @@
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
           if (this.isSearchPerm || ['search'].includes(value.tipType)) {
-            this.fetchSystemSearch();
-          }
-        },
-        immediate: true
-      },
-      totalCount: {
-        handler (value) {
-          if (this.isSearchPerm && this.systemList.length) {
-            this.$set(this.systemList[0], 'count', value);
+            this.handleSystemSearch();
           }
         },
         immediate: true
@@ -210,15 +210,14 @@
             systemId: id
           });
           if (code === 0) {
-            this.systemPolicyList.splice(sysIndex, 1);
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-            const policyCount = this.systemPolicyList.reduce((prev, cur) => {
-              return cur.count + prev;
-            }, 0);
-            bus.$emit('on-system-perm', {
-              active: 'CustomPerm',
-              count: policyCount
+            bus.$emit('on-update-perm-group', {
+              active: 'customPerm',
+              count: 0,
+              systemId: this.systemPolicyList[sysIndex].id
             });
+            this.handleAllSystemChange(false);
+            this.systemPolicyList.splice(sysIndex, 1);
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -236,14 +235,14 @@
             'permApply/getHasPermSystem',
             externalParams
           );
-          this.formatSystemData(data || []);
+          this.handleGetSystemData(data || []);
           this.emptyPolicyData = formatCodeData(
             code,
             this.emptyPolicyData,
             data.length === 0
           );
         } else {
-          this.formatSystemData(this.systemPolicyList || []);
+          this.handleGetSystemData(this.systemPolicyList || []);
           this.emptyPolicyData = formatCodeData(
             0,
             this.emptyPolicyData,
@@ -253,19 +252,42 @@
       },
 
       handleAllSystemChange (payload) {
-        if (payload) {
+        this.$nextTick(() => {
           this.systemPolicyList.forEach((item) => {
-            console.log(item);
             const permRef = this.$refs[`customPermTable_${item.id}_${this.mode}`];
-            console.log(permRef);
             if (permRef && permRef.length) {
-              permRef[0].$refs[`customPermRef_${this.mode}_${item.id}`].toggleRowSelection(item, true);
+              const customPermRef = permRef[0].$refs[`customPermRef_${this.mode}_${item.id}`];
+              customPermRef && permRef[0].policyListBack.forEach((sub) => {
+                customPermRef.toggleRowSelection(sub, payload);
+                if (payload) {
+                  permRef[0].currentSelectList.push(sub);
+                  this.curSelectedGroup.push(sub);
+                } else {
+                  permRef[0].currentSelectList = [];
+                  this.curSelectedGroup = [];
+                }
+              });
             }
           });
-        }
+        });
+        console.log(this.curSelectedGroup);
       },
 
-      handleExpanded (value, payload) {},
+      handleUpdatePagination (payload, row) {
+        row.pagination = { ...payload };
+      },
+
+      handlePageChange (payload, row) {
+        row.pagination = Object.assign(row.pagination, { current: payload });
+      },
+
+      handleLimitChange (payload, row) {
+        row.pagination = Object.assign(row.pagination, { current: 1, limit: payload });
+      },
+
+      handleExpanded (value, payload) {
+        
+      },
 
       handleShowDelConfirm (payload) {
         this.$nextTick(() => {
@@ -276,25 +298,50 @@
         });
       },
 
+      handleSelectPerm (payload) {
+        this.curSelectedGroup = uniqWith([...this.curSelectedGroup, ...payload], isEqual);
+        this.$emit('on-selected-group', this.curSelectedGroup);
+        // 判断是否系统全选
+        const isCustom = ['customPerm'].includes(this.mode);
+        if (isCustom) {
+          const customList = this.curSelectedGroup.filter((v) => ['customPerm'].includes(v.mode_type));
+          const countList = this.systemPolicyList.map((v) => v.count);
+          const customTotal = countList.reduce((prev, cur) => {
+            return cur + prev;
+          }, 0);
+          this.isAllSystem = customTotal === customList.length;
+        }
+      },
+
       handleDeleteAction (policyListLen, sysIndex) {
         this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
+        bus.$emit('on-update-perm-group', {
+          active: 'customPerm',
+          count: policyListLen,
+          systemId: this.systemPolicyList[sysIndex].id
+        });
         if (this.systemPolicyList[sysIndex].count < 1) {
           this.systemPolicyList.splice(sysIndex, 1);
         }
         if (!this.systemPolicyList.length) {
           this.handleRefreshSystem();
-          if (this.isSearchPerm) {
-            bus.$emit('on-perm-tab-count', {
-              active: 'CustomPerm',
-              count: this.systemPolicyList.length
-            });
-          }
         }
       },
 
       // 格式化系统列表数据
-      formatSystemData (payload) {
-        const systemPolicyList = payload.map((item) => new PermSystem(item));
+      handleGetSystemData (payload) {
+        const systemPolicyList = payload.map((item) => {
+          return {
+            ...new PermSystem(item),
+            ...{
+              pagination: {
+                current: 1,
+                limit: 10,
+                count: 0
+              }
+            }
+          };
+        });
         this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
         this.systemPolicyList.sort((curr, next) => curr.name.localeCompare(next.name));
         if (this.externalSystemId && this.systemPolicyList.length > 1) {
@@ -320,13 +367,13 @@
       },
 
       // 搜索自定义权限
-      fetchSystemSearch () {
+      handleSystemSearch () {
         // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
         const { id, description, name, system_id: systemId } = this.curSearchParams;
         const noValue = !id && !name && !description;
         // 筛选搜索的系统id
         const curSystemList = this.systemList.filter((item) => item.id === systemId && noValue);
-        this.formatSystemData(curSystemList || []);
+        this.handleGetSystemData(curSystemList || []);
       },
       
       handleEmptyClear () {
@@ -346,9 +393,6 @@
   /* height: 100%; */
   .all-system-checkbox {
     padding: 0 24px 12px 24px;
-  }
-  .iam-perm-edit-table {
-    min-height: 101px;
   }
   /deep/ .system-render-template-item {
     background-color: #eaebf0;

@@ -153,10 +153,11 @@
       handleOpenTag ({ name, id }, type) {
         const routeMap = {
           name: () => {
-            bus.$emit('on-view-group-perm', {
+            bus.$emit('on-batch-view-group-perm', {
               name,
               id,
-              show: true
+              show: true,
+              width: 1160
             });
           }
         };

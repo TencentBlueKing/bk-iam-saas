@@ -231,13 +231,16 @@
                 });
               }
               this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
-              bus.$emit('on-system-perm', { active: this.groupData.value });
+              bus.$emit('on-update-perm-group', { active: 'personalPerm' });
               this.$emit('update:show', false);
             } catch (e) {
               this.messageAdvancedError(e);
             } finally {
               this.submitLoading = false;
             }
+          },
+          deleteAction: () => {
+
           }
         };
         return modeMap[this.curSliderName]();

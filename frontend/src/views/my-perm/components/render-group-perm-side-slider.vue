@@ -54,6 +54,10 @@
       showMember: {
         type: Boolean,
         default: true
+      },
+      isBatchSlider: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -83,6 +87,14 @@
       });
       bus.$on('on-drawer-side', (payload) => {
         this.width = payload.width;
+        if (this.isBatchSlider) {
+          bus.$emit('on-batch-view-group-perm', {
+            name: this.name,
+            id: this.groupId,
+            width: this.width + 200,
+            show: true
+          });
+        }
       });
     },
     methods: {

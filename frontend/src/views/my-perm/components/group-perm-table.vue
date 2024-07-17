@@ -18,6 +18,7 @@
         type="selection"
         align="center"
         :selectable="getDefaultSelect"
+        :width="60"
       />
       <template v-for="item in tableProps">
         <template v-if="item.prop === 'name'">
@@ -486,6 +487,7 @@
       },
       groupData: {
         handler (value) {
+          this.currentSelectList = [];
           this.queryGroupData = cloneDeep(value);
         },
         immediate: true
@@ -574,6 +576,7 @@
             this.curGroupName = name;
             this.curGroupId = id;
             this.isShowPermSideSlider = true;
+            bus.$on('on-drawer-side', { width: 960 });
           },
           memberTemplate: async () => {
             await this.fetchDetailInfo(template_id, template_name);
@@ -634,7 +637,7 @@
             const selectGroups = selectList.filter((item) => !tableList.includes(`${item.name}&${item.id}&${item.mode_type}`));
             this.currentSelectList = [...selectGroups, ...payload];
             this.fetchCustomTotal(this.currentSelectList);
-            console.log(this.currentSelectList, selectGroups, tableList, '选中');
+            // console.log(this.currentSelectList, selectGroups, tableList, '选中');
             this.$emit('on-selected-group', this.currentSelectList);
           }
         };
@@ -773,25 +776,30 @@
     }
     .bk-table-fixed-header-wrapper {
       th {
-        /* &:first-child { */
+        &:nth-child(1) {
           .cell {
-            padding-left: 32px;
+            padding-left: 40px;
           }
-        /* } */
-      }
-    }
-    .bk-table-fixed-body-wrapper {
-      tr {
-        &:hover {
-          background-color: transparent;
-          & > td {
-            background-color: transparent;
+        }
+        &:nth-child(2) {
+          .cell {
+            padding-left: 36px;
           }
         }
       }
-      td .cell,
-      th .cell {
-        padding-left: 32px;
+    }
+    .bk-table-fixed-body-wrapper {
+      td, th {
+        &:nth-child(1) {
+          .cell {
+            padding-left: 40px;
+          }
+        }
+        &:nth-child(2) {
+          .cell {
+            padding-left: 36px;
+          }
+        }
       }
     }
   }

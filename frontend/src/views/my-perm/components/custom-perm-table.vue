@@ -6,7 +6,14 @@
       :data="policyList"
       :header-border="false"
       :outer-border="false"
-      :cell-class-name="getCellClass"
+      :class="[
+        { 'is-hide-pagination': policyListBack.length < 10 }
+      ]"
+      :pagination="pagination"
+      @page-change="handlePageChange"
+      @page-limit-change="handleLimitChange"
+      @select="handleSelectionChange"
+      @select-all="handleAllSelectionChange"
     >
       <bk-table-column
         type="selection"
@@ -174,16 +181,6 @@
       </template>
     </bk-table>
 
-    <delete-dialog
-      :show.sync="deleteDialog.visible"
-      :loading="deleteDialog.loading"
-      :title="deleteDialog.title"
-      :sub-title="deleteDialog.subTitle"
-      @on-after-leave="handleAfterDeleteLeave"
-      @on-cancel="hideCancelDelete"
-      @on-sumbit="handleSubmitDelete"
-    />
-
     <bk-sideslider
       :is-show="isShowSideSlider"
       :title="sideSliderTitle"
@@ -220,7 +217,7 @@
                 {{ $t(`m.common['删除']`) }}
               </bk-button>
             </iam-popover-confirm>
-            <bk-button style="margin-left: 10px" @click="handleCancel">
+            <bk-button style="margin-left: 8px" @click="handleCancelDelete">
               {{ $t(`m.common['取消']`) }}
             </bk-button>
           </template>
@@ -232,7 +229,7 @@
           :can-edit="!isBatchDelete"
           ref="detailComRef"
           @tab-change="handleTabChange"
-          @on-change="handleChange"
+          @on-change="handleDetailChange"
           @on-select-all="handleSelectAll"
         />
       </div>
@@ -280,7 +277,7 @@
       </div>
     </bk-sideslider>
 
-    <delete-action-dialog
+    <DeleteActionDialog
       :show.sync="isShowDeleteDialog"
       :loading="deleteDialog.loading"
       :title="delActionDialogTitle"
@@ -297,17 +294,15 @@
 <script>
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
-  import { bus } from '@/common/bus';
+  // import { bus } from '@/common/bus';
   import { formatCodeData } from '@/common/util';
   import { leaveConfirm } from '@/common/leave-confirm';
   import PermPolicy from '@/model/my-perm-policy';
-  import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
   import RenderDetail from '@/components/iam-render-detail';
   import IamPopoverConfirm from '@/components/iam-popover-confirm';
   import IamEffectCondition from '@/components/iam-effect-condition';
   import IamEffectConditionEdit from '@/components/iam-sideslider-effect-condition';
-
   export default {
     provide: function () {
       return {
@@ -317,7 +312,6 @@
     components: {
       IamPopoverConfirm,
       RenderDetail,
-      DeleteDialog,
       IamEffectCondition,
       IamEffectConditionEdit,
       DeleteActionDialog
@@ -347,17 +341,54 @@
       },
       curSearchParams: {
         type: Object
+      },
+      pagination: {
+        type: Object,
+        default: () => {
+          return {
+            current: 1,
+            limit: 10,
+            count: 0
+          };
+        }
+      },
+      curSelectedGroup: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
       return {
         policyList: [],
+        policyListBack: [],
         previewData: [],
         curDeleteIds: [],
+        policyIdList: [],
+        delActionList: [],
+        curInstancePaths: [],
+        currentSelectList: [],
+        environmentsEffectData: [],
+        originalCustomTmplList: [],
         initRequestQueue: ['permTable'],
         curId: '',
         curPolicyId: '',
+        sideSliderTitle: '',
+        currentActionName: '',
+        currentInstanceGroupName: '',
+        delActionDialogTitle: '',
+        delActionDialogTip: '',
+        environmentsSliderTitle: this.$t(`m.common['生效条件']`),
+        batchDisabled: false,
+        disabled: true,
+        canOperate: true,
+        isCustom: true,
+        isBatchDelete: true,
+        isShowDeleteDialog: false,
         isShowSideSlider: false,
+        isShowEffectConditionSlider: false,
+        isShowResourceInstanceEffectTime: false,
+        params: {},
+        searchParams: {},
         policyCountMap: {},
         deleteDialog: {
           visible: false,
@@ -365,34 +396,13 @@
           subTitle: '',
           loading: false
         },
-        sideSliderTitle: '',
-        isBatchDelete: true,
-        batchDisabled: false,
-        disabled: true,
-        canOperate: true,
-        isShowEffectConditionSlider: false,
-        environmentsSliderTitle: this.$t(`m.common['生效条件']`),
-        environmentsEffectData: [],
-        isShowResourceInstanceEffectTime: false,
         resourceGroupParams: {},
-        params: '',
-        originalCustomTmplList: [],
-        isCustom: true,
-        isShowDeleteDialog: false,
-        currentActionName: '',
-        currentInstanceGroupName: '',
-        delActionDialogTitle: '',
-        delActionDialogTip: '',
-        delActionList: [],
-        curInstancePaths: [],
-        policyIdList: [],
         policyEmptyData: {
           type: '',
           text: '',
           tip: '',
           tipType: ''
-        },
-        searchParams: {}
+        }
       };
     },
     computed: {
@@ -464,10 +474,11 @@
             };
             this.params = params;
             await this.fetchActions(value);
-            this.fetchData(params);
+            this.fetchPolicy(params);
           } else {
             this.initRequestQueue = [];
             this.policyList = [];
+            this.policyListBack = [];
             this.policyCountMap = {};
           }
         },
@@ -486,6 +497,12 @@
           this.searchParams = Object.assign({}, value);
         },
         immediate: true
+      },
+      curSelectedGroup: {
+        handler (value) {
+          this.currentSelectList = [...value];
+        },
+        deep: true
       }
     },
     methods: {
@@ -508,7 +525,8 @@
         }
       },
 
-      async fetchData (params) {
+      async fetchPolicy (params) {
+        const { current, limit } = this.pagination;
         try {
           let url = '';
           let queryParams = {};
@@ -533,20 +551,59 @@
               item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
               return new PermPolicy(item);
             });
+            this.policyListBack = cloneDeep(this.policyList);
           }
+          this.policyList = this.handleGetDataByPage(
+            this.pagination.current,
+            {
+              list: this.policyListBack,
+              pagination: this.pagination
+            }
+          );
           this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
         } catch (e) {
           this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
           this.messageAdvancedError(e);
         } finally {
           this.initRequestQueue.shift();
-          bus.$emit('on-perm-tab-count', {
-            active: 'CustomPerm',
-            count: this.policyList.length || 0
+          this.$emit('on-update-pagination', {
+            current,
+            limit,
+            count: this.policyListBack.length
           });
         }
       },
-
+  
+      fetchSelectedGroups (type, payload, row) {
+        const hasData = {};
+        const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
+          // eslint-disable-next-line no-unused-expressions
+          hasData[`${next.name}&${next.id}&${next.mode_type}`] ? '' : hasData[`${next.name}&${next.id}&${next.mode_type}`] = true && curr.push(next);
+          return curr;
+        }, []);
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              selectList.push(row);
+              this.currentSelectList = [...selectList];
+            } else {
+              this.currentSelectList = selectList.filter((item) => `${item.name}&${item.id}&${item.mode_type}` !== `${row.name}&${row.id}&${row.mode_type}`);
+            }
+            this.fetchCustomTotal(this.currentSelectList);
+            this.$emit('on-select-perm', this.currentSelectList);
+          },
+          all: () => {
+            const tableList = this.policyList.map((v) => `${v.name}&${v.id}&${this.mode}`);
+            const selectGroups = selectList.filter((item) => !tableList.includes(`${item.name}&${item.id}&${item.mode_type}`));
+            this.currentSelectList = [...selectGroups, ...payload];
+            this.fetchCustomTotal(this.currentSelectList);
+            this.$emit('on-select-perm', this.currentSelectList);
+          }
+        };
+        return typeMap[type]();
+      },
+      
       fetchCustomTotal (payload) {
         this.$nextTick(() => {
           const permRef = this.$refs[`customPermRef_${this.mode}_${this.systemId}`];
@@ -554,10 +611,81 @@
             const paginationWrapper = permRef.$refs.paginationWrapper;
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
-              const len = payload.filter((v) => v.mode_type === this.mode);
-              selectCount[0].children[0].innerHTML = len.length;
+              selectCount[0].children[0].innerHTML = payload.length;
             }
           }
+        });
+      },
+
+      handleSelectionChange (selection, row) {
+        this.$set(row, 'mode_type', this.mode);
+        this.fetchSelectedGroups('multiple', selection, row);
+      },
+      
+      handleAllSelectionChange (selection) {
+        if (selection.length > 0) {
+          selection = selection.map((v) => {
+            return {
+              ...v,
+              ...{
+                mode_type: this.mode
+              }
+            };
+          });
+        }
+        this.fetchSelectedGroups('all', selection);
+      },
+
+      handleGetDataByPage (page, payload) {
+        if (!page) {
+          payload.pagination.current = page = 1;
+        }
+        let startIndex = (page - 1) * payload.pagination.limit;
+        let endIndex = page * payload.pagination.limit;
+        if (startIndex < 0) {
+          startIndex = 0;
+        }
+        if (endIndex > payload.list.length) {
+          endIndex = payload.list.length;
+        }
+        return payload.list.slice(startIndex, endIndex);
+      },
+
+      handlePageChange (page) {
+        this.$emit('on-page-change', page);
+        this.policyList = this.handleGetDataByPage(
+          page,
+          {
+            list: this.policyListBack,
+            pagination: this.pagination
+          }
+        );
+        // 切换分页时自动勾选已选的数据
+        this.handleGetSelectedPerm();
+      },
+  
+      handleLimitChange (limit) {
+        this.$emit('on-limit-change', limit);
+        const pagination = Object.assign(this.pagination, { current: 1, limit });
+        this.policyList = this.handleGetDataByPage(
+          1,
+          {
+            list: this.policyListBack,
+            pagination
+          }
+        );
+        this.handleGetSelectedPerm();
+      },
+
+      handleGetSelectedPerm () {
+        const policyData = this.currentSelectList.map((v) => `${v.name}&${v.id}`);
+        this.fetchCustomTotal(this.currentSelectList);
+        this.$nextTick(() => {
+          this.policyList.forEach((item) => {
+            if (policyData.includes(`${item.name}&${item.id}`)) {
+              this.$refs[`customPermRef_${this.mode}_${this.systemId}`].toggleRowSelection(item, true);
+            }
+          });
         });
       },
 
@@ -583,7 +711,7 @@
         const params = {
           systemId: this.systemId
         };
-        this.fetchData(params);
+        this.fetchPolicy(params);
       },
 
       handleBatchDelete () {
@@ -597,7 +725,7 @@
         this.canOperate = canDelete;
       },
 
-      handleChange () {
+      handleDetailChange () {
         const data = this.$refs.detailComRef.handleGetValue();
         this.disabled = data.ids.length < 1 && data.condition.length < 1;
         if (!this.disabled) {
@@ -655,20 +783,16 @@
                 resourceGroupId: this.resourceGroupParams.resourceGroupId
               });
             }
-            setTimeout(() => {
-              this.fetchData(this.params);
-              this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-            }, 2000);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+            this.fetchPolicy(this.params);
           } else {
             await this.$store.dispatch('permApply/deletePerm', {
               policyIds: this.curDeleteIds,
               systemId: this.systemId
             });
-            const policyList = this.policyList.filter(
-              (item) => !this.curDeleteIds.includes(item.policy_id)
-            );
+            const policyList = this.policyList.filter((item) => !this.curDeleteIds.includes(item.policy_id));
             await this.fetchActions(this.systemId);
-            await this.fetchData(this.params);
+            await this.fetchPolicy(this.params);
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.$emit('on-delete-action', policyList.length);
           }
@@ -676,9 +800,11 @@
           this.messageAdvancedError(e);
         } finally {
           this.deleteDialog.loading = false;
-          this.deleteDialog.visible = false;
-          this.isShowDeleteDialog = false;
         }
+      },
+      
+      handleShowDelDialog (payload) {
+        this.handleDeleteActionOrInstance(payload, 'action');
       },
 
       // 区分删除操作还是实例
@@ -701,9 +827,7 @@
             && item.related_actions.length
             && item.id !== id
           ) {
-            delRelatedActions = item.related_actions.filter((v) =>
-              curAction.related_actions.includes(v)
-            );
+            delRelatedActions = item.related_actions.filter((v) => curAction.related_actions.includes(v));
           }
           if (item.related_actions && item.related_actions.includes(id)) {
             this.delActionList.push(item);
@@ -761,14 +885,9 @@
             this.delActionDialogTip = this.$t(`m.info['删除组依赖实例产生的影响']`, {
               value: this.currentActionName
             });
-            this.isShowDeleteDialog = true;
           }
         };
-        typeMap[type]();
-      },
-
-      handleCancel () {
-        this.isBatchDelete = true;
+        return typeMap[type]();
       },
 
       handleResourceCancel () {
@@ -850,25 +969,21 @@
       },
 
       handlerReduceInstance (payload, data) {
-        if (data.resource_groups.length < 2) return;
-        const { id, related_resource_types: relatedResourceTypes } = payload;
-        this.resourceGroupParams = {
-          id: data.policy_id,
-          resourceGroupId: id
-        };
-        if (relatedResourceTypes && relatedResourceTypes.length) {
-          this.currentActionName = relatedResourceTypes.map((item) => item.name).join();
+        if (data.resource_groups.length >= 2) {
+          const { id, related_resource_types: relatedResourceTypes } = payload;
+          this.resourceGroupParams = {
+            id: data.policy_id,
+            resourceGroupId: id
+          };
+          if (relatedResourceTypes && relatedResourceTypes.length) {
+            this.currentActionName = relatedResourceTypes.map((item) => item.name).join();
+          }
+          this.handleDeleteActionOrInstance(data, 'groupInstance');
         }
-        this.handleDeleteActionOrInstance(data, 'groupInstance');
       },
 
       handleViewEffectCondition () {
-        console.log('environmentsEffectData', this.environmentsEffectData);
         this.isShowResourceInstanceEffectTime = true;
-      },
-
-      handleShowDelDialog (payload) {
-        this.handleDeleteActionOrInstance(payload, 'action');
       },
 
       handleEffectTimeSubmit () {
@@ -881,11 +996,7 @@
         this.deleteDialog.subTitle = '';
         this.curDeleteIds = [];
       },
-
-      hideCancelDelete () {
-        this.deleteDialog.visible = false;
-      },
-
+      
       handleAfterDeleteLeaveAction () {
         this.currentActionName = '';
         this.delActionList = [];
@@ -895,15 +1006,10 @@
       },
 
       handleCancelDelete () {
+        this.deleteDialog.visible = false;
         this.isShowDeleteDialog = false;
+        this.isBatchDelete = true;
         this.curDeleteIds = [];
-      },
-
-      getCellClass ({ row, column, rowIndex, columnIndex }) {
-        // if (columnIndex === 1 || columnIndex === 2) {
-        //   return 'iam-perm-table-cell-cls';
-        // }
-        return '';
       },
 
       resetDataAfterClose () {

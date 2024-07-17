@@ -105,6 +105,11 @@
           <ul class="bk-dropdown-list" slot="dropdown-content">
             <li>
               <a
+                v-bk-tooltips="{
+                  placement: 'right-start',
+                  content: $t(`m.perm['未勾选用户组，无法选择退出']`),
+                  disabled: !isNoBatchQuit
+                }"
                 :class="[{ 'quit-disabled': isNoBatchQuit }]"
                 :title="managerGroupTitle"
                 @click.stop="handleBatch('quit')"
@@ -131,6 +136,11 @@
             </li>
             <li>
               <a
+                v-bk-tooltips="{
+                  placement: 'right-start',
+                  content: $t(`m.perm['未勾选自定义操作选前，无法选择删除']`),
+                  disabled: !isNoBatchDelete
+                }"
                 :class="[{ 'remove-disabled': isNoBatchDelete }]"
                 :title="managerGroupTitle"
                 @click.stop="handleBatch('remove')"
@@ -160,6 +170,7 @@
 
     <RenderGroupPermSideSlider
       :show="isShowPermSideSlider"
+      :is-batch-slider="isShowBatchSlider"
       :name="curGroupName"
       :group-id="curGroupId"
       @animation-end="handleAnimationEnd"
@@ -290,6 +301,12 @@
     watch: {
       navStick () {
         this.formatFormItemWidth();
+      },
+      groupData: {
+        handler () {
+          this.handleResetData();
+        },
+        deep: true
       }
     },
     created () {
@@ -298,14 +315,14 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
-        bus.$off('on-view-group-perm');
+        bus.$off('on-batch-view-group-perm');
       });
       window.addEventListener('resize', this.formatFormItemWidth);
-      bus.$on('on-view-group-perm', ({ name, id, show }) => {
+      bus.$on('on-batch-view-group-perm', ({ name, id, show, width }) => {
         this.isShowPermSideSlider = show;
         this.curGroupName = name;
         this.curGroupId = id;
-        this.batchSliderWidth = show ? 1160 : 960;
+        this.batchSliderWidth = width;
       });
     },
     methods: {
@@ -360,6 +377,10 @@
               this.curSliderName = 'quit';
               this.batchSliderTitle = this.$t(`m.perm['批量退出用户组']`);
               this.sliderGroupPermList = this.currentSelectList.filter((item) => ['personalPerm'].includes(item.mode_type));
+              if (this.currentSelectList.length > this.sliderGroupPermList.length) {
+                // const is
+              }
+              console.log(this.currentSelectList, 5555);
               this.isShowBatchSlider = true;
             }
           },
@@ -369,7 +390,7 @@
           handover: () => {
 
           },
-          delete: () => {
+          remove: () => {
 
           }
         };
@@ -397,6 +418,11 @@
 
       handleDropdownHide () {
         this.isDropdownShow = false;
+      },
+
+      handleResetData () {
+        this.currentSelectList = [];
+        this.sliderGroupPermList = [];
       },
       
       handleAnimationEnd () {
