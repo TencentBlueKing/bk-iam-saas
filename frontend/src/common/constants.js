@@ -136,6 +136,109 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
   'secondaryManageSpaceCreate'
 ];
 
+// 不同导航栏下的路由模块分类
+export const ALL_ROUTES_LIST = new Map([
+  // 权限模板
+  [
+    ['permTemplate', 'permTemplateDetail', 'permTemplateCreate', 'permTemplateEdit', 'permTemplateDiff'],
+    'permTemplateNav'
+  ],
+  // 首页
+  [['', 'index'], 'indexNav'],
+  // 用户组
+  [
+    ['userGroup', 'userGroupDetail', 'createUserGroup', 'cloneUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'],
+    'userGroupNav'
+  ],
+  // 系统接入
+  [
+    [
+      'systemAccess',
+      'systemAccessCreate',
+      'systemAccessAccess',
+      'systemAccessRegistry',
+      'systemAccessOptimize',
+      'systemAccessComplete'
+    ],
+    'systemAccessNav'
+  ],
+  // 我的申请
+  [['apply'], 'applyNav'],
+  // 权限申请 'permApply'
+  [['applyCustomPerm', 'applyJoinUserGroup'], 'permApplyNav'],
+  // 临时权限申请 'provisionPermApply'
+  [['applyProvisionPerm'], 'provisionPermApplyNav'],
+  // 我的权限
+  [
+    [
+      'myPerm',
+      'templatePermDetail',
+      'groupPermDetail',
+      'permRenewal',
+      'groupPermRenewal',
+      'permTransfer',
+      'permTransferHistory',
+      'applyPerm'
+    ],
+    'myPermNav'
+  ],
+  // 我的管理空间
+  [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
+  // 分级管理员
+  [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
+  // 二级管理空间
+  [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],
+  // 授权边界
+  [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
+  // 最大可授权人员边界
+  [['addMemberBoundary'], 'addMemberBoundaryNav'],
+  // 资源权限
+  [['resourcePermiss'], 'resourcePermissNav'],
+  // 管理员
+  [['administrator'], 'settingNav'],
+  // 审批流程
+  [['approvalProcess'], 'approvalProcessNav'],
+  // 用户
+  [['user'], 'userNav'],
+  // 审计
+  [['audit'], 'auditNav'],
+  // 用户组设置
+  [['userGroupSetting'], 'userGroupSettingNav'],
+  // 敏感等级
+  [['sensitivityLevel'], 'sensitivityLevelNav'],
+  // 人员模板
+  [['memberTemplate'], 'memberTemplateNav'],
+  // 管理空间下资源权限管理
+  [['resourcePermManage'], 'resourcePermManageNav'],
+  // 用户/组织
+  [['userOrgPerm'], 'userOrgPermNav'],
+  // 续期通知
+  [['renewalNotice'], 'renewalNoticeNav']
+]);
+
+// 切换管理员身份需要重定向的页面
+export const MANAGE_SPACE_REDIRECT_ROUTES = new Map([
+  // 权限模板
+  [
+    ['permTemplateDetail', 'permTemplateCreate', 'permTemplateEdit', 'permTemplateDiff'],
+    'permTemplate'
+  ],
+  // 用户组模块
+  [
+    ['userGroupDetail', 'createUserGroup', 'cloneUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'],
+    'userGroup'
+  ],
+  // 管理空间
+  [
+    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
+    'ratingManager'],
+  // 二级管理员
+  [
+    ['secondaryManageSpaceCreate', 'secondaryManageSpaceDetail', 'secondaryManageSpaceEdit'],
+    'secondaryManageSpace'
+  ]
+]);
+
 // 用户组属性枚举
 export const USER_GROUP_ATTRIBUTES = [
   {
