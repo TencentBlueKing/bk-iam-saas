@@ -271,8 +271,7 @@ export const beforeEach = async (to, from, next) => {
           } else {
             // 单独处理返回个人staff不需要重定向我的权限的路由
             const routeNavMap = [
-              [(name) => !getNavRouterDiff(0).includes(name), () => next()],
-              [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
+              [(name) => !getNavRouterDiff(0).includes(name), () => next()]
             ];
             const getRouteNav = routeNavMap.find((item) => item[0](to.name));
             if (getRouteNav) {
