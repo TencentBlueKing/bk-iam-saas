@@ -994,7 +994,7 @@
           return;
         }
         this.isAllExpanded = payload;
-        const tempData = [];
+        let tempData = [];
         let templateIds = [];
         let instancesDisplayData = {};
         if (payload) {
@@ -1008,8 +1008,11 @@
           for (const [key, value] of this.curMap.entries()) {
             if (value.length === 1) {
               tempData.push(...value);
+              tempData = _.uniqWith(tempData, _.isEqual);
             } else {
               let curInstances = [];
+              // 这里避免从模板选择的权限和自定义权限下的操作是一致的，所以需要去重
+              tempData = _.uniqWith(tempData, _.isEqual);
               const conditions = value.map(subItem =>
                 subItem.resource_groups && subItem.resource_groups[0]
                   .related_resource_types[0].condition);

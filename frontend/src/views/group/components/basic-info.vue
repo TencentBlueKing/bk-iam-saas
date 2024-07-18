@@ -116,6 +116,8 @@
         const maxLength = 32;
         const minLength = 5;
         const inputValue = payload.trim();
+        this.nameValidateText = '';
+        this.isShowNameError = false;
         if (!inputValue) {
           this.nameValidateText = this.$t(`m.verify['用户组名必填']`);
           this.isShowNameError = true;
@@ -125,18 +127,14 @@
           this.isShowNameError = true;
         }
         if (!this.isShowNameError) {
-          if (payload.trim().length > maxLength) {
+          if (inputValue.length > maxLength) {
             this.nameValidateText = this.$t(`m.verify['用户组名最长不超过32个字符']`);
             this.isShowNameError = true;
           }
-          if (payload.trim().length < minLength) {
+          if (inputValue.length < minLength) {
             this.nameValidateText = this.$t(`m.verify['用户组名最短不少于5个字符']`);
             this.isShowNameError = true;
           }
-          // if (!/^[^\s]*$/g.test(payload)) {
-          //     this.nameValidateText = this.$t(`m.verify['用户组名不允许空格']`)
-          //     this.isShowNameError = true
-          // }
         }
       },
 
