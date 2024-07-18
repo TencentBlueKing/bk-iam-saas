@@ -2309,7 +2309,7 @@
             height: calc(100vh - 114px);
         }
         .bk-sideslider-footer {
-            background-color: #f5f6fa!important;
+            background-color: #ffffff !important;
             border-color: #dcdee5!important;
         }
     }
