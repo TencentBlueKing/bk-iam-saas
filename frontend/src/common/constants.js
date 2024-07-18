@@ -273,3 +273,83 @@ export const SEND_DAYS_LIST = [
     value: 'sunday'
   }
 ];
+
+// 只显示角色名称的审计类型
+export const ONLY_ROLE_TYPE = [
+  'template.create',
+  'subject.template.create',
+  'subject.template.delete'
+];
+
+// 没有详情的审计类型
+export const NO_DETAIL_TYPE = [
+  'group.create',
+  'group.delete',
+  // 'template.create',
+  'template.update',
+  'role.create'
+];
+
+// 只有描述字段的审计类型
+export const ONLY_DESCRIPTION_TYPE = [
+  'group.update',
+  'role.update',
+  'role.member.policy.create',
+  'role.member.policy.delete',
+  'approval.global.update'
+];
+
+// 只有子对象的审计类型
+export const ONLY_SUB_TYPE = [
+  'action.sensitivity.level.update',
+  'group.template.create',
+  'group.member.create',
+  'group.member.delete',
+  'group.member.renew',
+  'group.transfer',
+  'user.group.delete',
+  'department.group.delete',
+  'user.role.delete',
+  'role.member.create',
+  'role.member.delete',
+  'role.member.update',
+  'role.commonaction.create',
+  'role.commonaction.delete',
+  'subject.template.group.delete',
+  'subject.template.member.create',
+  'subject.template.member.delete'
+];
+
+// 只有附加信息的审计类型
+export const ONLY_EXTRA_INFO_TYPE = [
+  'group.policy.create',
+  'group.policy.delete',
+  'group.policy.update',
+  'user.policy.delete',
+  'user.policy.create',
+  'user.policy.update',
+  'user.temporary.policy.create',
+  'user.temporary.policy.delete',
+  'user.blacklist.member.create',
+  'user.blacklist.member.delete',
+  'user.permission.clean',
+  'role.group.renew',
+  'template.version.sync'
+];
+
+// 既有 description 又有 extra_info
+export const DE_TYPR = ['template.update'];
+
+// 既有 sub_objects 又有 extra_info
+export const SE_TYPE = [
+  'template.member.create',
+  'template.member.delete',
+  'template.version.update'
+];
+
+// 既有 description 又有 sub_objects
+export const DS_TYPE = [
+  'approval.action.update',
+  'approval.group.update',
+  'template.preupdate.create'
+];
