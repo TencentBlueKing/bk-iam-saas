@@ -62,7 +62,6 @@
               ]"
               :title="data.name"> -->
             <div
-              v-bkloading="{ isLoading: data.subManageLoading, opacity: 1 }"
               :class="[
                 'single-hide',
                 { 'iam-search-data': isSearch }
