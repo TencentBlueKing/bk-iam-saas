@@ -33,7 +33,6 @@
         >
           <div slot-scope="{ node,data }">
             <div
-              v-bkloading="{ isLoading: data.subManageLoading, opacity: 1 }"
               :class="[
                 'single-hide',
                 { 'iam-search-data': isSearch }
@@ -168,97 +167,12 @@
   import { bus } from '@/common/bus';
   // import { getTreeNode } from '@/common/util';
   import { getRouterDiff } from '@/common/router-handle';
-  import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
+  import { NEED_CONFIRM_DIALOG_ROUTER, MANAGE_SPACE_REDIRECT_ROUTES, ALL_ROUTES_LIST } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import IamGuide from '@/components/iam-guide/index.vue';
 
-  const routerMap = new Map([
-    // 权限模板
-    [
-      ['permTemplate', 'permTemplateDetail', 'permTemplateCreate', 'permTemplateEdit', 'permTemplateDiff'],
-      'permTemplateNav'
-    ],
-    // 首页
-    [['', 'index'], 'indexNav'],
-    // 用户组
-    [
-      ['userGroup', 'userGroupDetail', 'createUserGroup', 'cloneUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'],
-      'userGroupNav'
-    ],
-    // 系统接入
-    [
-      [
-        'systemAccess',
-        'systemAccessCreate',
-        'systemAccessAccess',
-        'systemAccessRegistry',
-        'systemAccessOptimize',
-        'systemAccessComplete'
-      ],
-      'systemAccessNav'
-    ],
-    // 我的申请
-    [['apply'], 'applyNav'],
-    // 权限申请 'permApply'
-    [['applyCustomPerm', 'applyJoinUserGroup'], 'permApplyNav'],
-    // 临时权限申请 'provisionPermApply'
-    [['applyProvisionPerm'], 'provisionPermApplyNav'],
-    // 我的权限
-    [
-      [
-        'myPerm',
-        'templatePermDetail',
-        'groupPermDetail',
-        'permRenewal',
-        'groupPermRenewal',
-        'permTransfer',
-        'permTransferHistory',
-        'applyPerm'
-      ],
-      'myPermNav'
-    ],
-    // 我的管理空间
-    [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
-    // 分级管理员
-    [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
-    // 二级管理空间
-    [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],
-    // 授权边界
-    [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
-    // 最大可授权人员边界
-    [['addMemberBoundary'], 'addMemberBoundaryNav'],
-    // 资源权限
-    [['resourcePermiss'], 'resourcePermissNav'],
-    // 管理员
-    [['administrator'], 'settingNav'],
-    // 审批流程
-    [['approvalProcess'], 'approvalProcessNav'],
-    // 用户
-    [['user'], 'userNav'],
-    // 审计
-    [['audit'], 'auditNav'],
-    // 用户组设置
-    [['userGroupSetting'], 'userGroupSettingNav'],
-    // 敏感等级
-    [['sensitivityLevel'], 'sensitivityLevelNav'],
-    // 人员模板
-    [['memberTemplate'], 'memberTemplateNav'],
-    // 管理空间下资源权限管理
-    [['resourcePermManage'], 'resourcePermManageNav'],
-    // 用户/组织
-    [['userOrgPerm'], 'userOrgPermNav'],
-    // 续期通知
-    [['renewalNotice'], 'renewalNoticeNav'],
-    // 操作模板
-    [
-      ['actionsTemplate', 'actionsTemplateCreate', 'actionsTemplateEdit', 'actionsTemplateDiff'],
-      'actionsTemplateNav'
-    ]
-  ]);
-
   export default {
     inject: ['reload'],
-    name: '',
     components: {
       IamGuide
     },
@@ -269,9 +183,10 @@
         timer: null,
         curRole: 'staff',
         isUnfold: true,
-        routerMap: routerMap,
+        routerMap: Object.freeze(ALL_ROUTES_LIST),
         curRoleList: [],
         subRoleList: [],
+        manageSpaceRoutes: Object.freeze(MANAGE_SPACE_REDIRECT_ROUTES),
         curRoleId: 0,
         hoverId: -1,
         selectValue: '',
@@ -739,6 +654,11 @@
             return;
           }
           if (item.path === this.$route.path) {
+            // 因为vuex是同步操作，需要从缓存里获取最新的位置处理多个标签页之间不同权限页面之间的切换场景
+            const storageNavIndex = window.localStorage.getItem('index');
+            if (this.index !== storageNavIndex) {
+              return;
+            }
             bus.$emit('reload-page', item);
             this.$emit('reload-page', this.$route);
             return;
@@ -755,7 +675,6 @@
 
       // 更新路由
       updateRouter (roleType) {
-        let routeName = '';
         const curRouterName = this.$route.name;
         this.$store.commit('updataRouterDiff', roleType);
         const difference = getRouterDiff(roleType);
@@ -775,20 +694,14 @@
             });
             return;
           }
-          const routeMap = new Map([
-            [['permTemplateCreate', 'permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'], 'permTemplate'],
-            [['actionsTemplateCreate', 'actionsTemplateEdit', 'actionsTemplateDiff'], 'actionsTemplate'],
-            [['createUserGroup', 'cloneUserGroup', 'userGroupDetail', 'userGroupDetail', 'userGroupDetail'], 'userGroup'],
-            [['gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate'], 'ratingManager']
-          ]);
-          for (const [value, key] of routeMap.entries()) {
-            if (value.includes(curRouterName)) {
-              routeName = key;
-              break;
+          let resetRouteName = '';
+          for (const [key, value] of this.manageSpaceRoutes.entries()) {
+            if (key.includes(curRouterName)) {
+              resetRouteName = value;
             }
           }
-          if (routeName) {
-            this.$router.push({ name: routeName });
+          if (resetRouteName) {
+            this.$router.push({ name: resetRouteName });
             return;
           }
           this.$emit('reload-page', this.$route);

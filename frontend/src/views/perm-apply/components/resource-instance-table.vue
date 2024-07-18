@@ -508,21 +508,24 @@
               return false;
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.isDefaultLimit;
+          return curData && curData.isDefaultLimit;
       },
       curAggregateFlag () {
           if (this.aggregateIndex === -1) {
               return 'add';
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.flag;
+          return curData && curData.flag;
       },
       curAggregateSelectionMode () {
           if (this.aggregateIndex === -1) {
               return 'all';
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.selectionMode;
+          if (curData) {
+            return curData.selectionMode;
+          }
+          return 'all';
       },
       isShowPreview () {
           if (this.curIndex === -1) {
