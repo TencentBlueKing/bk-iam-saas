@@ -522,7 +522,10 @@
               return 'all';
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData && curData.selectionMode;
+          if (curData) {
+            return curData.selectionMode;
+          }
+          return 'all';
       },
       isShowPreview () {
           if (this.curIndex === -1) {
