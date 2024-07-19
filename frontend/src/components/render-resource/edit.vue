@@ -300,31 +300,23 @@
   };
 </script>
 <style lang="postcss" scoped>
-    .iam-condition-detail-wrapper {
-        position: relative;
-        &.reset-top {
-            position: relative;
-            top: -20px;
-        }
-        .group-checked-wrapper {
-            position: absolute;
-            right: 8px;
-        }
-        .resource-instance-wrapper {
-            /* padding: 0 20px; */
-            padding: 0 30px;
-        }
-        .no-limit-wrapper {
-            /* padding: 0 20px; */
-            padding: 0 30px;
-        }
-        .resource-empty-wrapper {
-            line-height: 40px;
-            background: #fff;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
-            font-size: 12px;
-            text-align: center;
-        }
-    }
+.iam-condition-detail-wrapper {
+  position: relative;
+  &.reset-top {
+    position: relative;
+    top: -20px;
+  }
+  .group-checked-wrapper {
+    position: absolute;
+    right: 8px;
+  }
+  .resource-empty-wrapper {
+    line-height: 40px;
+    background: #fff;
+    border: 1px solid #dcdee5;
+    border-radius: 2px;
+    font-size: 12px;
+    text-align: center;
+  }
+}
 </style>

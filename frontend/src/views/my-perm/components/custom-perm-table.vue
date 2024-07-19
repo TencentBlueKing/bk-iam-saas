@@ -225,9 +225,9 @@
       </div>
       <div slot="content">
         <RenderDetail
+          ref="detailComRef"
           :data="previewData"
           :can-edit="!isBatchDelete"
-          ref="detailComRef"
           @tab-change="handleTabChange"
           @on-change="handleDetailChange"
           @on-select-all="handleSelectAll"
@@ -442,7 +442,7 @@
           } else {
             if (payload.condition.length) {
               const { instance, instances } = payload.condition[0];
-              const list = instance || instances;
+              const list = instance || instances || [];
               curPaths = list.reduce((prev, next) => {
                 prev.push(
                   ...next.path.map(v => {
