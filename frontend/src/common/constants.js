@@ -136,6 +136,109 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
   'secondaryManageSpaceCreate'
 ];
 
+// 不同导航栏下的路由模块分类
+export const ALL_ROUTES_LIST = new Map([
+  // 权限模板
+  [
+    ['permTemplate', 'permTemplateDetail', 'permTemplateCreate', 'permTemplateEdit', 'permTemplateDiff'],
+    'permTemplateNav'
+  ],
+  // 首页
+  [['', 'index'], 'indexNav'],
+  // 用户组
+  [
+    ['userGroup', 'userGroupDetail', 'createUserGroup', 'cloneUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'],
+    'userGroupNav'
+  ],
+  // 系统接入
+  [
+    [
+      'systemAccess',
+      'systemAccessCreate',
+      'systemAccessAccess',
+      'systemAccessRegistry',
+      'systemAccessOptimize',
+      'systemAccessComplete'
+    ],
+    'systemAccessNav'
+  ],
+  // 我的申请
+  [['apply'], 'applyNav'],
+  // 权限申请 'permApply'
+  [['applyCustomPerm', 'applyJoinUserGroup'], 'permApplyNav'],
+  // 临时权限申请 'provisionPermApply'
+  [['applyProvisionPerm'], 'provisionPermApplyNav'],
+  // 我的权限
+  [
+    [
+      'myPerm',
+      'templatePermDetail',
+      'groupPermDetail',
+      'permRenewal',
+      'groupPermRenewal',
+      'permTransfer',
+      'permTransferHistory',
+      'applyPerm'
+    ],
+    'myPermNav'
+  ],
+  // 我的管理空间
+  [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
+  // 分级管理员
+  [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
+  // 二级管理空间
+  [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],
+  // 授权边界
+  [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
+  // 最大可授权人员边界
+  [['addMemberBoundary'], 'addMemberBoundaryNav'],
+  // 资源权限
+  [['resourcePermiss'], 'resourcePermissNav'],
+  // 管理员
+  [['administrator'], 'settingNav'],
+  // 审批流程
+  [['approvalProcess'], 'approvalProcessNav'],
+  // 用户
+  [['user'], 'userNav'],
+  // 审计
+  [['audit'], 'auditNav'],
+  // 用户组设置
+  [['userGroupSetting'], 'userGroupSettingNav'],
+  // 敏感等级
+  [['sensitivityLevel'], 'sensitivityLevelNav'],
+  // 人员模板
+  [['memberTemplate'], 'memberTemplateNav'],
+  // 管理空间下资源权限管理
+  [['resourcePermManage'], 'resourcePermManageNav'],
+  // 用户/组织
+  [['userOrgPerm'], 'userOrgPermNav'],
+  // 续期通知
+  [['renewalNotice'], 'renewalNoticeNav']
+]);
+
+// 切换管理员身份需要重定向的页面
+export const MANAGE_SPACE_REDIRECT_ROUTES = new Map([
+  // 权限模板
+  [
+    ['permTemplateDetail', 'permTemplateCreate', 'permTemplateEdit', 'permTemplateDiff'],
+    'permTemplate'
+  ],
+  // 用户组模块
+  [
+    ['userGroupDetail', 'createUserGroup', 'cloneUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'],
+    'userGroup'
+  ],
+  // 管理空间
+  [
+    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
+    'ratingManager'],
+  // 二级管理员
+  [
+    ['secondaryManageSpaceCreate', 'secondaryManageSpaceDetail', 'secondaryManageSpaceEdit'],
+    'secondaryManageSpace'
+  ]
+]);
+
 // 用户组属性枚举
 export const USER_GROUP_ATTRIBUTES = [
   {
@@ -332,4 +435,84 @@ export const ALL_MANAGER_TYPE_ENUM = [
     label: il8n('nav', '二级空间管理员'),
     value: 'subset_manager'
   }
+];
+
+// 只显示角色名称的审计类型
+export const ONLY_ROLE_TYPE = [
+  'template.create',
+  'subject.template.create',
+  'subject.template.delete'
+];
+
+// 没有详情的审计类型
+export const NO_DETAIL_TYPE = [
+  'group.create',
+  'group.delete',
+  // 'template.create',
+  'template.update',
+  'role.create'
+];
+
+// 只有描述字段的审计类型
+export const ONLY_DESCRIPTION_TYPE = [
+  'group.update',
+  'role.update',
+  'role.member.policy.create',
+  'role.member.policy.delete',
+  'approval.global.update'
+];
+
+// 只有子对象的审计类型
+export const ONLY_SUB_TYPE = [
+  'action.sensitivity.level.update',
+  'group.template.create',
+  'group.member.create',
+  'group.member.delete',
+  'group.member.renew',
+  'group.transfer',
+  'user.group.delete',
+  'department.group.delete',
+  'user.role.delete',
+  'role.member.create',
+  'role.member.delete',
+  'role.member.update',
+  'role.commonaction.create',
+  'role.commonaction.delete',
+  'subject.template.group.delete',
+  'subject.template.member.create',
+  'subject.template.member.delete'
+];
+
+// 只有附加信息的审计类型
+export const ONLY_EXTRA_INFO_TYPE = [
+  'group.policy.create',
+  'group.policy.delete',
+  'group.policy.update',
+  'user.policy.delete',
+  'user.policy.create',
+  'user.policy.update',
+  'user.temporary.policy.create',
+  'user.temporary.policy.delete',
+  'user.blacklist.member.create',
+  'user.blacklist.member.delete',
+  'user.permission.clean',
+  'role.group.renew',
+  'template.version.sync'
+];
+
+// 既有 description 又有 extra_info
+export const DE_TYPR = ['template.update'];
+
+// 既有 sub_objects 又有 extra_info
+export const SE_TYPE = [
+  'template.member.create',
+  'template.member.delete',
+  'template.version.update'
+];
+
+// 既有 description 又有 sub_objects
+export const DS_TYPE = [
+  'approval.action.update',
+  'approval.group.update',
+  'template.preupdate.create'
 ];

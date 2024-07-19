@@ -560,8 +560,8 @@
             } else {
               item.expanded = false;
             }
-          }, 0);
-        });
+          });
+        }, 0);
       },
 
       formatRoleMembers (payload) {
