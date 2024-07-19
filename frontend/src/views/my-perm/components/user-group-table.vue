@@ -20,7 +20,9 @@
                   content: row.name,
                   placements: ['right-start']
                 }"
-                class="can-view-name"
+                :class="[
+                  { 'can-view-name': row.isViewDetail }
+                ]"
                 @click.stop="handleOpenTag(row, 'name')"
               >
                 {{ row.name || '--' }}
@@ -124,8 +126,14 @@
         const typeMap = {
           quit: () => {
             return [
-              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name', isViewDetail: true },
               { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+            ];
+          },
+          deleteAction: () => {
+            return [
+              { label: this.$t(`m.userGroup['操作名']`), prop: 'name', isViewDetail: false },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           }
@@ -150,18 +158,20 @@
         return this.tableList.slice(startIndex, endIndex);
       },
 
-      handleOpenTag ({ name, id }, type) {
-        const routeMap = {
-          name: () => {
-            bus.$emit('on-batch-view-group-perm', {
-              name,
-              id,
-              show: true,
-              width: 1160
-            });
-          }
-        };
-        return routeMap[type]();
+      handleOpenTag ({ name, id, isViewDetail }, type) {
+        if (isViewDetail) {
+          const routeMap = {
+            name: () => {
+              bus.$emit('on-batch-view-group-perm', {
+                name,
+                id,
+                show: true,
+                width: 1160
+              });
+            }
+          };
+          return routeMap[type]();
+        }
       },
 
       handleRemove (payload) {
@@ -196,6 +206,24 @@
 <style lang="postcss" scoped>
 /deep/ .user-group-perm-table {
   border: none;
+  .bk-table-header-wrapper {
+    th {
+      &:nth-child(1) {
+        .cell {
+          padding-left: 36px;
+        }
+      }
+    }
+  }
+  .bk-table-body-wrapper {
+    td, th {
+      &:nth-child(1) {
+        .cell {
+          padding-left: 36px;
+        }
+      }
+    }
+  }
   .bk-table-empty-block {
     border: none;
   }
@@ -206,30 +234,6 @@
   .can-view-name {
     color: #3A84FF;
     cursor: pointer;
-  }
-  .renewal-expired-at {
-    .iam-expire-time-wrapper {
-      .cur-text {
-        font-size: 12px;
-      }
-      .after-renewal-icon {
-        font-size: 20px;
-      }
-      .after-renewal-text {
-        font-size: 12px;
-        color: #3a84ff;
-      }
-    }
-    &-near {
-      .iam-expire-time-wrapper {
-        .cur-text {
-          background-color: #FFF1DB;
-          color: #FE9C00;
-          padding: 0 8px;
-          border-radius: 2px;
-        }
-      }
-    }
   }
 }
 </style>

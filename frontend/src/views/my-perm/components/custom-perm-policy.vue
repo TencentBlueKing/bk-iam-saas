@@ -258,6 +258,8 @@
             if (permRef && permRef.length) {
               const customPermRef = permRef[0].$refs[`customPermRef_${this.mode}_${item.id}`];
               customPermRef && permRef[0].policyListBack.forEach((sub) => {
+                this.$set(sub, 'mode_type', 'customPerm');
+                this.$set(sub, 'system_id', item.id);
                 customPermRef.toggleRowSelection(sub, payload);
                 if (payload) {
                   permRef[0].currentSelectList.push(sub);
@@ -269,8 +271,9 @@
               });
             }
           });
+          console.log(this.curSelectedGroup);
+          this.$emit('on-selected-group', this.curSelectedGroup);
         });
-        console.log(this.curSelectedGroup);
       },
 
       handleUpdatePagination (payload, row) {
@@ -299,6 +302,7 @@
       },
 
       handleSelectPerm (payload) {
+        console.log(this.curSelectedGroup, payload);
         this.curSelectedGroup = uniqWith([...this.curSelectedGroup, ...payload], isEqual);
         this.$emit('on-selected-group', this.curSelectedGroup);
         // 判断是否系统全选

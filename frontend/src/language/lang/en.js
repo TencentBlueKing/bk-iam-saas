@@ -824,7 +824,7 @@ export const m = {
         '批量退出用户组': 'Multi-exit user group',
         '退出用户组名': 'Exit user group name',
         '未勾选用户组，无法选择退出': 'User group not selected, unable to choose to exit',
-        '未勾选自定义操作选前，无法选择删除': 'Before selecting the custom operation, deletion cannot be selected',
+        '未勾选自定义操作选择前，无法选择删除': 'Before selecting the custom operation, deletion cannot be selected',
         '清空后，该系统的所有操作权限和资源实例权限都会被清空。': 'After clearing, all operation permissions and resource instance permissions of the system will be cleared.'
     },
     permTemplate: {

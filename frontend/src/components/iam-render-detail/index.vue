@@ -11,7 +11,7 @@
         </template>
         <template v-else>
           <ConditionDetail
-            ref="conditionRef"
+            :ref="`conditionRef_${panel.name}_${panel.tabType}`"
             :data="panel.data"
             :can-edit="canEdit"
             @on-change="handleChange"
@@ -64,19 +64,25 @@
 
     methods: {
       handleTabChange (payload) {
-        const curActiveData = this.panels.find(item => item.name === payload);
-        if (curActiveData.tabType === 'relate') {
-          this.$emit('tab-change', {
-            disabled: true,
-            canDelete: false
-          });
-          return;
+        const curActiveData = this.panels.find((item) => item.name === payload);
+        if (curActiveData) {
+          const { data, tabType } = curActiveData;
+          const typeMap = {
+            relate: () => {
+              this.$emit('tab-change', {
+                disabled: true,
+                canDelete: false
+              });
+            },
+            other: () => {
+              this.$emit('tab-change', {
+                disabled: data.length < 1 || data.every((item) => !item.instance || item.instance.length < 1),
+                canDelete: true
+              });
+            }
+          };
+          return typeMap[tabType] ? typeMap[tabType]() : typeMap['other']();
         }
-        this.$emit('tab-change', {
-          disabled: curActiveData.data.length < 1
-            || curActiveData.data.every(item => !item.instance || item.instance.length < 1),
-          canDelete: true
-        });
       },
 
       handleChange () {
@@ -88,17 +94,28 @@
       },
 
       handleGetValue () {
-        const data = this.$refs.conditionRef[0].handleGetValue();
-        const curActiveData = this.panels.find(item => item.name === this.active);
-        if (curActiveData.tabType !== 'relate') {
+        const curActiveData = this.panels.find((item) => item.name === this.active);
+        if (curActiveData) {
+          let data = {};
+          const { name, tabType, systemId, resource_group_id } = curActiveData;
+          const conditionRef = this.$refs[`conditionRef_${name}_${tabType}`];
+          // 这里tab选项存在多个资源类型组件场景，需要遍历dom所在位置
+          if (conditionRef && conditionRef.length > 0) {
+            data = conditionRef[0].handleGetValue();
+          }
+          if (tabType !== 'relate') {
+            return {
+              ...data,
+              system_id: systemId,
+              type: this.active,
+              resource_group_id
+            };
+          }
           return {
             ...data,
-            system_id: curActiveData.systemId,
-            type: this.active,
-            resource_group_id: curActiveData.resource_group_id
+            resource_group_id
           };
         }
-        return { ...data, resource_group_id: curActiveData.resource_group_id };
       }
     }
   };

@@ -107,7 +107,7 @@
               <a
                 v-bk-tooltips="{
                   placement: 'right-start',
-                  content: $t(`m.perm['未勾选用户组，无法选择退出']`),
+                  content: formatOperateTip('quit'),
                   disabled: !isNoBatchQuit
                 }"
                 :class="[{ 'quit-disabled': isNoBatchQuit }]"
@@ -138,12 +138,12 @@
               <a
                 v-bk-tooltips="{
                   placement: 'right-start',
-                  content: $t(`m.perm['未勾选自定义操作选前，无法选择删除']`),
+                  content: $t(`m.perm['未勾选自定义操作选择前，无法选择删除']`),
                   disabled: !isNoBatchDelete
                 }"
                 :class="[{ 'remove-disabled': isNoBatchDelete }]"
                 :title="managerGroupTitle"
-                @click.stop="handleBatch('remove')"
+                @click.stop="handleBatch('deleteAction')"
               >
                 {{ $t(`m.perm['删除（自定义操作权限）']`) }}
               </a>
@@ -296,6 +296,27 @@
           ['personalPerm', 'customPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
         );
         return !(selectGroup.length > 0);
+      },
+      formatOperateTip () {
+        return (payload) => {
+          const typeMap = {
+            quit: () => {
+              const personalPerm = this.currentSelectList.filter((item) => ['personalPerm'].includes(item.mode_type));
+              const noQuitList = personalPerm.filter((item) => item.department_id !== 0 && this.isAdminGroup(item));
+              if (!personalPerm.length || !this.currentSelectList.length) {
+                return this.$t(`m.perm['未勾选用户组，无法选择退出']`);
+              }
+              if (noQuitList.length > 0 && this.currentSelectList.length === noQuitList.length) {
+                return this.$t(`m.perm['唯一管理员不可退出']`);
+              }
+            }
+          };
+          if (typeMap[payload]) {
+            console.log(typeMap[payload](), payload);
+            return typeMap[payload]();
+          }
+          return '';
+        };
       }
     },
     watch: {
@@ -377,21 +398,21 @@
               this.curSliderName = 'quit';
               this.batchSliderTitle = this.$t(`m.perm['批量退出用户组']`);
               this.sliderGroupPermList = this.currentSelectList.filter((item) => ['personalPerm'].includes(item.mode_type));
-              if (this.currentSelectList.length > this.sliderGroupPermList.length) {
-                // const is
-              }
-              console.log(this.currentSelectList, 5555);
               this.isShowBatchSlider = true;
             }
           },
           renewal: () => {
-
+            this.batchSliderTitle = this.$t(`m.perm['批量续期']`);
+          //   const selectGroup = this.currentSelectList.filter((item) => ['personalPerm', 'customPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired());
           },
           handover: () => {
 
           },
-          remove: () => {
-
+          deleteAction: () => {
+            this.curSliderName = 'deleteAction';
+            this.batchSliderTitle = this.$t(`m.perm['批量删除操作权限']`);
+            this.sliderGroupPermList = this.currentSelectList.filter((item) => ['customPerm'].includes(item.mode_type));
+            this.isShowBatchSlider = true;
           }
         };
         return typeMap[payload]();

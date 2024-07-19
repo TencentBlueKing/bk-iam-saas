@@ -112,6 +112,7 @@
         isOnlyPerm: false,
         isSearchResource: false,
         isHasHandover: false,
+        isBatchDelAction: false,
         totalCount: 0,
         renewalGroupPermLen: 0,
         renewalCustomPermLen: 0,
@@ -794,6 +795,13 @@
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
             }
             this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
+            bus.$emit('on-update-all-perm', {
+              allPerm: this.allPermItem,
+              renewalGroupPermLen: this.renewalGroupPermLen,
+              renewalCustomPermLen: this.renewalCustomPermLen,
+              isBatchDelAction: this.isBatchDelAction
+            });
+            this.handleDefaultExpand(this.defaultExpandItem);
           },
           renewalPerm: async () => {
             this.defaultExpandItem = ['personalPerm', 'customPerm'];
@@ -861,7 +869,8 @@
         bus.$emit('on-update-all-perm', {
           allPerm: this.allPermItem,
           renewalGroupPermLen: this.renewalGroupPermLen,
-          renewalCustomPermLen: this.renewalCustomPermLen
+          renewalCustomPermLen: this.renewalCustomPermLen,
+          isBatchDelAction: this.isBatchDelAction
         });
         this.handleDefaultExpand(this.defaultExpandItem);
       },
@@ -995,12 +1004,14 @@
           bus.$off('on-update-perm-group');
         });
         bus.$on('on-update-perm-group', async (payload) => {
-          const { active, count, systemId } = payload;
+          // isBatchDelAction代表是批量删除，在全部权限和自定义权限会存在跨系统和跨权限类型勾选，所以需要调用接口更新最新数据
+          const { active, count, systemId, isBatchDelAction } = payload;
           const curData = this.allPermItem.find((v) => v.id === active);
+          this.isBatchDelAction = isBatchDelAction;
           if (curData) {
             curData.pagination.current = 1;
             this.curSelectedGroup = this.curSelectedGroup.filter((v) => v.mode_type !== active);
-            if (['customPerm'].includes(active)) {
+            if (['customPerm'].includes(active) && !isBatchDelAction) {
               if (systemId) {
                 const curSystem = curData.list.find((v) => v.id === systemId);
                 if (curSystem) {
@@ -1011,7 +1022,8 @@
               bus.$emit('on-update-all-perm', {
                 allPerm: this.allPermItem,
                 renewalGroupPermLen: this.renewalGroupPermLen,
-                renewalCustomPermLen: this.renewalCustomPermLen
+                renewalCustomPermLen: this.renewalCustomPermLen,
+                isBatchDelAction: this.isBatchDelAction
               });
             } else {
               this.fetchInitData();

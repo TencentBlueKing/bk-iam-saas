@@ -15,35 +15,31 @@
           class="no-renewal-tip"
         >
           <Icon bk type="info-circle-shape" class="warn" />
-          <span class="no-renewal-name">{{ formatTypeTip() }}</span>
+          <span class="no-renewal-name">{{ formatTypeTip }}</span>
         </div>
         <div class="batch-operate-content">
           <bk-form form-type="vertical">
             <bk-form-item class="group-table-content" :label-width="0" :required="false">
-              <RenderPermBoundary
-                :modules="['transferPreview']"
-                :custom-title="formatTableTitle"
-                :custom-slot-name="'renewalPreview'"
+              <div class="form-item-title">{{ formatFormItemTitle }}</div>
+              <RenderPermItem
+                :mode="'detail'"
                 :expanded="true"
-                :is-custom-title-style="true"
               >
-                <div slot="renewalPreview">
-                  <span>{{ $t(`m.common['已选']`) }}</span>
-                  <template>
-                    <span class="number">{{ formatSelectedGroup }}</span>
-                    {{ $t(`m.common['个用户组']`) }}
-                  </template>
+                <div slot="headerTitle" class="single-hide header-content">
+                  <span class="header-content-count">
+                    {{ $t(`m.common['已选']`) }}
+                    <span class="count">{{ formatSelectedGroup }}</span>
+                    {{ formatTypeTitle }}
+                  </span>
                 </div>
-                <div slot="transferPreview">
-                  <IamUserGroupTable
-                    ref="joinedUserGroupRef"
-                    :mode="curSliderName"
-                    :list="selectTableList"
-                    :no-show-list="noSelectTableList"
-                    @on-remove-group="handleRemoveGroup"
-                  />
-                </div>
-              </RenderPermBoundary>
+                <IamUserGroupTable
+                  ref="joinedUserGroupRef"
+                  :mode="curSliderName"
+                  :list="selectTableList"
+                  :no-show-list="noSelectTableList"
+                  @on-remove-group="handleRemoveGroup"
+                />
+              </RenderPermItem>
               <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.userOrOrg['用户组不能为空']`) }}</p>
             </bk-form-item>
           </bk-form>
@@ -68,13 +64,13 @@
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { leaveConfirm } from '@/common/leave-confirm';
-  import RenderPermBoundary from '@/components/render-perm-boundary';
+  import RenderPermItem from '@/components/iam-expand-perm/index.vue';
   import IamUserGroupTable from './user-group-table.vue';
   
   export default {
     components: {
       IamUserGroupTable,
-      RenderPermBoundary
+      RenderPermItem
     },
     props: {
       show: {
@@ -144,10 +140,13 @@
       isHasDepartment () {
         return this.departList.length > 0;
       },
-      formatTableTitle () {
+      formatFormItemTitle () {
         const typeMap = {
           quit: () => {
             return this.$t(`m.perm['退出用户组名']`);
+          },
+          deleteAction: () => {
+            return this.$t(`m.perm['删除操作权限']`);
           }
         };
         if (typeMap[this.curSliderName]) {
@@ -168,6 +167,10 @@
             this.selectTableList = this.selectTableList.filter(
               (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
             return this.selectTableList.length;
+          },
+          deleteAction: () => {
+            const list = this.groupList.filter((item) => ['customPerm'].includes(item.mode_type));
+            return list.length;
           }
         };
         if (modeMap[this.curSliderName]) {
@@ -175,19 +178,26 @@
         }
         return '';
       },
-      formatTypeTip () {
-        return () => {
-          const list = this.noSelectTableList.map((item) => item.name);
-          const modeMap = {
-            quit: () => {
-              return this.$t(`m.info['不可移出的用户组如下']`, { value: list });
-            },
-            renewal: () => {
-              return this.$t(`m.info['不可续期的用户组如下']`, { value: list });
-            }
-          };
-          return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';
+      formatTypeTitle () {
+        const list = this.noSelectTableList.map((item) => item.name);
+        const modeMap = {
+          quit: () => {
+            return this.$t(`m.common['个用户组']`, { value: list });
+          },
+          deleteAction: () => {
+            return this.$t(`m.info['个操作']`, { value: list });
+          }
         };
+        return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';
+      },
+      formatTypeTip () {
+        const list = this.noSelectTableList.map((item) => item.name);
+        const modeMap = {
+          quit: () => {
+            return this.$t(`m.info['不可移出的用户组如下']`, { value: list });
+          }
+        };
+        return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';
       }
     },
     watch: {
@@ -224,10 +234,11 @@
           quit: async () => {
             try {
               this.submitLoading = true;
-              for (let i = 0; i < this.selectTableList.length; i++) {
+              const list = this.selectTableList.filter((item) => ['personalPerm'].includes(item.mode_type));
+              for (let i = 0; i < list.length; i++) {
                 await this.$store.dispatch('perm/quitGroupPerm', {
                   type: 'group',
-                  id: this.selectTableList[i].id
+                  id: list[i].id
                 });
               }
               this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
@@ -239,8 +250,26 @@
               this.submitLoading = false;
             }
           },
-          deleteAction: () => {
-
+          deleteAction: async () => {
+            try {
+              this.submitLoading = true;
+              const list = this.selectTableList.filter((item) => ['customPerm'].includes(item.mode_type));
+              const policyIds = list.map((v) => v.policy_id);
+              for (let i = 0; i < list.length; i++) {
+                const { system_id } = list[i];
+                await this.$store.dispatch('permApply/deletePerm', {
+                  policyIds,
+                  systemId: system_id
+                });
+              }
+              this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+              bus.$emit('on-update-perm-group', { active: 'customPerm', isBatchDelAction: true });
+              this.$emit('update:show', false);
+            } catch (e) {
+              this.messageAdvancedError(e);
+            } finally {
+              this.submitLoading = false;
+            }
           }
         };
         return modeMap[this.curSliderName]();
@@ -295,16 +324,29 @@
     }
     .batch-operate-content {
       padding: 0 40px 16px 40px;
-      /deep/ .bk-form-item {
+      /deep/ .group-table-content {
         margin-top: 24px;
-        .bk-label {
-          font-weight: 700;
-          font-size: 14px;
+        .form-item-title {
           color: #313238;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 8px;
         }
-        .verify-field-error {
-          font-size: 12px;
-          color: #ff4d4d;
+        .system-render-template-item {
+          .expand-header {
+            padding-left: 17px;
+            .expanded-icon {
+              color: #63656E;
+            }
+            .header-content {
+              padding-left: 9px;
+              color: #63656E;
+              font-weight: 700;
+              .count {
+                color: #3A84FF;
+              }
+            }
+          }
         }
       }
       .user-group-error,
@@ -322,108 +364,9 @@
       margin-right: 8px;
     }
   }
-
   /deep/ .bk-sideslider-footer {
     border-top: 0;
     background-color: #ffffff !important;
-  }
-
-  /deep/ .operate-object,
-  /deep/ .group-table-content {
-    .horizontal-item {
-      width: 100%;
-      padding: 0;
-      margin-bottom: 0;
-      box-shadow: none;
-      display: inline-block;
-      .perm-boundary-title {
-        font-weight: 700;
-        font-size: 14px;
-        color: #313238;
-        margin-bottom: 8px !important;
-      }
-      .render-form-item {
-        margin-bottom: 0 !important;
-      }
-    }
-
-    .members-boundary-detail {
-      padding: 16px;
-    }
-
-    .iam-member-display-wrapper {
-      margin-left: 0;
-      .label {
-        margin-bottom: 0 !important;
-      }
-    }
-
-    &-single {
-      .iam-member-display-wrapper {
-        .label {
-          display: none;
-        }
-      }
-    }
-  }
-
-  /deep/ .group-table-content {
-    margin-top: 18px !important;
-    .iam-resource-expand {
-      background-color: #eaebf0;
-    }
-  }
-
-  /deep/ .joined-user-group {
-    .bk-label {
-      width: 100% !important;
-    }
-    &-list {
-      border: 1px solid #dcdee5;
-      border-radius: 2px;
-    }
-  }
-
-  /deep/ .render-join {
-    display: flex;
-    margin-bottom: 8px;
-    &-label {
-      position: relative;
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 32px;
-      color: #313238;
-      margin-bottom: 8px !important;
-      &::after {
-        content: '*';
-        height: 8px;
-        line-height: 1;
-        font-size: 12px;
-        color: #ea3636;
-        display: inline-block;
-        vertical-align: middle;
-        position: absolute;
-        top: 50%;
-        transform: translate(3px, -50%);
-      }
-    }
-    &-tip {
-      margin-left: 20px;
-      line-height: 32px;
-      font-size: 12px;
-      color: #979ba5;
-      &-icon {
-        font-size: 13px;
-        color: #c4c6cc;
-      }
-    }
-  }
-
-  /deep/ .apply-expired-at {
-    margin-top: 18px !important;
-    .custom-time {
-      height: 26px;
-    }
   }
 }
 </style>
