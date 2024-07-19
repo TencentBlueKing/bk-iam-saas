@@ -105,8 +105,8 @@
       />
       <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right" :min-width="formatOperate">
         <template slot-scope="{ row }">
-          <div class="flex-between">
-            <div class="custom-actions-item">
+          <div class="custom-operate-content">
+            <div class="custom-operate-item">
               <bk-popconfirm
                 trigger="click"
                 placement="bottom-end"
@@ -145,17 +145,17 @@
                 </bk-button>
               </bk-popconfirm>
             </div>
-            <div class="custom-actions-item" v-if="isShowPreview(row)">
+            <div class="custom-operate-item" v-if="isShowPreview(row)">
               <bk-button type="primary" text @click="handleViewResource(row)">
                 {{ $t(`m.userGroupDetail['查看实例权限']`) }}
               </bk-button>
             </div>
-            <div class="custom-actions-item">
+            <div class="custom-operate-item">
               <bk-button type="primary" text @click="handleViewResource(row)">
                 {{ $t(`m.renewal['续期']`) }}
               </bk-button>
             </div>
-            <div class="custom-actions-item">
+            <div class="custom-operate-item">
               <bk-button type="primary" text @click="handleViewResource(row)">
                 {{ $t(`m.perm['交接']`) }}
               </bk-button>

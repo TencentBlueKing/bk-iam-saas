@@ -128,9 +128,13 @@
         padding: 0 20px;
       }
     }
-    .custom-actions-item {
-      &:not(&:last-child) {
+    .custom-operate-content {
+      display: flex;
+      .custom-operate-item {
         margin-left: 8px;
+        &:first-of-type {
+          margin-left: 0;
+        }
       }
     }
     &.is-hide-pagination {
