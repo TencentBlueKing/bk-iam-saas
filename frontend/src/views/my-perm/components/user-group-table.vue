@@ -177,16 +177,16 @@
       handleRemove (payload) {
         this.tableList.splice(this.tableList.indexOf(payload), 1);
         this.pagination.count = this.tableList.length;
-        this.handlePageChange(this.pagination.current);
         if (!this.tableList.length) {
           this.tableEmptyData = formatCodeData(0, this.tableEmptyData, true);
         }
-        // 需要处理不需要续期和不能移除的用户组权限
+        // 需要处理不能移除的用户组权限
         const noSelectTableList = [...this.noShowList];
         const list = [...this.tableList, ...noSelectTableList];
+        this.handlePageChange(this.pagination.current);
         this.$emit('on-remove-group', list);
         // 同步更新checkbox状态
-        bus.$emit('on-remove-toggle-checkbox', list);
+        bus.$emit('on-remove-perm-checkbox', list);
       },
 
       handlePageChange (page = 1) {

@@ -14,7 +14,8 @@
         :ref="`rPolicy_${sys.id}`"
         :mode="'detail'"
         :title="sys.name"
-        :count="sys.count"
+        :count="sys.pagination.count || 0"
+        :ext-cls="formatExtCls(sys)"
         :external-delete="true"
         :expanded.sync="sys.expanded"
         @on-expanded="handleExpanded(...arguments, sys)"
@@ -23,7 +24,7 @@
           <span class="header-content-title">{{ sys.name }}</span>
           <span class="header-content-count">
             ({{ $t(`m.common['共']`) }}
-            <span class="count">{{ sys.count }}</span>
+            <span class="count">{{ sys.pagination.count || 0 }}</span>
             {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }})
           </span>
         </div>
@@ -68,6 +69,9 @@
           :key="sys.id"
           :system-id="sys.id"
           :pagination="sys.pagination"
+          :renewal-custom-perm="renewalCustomPerm"
+          :group-data="groupData"
+          :cur-selected-group="curSelectedGroup"
           :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
           :is-search-perm="isSearchPerm"
@@ -116,6 +120,13 @@
         type: Array,
         default: () => []
       },
+      renewalCustomPerm: {
+        type: Array,
+        default: () => []
+      },
+      groupData: {
+        type: Object
+      },
       deleteConfirmData: {
         type: Object,
         default: () => {
@@ -154,9 +165,6 @@
       isSearchPerm: {
         type: Boolean,
         default: false
-      },
-      totalCount: {
-        type: Number
       }
     },
     data () {
@@ -177,6 +185,14 @@
       ...mapGetters(['externalSystemId']),
       hasPerm () {
         return this.systemPolicyList.length > 0;
+      },
+      formatExtCls () {
+        return (payload) => {
+          if (payload && !payload.pagination.count) {
+            return 'no-perm-item-wrapper';
+          }
+          return '';
+        };
       }
     },
     watch: {
@@ -196,6 +212,26 @@
         },
         immediate: true
       }
+    },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-all-delete-policy');
+      });
+      // 处理跨系统删除操作更新
+      bus.$on('on-all-delete-policy', ({ allDeletePolicy }) => {
+        this.systemPolicyList.forEach((item) => {
+          const curSystem = allDeletePolicy.keys().find((v) => v === item.id);
+          if (curSystem) {
+            this.$nextTick(() => {
+              const customRef = this.$refs[`customPermTable_${curSystem}_${this.mode}`];
+              if (customRef && customRef.length) {
+                customRef[0].fetchActions(curSystem);
+                customRef[0].fetchPolicy({ systemId: curSystem });
+              }
+            });
+          }
+        });
+      });
     },
     methods: {
       async handleDeleteSystem (payload, sysIndex) {
@@ -226,21 +262,8 @@
 
       async handleRefreshSystem () {
         if (!this.isSearchPerm && this.curSearchParams.system_id) {
-          const externalParams = {};
-          if (this.externalSystemId) {
-            externalParams.system_id = this.externalSystemId;
-          }
-          this.emptyPolicyData.tipType = '';
-          const { code, data } = await this.$store.dispatch(
-            'permApply/getHasPermSystem',
-            externalParams
-          );
-          this.handleGetSystemData(data || []);
-          this.emptyPolicyData = formatCodeData(
-            code,
-            this.emptyPolicyData,
-            data.length === 0
-          );
+          //  处理需要重新获取系统下的操作业务
+          await this.handleGetSystemAction();
         } else {
           this.handleGetSystemData(this.systemPolicyList || []);
           this.emptyPolicyData = formatCodeData(
@@ -251,7 +274,26 @@
         }
       },
 
+      async handleGetSystemAction () {
+        const externalParams = {};
+        if (this.externalSystemId) {
+          externalParams.system_id = this.externalSystemId;
+        }
+        this.emptyPolicyData.tipType = '';
+        const { code, data } = await this.$store.dispatch(
+          'permApply/getHasPermSystem',
+          externalParams
+        );
+        this.handleGetSystemData(data || []);
+        this.emptyPolicyData = formatCodeData(
+          code,
+          this.emptyPolicyData,
+          data.length === 0
+        );
+      },
+
       handleAllSystemChange (payload) {
+        this.isAllSystem = payload;
         this.$nextTick(() => {
           this.systemPolicyList.forEach((item) => {
             const permRef = this.$refs[`customPermTable_${item.id}_${this.mode}`];
@@ -271,7 +313,6 @@
               });
             }
           });
-          console.log(this.curSelectedGroup);
           this.$emit('on-selected-group', this.curSelectedGroup);
         });
       },
@@ -302,8 +343,7 @@
       },
 
       handleSelectPerm (payload) {
-        console.log(this.curSelectedGroup, payload);
-        this.curSelectedGroup = uniqWith([...this.curSelectedGroup, ...payload], isEqual);
+        this.curSelectedGroup = uniqWith([...payload], isEqual);
         this.$emit('on-selected-group', this.curSelectedGroup);
         // 判断是否系统全选
         const isCustom = ['customPerm'].includes(this.mode);
@@ -404,6 +444,7 @@
     .expand-header {
       height: 40px !important;
       line-height: 40px !important;
+      padding-left: 9px !important;
       .sub-header-item {
         .sub-header-content {
           .expanded-icon {

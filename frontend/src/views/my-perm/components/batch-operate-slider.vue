@@ -63,6 +63,7 @@
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
+  import { classifyArrayByField } from '@/common/util';
   import { leaveConfirm } from '@/common/leave-confirm';
   import RenderPermItem from '@/components/iam-expand-perm/index.vue';
   import IamUserGroupTable from './user-group-table.vue';
@@ -169,7 +170,7 @@
             return this.selectTableList.length;
           },
           deleteAction: () => {
-            const list = this.groupList.filter((item) => ['customPerm'].includes(item.mode_type));
+            const list = this.selectTableList.filter((item) => ['customPerm'].includes(item.mode_type));
             return list.length;
           }
         };
@@ -214,16 +215,6 @@
         immediate: true
       }
     },
-    mounted () {
-      this.$once('hook:beforeDestroy', () => {
-        bus.$off('on-remove-toggle-checkbox');
-      });
-      // 同步更新checkbox状态
-      bus.$on('on-remove-toggle-checkbox', (payload) => {
-        this.selectTableList = [...payload];
-        this.submitFormData = Object.assign({}, { selectTableList: this.selectTableList });
-      });
-    },
     methods: {
       async handleSubmit () {
         if (!this.selectTableList.length) {
@@ -254,17 +245,21 @@
             try {
               this.submitLoading = true;
               const list = this.selectTableList.filter((item) => ['customPerm'].includes(item.mode_type));
-              const policyIds = list.map((v) => v.policy_id);
-              for (let i = 0; i < list.length; i++) {
-                const { system_id } = list[i];
-                await this.$store.dispatch('permApply/deletePerm', {
-                  policyIds,
-                  systemId: system_id
-                });
+              if (list.length) {
+                const systemList = classifyArrayByField(list, 'system_id');
+                for (const [key, value] of systemList.entries()) {
+                  const policyIds = value.map((v) => v.policy_id);
+                  await this.$store.dispatch('permApply/deletePerm', {
+                    policyIds,
+                    systemId: key
+                  });
+                }
+                this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+                bus.$emit('on-update-perm-group', { active: 'customPerm', isBatchDelAction: true });
+                // 刷新自定义权限表格，更新可续期自定义权限数量
+                bus.$emit('on-all-delete-policy', { allDeletePolicy: systemList });
+                this.$emit('update:show', false);
               }
-              this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-              bus.$emit('on-update-perm-group', { active: 'customPerm', isBatchDelAction: true });
-              this.$emit('update:show', false);
             } catch (e) {
               this.messageAdvancedError(e);
             } finally {
@@ -276,7 +271,8 @@
       },
 
       handleRemoveGroup (payload) {
-        this.selectTableList = payload;
+        this.selectTableList = [...payload];
+        this.submitFormData = Object.assign({}, { selectTableList: this.selectTableList });
       },
   
       handleCancel (payload) {

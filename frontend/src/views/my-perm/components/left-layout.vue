@@ -156,8 +156,8 @@
 
       handleGetBusData () {
         bus.$on('on-update-all-perm', (payload) => {
-          const { allPerm, renewalGroupPermLen, renewalCustomPermLen } = payload;
-          this.renewalData.count = renewalGroupPermLen + renewalCustomPermLen;
+          const { allPerm, renewalGroupPermLen, renewalCustomPerm } = payload;
+          this.renewalData.count = renewalGroupPermLen + renewalCustomPerm.length;
           this.permList.forEach((item) => {
             const hasData = allPerm.find((v) => v.id === item.value);
             const tabMap = [

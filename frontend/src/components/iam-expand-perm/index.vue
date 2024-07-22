@@ -1,10 +1,11 @@
 <template>
-  <div :class="
-    [
-      'system-render-template-item',
-      extCls,
-      { 'is-not-expanded': !isExpanded }
-    ]"
+  <div
+    :class="
+      [
+        'system-render-template-item',
+        extCls,
+        { 'is-not-expanded': !isExpanded }
+      ]"
   >
     <div class="expand-header">
       <div class="flex-between sub-header-item">

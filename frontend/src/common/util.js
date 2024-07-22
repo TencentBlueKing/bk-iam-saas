@@ -791,3 +791,18 @@ export const getRoutePath = (subPath) => {
   const path = subPath.startsWith('/') ? subPath.slice(1) : subPath;
   return rootPath ? `${rootPath}${path}` : path;
 };
+
+/**
+ * 根据指定字段作为key值对数组结构进行分类
+ * @param {arr} value 传入的数组
+ */
+export const classifyArrayByField = (arr, field) => {
+  return arr.reduce((map, obj) => {
+    const key = obj[field];
+    if (!map.has(key)) {
+      map.set(key, []);
+    }
+    map.get(key).push(obj);
+    return map;
+  }, new Map());
+};

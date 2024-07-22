@@ -103,9 +103,9 @@
         :min-width="100"
         :label="$t(`m.common['有效期']`)"
       />
-      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right" :min-width="formatOperate">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right" :width="formatOperate">
         <template slot-scope="{ row }">
-          <div class="flex-between">
+          <div class="custom-perm-operate-column">
             <div class="custom-actions-item">
               <bk-popconfirm
                 trigger="click"
@@ -150,7 +150,7 @@
                 {{ $t(`m.userGroupDetail['查看实例权限']`) }}
               </bk-button>
             </div>
-            <div class="custom-actions-item">
+            <div class="custom-actions-item" v-if="isShowRenewal(row)">
               <bk-button type="primary" text @click="handleViewResource(row)">
                 {{ $t(`m.renewal['续期']`) }}
               </bk-button>
@@ -292,9 +292,9 @@
 </template>
 
 <script>
-  import { cloneDeep } from 'lodash';
+  import { cloneDeep, isEqual, uniqWith } from 'lodash';
   import { mapGetters } from 'vuex';
-  // import { bus } from '@/common/bus';
+  import { bus } from '@/common/bus';
   import { formatCodeData } from '@/common/util';
   import { leaveConfirm } from '@/common/leave-confirm';
   import PermPolicy from '@/model/my-perm-policy';
@@ -328,6 +328,9 @@
         type: Boolean,
         default: false
       },
+      groupData: {
+        type: Object
+      },
       emptyData: {
         type: Object,
         default: () => {
@@ -355,12 +358,17 @@
       curSelectedGroup: {
         type: Array,
         default: () => []
+      },
+      renewalCustomPerm: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
       return {
         policyList: [],
         policyListBack: [],
+        linearActionList: [],
         previewData: [],
         curDeleteIds: [],
         policyIdList: [],
@@ -368,7 +376,7 @@
         curInstancePaths: [],
         currentSelectList: [],
         environmentsEffectData: [],
-        originalCustomTmplList: [],
+        systemActionList: [],
         initRequestQueue: ['permTable'],
         curId: '',
         curPolicyId: '',
@@ -413,6 +421,12 @@
       isShowPreview () {
         return (payload) => {
           return !payload.isEmpty && payload.policy_id !== '';
+        };
+      },
+      isShowRenewal () {
+        return (payload) => {
+          const result = this.renewalCustomPerm.some((v) => v.id === payload.policy_id);
+          return result;
         };
       },
       formatInstanceCount () {
@@ -461,12 +475,14 @@
       },
       formatOperate () {
         const isCN = ['zh-cn'].includes(window.CUR_LANGUAGE);
-        return isCN ? 200 : 400;
+        return isCN ? 260 : 410;
       }
     },
     watch: {
       systemId: {
         async handler (value) {
+          this.currentSelectList = [];
+          console.log(value, 454);
           if (value) {
             this.initRequestQueue = ['permTable'];
             const params = {
@@ -482,7 +498,8 @@
             this.policyCountMap = {};
           }
         },
-        immediate: true
+        immediate: true,
+        deep: true
       },
       emptyData: {
         handler (value) {
@@ -505,6 +522,22 @@
         deep: true
       }
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-remove-perm-checkbox');
+      });
+      // 同步更新checkbox状态
+      bus.$on('on-remove-perm-checkbox', (payload) => {
+        this.$emit('on-select-perm', payload);
+        this.$nextTick(() => {
+          this.policyList.forEach((item) => {
+            if (this.$refs[`customPermRef_${this.mode}_${this.systemId}`] && !payload.map((v) => v.id).includes(item.id)) {
+              this.$refs[`customPermRef_${this.mode}_${this.systemId}`].toggleRowSelection(item, false);
+            }
+          });
+        });
+      });
+    },
     methods: {
       async fetchActions (systemId) {
         const params = {
@@ -518,7 +551,8 @@
         }
         try {
           const { data } = await this.$store.dispatch('permApply/getActions', params);
-          this.originalCustomTmplList = cloneDeep(data);
+          const actionList = data || [];
+          this.systemActionList = cloneDeep(actionList);
           this.handleActionLinearData();
         } catch (e) {
           this.messageAdvancedError(e);
@@ -545,14 +579,21 @@
             return;
           }
           const { code, data } = await this.$store.dispatch(url, queryParams);
-          if (data.length) {
-            this.policyList = data.map((item) => {
+          console.log(data);
+          let policyList = data || [];
+          if (this.groupData && ['renewalPerm'].includes(this.groupData.value)) {
+            const renewalCustomPerm = this.renewalCustomPerm.map((v) => `${v.policy.id}&${v.policy.name}`);
+            policyList = policyList.filter((v) => renewalCustomPerm.includes(`${v.id}&${v.name}`));
+          }
+          if (policyList.length) {
+            this.policyList = policyList.map((item) => {
               const relatedEnvironments = this.linearActionList.find((v) => v.id === item.id);
               item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
               return new PermPolicy(item);
             });
-            this.policyListBack = cloneDeep(this.policyList);
           }
+          console.log(this.policyList);
+          this.policyListBack = cloneDeep(this.policyList);
           this.policyList = this.handleGetDataByPage(
             this.pagination.current,
             {
@@ -575,12 +616,7 @@
       },
   
       fetchSelectedGroups (type, payload, row) {
-        const hasData = {};
-        const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
-          // eslint-disable-next-line no-unused-expressions
-          hasData[`${next.name}&${next.id}&${next.mode_type}`] ? '' : hasData[`${next.name}&${next.id}&${next.mode_type}`] = true && curr.push(next);
-          return curr;
-        }, []);
+        const selectList = uniqWith([...this.currentSelectList, ...this.curSelectedGroup], isEqual);
         const typeMap = {
           multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
@@ -611,7 +647,9 @@
             const paginationWrapper = permRef.$refs.paginationWrapper;
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
-              selectCount[0].children[0].innerHTML = payload.length;
+              // 查找当前系统下的操作
+              const actionsLen = payload.filter((v) => `${v.mode_type}&${v.system_id}` === `${this.mode}&${this.systemId}`).length;
+              selectCount[0].children[0].innerHTML = actionsLen;
             }
           }
         });
@@ -695,7 +733,7 @@
 
       handleActionLinearData () {
         const linearActions = [];
-        this.originalCustomTmplList.forEach((item, index) => {
+        this.systemActionList.forEach((item) => {
           // item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach((act) => {
             linearActions.push(act);

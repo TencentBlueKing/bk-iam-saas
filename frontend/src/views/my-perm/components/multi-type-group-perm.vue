@@ -42,6 +42,7 @@
             :cur-search-params="curSearchParams"
             :group-data="groupData"
             :list="item.list"
+            :renewal-custom-perm="renewalCustomPerm"
             :cur-selected-group="curSelectedGroup"
             :delete-confirm-data="deleteConfirmData"
             :empty-data="item.emptyData"
@@ -109,13 +110,12 @@
     },
     data () {
       return {
-        isOnlyPerm: false,
+        isFirstReq: false,
         isSearchResource: false,
         isHasHandover: false,
         isBatchDelAction: false,
         totalCount: 0,
         renewalGroupPermLen: 0,
-        renewalCustomPermLen: 0,
         comKey: -1,
         allPermItem: [
           {
@@ -241,6 +241,7 @@
         ],
         allPermItemBack: [],
         curSelectedGroup: [],
+        renewalCustomPerm: [],
         defaultExpandItem: [],
         queryGroupData: {},
         curSearchParams: {},
@@ -351,8 +352,9 @@
     },
     watch: {
       groupData: {
-        handler (value) {
-          this.queryGroupData = cloneDeep(value);
+        handler (newValue, oldValue) {
+          this.isFirstReq = !oldValue;
+          this.queryGroupData = cloneDeep(newValue);
           this.curSelectedGroup = [];
           this.handleSelectedGroup([]);
           this.fetchResetData();
@@ -764,7 +766,7 @@
             params.system_id = this.externalSystemId;
           }
           const { data } = await this.$store.dispatch('renewal/getExpireSoonPerm', params);
-          this.renewalCustomPermLen = data.length || 0;
+          this.renewalCustomPerm = data || [];
         } catch (e) {
           this.messageAdvancedError(e);
         }
@@ -798,7 +800,7 @@
             bus.$emit('on-update-all-perm', {
               allPerm: this.allPermItem,
               renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPermLen: this.renewalCustomPermLen,
+              renewalCustomPerm: this.renewalCustomPerm,
               isBatchDelAction: this.isBatchDelAction
             });
             this.handleDefaultExpand(this.defaultExpandItem);
@@ -808,7 +810,7 @@
             const initReqList = [
               this.fetchExpiredGroupPerm(),
               this.fetchExpiredCustomPerm(),
-              // this.fetchUserGroupSearch(),
+              this.fetchUserGroupSearch(),
               this.fetchCustomPermSearch()
             ];
             await Promise.all(initReqList);
@@ -843,7 +845,10 @@
           customPerm: async () => {
             this.defaultExpandItem = ['customPerm'];
             const initReqList = [
-              this.fetchCustomPermSearch()
+              this.fetchExpiredCustomPerm(),
+              this.fetchExpiredGroupPerm(),
+              this.fetchCustomPermSearch(),
+              this.fetchUserGroupSearch()
             ];
             await Promise.all(initReqList);
             this.handleGetPermData();
@@ -858,6 +863,9 @@
           }
         };
         if (typeMap[this.queryGroupData.value]) {
+          if (this.isFirstReq) {
+            return typeMap['all']();
+          }
           return typeMap[this.queryGroupData.value]();
         }
       },
@@ -869,7 +877,7 @@
         bus.$emit('on-update-all-perm', {
           allPerm: this.allPermItem,
           renewalGroupPermLen: this.renewalGroupPermLen,
-          renewalCustomPermLen: this.renewalCustomPermLen,
+          renewalCustomPerm: this.renewalCustomPerm,
           isBatchDelAction: this.isBatchDelAction
         });
         this.handleDefaultExpand(this.defaultExpandItem);
@@ -1007,7 +1015,7 @@
           // isBatchDelAction代表是批量删除，在全部权限和自定义权限会存在跨系统和跨权限类型勾选，所以需要调用接口更新最新数据
           const { active, count, systemId, isBatchDelAction } = payload;
           const curData = this.allPermItem.find((v) => v.id === active);
-          this.isBatchDelAction = isBatchDelAction;
+          this.isBatchDelAction = isBatchDelAction || false;
           if (curData) {
             curData.pagination.current = 1;
             this.curSelectedGroup = this.curSelectedGroup.filter((v) => v.mode_type !== active);
@@ -1022,7 +1030,7 @@
               bus.$emit('on-update-all-perm', {
                 allPerm: this.allPermItem,
                 renewalGroupPermLen: this.renewalGroupPermLen,
-                renewalCustomPermLen: this.renewalCustomPermLen,
+                renewalCustomPerm: this.renewalCustomPerm,
                 isBatchDelAction: this.isBatchDelAction
               });
             } else {

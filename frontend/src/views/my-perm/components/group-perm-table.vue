@@ -277,7 +277,7 @@
 </template>
   
 <script>
-  import { cloneDeep } from 'lodash';
+  import { cloneDeep, isEqual, uniqWith } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { getNowTimeExpired } from '@/common/util';
@@ -502,7 +502,6 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-remove-toggle-checkbox');
-        bus.$off('on-info-change');
       });
       // 同步更新checkbox状态
       bus.$on('on-remove-toggle-checkbox', (payload) => {
@@ -614,12 +613,7 @@
       },
   
       fetchSelectedGroups (type, payload, row) {
-        const hasData = {};
-        const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
-          // eslint-disable-next-line no-unused-expressions
-          hasData[`${next.name}&${next.id}&${next.mode_type}`] ? '' : hasData[`${next.name}&${next.id}&${next.mode_type}`] = true && curr.push(next);
-          return curr;
-        }, []);
+        const selectList = uniqWith([...this.currentSelectList, ...this.curSelectedGroup], isEqual);
         const typeMap = {
           multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
@@ -637,7 +631,6 @@
             const selectGroups = selectList.filter((item) => !tableList.includes(`${item.name}&${item.id}&${item.mode_type}`));
             this.currentSelectList = [...selectGroups, ...payload];
             this.fetchCustomTotal(this.currentSelectList);
-            // console.log(this.currentSelectList, selectGroups, tableList, '选中');
             this.$emit('on-selected-group', this.currentSelectList);
           }
         };

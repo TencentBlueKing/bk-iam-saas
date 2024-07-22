@@ -48,7 +48,7 @@
           ]
         ),
         selectTabData: {
-          value: 'all'
+          value: ''
         },
         querySearchParams: {}
       };

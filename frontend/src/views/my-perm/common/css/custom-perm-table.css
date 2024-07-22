@@ -108,7 +108,18 @@
         }
         &.is-last {
           .cell {
-            padding-right: 10px;
+            padding-right: 0;
+          }
+        }
+      }
+      .custom-perm-operate-column {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        .custom-actions-item {
+          margin-right: 16px;
+          &:last-child {
+            margin-right: 0;
           }
         }
       }
@@ -138,7 +149,7 @@
       }
     }
     &.is-hide-pagination {
-      .bk-table-pagination-wrapper {
+      .bk-table-pagination {
         display: none;
       }
     }
