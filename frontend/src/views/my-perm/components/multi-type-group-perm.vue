@@ -12,8 +12,8 @@
         :ref="`rTemplateItem_${item.id}`"
         :mode="'detail'"
         :title="item.name"
-        :count="item.pagination.count"
         :expanded.sync="item.expanded"
+        :count="item.pagination.count"
         :ext-cls="formatExtCls(index)"
         :class="[
           'resource-perm-side-content-table',
@@ -21,7 +21,7 @@
         ]"
         @on-expanded="handleExpanded(...arguments, item, index)"
       >
-        <template v-if="item.pagination.count > 0">
+        <template>
           <div slot="headerTitle" class="single-hide header-content">
             <span class="header-content-title">{{ item.name }}</span>
             <span class="header-content-count">
@@ -35,17 +35,17 @@
             :key="comKey"
             :is="curCom(item.id)"
             :mode="item.id"
+            :list="item.list"
+            :pagination="item.pagination"
+            :empty-data="item.emptyData"
             :is-loading="item.loading"
             :is-search-perm="isSearchResource"
             :is-has-handover="isHasHandover"
-            :pagination="item.pagination"
             :cur-search-params="curSearchParams"
             :group-data="groupData"
-            :list="item.list"
             :renewal-custom-perm="renewalCustomPerm"
             :cur-selected-group="curSelectedGroup"
             :delete-confirm-data="deleteConfirmData"
-            :empty-data="item.emptyData"
             @on-page-change="handlePageChange(...arguments, item)"
             @on-limit-change="handleLimitChange(...arguments, item)"
             @on-selected-group="handleSelectedGroup"
@@ -75,7 +75,8 @@
   import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
-  import { existValue, formatCodeData, sleep } from '@/common/util';
+  import { ALL_PERM_GROUP_LIST } from '@/common/constants';
+  import { existValue, formatCodeData, getNowTimeExpired, sleep } from '@/common/util';
   import RenderPermItem from '@/components/iam-expand-perm/index.vue';
   import CustomPermPolicy from './custom-perm-policy.vue';
   import GroupPermTable from './group-perm-table.vue';
@@ -88,10 +89,7 @@
     },
     props: {
       groupData: {
-        type: Object,
-        default: () => {
-          return {};
-        }
+        type: Object
       },
       emptyData: {
         type: Object,
@@ -117,128 +115,27 @@
         totalCount: 0,
         renewalGroupPermLen: 0,
         comKey: -1,
-        allPermItem: [
-          {
-            id: 'personalPerm',
-            name: this.$t(`m.userOrOrg['个人用户组权限']`),
-            loading: false,
-            expanded: false,
-            pagination: {
-              current: 1,
-              limit: 10,
-              count: 0,
-              showTotalCount: true
-            },
-            emptyData: {
-              type: 'empty',
-              text: '暂无数据',
-              tip: '',
-              tipType: ''
-            },
-            list: [],
-            listBack: []
+        allPermItem: ALL_PERM_GROUP_LIST.map((v) => {
+          return {
+          ...v,
+          loading: false,
+          expanded: false,
+          pagination: {
+            current: 1,
+            limit: 10,
+            count: 0,
+            showTotalCount: true
           },
-          {
-            id: 'departPerm',
-            name: this.$t(`m.userOrOrg['组织用户组权限']`),
-            loading: false,
-            expanded: false,
-            pagination: {
-              current: 1,
-              limit: 10,
-              count: 0,
-              showTotalCount: true
-            },
-            emptyData: {
-              type: 'empty',
-              text: '暂无数据',
-              tip: '',
-              tipType: ''
-            },
-            list: [],
-            listBack: []
+          emptyData: {
+            type: 'empty',
+            text: '暂无数据',
+            tip: '',
+            tipType: ''
           },
-          {
-            id: 'userTempPerm',
-            name: this.$t(`m.perm['直接加入人员模板的用户组权限']`),
-            loading: false,
-            expanded: false,
-            pagination: {
-              current: 1,
-              limit: 10,
-              count: 0,
-              showTotalCount: true
-            },
-            emptyData: {
-              type: 'empty',
-              text: '暂无数据',
-              tip: '',
-              tipType: ''
-            },
-            list: [],
-            listBack: []
-          },
-          {
-            id: 'departTempPerm',
-            name: this.$t(`m.perm['通过组织加入人员模板的用户组权限']`),
-            loading: false,
-            expanded: false,
-            pagination: {
-              current: 1,
-              limit: 10,
-              count: 0,
-              showTotalCount: true
-            },
-            emptyData: {
-              type: 'empty',
-              text: '暂无数据',
-              tip: '',
-              tipType: ''
-            },
-            list: [],
-            listBack: []
-          },
-          {
-            id: 'customPerm',
-            name: this.$t(`m.perm['自定义权限']`),
-            loading: false,
-            expanded: false,
-            pagination: {
-              current: 1,
-              limit: 10,
-              count: 0,
-              showTotalCount: true
-            },
-            emptyData: {
-              type: 'empty',
-              text: '暂无数据',
-              tip: '',
-              tipType: ''
-            },
-            list: [],
-            listBack: []
-          },
-          {
-            id: 'managerPerm',
-            name: this.$t(`m.perm['管理员权限']`),
-            loading: false,
-            expanded: false,
-            pagination: {
-              current: 1,
-              limit: 10,
-              count: 0,
-              showTotalCount: true
-            },
-            emptyData: {
-              type: 'empty',
-              text: '暂无数据',
-              tip: '',
-              tipType: ''
-            },
-            list: [],
-            listBack: []
-          }
-        ],
+          list: [],
+          listBack: []
+          };
+        }),
         allPermItemBack: [],
         curSelectedGroup: [],
         renewalCustomPerm: [],
@@ -268,8 +165,8 @@
         return (payload) => {
           let com = '';
           const list = new Map([
-            [['personalPerm', 'departPerm', 'userTempPerm', 'departTempPerm', 'managerPerm'], 'GroupPermTable'],
-            [['customPerm'], 'CustomPermPolicy']
+            [['personalPerm', 'departPerm', 'userTempPerm', 'departTempPerm', 'managerPerm', 'renewalPersonalPerm'], 'GroupPermTable'],
+            [['customPerm', 'renewalCustomPerm'], 'CustomPermPolicy']
           ]);
           for (const [key, value] of list.entries()) {
             if (key.includes(payload)) {
@@ -285,43 +182,42 @@
       },
       isShowPerm () {
         return (payload) => {
-          const typeMap = {
-            all: () => {
-              return ['personalPerm', 'departPerm', 'userTempPerm', 'departTempPerm', 'customPerm', 'managerPerm'].includes(payload.id);
-            },
-            renewalPerm: () => {
-              return ['personalPerm', 'customPerm'].includes(payload.id);
-            },
-            personalPerm: () => {
-              return ['personalPerm'].includes(payload.id);
-            },
-            departPerm: () => {
-              return ['departPerm'].includes(payload.id);
-            },
-            memberTempPerm: () => {
-              return ['userTempPerm', 'departTempPerm'].includes(payload.id);
-            },
-            customPerm: () => {
-              return ['customPerm'].includes(payload.id);
-            },
-            managerPerm: () => {
-              return ['managerPerm'].includes(payload.id);
+          let result = '';
+          const permList = Object.freeze(new Map([
+            [['personalPerm', 'departPerm', 'userTempPerm', 'departTempPerm', 'customPerm', 'managerPerm'], 'all'],
+            [['renewalPersonalPerm', 'renewalCustomPerm'], 'renewalPerm'],
+            [['personalPerm'], 'personalPerm'],
+            [['departPerm'], 'departPerm'],
+            [['userTempPerm', 'departTempPerm'], 'memberTempPerm'],
+            [['customPerm'], 'customPerm'],
+            [['managerPerm'], 'managerPerm']
+          ]));
+          for (const [key, value] of permList.entries()) {
+            if (key.includes(payload.id) && value === this.queryGroupData.value) {
+              result = value;
+              break;
             }
-          };
-          if (typeMap[this.queryGroupData.value]) {
-            return typeMap[this.queryGroupData.value]();
           }
-          return false;
+          return !!result;
         };
       },
       formatExtCls () {
         return (index) => {
           const { pagination, id } = this.allPermItem[index];
           const len = pagination.count;
-          if (!len) {
+          // 续期选项的自定义权限
+         const isRenewalCustomPerm = ['renewalPerm'].includes(this.groupData.value) && ['renewalCustomPerm'].includes(id);
+          if (!len || (isRenewalCustomPerm && !this.renewalCustomPerm.length)) {
             return 'no-perm-item-wrapper';
           }
           return `iam-${id}-ext-cls`;
+        };
+      },
+      formatExpireSoon () {
+        return (payload) => {
+          const dif = payload - getNowTimeExpired();
+          const days = Math.ceil(dif / (24 * 3600));
+          return days < 16;
         };
       },
       formatPermLength () {
@@ -331,14 +227,18 @@
       formatPermItemLen () {
         return (payload) => {
           // 处理一个展开项有多个表格，需要求和
-          const isMulti = ['customPerm'].includes(payload.id);
+          const isMulti = ['customPerm', 'renewalCustomPerm'].includes(payload.id);
           const typeMap = {
             true: () => {
-               const countList = payload.list.map((v) => v.count);
-               payload.pagination.count = countList.reduce((prev, cur) => {
-                return cur + prev;
-              }, 0);
-              return payload.pagination.count;
+              if (['renewalPerm'].includes(this.groupData.value)) {
+                return this.renewalCustomPerm.length;
+              } else {
+                const countList = payload.list.map((v) => v.count);
+                payload.pagination.count = countList.reduce((prev, cur) => {
+                 return cur + prev;
+               }, 0);
+               return payload.pagination.count;
+              }
             },
             false: () => {
               return payload.pagination.count;
@@ -358,6 +258,7 @@
           this.curSelectedGroup = [];
           this.handleSelectedGroup([]);
           this.fetchResetData();
+          this.comKey = +new Date();
         },
         immediate: true
       },
@@ -584,6 +485,7 @@
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
+            listBack: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
@@ -599,7 +501,9 @@
         if (existValue('externalApp') && this.externalSystemId) {
           return;
         }
-        let curData = this.allPermItem.find((item) => item.id === 'customPerm');
+        // 是否是续期选项
+        const isRenewalPerm = ['renewalPerm'].includes(this.queryGroupData.value);
+        let curData = this.allPermItem.find((item) => isRenewalPerm ? ['renewalCustomPerm'].includes(item.id) : ['customPerm'].includes(item.id));
         if (!curData) {
           return;
         }
@@ -622,7 +526,7 @@
                 pagination: {
                   current: 1,
                   limit: 10,
-                  count: 0
+                  count: v.count
                 }
               }
             };
@@ -673,6 +577,7 @@
           const totalCount = data.count || 0;
           curData = Object.assign(curData, {
             list: data.results || [],
+            listBack: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
@@ -680,6 +585,7 @@
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
+            listBack: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
@@ -693,65 +599,47 @@
 
       // 获取即将过期的用户组权限
       async fetchExpiredGroupPerm () {
-        let url = 'renewal/getExpireSoonGroupWithUser';
-        let params = {
-          page: 1,
-          page_size: 10
-        };
-        if (this.externalSystemId) {
-          params.system_id = this.externalSystemId;
-          params.hidden = false;
+        let curData = this.allPermItem.find((item) => item.id === 'renewalPersonalPerm');
+        if (!curData) {
+          return;
         }
-        if (['renewalPerm'].includes(this.queryGroupData.value)) {
-          let curData = this.allPermItem.find((v) => ['personalPerm'].includes(v.id));
-          if (!curData) {
-            return;
+        const { emptyData, pagination } = curData;
+        try {
+          curData.loading = true;
+          const { current, limit } = pagination;
+          const params = {
+            page: current,
+            page_size: limit
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
           }
-          const { emptyData, pagination } = curData;
-          try {
-            curData.loading = true;
-            const { current, limit } = pagination;
-            if (this.isSearchResource) {
-              url = 'renewal/getExpireSoonGroupWithUser';
-              params = {
-                ...this.curSearchParams,
-                page: current,
-                page_size: limit
-              };
-            }
-            const { code, data } = await this.$store.dispatch(url, params);
-            const totalCount = data.count || 0;
-            const tableList = data.results || [];
-            curData = Object.assign(curData, {
-              list: tableList,
-              listBack: tableList,
-              emptyData: formatCodeData(code, emptyData, totalCount === 0),
-              pagination: { ...pagination, ...{ count: totalCount } }
-            });
-            this.renewalGroupPermLen = totalCount;
-            this.emptyPermData = cloneDeep(curData.emptyData);
-            // 跨页全选
-            this.handleGetSelectedGroups(curData.id);
-          } catch (e) {
-            this.emptyPermData = formatCodeData(e.code, emptyData);
-            curData = Object.assign(curData, {
-              list: [],
-              emptyData: formatCodeData(e.code, emptyData),
-              pagination: { ...pagination, ...{ count: 0 } }
-            });
-            this.messageAdvancedError(e);
-          } finally {
-            sleep(500).then(() => {
-              curData.loading = false;
-            });
-          }
-        } else {
-          try {
-            const { data } = await this.$store.dispatch(url, params);
-            this.renewalGroupPermLen = data.count || 0;
-          } catch (e) {
-            this.messageAdvancedError(e);
-          }
+          const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', params);
+          this.renewalGroupPermLen = data.count || 0;
+          const totalCount = data.count || 0;
+          const tableList = data.results || [];
+          curData = Object.assign(curData, {
+            list: tableList,
+            listBack: tableList,
+            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            pagination: { ...pagination, ...{ count: totalCount } }
+          });
+          this.emptyPermData = cloneDeep(curData.emptyData);
+          // 跨页全选
+          this.handleGetSelectedGroups(curData.id);
+        } catch (e) {
+          curData = Object.assign(curData, {
+            list: [],
+            listBack: [],
+            emptyData: formatCodeData(e.code, emptyData),
+            pagination: { ...pagination, ...{ count: 0 } }
+          });
+          this.messageAdvancedError(e);
+        } finally {
+          sleep(300).then(() => {
+            curData.loading = false;
+          });
         }
       },
 
@@ -767,6 +655,16 @@
           }
           const { data } = await this.$store.dispatch('renewal/getExpireSoonPerm', params);
           this.renewalCustomPerm = data || [];
+          if (['renewalPerm'].includes(this.queryGroupData.value)) {
+            const curData = this.allPermItem.find((v) => ['renewalCustomPerm'].includes(v.id));
+            if (curData) {
+              curData.pagination = Object.assign(curData.pagination, {
+                current: 1,
+                limit: 10,
+                count: this.renewalCustomPerm.length
+              });
+            }
+          }
         } catch (e) {
           this.messageAdvancedError(e);
         }
@@ -806,12 +704,12 @@
             this.handleDefaultExpand(this.defaultExpandItem);
           },
           renewalPerm: async () => {
-            this.defaultExpandItem = ['personalPerm', 'customPerm'];
+            this.defaultExpandItem = ['renewalPersonalPerm', 'renewalCustomPerm'];
             const initReqList = [
               this.fetchExpiredGroupPerm(),
-              this.fetchExpiredCustomPerm(),
               this.fetchUserGroupSearch(),
-              this.fetchCustomPermSearch()
+              this.fetchCustomPermSearch(),
+              this.fetchExpiredCustomPerm()
             ];
             await Promise.all(initReqList);
             this.handleGetPermData();
@@ -845,10 +743,8 @@
           customPerm: async () => {
             this.defaultExpandItem = ['customPerm'];
             const initReqList = [
-              this.fetchExpiredCustomPerm(),
-              this.fetchExpiredGroupPerm(),
               this.fetchCustomPermSearch(),
-              this.fetchUserGroupSearch()
+              this.fetchExpiredCustomPerm()
             ];
             await Promise.all(initReqList);
             this.handleGetPermData();
@@ -1019,7 +915,10 @@
           if (curData) {
             curData.pagination.current = 1;
             this.curSelectedGroup = this.curSelectedGroup.filter((v) => v.mode_type !== active);
-            if (['customPerm'].includes(active) && !isBatchDelAction) {
+            if (['renewalPerm'].includes(this.queryGroupData.value)) {
+              return;
+            }
+            if (['customPerm', 'renewalCustomPerm'].includes(active) && !isBatchDelAction) {
               if (systemId) {
                 const curSystem = curData.list.find((v) => v.id === systemId);
                 if (curSystem) {
@@ -1033,9 +932,9 @@
                 renewalCustomPerm: this.renewalCustomPerm,
                 isBatchDelAction: this.isBatchDelAction
               });
-            } else {
-              this.fetchInitData();
+              return;
             }
+            this.fetchInitData();
           }
         });
         bus.$on('on-refresh-resource-search', (payload) => {

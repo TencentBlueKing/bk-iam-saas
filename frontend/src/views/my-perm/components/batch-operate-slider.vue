@@ -170,7 +170,7 @@
             return this.selectTableList.length;
           },
           deleteAction: () => {
-            const list = this.selectTableList.filter((item) => ['customPerm'].includes(item.mode_type));
+            const list = this.selectTableList.filter((item) => ['customPerm', 'renewalCustomPerm'].includes(item.mode_type));
             return list.length;
           }
         };
@@ -244,7 +244,7 @@
           deleteAction: async () => {
             try {
               this.submitLoading = true;
-              const list = this.selectTableList.filter((item) => ['customPerm'].includes(item.mode_type));
+              const list = this.selectTableList.filter((item) => ['customPerm', 'renewalCustomPerm'].includes(item.mode_type));
               if (list.length) {
                 const systemList = classifyArrayByField(list, 'system_id');
                 for (const [key, value] of systemList.entries()) {
@@ -255,7 +255,8 @@
                   });
                 }
                 this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-                bus.$emit('on-update-perm-group', { active: 'customPerm', isBatchDelAction: true });
+                const isRenewalPerm = ['renewalPerm'].includes(this.groupData.value);
+                bus.$emit('on-update-perm-group', { active: isRenewalPerm ? 'renewalCustomPerm' : 'customPerm', isBatchDelAction: true });
                 // 刷新自定义权限表格，更新可续期自定义权限数量
                 bus.$emit('on-all-delete-policy', { allDeletePolicy: systemList });
                 this.$emit('update:show', false);

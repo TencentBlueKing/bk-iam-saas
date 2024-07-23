@@ -110,6 +110,7 @@
     created () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-update-all-perm');
+        bus.$off('on-update-renewal-perm');
       });
       this.fetchInitTab();
     },
@@ -118,7 +119,7 @@
     },
     methods: {
       fetchInitTab () {
-        const activeTab = this.$route.query.tab || 'customPerm';
+        const activeTab = this.$route.query.tab || 'all';
         // 处理嵌入系统需要显示哪些组权限
         if (existValue('externalApp') && this.externalSystemId) {
           let hidePermTab = [];
@@ -155,6 +156,7 @@
       },
 
       handleGetBusData () {
+        // 处理所有权限类型的总数变更
         bus.$on('on-update-all-perm', (payload) => {
           const { allPerm, renewalGroupPermLen, renewalCustomPerm } = payload;
           this.renewalData.count = renewalGroupPermLen + renewalCustomPerm.length;
@@ -176,13 +178,15 @@
               [
                 () => ['all'].includes(item.value),
                 () => {
-                  item.count = allPerm.reduce((prev, cur) => {
+                  // 过滤续期的个人用户组和自定义权限
+                  const list = allPerm.filter((v) => !['renewalPersonalPerm', 'renewalCustomPerm'].includes(v.id));
+                  item.count = list.reduce((prev, cur) => {
                     return cur.pagination.count + prev;
                   }, 0);
                 }
               ],
               [
-                () => ['customPerm'].includes(item.value) && hasData,
+                () => ['customPerm', 'renewalCustomPerm'].includes(item.value) && hasData,
                 () => {
                   const countList = hasData.list.map((v) => v.count);
                   item.count = countList.reduce((prev, cur) => {
@@ -191,7 +195,7 @@
                 }
               ],
               [
-                () => () => !['memberTempPerm', 'customPerm', 'all'].includes(item.value),
+                () => () => !['memberTempPerm', 'customPerm', 'renewalCustomPerm', 'all'].includes(item.value),
                 () => {
                   item.count = hasData.pagination.count;
                 }
@@ -200,6 +204,24 @@
             const getPermTab = tabMap.find((v) => v[0]());
             if (getPermTab) {
               getPermTab[1]();
+            }
+          });
+        });
+        // 处理从可续期更新续期的数据后同步更新所有权限类型的最新数量
+        bus.$on('on-update-renewal-perm', (payload) => {
+          const { list } = payload;
+          this.renewalData.count = this.renewalData.count - list.length;
+          const personalPermList = list.filter((v) => ['renewalPersonalPerm'].includes(v.mode_type));
+          const customPermList = list.filter((v) => ['renewalCustomPerm'].includes(v.mode_type));
+          this.permList.forEach((item) => {
+            if (['all'].includes(item.value)) {
+              item.count -= list.length;
+            }
+            if (['personalPerm'].includes(item.value)) {
+              item.count -= personalPermList.length;
+            }
+            if (['customPerm'].includes(item.value)) {
+              item.count -= customPermList.length;
             }
           });
         });

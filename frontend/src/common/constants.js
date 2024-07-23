@@ -417,6 +417,43 @@ export const ALL_PERM_TYPE_LIST = [
   }
 ];
 
+// 我的权限所有用户组权限类型
+export const ALL_PERM_GROUP_LIST = [
+  {
+    id: 'personalPerm',
+    name: il8n('perm', '个人用户组权限')
+  },
+  // 这里单独处理可续期的权限，避免切换左侧的时候调用相同的接口后权限总数发生变化
+  {
+    id: 'renewalPersonalPerm',
+    name: il8n('perm', '个人用户组权限')
+  },
+  {
+    id: 'departPerm',
+    name: il8n('userOrOrg', '组织用户组权限')
+  },
+  {
+    id: 'userTempPerm',
+    name: il8n('perm', '直接加入人员模板的用户组权限')
+  },
+  {
+    id: 'departTempPerm',
+    name: il8n('perm', '通过组织加入人员模板的用户组权限')
+  },
+  {
+    id: 'customPerm',
+    name: il8n('perm', '自定义权限')
+  },
+  {
+    id: 'renewalCustomPerm',
+    name: il8n('perm', '自定义权限')
+  },
+  {
+    id: 'managerPerm',
+    name: il8n('perm', '管理员权限')
+  }
+];
+
 // 所有管理员类型
 export const ALL_MANAGER_TYPE_ENUM = [
   {

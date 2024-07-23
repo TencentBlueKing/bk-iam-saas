@@ -366,7 +366,7 @@
       ...mapGetters(['user']),
       isShowRenewal () {
         return (payload) => {
-          return this.formatExpired(payload.expired_at) && ['personalPerm', 'customPerm'].includes(this.mode);
+          return this.formatExpired(payload.expired_at) && ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalRenewalPerm'].includes(this.mode);
         };
       },
       isShowHandover () {
@@ -458,16 +458,23 @@
         };
       },
       formatOperate () {
-        const typeMap = {
-          personalPerm: () => {
-            return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 150 : 200;
-          },
-          customPerm: () => {
-            return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 200 : 300;
-          }
-        };
-        if (typeMap[this.mode]) {
-          return typeMap[this.mode]();
+        const tabMap = [
+          [
+            () => ['personalPerm', 'renewalPersonalPerm'].includes(this.mode),
+            () => {
+              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 150 : 200;
+            }
+          ],
+          [
+            () => ['customPerm', 'renewalCustomPerm'].includes(this.mode),
+            () => {
+              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 200 : 300;
+            }
+          ]
+        ];
+        const getPermTab = tabMap.find((v) => v[0]());
+        if (getPermTab) {
+          return getPermTab[1]();
         }
         return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 80 : 100;
       }
@@ -545,7 +552,7 @@
               const emitParams = {
                 ...params,
                 ...{
-                  mode: 'personalPerm'
+                  mode: this.mode
                 }
               };
               await this.$store.dispatch('perm/quitGroupPerm', params);
@@ -678,6 +685,17 @@
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           },
+          renewalPersonalPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
+              { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
+              { label: this.$t(`m.perm['加入用户组时间']`), prop: 'created_time' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+            ];
+          },
           departPerm: () => {
             return [
               { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
@@ -713,9 +731,6 @@
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
-          },
-          customPerm: () => {
-
           },
           managerPerm: () => {
             return [

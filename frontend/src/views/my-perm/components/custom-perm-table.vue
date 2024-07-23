@@ -22,15 +22,20 @@
       <bk-table-column
         :label="$t(`m.common['操作']`)"
         :min-width="200"
-        :show-overflow-tooltip="true"
         :fixed="'left'"
       >
         <template slot-scope="{ row }">
-          <span>{{ row.name }}</span>
+          <span
+            v-bk-tooltips="{
+              content: row.name,
+              placements: ['right-start']
+            }"
+          >
+            {{ row.name }}
+          </span>
         </template>
       </bk-table-column>
       <bk-table-column
-        :resizable="false"
         :label="$t(`m.common['资源实例']`)"
         :min-width="150"
       >
@@ -482,15 +487,10 @@
       systemId: {
         async handler (value) {
           this.currentSelectList = [];
-          console.log(value, 454);
           if (value) {
             this.initRequestQueue = ['permTable'];
-            const params = {
-              systemId: value
-            };
-            this.params = params;
             await this.fetchActions(value);
-            this.fetchPolicy(params);
+            this.fetchPolicy({ systemId: value });
           } else {
             this.initRequestQueue = [];
             this.policyList = [];
@@ -498,8 +498,7 @@
             this.policyCountMap = {};
           }
         },
-        immediate: true,
-        deep: true
+        immediate: true
       },
       emptyData: {
         handler (value) {
@@ -579,7 +578,6 @@
             return;
           }
           const { code, data } = await this.$store.dispatch(url, queryParams);
-          console.log(data);
           let policyList = data || [];
           if (this.groupData && ['renewalPerm'].includes(this.groupData.value)) {
             const renewalCustomPerm = this.renewalCustomPerm.map((v) => `${v.policy.id}&${v.policy.name}`);
@@ -592,7 +590,6 @@
               return new PermPolicy(item);
             });
           }
-          console.log(this.policyList);
           this.policyListBack = cloneDeep(this.policyList);
           this.policyList = this.handleGetDataByPage(
             this.pagination.current,
@@ -607,7 +604,7 @@
           this.messageAdvancedError(e);
         } finally {
           this.initRequestQueue.shift();
-          this.$emit('on-update-pagination', {
+          this.$emit('on-change-policy-perm', {
             current,
             limit,
             count: this.policyListBack.length
@@ -826,17 +823,34 @@
               });
             }
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-            this.fetchPolicy(this.params);
+            this.fetchPolicy({ systemId: this.systemId });
           } else {
             await this.$store.dispatch('permApply/deletePerm', {
               policyIds: this.curDeleteIds,
               systemId: this.systemId
             });
+            const deletePolicyList = this.policyList.filter((item) => this.curDeleteIds.includes(item.policy_id));
             const policyList = this.policyList.filter((item) => !this.curDeleteIds.includes(item.policy_id));
+            this.currentSelectList = this.currentSelectList.filter(
+              (item) => !this.curDeleteIds.includes(item.policy_id)
+            );
             await this.fetchActions(this.systemId);
-            await this.fetchPolicy(this.params);
+            await this.fetchPolicy({ systemId: this.systemId });
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+            this.$emit('on-select-perm', this.currentSelectList);
             this.$emit('on-delete-action', policyList.length);
+            // 处理删除续期数据同步更新其他选项的数量
+            if (['renewalCustomPerm'].includes(this.mode)) {
+              const list = deletePolicyList.map((v) => {
+                return {
+                    ...v,
+                    mode_type: 'renewalCustomPerm'
+                };
+              });
+              bus.$emit('on-update-renewal-perm', {
+                list
+              });
+            }
           }
         } catch (e) {
           this.messageAdvancedError(e);

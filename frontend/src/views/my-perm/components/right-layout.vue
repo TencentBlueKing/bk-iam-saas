@@ -119,6 +119,11 @@
             </li>
             <li>
               <a
+                v-bk-tooltips="{
+                  placement: 'right-start',
+                  content: formatOperateTip('renewal'),
+                  disabled: !isNoBatchRenewal
+                }"
                 :class="[{ 'renewal-disabled': isNoBatchRenewal }]"
                 :title="renewalGroupTitle"
                 @click.stop="handleBatch('renewal')"
@@ -280,12 +285,12 @@
       },
       isNoBatchQuit () {
         // 只有个人用户组可以退出
-        const personalPerm = this.currentSelectList.filter((item) => ['personalPerm'].includes(item.mode_type) && item.department_id === 0 && !this.isAdminGroup(item));
+        const personalPerm = this.currentSelectList.filter((item) => ['personalPerm', 'renewalPersonalPerm'].includes(item.mode_type) && item.department_id === 0 && !this.isAdminGroup(item));
         return !(personalPerm.length > 0);
       },
       isNoBatchDelete () {
         // 只有自定义权限可以删除
-        const customPerm = this.currentSelectList.filter((item) => ['customPerm'].includes(item.mode_type));
+        const customPerm = this.currentSelectList.filter((item) => ['customPerm', 'renewalCustomPerm'].includes(item.mode_type));
         return !(customPerm.length > 0);
       },
       isNoBatchHandover () {
@@ -293,7 +298,7 @@
       },
       isNoBatchRenewal () {
         const selectGroup = this.currentSelectList.filter((item) =>
-          ['personalPerm', 'customPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+          ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
         );
         return !(selectGroup.length > 0);
       },
@@ -301,7 +306,7 @@
         return (payload) => {
           const typeMap = {
             quit: () => {
-              const personalPerm = this.currentSelectList.filter((item) => ['personalPerm'].includes(item.mode_type));
+              const personalPerm = this.currentSelectList.filter((item) => ['personalPerm', 'renewalPersonalPerm'].includes(item.mode_type));
               const noQuitList = personalPerm.filter((item) => item.department_id !== 0 && this.isAdminGroup(item));
               if (!personalPerm.length || !this.currentSelectList.length) {
                 return this.$t(`m.perm['未勾选用户组，无法选择退出']`);
@@ -309,10 +314,20 @@
               if (noQuitList.length > 0 && this.currentSelectList.length === noQuitList.length) {
                 return this.$t(`m.perm['唯一管理员不可退出']`);
               }
+            },
+            renewal: () => {
+              const selectGroup = this.currentSelectList.filter((item) =>
+                ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+              );
+              if (!this.currentSelectList.length) {
+                return this.$t(`m.perm['未勾选用户组，无法去续期']`);
+              }
+              if (!selectGroup.length && !['personalPerm', 'customPerm'].includes(this.groupData.value)) {
+                return this.$t(`m.perm['未勾选个人用户组权限或自定义操作选择前，无法去续期']`);
+              }
             }
           };
           if (typeMap[payload]) {
-            console.log(typeMap[payload](), payload);
             return typeMap[payload]();
           }
           return '';
@@ -380,6 +395,7 @@
       },
 
       handleSelectGroupPerm (payload) {
+        console.log(this.currentSelectList, 555);
         this.currentSelectList = [...payload];
       },
 

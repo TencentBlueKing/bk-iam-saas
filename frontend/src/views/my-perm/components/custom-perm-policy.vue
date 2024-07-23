@@ -10,14 +10,14 @@
       </bk-checkbox>
       <CustomPermSystemPolicy
         v-for="(sys, sysIndex) in systemPolicyList"
-        :key="sys.id"
+        :key="`${sys.id}_${mode}`"
         :ref="`rPolicy_${sys.id}`"
         :mode="'detail'"
         :title="sys.name"
         :count="sys.pagination.count || 0"
+        :expanded.sync="sys.expanded"
         :ext-cls="formatExtCls(sys)"
         :external-delete="true"
-        :expanded.sync="sys.expanded"
         @on-expanded="handleExpanded(...arguments, sys)"
       >
         <div slot="headerTitle" class="single-hide header-content">
@@ -66,7 +66,7 @@
           class="iam-perm-edit-table"
           :ref="`customPermTable_${sys.id}_${mode}`"
           :mode="mode"
-          :key="sys.id"
+          :key="`${sys.id}_${mode}`"
           :system-id="sys.id"
           :pagination="sys.pagination"
           :renewal-custom-perm="renewalCustomPerm"
@@ -76,7 +76,7 @@
           :empty-data="emptyPolicyData"
           :is-search-perm="isSearchPerm"
           @on-select-perm="handleSelectPerm"
-          @on-update-pagination="handleUpdatePagination(...arguments, sys)"
+          @on-change-policy-perm="handleChangePolicyPerm(...arguments, sys)"
           @on-page-change="handlePageChange(...arguments, sys)"
           @on-limit-page="handleLimitChange(...arguments, sys)"
           @on-delete-action="handleDeleteAction(...arguments, sysIndex)"
@@ -171,6 +171,7 @@
       return {
         isAllSystem: false,
         isDisabledOperate: false,
+        customKey: -1,
         systemPolicyList: [],
         curSelectedGroup: [],
         emptyPolicyData: {
@@ -248,7 +249,7 @@
           if (code === 0) {
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             bus.$emit('on-update-perm-group', {
-              active: 'customPerm',
+              active: this.mode,
               count: 0,
               systemId: this.systemPolicyList[sysIndex].id
             });
@@ -300,7 +301,7 @@
             if (permRef && permRef.length) {
               const customPermRef = permRef[0].$refs[`customPermRef_${this.mode}_${item.id}`];
               customPermRef && permRef[0].policyListBack.forEach((sub) => {
-                this.$set(sub, 'mode_type', 'customPerm');
+                this.$set(sub, 'mode_type', this.mode);
                 this.$set(sub, 'system_id', item.id);
                 customPermRef.toggleRowSelection(sub, payload);
                 if (payload) {
@@ -317,7 +318,7 @@
         });
       },
 
-      handleUpdatePagination (payload, row) {
+      handleChangePolicyPerm (payload, row) {
         row.pagination = { ...payload };
       },
 
@@ -330,7 +331,7 @@
       },
 
       handleExpanded (value, payload) {
-        
+        console.log(value, payload);
       },
 
       handleShowDelConfirm (payload) {
@@ -346,9 +347,9 @@
         this.curSelectedGroup = uniqWith([...payload], isEqual);
         this.$emit('on-selected-group', this.curSelectedGroup);
         // 判断是否系统全选
-        const isCustom = ['customPerm'].includes(this.mode);
+        const isCustom = ['customPerm', 'renewalCustomPerm'].includes(this.mode);
         if (isCustom) {
-          const customList = this.curSelectedGroup.filter((v) => ['customPerm'].includes(v.mode_type));
+          const customList = this.curSelectedGroup.filter((v) => ['customPerm', 'renewalCustomPerm'].includes(v.mode_type));
           const countList = this.systemPolicyList.map((v) => v.count);
           const customTotal = countList.reduce((prev, cur) => {
             return cur + prev;
@@ -358,17 +359,15 @@
       },
 
       handleDeleteAction (policyListLen, sysIndex) {
+        this.isAllSystem = false;
         this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
         bus.$emit('on-update-perm-group', {
-          active: 'customPerm',
+          active: this.mode,
           count: policyListLen,
           systemId: this.systemPolicyList[sysIndex].id
         });
         if (this.systemPolicyList[sysIndex].count < 1) {
           this.systemPolicyList.splice(sysIndex, 1);
-        }
-        if (!this.systemPolicyList.length) {
-          this.handleRefreshSystem();
         }
       },
 
@@ -381,7 +380,7 @@
               pagination: {
                 current: 1,
                 limit: 10,
-                count: 0
+                count: item.count
               }
             }
           };

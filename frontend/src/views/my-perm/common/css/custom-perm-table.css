@@ -115,7 +115,6 @@
       .custom-perm-operate-column {
         display: flex;
         align-items: center;
-        justify-content: space-around;
         .custom-actions-item {
           margin-right: 16px;
           &:last-child {
