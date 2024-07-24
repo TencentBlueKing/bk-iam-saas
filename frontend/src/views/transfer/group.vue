@@ -3,19 +3,18 @@
     v-bkloading="{ isLoading, opacity: 1 }">
     <template v-if="!isLoading && !isEmpty">
       <div class="transfer-group-content" ref="transferGroupContent">
-        <div class="header" @click="handleGroupExpanded">
-          <Icon bk class="expanded-icon" :type="groupExpanded ? 'down-shape' : 'right-shape'" />
-          <label class="title"> {{$t(`m.permTransfer['用户组权限交接']`)}} </label>
+        <div class="header">
+          <!-- <Icon bk class="expanded-icon" :type="groupExpanded ? 'down-shape' : 'right-shape'" /> -->
+          <!-- <span class="title"> {{$t(`m.permTransfer['用户组权限交接']`)}} </span> -->
           <div class="sub-title" v-if="groupNotTransferCount > 0">
-            <i class="iam-icon iamcenter-warning-fill not-transfer-icon"></i>
+            <i class="iam-icon iamcenter-warning-fill not-transfer-icon" />
             {{$t(`m.permTransfer['无法交接用户组：']`)}}{{groupNotTransferCount}}{{$t(`m.common['个']`)}}
             <span class="reason">{{$t(`m.permTransfer['（通过组织加入、已过期的组无法交接）']`)}}</span>
           </div>
         </div>
-        <div class="content" v-if="groupExpanded">
+        <div class="content">
           <div class="slot-content">
             <bk-table
-              :style="{ maxHeight: groupShowAll ? 'none' : '254px' }"
               border
               ref="groupTableRef"
               :data="groupList"
@@ -34,8 +33,7 @@
                 <template slot-scope="{ row }">
                   <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }">
                     {{row.name}}
-                    <i class="iam-icon iamcenter-warning-fill not-transfer-icon"
-                      v-if="row.canNotTransfer"></i>
+                    <i class="iam-icon iamcenter-warning-fill not-transfer-icon" v-if="row.canNotTransfer" />
                   </span>
                 </template>
               </bk-table-column>
@@ -64,18 +62,16 @@
               </bk-table-column>
             </bk-table>
           </div>
-          <p class="expand-action" @click="handleGroupShowAll" v-if="groupList.length > 5">
+          <!-- <p class="expand-action" @click="handleGroupShowAll" v-if="groupList.length > 5">
             <Icon :type="groupShowAll ? 'up-angle' : 'down-angle'" />
             <template v-if="!groupShowAll">{{ $t(`m.common['点击展开']`) }}</template>
             <template v-else>{{ $t(`m.common['点击收起']`) }}</template>
-          </p>
+          </p> -->
         </div>
       </div>
     </template>
     <div v-if="!isLoading && isEmpty" style="height: 60px;">
       <div class="empty-wrapper">
-        <!-- <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
         <ExceptionEmpty
           :type="emptyData.type"
           :empty-text="emptyData.text"
@@ -87,12 +83,11 @@
     </div>
   </div>
 </template>
+
 <script>
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
-
   export default {
-    name: '',
     components: {
     },
     data () {
@@ -179,30 +174,27 @@
         this.fetchData();
       },
 
-      handleGroupExpanded () {
-        this.groupExpanded = !this.groupExpanded;
-        if (this.groupExpanded) {
-          this.handleGetCheckData();
-        }
-      },
+      // handleGroupExpanded () {
+      //   this.groupExpanded = !this.groupExpanded;
+      //   if (this.groupExpanded) {
+      //     this.handleGetCheckData();
+      //   }
+      // },
 
-      handleGroupShowAll () {
-        this.groupShowAll = !this.groupShowAll;
-        if (!this.groupShowAll) {
-          setTimeout(() => {
-            const top = this.$refs.transferGroupContent.getBoundingClientRect().top
-              + this.pageContainer.scrollTop;
+      // handleGroupShowAll () {
+      //   this.groupShowAll = !this.groupShowAll;
+      //   if (!this.groupShowAll) {
+      //     setTimeout(() => {
+      //       const top = this.$refs.transferGroupContent.getBoundingClientRect().top
+      //         + this.pageContainer.scrollTop;
 
-            this.pageContainer.scrollTo({
-              top: top - 61, // 减去顶导的高度 61
-              behavior: 'smooth'
-            });
-            // this.$refs.transferGroupContent.scrollIntoView({
-            //     behavior: 'smooth'
-            // })
-          }, 10);
-        }
-      },
+      //       this.pageContainer.scrollTo({
+      //         top: top - 61, // 减去顶导的高度 61
+      //         behavior: 'smooth'
+      //       });
+      //     }, 10);
+      //   }
+      // },
 
       fetchSelectedGroupCount () {
         setTimeout(() => {
@@ -274,6 +266,7 @@
     }
   };
 </script>
+
 <style lang="postcss">
-    @import './group.css';
+@import './common/css/group.css';
 </style>

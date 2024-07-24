@@ -53,7 +53,7 @@ const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/my-perm');
 
 // 我的权限
-const MyPermission = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
+// const MyPermission = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
 
 // 申请权限外链页面
 const ApplyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm/apply-perm');
@@ -279,15 +279,15 @@ export const routes = [
         },
         component: MyPerm
       },
-      {
-        path: 'my-permission',
-        name: 'myPermission',
-        alias: '',
-        meta: {
-          headerTitle: il8n('nav', '我的权限')
-        },
-        component: MyPermission
-      },
+      // {
+      //   path: 'my-permission',
+      //   name: 'myPermission',
+      //   alias: '',
+      //   meta: {
+      //     headerTitle: il8n('nav', '我的权限')
+      //   },
+      //   component: MyPermission
+      // },
       {
         path: 'my-perm/apply-perm',
         name: 'applyPerm',

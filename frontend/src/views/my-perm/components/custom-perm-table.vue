@@ -166,13 +166,6 @@
               </bk-button>
             </div>
           </div>
-          <!-- <Icon
-            v-if="isShowPreview(row)"
-            type="detail-new"
-            class="view-icon"
-            :title="$t(`m.perm['查看实例资源权限组']`)"
-            @click.stop="handleViewResource(_, row)"
-          /> -->
         </template>
       </bk-table-column>
       <template slot="empty">
@@ -402,7 +395,6 @@
         isShowResourceInstanceEffectTime: false,
         params: {},
         searchParams: {},
-        policyCountMap: {},
         deleteDialog: {
           visible: false,
           title: this.$t(`m.dialog['确认删除']`),
@@ -487,15 +479,12 @@
       systemId: {
         async handler (value) {
           this.currentSelectList = [];
+          this.initRequestQueue = [];
+          this.policyList = [];
+          this.policyListBack = [];
           if (value) {
             this.initRequestQueue = ['permTable'];
-            await this.fetchActions(value);
-            this.fetchPolicy({ systemId: value });
-          } else {
-            this.initRequestQueue = [];
-            this.policyList = [];
-            this.policyListBack = [];
-            this.policyCountMap = {};
+            await Promise.all([this.fetchActions(value), this.fetchPolicy({ systemId: value })]);
           }
         },
         immediate: true

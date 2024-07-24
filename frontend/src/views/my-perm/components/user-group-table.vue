@@ -133,7 +133,7 @@
           },
           deleteAction: () => {
             return [
-              { label: this.$t(`m.userGroup['操作名']`), prop: 'name', isViewDetail: false },
+              { label: this.$t(`m.common['操作名']`), prop: 'name', isViewDetail: false },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           }

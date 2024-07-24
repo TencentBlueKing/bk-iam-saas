@@ -14,14 +14,19 @@
       @select-all="handleAllChange"
       v-bkloading="{ isLoading: isLoading, opacity: 1 }"
     >
-      <bk-table-column
-        type="selection"
-        align="center"
-        :selectable="getDefaultSelect"
-        :width="60"
-      />
       <template v-for="item in tableProps">
-        <template v-if="item.prop === 'name'">
+        <template v-if="item.prop === 'selection'">
+          <bk-table-column
+            :align="item.align"
+            :width="item.width"
+            :type="item.prop"
+            :key="item.prop"
+            :prop="item.prop"
+            :selectable="getDefaultSelect"
+            :fixed="'left'"
+          />
+        </template>
+        <template v-else-if="item.prop === 'name'">
           <bk-table-column
             :key="item.prop"
             :label="item.label"
@@ -542,6 +547,7 @@
       },
 
       handleOperate (payload, type) {
+        const list = [];
         const typeMap = {
           quit: async () => {
             try {
@@ -564,10 +570,25 @@
             }
           },
           renewal: () => {
-            
+            list.push({
+              ...payload,
+              ...{
+                mode_type: this.mode
+              }
+            });
+            this.$store.commit('perm/updateRenewalData', list);
           },
           handover: () => {
-            
+            list.push({
+              ...payload,
+              ...{
+                mode_type: this.mode
+              }
+            });
+            this.$store.commit('perm/updateHandoverData', list);
+            this.$router.push({
+              name: 'permTransfer'
+            });
           }
         };
         return typeMap[type]();
@@ -676,6 +697,7 @@
         const tabMap = {
           personalPerm: () => {
             return [
+              { width: 60, align: 'center', prop: 'selection' },
               { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
               { label: this.$t(`m.common['描述']`), prop: 'description' },
               { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
@@ -687,6 +709,7 @@
           },
           renewalPersonalPerm: () => {
             return [
+              { width: 60, align: 'center', prop: 'selection' },
               { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
               { label: this.$t(`m.common['描述']`), prop: 'description' },
               { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
@@ -704,8 +727,8 @@
               { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
               { label: this.$t(`m.perm['加入用户组时间']`), prop: 'created_time' },
               { label: this.$t(`m.perm['通过组织加入']`), prop: 'join_type' },
-              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
-              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
+              // { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           },
           userTempPerm: () => {
@@ -716,8 +739,8 @@
               { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
               { label: this.$t(`m.perm['加入用户组时间']`), prop: 'created_time' },
               { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
-              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
-              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
+              // { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           },
           departTempPerm: () => {
@@ -728,12 +751,13 @@
               { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
               { label: this.$t(`m.perm['加入用户组时间']`), prop: 'created_time' },
               { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
-              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
-              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
+              // { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           },
           managerPerm: () => {
             return [
+              { width: 60, align: 'center', prop: 'selection' },
               { label: this.$t(`m.permTransfer['管理员名称']`), prop: 'name' },
               { label: this.$t(`m.common['类型']`), prop: 'manager_type' },
               { label: this.$t(`m.common['描述']`), prop: 'description' },

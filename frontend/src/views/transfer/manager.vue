@@ -248,6 +248,7 @@
     }
   };
 </script>
-<style lang="postcss">
-    @import './manager.css';
+
+<style lang="postcss" scoped>
+@import './common/css/manager.css';
 </style>

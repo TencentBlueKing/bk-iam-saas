@@ -147,7 +147,7 @@
             return this.$t(`m.perm['退出用户组名']`);
           },
           deleteAction: () => {
-            return this.$t(`m.perm['删除操作权限']`);
+            return this.$t(`m.userGroupDetail['删除操作权限']`);
           }
         };
         if (typeMap[this.curSliderName]) {
@@ -186,7 +186,7 @@
             return this.$t(`m.common['个用户组']`, { value: list });
           },
           deleteAction: () => {
-            return this.$t(`m.info['个操作']`, { value: list });
+            return this.$t(`m.common['个操作']`, { value: list });
           }
         };
         return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';

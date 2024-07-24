@@ -1,0 +1,30 @@
+.iam-transfer-history-sideslider {
+    .bk-sideslider-content {
+        background: #f5f6fa;
+    }
+    .content-wrapper {
+        position: relative;
+        padding: 30px;
+        min-height: calc(100vh - 60px);
+        background-color: #1a1a1a;
+    }
+    .detail-header {
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 20px;
+    }
+    .detail-content {
+        font-size: 12px;
+        color: #fff;
+        .detail-item {
+            margin-bottom: 5px;
+            display: flex;
+            .time {
+                flex-basis: auto;
+                flex-grow: 0;
+                flex-shrink: 0;
+            }
+        }
+    }
+}

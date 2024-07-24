@@ -122,6 +122,7 @@
     }
   };
 </script>
-<style lang="postcss">
-    @import './history-detail.css';
+
+<style lang="postcss" scoped>
+@import './common/css/history-detail.css';
 </style>

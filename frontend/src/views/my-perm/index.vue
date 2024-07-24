@@ -6,9 +6,7 @@
         { 'no-expand': !isExpand }
       ]"
     >
-      <LeftLayout
-        @on-select-tab="handleSelectTab"
-      />
+      <LeftLayout @on-select-tab="handleSelectTab" />
     </div>
     <div class="my-perm-wrapper-center">
       <div class="expand-icon" @click.stop="handleToggleExpand">
@@ -134,7 +132,7 @@
     }
   }
   &-right-layout {
-    padding-top: 12px;
+    width: 100%;
     padding-right: 16px;
     box-sizing: border-box;
     overflow: hidden;

@@ -167,29 +167,30 @@
     }
   };
 </script>
-<style lang="postcss">
-    @import './group.css';
-    .member-item {
-            position: relative;
-            display: inline-block;
-            margin: 0 6px 6px 0;
-            padding: 0 10px;
-            line-height: 22px;
-            background: #f5f6fa;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
-            font-size: 12px;
-            .member-name {
-                display: inline-block;
-                max-width: 200px;
-                line-height: 17px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: text-top;
-                .count {
-                    color: #c4c6cc;
-                }
-            }
-        }
+
+<style lang="postcss" scoped>
+@import './common/css/group.css';
+.member-item {
+  position: relative;
+  display: inline-block;
+  margin: 0 6px 6px 0;
+  padding: 0 10px;
+  line-height: 22px;
+  background-color: #f5f6fa;
+  border: 1px solid #dcdee5;
+  border-radius: 2px;
+  font-size: 12px;
+  .member-name {
+    display: inline-block;
+    max-width: 200px;
+    line-height: 17px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: text-top;
+    .count {
+      color: #c4c6cc;
+    }
+  }
+}
 </style>

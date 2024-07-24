@@ -201,15 +201,16 @@
         handler (v) {
           this.curSelectedGroup = [];
           this.handleGetSystemData(v);
+          // console.log(55555);
         },
         immediate: true
       },
       emptyData: {
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
-          if (this.isSearchPerm || ['search'].includes(value.tipType)) {
-            this.handleSystemSearch();
-          }
+          // if (this.isSearchPerm || ['search'].includes(value.tipType)) {
+          //   this.handleSystemSearch();
+          // }
         },
         immediate: true
       }
@@ -258,20 +259,6 @@
           }
         } catch (e) {
           this.messageAdvancedError(e);
-        }
-      },
-
-      async handleRefreshSystem () {
-        if (!this.isSearchPerm && this.curSearchParams.system_id) {
-          //  处理需要重新获取系统下的操作业务
-          await this.handleGetSystemAction();
-        } else {
-          this.handleGetSystemData(this.systemPolicyList || []);
-          this.emptyPolicyData = formatCodeData(
-            0,
-            this.emptyPolicyData,
-            this.systemPolicyList.length === 0
-          );
         }
       },
 
@@ -415,7 +402,7 @@
         const { id, description, name, system_id: systemId } = this.curSearchParams;
         const noValue = !id && !name && !description;
         // 筛选搜索的系统id
-        const curSystemList = this.systemList.filter((item) => item.id === systemId && noValue);
+        const curSystemList = this.systemPolicyList.filter((item) => item.id === systemId && noValue);
         this.handleGetSystemData(curSystemList || []);
       },
       

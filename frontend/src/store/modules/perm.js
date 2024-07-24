@@ -33,10 +33,14 @@ export default {
   namespaced: true,
   state: {
     // 切换 tab 的 loading
-    toggleTabLoading: false
+    toggleTabLoading: false,
+    renewalData: [],
+    handoverData: []
   },
   getters: {
-    toggleTabLoading: (state) => state.toggleTabLoading
+    toggleTabLoading: (state) => state.toggleTabLoading,
+    renewalData: (state) => state.renewalData,
+    handoverData: (state) => state.handoverData
   },
   mutations: {
     /**
@@ -47,6 +51,24 @@ export default {
      */
     updateToggleTabLoading (state, toggleTabLoading) {
       state.toggleTabLoading = toggleTabLoading;
+    },
+    /**
+     * 更新批量续期的数据
+     *
+     * @param {Object} state store state
+     * @param {Array} renewalData renewalData 批量续期的权限数据
+     */
+    updateRenewalData (state, renewalData) {
+      state.renewalData = renewalData;
+    },
+    /**
+     * 更新批量交接的数据
+     *
+     * @param {Object} state store state
+     * @param {Array} payload toggleTabLoading 批量交接的权限数据
+     */
+    updateHandoverData (state, handoverData) {
+      state.handoverData = handoverData;
     }
   },
   actions: {

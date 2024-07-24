@@ -1,0 +1,108 @@
+.iam-transfer-custom-wrapper {
+  margin-bottom: 30px;
+  .transfer-custom-content {
+    background-color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 2px;
+    box-shadow: 0px 1px 2px 0px rgba(49, 50, 56, 0.1);
+    &:hover {
+      box-shadow: 0px 2px 4px 0px rgba(49, 50, 56, 0.15);
+    }
+    .checkbox-cell-wrapper {
+      .cell {
+        padding: 0 !important;
+      }
+    }
+    .header {
+      display: flex;
+      justify-content: flex-start;
+      position: relative;
+      padding: 0 30px;
+      height: 40px;
+      line-height: 40px;
+      font-size: 14px;
+      color: #63656e;
+      border-radius: 2px;
+      cursor: pointer;
+      .expanded-icon {
+        position: absolute;
+        top: 13px;
+        left: 10px;
+      }
+      .title {
+        font-weight: 500;
+        cursor: pointer;
+        color: #313238;
+      }
+      .sub-title {
+        margin-left: 17px;
+        .reason {
+          font-size: 12px;
+          color: #979ba5;
+        }
+      }
+    }
+    .content {
+      position: relative;
+      .slot-content {
+        padding: 0 30px 20px 30px;
+        min-height: 60px;
+      }
+      .system-list-wrapper {
+        .system-list-item-header {
+          display: flex;
+          justify-content: flex-start;
+          position: relative;
+          padding: 0 25px;
+          height: 40px;
+          line-height: 40px;
+          font-size: 14px;
+          color: #63656e;
+          cursor: pointer;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        }
+        .system-list-item-expanded {
+          position: absolute;
+          top: 10px;
+          left: 0;
+          font-size: 22px;
+        }
+        .system-list-item-title {
+          font-weight: 700;
+          cursor: pointer;
+          color: #63656e;
+        }
+        .system-list-item-sub-title {
+          font-size: 12px;
+          color: #979ba5;
+          margin-left: 15px;
+        }
+      }
+    }
+  }
+  .iam-perm-ext-cls {
+    margin-top: 10px;
+  }
+  .iam-perm-ext-reset-cls {
+    margin-bottom: 20px;
+  }
+  .empty-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    img {
+      width: 120px;
+    }
+    .empty-tips {
+      position: relative;
+      top: -25px;
+      font-size: 12px;
+      color: #c4c6cc;
+      text-align: center;
+    }
+  }
+}

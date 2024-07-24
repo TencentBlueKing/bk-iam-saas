@@ -1,87 +1,95 @@
 <template>
   <div class="my-perm-right-layout">
-    <IamResourceCascadeSearch
-      ref="iamResourceSearchRef"
-      :custom-class="'my-perm-resource-search'"
-      :is-full-screen="true"
-      :is-custom-search="true"
-      :cur-search-data="searchData"
-      :grid-count="gridCount"
-      :form-item-margin="16"
-      :nav-stick-padding="16"
-      :other-layout-width="leftLayoutWidth"
-      @on-remote-table="handleRemoteTable"
-      @on-refresh-table="handleRefreshTable"
-    >
-      <div
-        slot="custom-content"
-        :class="['custom-content', { 'custom-content-no-search': !enableGroupInstanceSearch }]"
+    <template v-if="!isHideResourceSearch">
+      <IamResourceCascadeSearch
+        ref="iamResourceSearchRef"
+        :custom-class="'my-perm-resource-search'"
+        :is-full-screen="true"
+        :is-custom-search="true"
+        :cur-search-data="searchData"
+        :grid-count="gridCount"
+        :form-item-margin="16"
+        :nav-stick-padding="16"
+        :other-layout-width="leftLayoutWidth"
+        @on-remote-table="handleRemoteTable"
+        @on-refresh-table="handleRefreshTable"
       >
-        <bk-form form-type="vertical" class="custom-content-form">
-          <iam-form-item
-            :label="$t(`m.userGroup['用户组名']`)"
-            :style="{ width: formItemWidth }"
-            class="custom-form-item"
-          >
-            <bk-input
-              v-model="formData.name"
-              :clearable="true"
-              :placeholder="$t(`m.verify['请输入']`)"
-              :right-icon="'bk-icon icon-search'"
-              @right-icon-click="handleSearch"
-              @enter="handleSearch"
-              @clear="handleClearSearch"
-            />
-          </iam-form-item>
-          <iam-form-item
-            :label="$t(`m.userOrOrg['用户组 ID']`)"
-            :style="{ width: formItemWidth }"
-            class="custom-form-item"
-          >
-            <bk-input
-              type="number"
-              v-model="formData.id"
-              :placeholder="$t(`m.verify['请输入']`)"
-              :precision="0"
-              :show-controls="false"
-              @enter="handleSearch"
-            />
-          </iam-form-item>
-          <iam-form-item
-            :label="$t(`m.common['描述']`)"
-            :style="{ width: formItemWidth }"
-            class="custom-form-item"
-          >
-            <bk-input
-              v-model="formData.description"
-              :clearable="true"
-              :placeholder="$t(`m.verify['请输入']`)"
-              :right-icon="'bk-icon icon-search'"
-              @right-icon-click="handleSearch"
-              @enter="handleSearch"
-              @clear="handleClearSearch"
-            />
-          </iam-form-item>
-          <iam-form-item
-            :style="{ width: formItemWidth }"
-            class="custom-form-item custom-operate-item"
-          >
-            <bk-button
-              theme="primary"
-              :outline="true"
-              @click="handleSearch">
-              {{ $t(`m.common['查询']`) }}
-            </bk-button>
-            <bk-button
-              theme="default"
-              @click="handleReset">
-              {{ $t(`m.common['重置']`) }}
-            </bk-button>
-          </iam-form-item>
-        </bk-form>
-      </div>
-    </IamResourceCascadeSearch>
-    <div class="batch-perm-operate">
+        <div
+          slot="custom-content"
+          :class="['custom-content', { 'custom-content-no-search': !enableGroupInstanceSearch }]"
+        >
+          <bk-form form-type="vertical" class="custom-content-form">
+            <iam-form-item
+              :label="$t(`m.userGroup['用户组名']`)"
+              :style="{ width: formItemWidth }"
+              class="custom-form-item"
+            >
+              <bk-input
+                v-model="formData.name"
+                :clearable="true"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :right-icon="'bk-icon icon-search'"
+                @right-icon-click="handleSearch"
+                @enter="handleSearch"
+                @clear="handleClearSearch"
+              />
+            </iam-form-item>
+            <iam-form-item
+              :label="$t(`m.userOrOrg['用户组 ID']`)"
+              :style="{ width: formItemWidth }"
+              class="custom-form-item"
+            >
+              <bk-input
+                type="number"
+                v-model="formData.id"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :precision="0"
+                :show-controls="false"
+                @enter="handleSearch"
+              />
+            </iam-form-item>
+            <iam-form-item
+              :label="$t(`m.common['描述']`)"
+              :style="{ width: formItemWidth }"
+              class="custom-form-item"
+            >
+              <bk-input
+                v-model="formData.description"
+                :clearable="true"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :right-icon="'bk-icon icon-search'"
+                @right-icon-click="handleSearch"
+                @enter="handleSearch"
+                @clear="handleClearSearch"
+              />
+            </iam-form-item>
+            <iam-form-item
+              :style="{ width: formItemWidth }"
+              class="custom-form-item custom-operate-item"
+            >
+              <bk-button
+                theme="primary"
+                :outline="true"
+                @click="handleSearch">
+                {{ $t(`m.common['查询']`) }}
+              </bk-button>
+              <bk-button
+                theme="default"
+                @click="handleReset">
+                {{ $t(`m.common['重置']`) }}
+              </bk-button>
+            </iam-form-item>
+          </bk-form>
+        </div>
+      </IamResourceCascadeSearch>
+    </template>
+    <div
+      :class="[
+        'flex-between',
+        'batch-perm-operate',
+        { 'no-resource-search': isHideResourceSearch }
+      ]"
+    >
       <div class="batch-perm-operate-item">
         <bk-dropdown-menu
           class="operate-dropdown-menu"
@@ -133,6 +141,11 @@
             </li>
             <li>
               <a
+                v-bk-tooltips="{
+                  placement: 'right-start',
+                  content: formatOperateTip('handover'),
+                  disabled: !isNoBatchHandover
+                }"
                 :class="[{ 'handover-disabled': isNoBatchHandover }]"
                 @click.stop="handleBatch('handover')"
               >
@@ -156,10 +169,20 @@
           </ul>
         </bk-dropdown-menu>
       </div>
+      <div class="batch-perm-operate-search" v-if="isHideResourceSearch">
+        <IamSearchSelect
+          style="width: 559px;"
+          :data="formatSearchData"
+          :value="searchList"
+          :placeholder="$t(`m.levelSpace['输入管理员名称']`)"
+          @on-change="handleSelectSearch"
+        />
+      </div>
     </div>
     <MultiTypeGroupPerm
       :group-data="groupData"
       @on-selected-group="handleSelectGroupPerm"
+      @on-clear="handleClearSearch"
     />
     <!-- 批量操作组件 -->
     <BatchOperateSlider
@@ -188,6 +211,7 @@
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { getNowTimeExpired } from '@/common/util';
+  import IamSearchSelect from '@/components/iam-search-select';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import MultiTypeGroupPerm from './multi-type-group-perm.vue';
   import BatchOperateSlider from './batch-operate-slider.vue';
@@ -199,6 +223,7 @@
       };
     },
     components: {
+      IamSearchSelect,
       IamResourceCascadeSearch,
       MultiTypeGroupPerm,
       BatchOperateSlider,
@@ -239,7 +264,7 @@
           },
           {
             id: 'id',
-            name: 'ID',
+            name: this.$t(`m.userOrOrg['用户组 ID']`),
             default: true
           },
           {
@@ -248,6 +273,7 @@
             default: true
           }
         ],
+        searchList: [],
         currentSelectList: [],
         sliderGroupPermList: [],
         formData: {
@@ -269,6 +295,9 @@
     },
     computed: {
       ...mapGetters(['navStick']),
+      isHideResourceSearch () {
+        return ['managerPerm'].includes(this.groupData.value);
+      },
       isAdminGroup () {
         return (payload) => {
           if (payload) {
@@ -294,6 +323,14 @@
         return !(customPerm.length > 0);
       },
       isNoBatchHandover () {
+        if (this.currentSelectList.length > 0) {
+          const expiredGroup = this.currentSelectList.filter((item) =>
+            ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm', ''].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+          );
+          if (expiredGroup.length === this.currentSelectList.length) {
+            return true;
+          }
+        }
         return !this.currentSelectList.length;
       },
       isNoBatchRenewal () {
@@ -302,7 +339,25 @@
         );
         return !(selectGroup.length > 0);
       },
+      formatSearchData () {
+        const typeMap = {
+          managerPerm: () => {
+            return [
+              {
+                id: 'name',
+                name: this.$t(`m.permTransfer['管理员名称']`),
+                default: true
+              }
+            ];
+          }
+        };
+        if (typeMap[this.groupData.value]) {
+          return typeMap[this.groupData.value]();
+        }
+        return [];
+      },
       formatOperateTip () {
+        const renewalTypeList = ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'];
         return (payload) => {
           const typeMap = {
             quit: () => {
@@ -317,13 +372,24 @@
             },
             renewal: () => {
               const selectGroup = this.currentSelectList.filter((item) =>
-                ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+                renewalTypeList.includes(item.mode_type) && item.expired_at < getNowTimeExpired()
               );
               if (!this.currentSelectList.length) {
                 return this.$t(`m.perm['未勾选用户组，无法去续期']`);
               }
               if (!selectGroup.length && !['personalPerm', 'customPerm'].includes(this.groupData.value)) {
                 return this.$t(`m.perm['未勾选个人用户组权限或自定义操作选择前，无法去续期']`);
+              }
+            },
+            handover: () => {
+              const noHandoverList = this.currentSelectList.filter((item) =>
+                renewalTypeList.includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+              );
+              if (!this.currentSelectList.length) {
+                return this.$t(`m.perm['未勾选用户组，无法去交接']`);
+              }
+              if (noHandoverList.length === this.currentSelectList.length) {
+                return this.$t(`m.permTransfer['（通过组织加入、已过期的组无法交接）']`);
               }
             }
           };
@@ -340,7 +406,7 @@
       },
       groupData: {
         handler () {
-          this.handleResetData();
+          this.handleRefreshGroup();
         },
         deep: true
       }
@@ -362,13 +428,22 @@
       });
     },
     methods: {
-      async fetchRemoteTable () {
+      async handleSelectSearch (payload) {
+        const { name } = payload;
+        this.isSearchPerm = true;
+        this.curSearchParams = {};
+        this.curSearchPagination = Object.assign(this.curSearchPagination, { current: 1, limit: 10 });
+        this.formData.name = name;
+        this.fetchRemoteTable();
+      },
+
+      fetchRemoteTable () {
         const params = {
           ...this.curSearchParams,
           ...this.formData
         };
         bus.$emit('on-refresh-resource-search', {
-          isSearchPerm: true,
+          isSearchPerm: this.isSearchPerm,
           curSearchParams: params,
           curSearchPagination: this.curSearchPagination
         });
@@ -380,22 +455,25 @@
           ...searchParams,
           ...this.formData
         };
+        console.log(6666, params);
         this.isSearchPerm = emptyData.tipType === 'search';
         this.curSearchParams = cloneDeep(params);
         this.curSearchPagination = cloneDeep(pagination);
-        bus.$emit('on-refresh-resource-search', {
-          isSearchPerm: this.isSearchPerm,
-          curSearchPagination: this.curSearchPagination,
-          curSearchParams: params
-        });
+        this.fetchRemoteTable();
       },
 
       handleRefreshTable () {
-
+        console.log('重置');
+        this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        this.fetchRemoteTable();
       },
 
+      handleSearchSelect () {},
+
       handleSelectGroupPerm (payload) {
-        console.log(this.currentSelectList, 555);
+        // console.log(this.currentSelectList, 555);
         this.currentSelectList = [...payload];
       },
 
@@ -413,22 +491,34 @@
             if (!this.isNoBatchQuit) {
               this.curSliderName = 'quit';
               this.batchSliderTitle = this.$t(`m.perm['批量退出用户组']`);
-              this.sliderGroupPermList = this.currentSelectList.filter((item) => ['personalPerm'].includes(item.mode_type));
+              this.sliderGroupPermList = this.currentSelectList.filter((item) => ['personalPerm', 'renewalPersonalPerm'].includes(item.mode_type));
               this.isShowBatchSlider = true;
             }
           },
           renewal: () => {
-            this.batchSliderTitle = this.$t(`m.perm['批量续期']`);
-          //   const selectGroup = this.currentSelectList.filter((item) => ['personalPerm', 'customPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired());
+            const selectGroup = this.currentSelectList.filter((item) => ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired());
+            if (!this.isNoBatchHandover && selectGroup.length > 0) {
+              this.$store.commit('perm/updateRenewalData', selectGroup);
+              this.$router.push({
+                name: 'permRenewal'
+              });
+            }
           },
           handover: () => {
-
+            if (!this.isNoBatchHandover) {
+              this.$store.commit('perm/updateHandoverData', this.currentSelectList);
+              this.$router.push({
+                name: 'permTransfer'
+              });
+            }
           },
           deleteAction: () => {
-            this.curSliderName = 'deleteAction';
-            this.batchSliderTitle = this.$t(`m.perm['批量删除操作权限']`);
-            this.sliderGroupPermList = this.currentSelectList.filter((item) => ['customPerm'].includes(item.mode_type));
-            this.isShowBatchSlider = true;
+            if (!this.isNoBatchDelete) {
+              this.curSliderName = 'deleteAction';
+              this.batchSliderTitle = this.$t(`m.perm['批量删除操作权限']`);
+              this.sliderGroupPermList = this.currentSelectList.filter((item) => ['customPerm'].includes(item.mode_type));
+              this.isShowBatchSlider = true;
+            }
           }
         };
         return typeMap[payload]();
@@ -457,9 +547,16 @@
         this.isDropdownShow = false;
       },
 
-      handleResetData () {
+      handleRefreshGroup () {
         this.currentSelectList = [];
         this.sliderGroupPermList = [];
+        this.curSearchParams = {};
+        this.formData = Object.assign(this.formData, {
+          name: '',
+          id: '',
+          description: ''
+        });
+        this.isSearchPerm = false;
       },
       
       handleAnimationEnd () {
@@ -510,9 +607,11 @@
         }
       }
     }
+    &.no-resource-search {
+      padding-top: 16px;
+    }
   }
   /deep/ .operate-dropdown-menu {
-    margin-top: 12px;
     background-color: #3a84ff;
     .group-dropdown-trigger-btn {
       color: #ffffff;
@@ -547,6 +646,8 @@
   /deep/ .my-perm-resource-search {
     background-color: #f5f6fa;
     padding: 0;
+    padding-top: 12px;
+    margin-bottom: 12px;
     .form-item-resource {
       .bk-select {
         background-color: #ffffff;

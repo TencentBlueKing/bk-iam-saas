@@ -17,11 +17,11 @@
         :ext-cls="formatExtCls(index)"
         :class="[
           'resource-perm-side-content-table',
-          { 'is-show-perm': isShowPerm(item) && item.pagination.count > 0 }
+          { 'is-show-perm': isShowPerm(item) }
         ]"
         @on-expanded="handleExpanded(...arguments, item, index)"
       >
-        <template>
+        <template v-if="isShowPerm(item)">
           <div slot="headerTitle" class="single-hide header-content">
             <span class="header-content-title">{{ item.name }}</span>
             <span class="header-content-count">
@@ -198,7 +198,7 @@
               break;
             }
           }
-          return !!result;
+          return !!result && payload.pagination.count > 0;
         };
       },
       formatExtCls () {
@@ -257,7 +257,7 @@
           this.queryGroupData = cloneDeep(newValue);
           this.curSelectedGroup = [];
           this.handleSelectedGroup([]);
-          this.fetchResetData();
+          this.fetchRefreshPermData();
           this.comKey = +new Date();
         },
         immediate: true
@@ -285,7 +285,7 @@
       this.handleSetBusQueryData();
     },
     methods: {
-      async fetchResetData () {
+      async fetchRefreshPermData () {
         this.resetPagination();
         await this.fetchInitData();
       },
@@ -326,14 +326,14 @@
           curData = Object.assign(curData, {
             list: tableList,
             listBack: tableList,
-            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(curData.emptyData);
           // 跨页全选
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
-          this.emptyPermData = formatCodeData(e.code, emptyData);
+          this.emptyPermData = formatCodeData(e.code, { ...emptyData, ...{ tipType: 'refresh' } });
           curData = Object.assign(curData, {
             list: [],
             listBack: [],
@@ -387,7 +387,7 @@
             curData = Object.assign(curData, {
               list: data || [],
               listBack: data || [],
-              emptyData: formatCodeData(code, emptyData, data.length === 0),
+              emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, data.length === 0),
               pagination: { ...pagination, ...{ count: data.length } }
             });
             this.handleGetDataByPage(current, curData);
@@ -398,7 +398,7 @@
           curData = Object.assign(curData, {
             list: [],
             listBack: [],
-            emptyData: formatCodeData(e.code, emptyData),
+            emptyData: formatCodeData(e.code, { ...emptyData, ...{ tipType: 'refresh' } }),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
@@ -434,7 +434,7 @@
           curData = Object.assign(curData, {
             list: data.results || [],
             listBack: data.results || [],
-            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(curData.emptyData);
@@ -443,7 +443,7 @@
           curData = Object.assign(curData, {
             list: [],
             listBack: [],
-            emptyData: formatCodeData(e.code, emptyData),
+            emptyData: formatCodeData(e.code, { ...emptyData, ...{ tipType: 'refresh' } }),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.emptyPermData = formatCodeData(e.code, emptyData);
@@ -477,7 +477,7 @@
           curData = Object.assign(curData, {
             list: data.results || [],
             listBack: data.results || [],
-            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(curData.emptyData);
@@ -486,7 +486,7 @@
           curData = Object.assign(curData, {
             list: [],
             listBack: [],
-            emptyData: formatCodeData(e.code, emptyData),
+            emptyData: formatCodeData(e.code, { ...emptyData, ...{ tipType: 'refresh' } }),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.emptyPermData = formatCodeData(e.code, emptyData);
@@ -504,15 +504,19 @@
         // 是否是续期选项
         const isRenewalPerm = ['renewalPerm'].includes(this.queryGroupData.value);
         let curData = this.allPermItem.find((item) => isRenewalPerm ? ['renewalCustomPerm'].includes(item.id) : ['customPerm'].includes(item.id));
-        if (!curData) {
+        if (!curData || (isRenewalPerm && this.renewalCustomPerm.length < 1)) {
           return;
         }
         const { emptyData, pagination } = curData;
         try {
           curData.loading = true;
-          const params = {
-            ...this.curSearchParams
-          };
+          const params = {};
+          if (Object.keys(this.curSearchParams).length > 0) {
+            params.system_id = this.curSearchParams.system_id;
+          }
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+          }
           const { code, data } = await this.$store.dispatch(
             'permApply/getHasPermSystem',
             params
@@ -578,7 +582,7 @@
           curData = Object.assign(curData, {
             list: data.results || [],
             listBack: data.results || [],
-            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.handleGetSelectedGroups(curData.id);
@@ -586,7 +590,7 @@
           curData = Object.assign(curData, {
             list: [],
             listBack: [],
-            emptyData: formatCodeData(e.code, emptyData),
+            emptyData: formatCodeData(e.code, { ...emptyData, ...{ tipType: 'refresh' } }),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
@@ -594,6 +598,9 @@
           sleep(300).then(() => {
             curData.loading = false;
           });
+          if (['managerPerm'].includes(this.queryGroupData.value)) {
+            this.emptyPermData = cloneDeep(curData.emptyData);
+          }
         }
       },
 
@@ -692,7 +699,7 @@
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
             } else {
               await Promise.all([...externalReqList, ...noExternalReqList]);
-              this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
+              this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0 && this.user.timestamp);
             }
             this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
             bus.$emit('on-update-all-perm', {
@@ -708,8 +715,8 @@
             const initReqList = [
               this.fetchExpiredGroupPerm(),
               this.fetchUserGroupSearch(),
-              this.fetchCustomPermSearch(),
-              this.fetchExpiredCustomPerm()
+              this.fetchExpiredCustomPerm(),
+              this.fetchCustomPermSearch()
             ];
             await Promise.all(initReqList);
             this.handleGetPermData();
@@ -949,8 +956,7 @@
             }
           });
           this.isSearchResource = isSearchPerm || false;
-          this.resetPagination();
-          this.fetchInitData();
+          this.fetchRefreshPermData();
         });
       },
   
@@ -961,6 +967,9 @@
   
       handleEmptyClear () {
         this.resetPagination();
+        this.curSearchParams = {};
+        this.isSearchResource = false;
+        this.fetchRefreshPermData();
         this.$emit('on-clear');
       },
 

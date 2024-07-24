@@ -421,7 +421,7 @@ export const ALL_PERM_TYPE_LIST = [
 export const ALL_PERM_GROUP_LIST = [
   {
     id: 'personalPerm',
-    name: il8n('perm', '个人用户组权限')
+    name: il8n('userOrOrg', '个人用户组权限')
   },
   // 这里单独处理可续期的权限，避免切换左侧的时候调用相同的接口后权限总数发生变化
   {
