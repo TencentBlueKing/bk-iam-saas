@@ -117,23 +117,23 @@
         comKey: -1,
         allPermItem: ALL_PERM_GROUP_LIST.map((v) => {
           return {
-          ...v,
-          loading: false,
-          expanded: false,
-          pagination: {
-            current: 1,
-            limit: 10,
-            count: 0,
-            showTotalCount: true
-          },
-          emptyData: {
-            type: 'empty',
-            text: '暂无数据',
-            tip: '',
-            tipType: ''
-          },
-          list: [],
-          listBack: []
+            ...v,
+            loading: false,
+            expanded: false,
+            pagination: {
+              current: 1,
+              limit: 10,
+              count: 0,
+              showTotalCount: true
+            },
+            emptyData: {
+              type: 'empty',
+              text: '暂无数据',
+              tip: '',
+              tipType: ''
+            },
+            list: [],
+            listBack: []
           };
         }),
         allPermItemBack: [],

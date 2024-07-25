@@ -1,101 +1,104 @@
 <template>
-  <div class="iam-transfer-manager-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
-    v-bkloading="{ isLoading, opacity: 1 }">
-    <template v-if="!isLoading && !isEmpty">
-      <div class="transfer-manager-content" ref="transferManagerContent">
-        <div class="header" @click="handleRateExpanded">
-          <Icon bk class="expanded-icon" :type="rateExpanded ? 'down-shape' : 'right-shape'" />
-          <label class="title">{{$t(`m.permTransfer['管理员交接']`)}}</label>
-        </div>
-        <div class="content" v-if="rateExpanded">
-          <div class="slot-content">
-            <bk-table
-              ref="manageTableRef"
-              :style="{ maxHeight: managerShowAll ? 'none' : '254px' }"
-              border
-              :data="managerList"
-              size="small"
-              :class="['manager-table', { 'set-border': isLoading }]"
-              :header-cell-class-name="getCellClass"
-              :cell-class-name="getCellClass"
-              :pagination="pagination"
-              @select="handleSelect"
-              @select-all="handleSelectAll"
-              @page-change="handlePageChange"
-              @page-limit-change="handleLimitChange">
-              <bk-table-column type="selection" align="center">
-              </bk-table-column>
-              <bk-table-column :label="$t(`m.permTransfer['管理员名称']`)" width="300">
-                <template slot-scope="{ row }">
+  <div class="iam-transfer-manager-wrapper" v-bkloading="{ isLoading: managerPermData.loading, opacity: 1 }">
+    <div class="transfer-manager-content" ref="transferManagerContent">
+      <div class="content">
+        <div class="slot-content">
+          <bk-table
+            ref="manageTableRef"
+            size="small"
+            :border="false"
+            :header-border="false"
+            :outer-border="false"
+            :data="managerPermData.list"
+            :pagination="managerPermData.pagination"
+            :header-cell-class-name="getCellClass"
+            :cell-class-name="getCellClass"
+            @select="handleSelect"
+            @select-all="handleSelectAll"
+            @page-change="handlePageChange"
+            @page-limit-change="handleLimitChange">
+            <bk-table-column type="selection" align="center" />
+            <bk-table-column :label="$t(`m.permTransfer['管理员名称']`)" width="300">
+              <template slot-scope="{ row }">
+                <span
+                  v-bk-tooltips="{
+                    content: row.name
+                  }"
+                >
                   {{row.name}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t(`m.common['类型']`)" width="300">
-                <template slot-scope="{ row }">
-                  <template v-if="row.type === 'super_manager'">
-                    {{$t(`m.myApproval['超级管理员']`)}}
-                  </template>
-                  <template v-else-if="row.type === 'system_manager'">
-                    {{$t(`m.nav['系统管理员']`)}}
-                  </template>
-                  <template v-else-if="row.type === 'rating_manager'">
-                    {{$t(`m.userGroup['管理空间']`)}}
-                  </template>
-                  <template v-else>--</template>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t(`m.common['描述']`)" width="300">
-                <template slot-scope="{ row }">
-                  {{row.description || '--'}}
-                </template>
-              </bk-table-column>
-              <template slot="empty">
-                <ExceptionEmpty
-                  :type="emptyData.type"
-                  :empty-text="emptyData.text"
-                  :tip-text="emptyData.tip"
-                  :tip-type="emptyData.tipType"
-                  @on-refresh="handleEmptyRefresh"
-                />
+                </span>
               </template>
-            </bk-table>
-          </div>
-          <p class="expand-action" @click="handleManagerShowAll" v-if="managerList.length > 5">
-            <Icon :type="managerShowAll ? 'up-angle' : 'down-angle'" />
-            <template v-if="!managerShowAll">{{ $t(`m.common['点击展开']`) }}</template>
-            <template v-else>{{ $t(`m.common['点击收起']`) }}</template>
-          </p>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.common['类型']`)" width="300">
+              <template slot-scope="{ row }">
+                {{ formatManagerType(row.type) }}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.common['描述']`)" width="300" :show-overflow-tooltip="true">
+              <template slot-scope="{ row }">
+                {{row.description || '--'}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.permTransfer['交接对象']`)" width="300">
+              <template slot-scope="{ row }">
+                <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length">
+                  <Icon type="arrows-left" />
+                  <IamEditMemberSelector
+                    mode="detail"
+                    field="role_members"
+                    width="300"
+                    :value="formatRoleMembers(row.handover_object)"
+                    :index="$index"
+                  />
+                </div>
+                <span>--</span>
+              </template>
+            </bk-table-column>
+            <template slot="empty">
+              <ExceptionEmpty
+                :type="emptyData.type"
+                :empty-text="emptyData.text"
+                :tip-text="emptyData.tip"
+                :tip-type="emptyData.tipType"
+                @on-refresh="handleEmptyRefresh"
+              />
+            </template>
+          </bk-table>
         </div>
       </div>
-    </template>
-    <!-- <template v-if="!isLoading && isEmpty">
-            <div class="empty-wrapper">
-                <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
-            </div>
-        </template> -->
+    </div>
   </div>
 </template>
+
 <script>
-  import { formatCodeData } from '@/common/util';
-  import { mapGetters } from 'vuex';
+  import { ALL_MANAGER_TYPE_ENUM } from '@/common/constants';
   export default {
-    name: '',
     components: {
+    },
+    props: {
+      curPermData: {
+        type: Object
+      },
+      selectedHandoverObject: {
+        type: Array,
+        default: () => []
+      },
+      description: {
+        type: String
+      }
     },
     data () {
       return {
         isEmpty: false,
         isLoading: false,
-        managerList: [],
         rateExpanded: true,
         managerShowAll: false,
         isSelectAllChecked: false,
         managerSelectData: [],
-        pageContainer: null,
+        managerPermData: {},
         pagination: {
           current: 1,
-          limit: 20,
+          limit: 10,
           count: 0
         },
         emptyData: {
@@ -107,43 +110,46 @@
       };
     },
     computed: {
-      ...mapGetters(['roleCount'])
+      formatManagerType () {
+        return (payload) => {
+          const managerData = ALL_MANAGER_TYPE_ENUM.find((v) => v.value === payload);
+          if (managerData) {
+            return managerData.label;
+          }
+          return '';
+        };
+      }
     },
-    mounted () {
-      this.pageContainer = document.querySelector('.main-scroller');
-      this.fetchData();
+    watch: {
+      curPermData: {
+        handler (value) {
+          this.managerPermData = { ...value };
+          // this.handleGetCheckData();
+        },
+        deep: true
+      },
+      description: {
+        handler (value) {
+          this.managerPermData.list.forEach((item) => {
+            this.$set(item, 'reason', value);
+          });
+        },
+        deep: true
+      },
+      selectedHandoverObject: {
+        handler (value) {
+          this.managerSelectData.list.forEach((item) => {
+            this.$set(item, 'handover_object', value);
+          });
+        },
+        deep: true
+      }
     },
     methods: {
-      async fetchData () {
-        this.isLoading = true;
-        try {
-          const { current, limit } = this.pagination;
-          const params = {
-            limit,
-            offset: (current - 1) * limit
-          };
-          const res = await this.$store.dispatch('roleList', params);
-          this.pagination.count = this.roleCount || 0;
-          const managerList = res || [];
-          this.managerList.splice(0, this.managerList.length, ...managerList);
-          this.isEmpty = managerList.length < 1;
-          this.emptyData = formatCodeData(0, this.emptyData, this.isEmpty);
-          this.handleGetCheckData();
-        } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
-          this.messageAdvancedError(e);
-        } finally {
-          this.isLoading = false;
-        }
-      },
-
       handleGetCheckData () {
-        const selectGroup = this.managerSelectData.length
-          ? this.managerSelectData.map(item => String(item.id)) : [];
+        const selectGroup = this.managerSelectData.length ? this.managerSelectData.map(item => String(item.id)) : [];
         setTimeout(() => {
-          this.managerList.forEach(item => {
+          this.managerPermData.list.forEach(item => {
             if (selectGroup.includes(String(item.id))) {
               this.$refs.manageTableRef && this.$refs.manageTableRef.toggleRowSelection(item, true);
             }
@@ -153,31 +159,6 @@
           });
         }, 0);
         this.fetchSelectedGroupCount();
-      },
-
-      handleRateExpanded () {
-        this.rateExpanded = !this.rateExpanded;
-        if (this.rateExpanded) {
-          this.handleGetCheckData();
-        }
-      },
-
-      handleManagerShowAll () {
-        this.managerShowAll = !this.managerShowAll;
-        if (!this.managerShowAll) {
-          setTimeout(() => {
-            const top = this.$refs.transferManagerContent.getBoundingClientRect().top
-              + this.pageContainer.scrollTop;
-
-            this.pageContainer.scrollTo({
-              top: top - 61, // 减去顶导的高度 61
-              behavior: 'smooth'
-            });
-            // this.$refs.transferManagerContent.scrollIntoView({
-            //     behavior: 'smooth'
-            // })
-          }, 10);
-        }
       },
 
       fetchSelectedGroupCount () {
@@ -221,24 +202,21 @@
         this.$emit('manager-selection-change', this.managerSelectData);
       },
 
-      handlePageChange (page) {
-        this.pagination = Object.assign(this.pagination, { current: page });
-        this.fetchData();
+      handlePageChange (current) {
+        const pagination = Object.assign(this.managerPermData.pagination, { current });
+        this.$emit('on-page-change', pagination);
       },
 
-      handleLimitChange (currentLimit, prevLimit) {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
-        this.fetchData();
+      handleLimitChange (limit) {
+        const pagination = Object.assign(this.managerPermData.pagination, { current: 1, limit });
+        this.$emit('on-limit-change', pagination);
       },
-
+      
       handleEmptyRefresh () {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 20 });
-        this.fetchData();
+        const pagination = Object.assign(this.managerPermData.pagination, { current: 1, limit: 10 });
+        this.$emit('on-page-change', pagination);
       },
 
-      /**
-       * getCellClass
-       */
       getCellClass ({ row, column, rowIndex, columnIndex }) {
         if (columnIndex === 0) {
           return 'checkbox-cell-wrapper';
@@ -250,5 +228,5 @@
 </script>
 
 <style lang="postcss" scoped>
-@import './common/css/manager.css';
+@import './common/css/group.css';
 </style>

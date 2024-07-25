@@ -133,7 +133,9 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
   'gradingAdminEdit',
   'myManageSpaceCreate',
   'authorBoundaryEditFirstLevel',
-  'secondaryManageSpaceCreate'
+  'secondaryManageSpaceCreate',
+  'permTransfer',
+  'permRenewal'
 ];
 
 // 不同导航栏下的路由模块分类

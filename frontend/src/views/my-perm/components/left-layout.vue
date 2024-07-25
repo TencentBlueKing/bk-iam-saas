@@ -101,10 +101,10 @@
     computed: {
       ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'user']),
       isShowCustomPerm () {
-        return this.externalSystemsLayout.myPerm.transfer.hideCustomData;
+        return !this.externalSystemsLayout.myPerm.transfer.hideCustomData;
       },
       isShowManagerPerm () {
-        return this.externalSystemsLayout.myPerm.transfer.hideManagerData;
+        return !this.externalSystemsLayout.myPerm.transfer.hideManagerData;
       }
     },
     created () {
@@ -123,10 +123,10 @@
         // 处理嵌入系统需要显示哪些组权限
         if (existValue('externalApp') && this.externalSystemId) {
           let hidePermTab = [];
-          if (this.isShowCustomPerm) {
+          if (!this.isShowCustomPerm) {
             hidePermTab = ['customPerm'];
           }
-          if (this.isShowManagerPerm) {
+          if (!this.isShowManagerPerm) {
             hidePermTab = [...hidePermTab, ...['managerPerm']];
           }
           this.permList = this.initPermList.filter((v) => !hidePermTab.includes(v.value));
