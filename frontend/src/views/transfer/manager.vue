@@ -4,8 +4,8 @@
       <div class="content">
         <div class="slot-content">
           <bk-table
-            ref="manageTableRef"
             size="small"
+            :ref="`manageTableRef_${managerPermData.id}`"
             :border="false"
             :header-border="false"
             :outer-border="false"
@@ -18,7 +18,7 @@
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange">
             <bk-table-column type="selection" align="center" />
-            <bk-table-column :label="$t(`m.permTransfer['管理员名称']`)" width="300">
+            <bk-table-column :label="$t(`m.permTransfer['管理员名称']`)">
               <template slot-scope="{ row }">
                 <span
                   v-bk-tooltips="{
@@ -29,19 +29,19 @@
                 </span>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['类型']`)" width="300">
+            <bk-table-column :label="$t(`m.common['类型']`)">
               <template slot-scope="{ row }">
                 {{ formatManagerType(row.type) }}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)" width="300" :show-overflow-tooltip="true">
+            <bk-table-column :label="$t(`m.common['描述']`)" :show-overflow-tooltip="true">
               <template slot-scope="{ row }">
                 {{row.description || '--'}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.permTransfer['交接对象']`)" width="300">
-              <template slot-scope="{ row }">
-                <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length">
+            <bk-table-column :label="$t(`m.permTransfer['交接对象']`)">
+              <template slot-scope="{ row, $index }">
+                <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length > 0">
                   <Icon type="arrows-left" />
                   <IamEditMemberSelector
                     mode="detail"
@@ -51,7 +51,7 @@
                     :index="$index"
                   />
                 </div>
-                <span>--</span>
+                <span v-else>--</span>
               </template>
             </bk-table-column>
             <template slot="empty">
@@ -71,20 +71,24 @@
 </template>
 
 <script>
+  import { cloneDeep, uniqWith, isEqual } from 'lodash';
   import { ALL_MANAGER_TYPE_ENUM } from '@/common/constants';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   export default {
     components: {
+      IamEditMemberSelector
     },
     props: {
       curPermData: {
         type: Object
       },
-      selectedHandoverObject: {
+      selectedManagerGroup: {
         type: Array,
         default: () => []
       },
-      description: {
-        type: String
+      selectedHandoverObject: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -118,24 +122,26 @@
           }
           return '';
         };
+      },
+      formatRoleMembers () {
+        return (payload) => {
+          if (payload && payload.length) {
+            const hasName = payload.some((v) => v.username);
+            if (!hasName) {
+              payload = payload.map(v => {
+                return {
+                  username: v,
+                  readonly: false
+                };
+              });
+            }
+            return payload;
+          }
+          return payload || [];
+        };
       }
     },
     watch: {
-      curPermData: {
-        handler (value) {
-          this.managerPermData = { ...value };
-          // this.handleGetCheckData();
-        },
-        deep: true
-      },
-      description: {
-        handler (value) {
-          this.managerPermData.list.forEach((item) => {
-            this.$set(item, 'reason', value);
-          });
-        },
-        deep: true
-      },
       selectedHandoverObject: {
         handler (value) {
           this.managerSelectData.list.forEach((item) => {
@@ -147,14 +153,20 @@
     },
     methods: {
       handleGetCheckData () {
-        const selectGroup = this.managerSelectData.length ? this.managerSelectData.map(item => String(item.id)) : [];
+        this.managerPermData = cloneDeep(this.curPermData);
+        const selectList = uniqWith([...this.selectedManagerGroup, ...this.managerSelectData], isEqual);
+        const selectGroup = selectList.map((item) => `${item.name}&${item.id}`);
         setTimeout(() => {
-          this.managerPermData.list.forEach(item => {
-            if (selectGroup.includes(String(item.id))) {
-              this.$refs.manageTableRef && this.$refs.manageTableRef.toggleRowSelection(item, true);
-            }
-            if (this.managerSelectData.length < 1) {
-              this.$refs.manageTableRef && this.$refs.manageTableRef.clearSelection();
+          this.managerPermData.loading = false;
+          console.log(this.selectedHandoverObject);
+          const managerPermRef = this.$refs[`manageTableRef_${this.managerPermData.id}`];
+          this.managerPermData.list.forEach((item) => {
+            this.$set(item, 'handover_object', this.selectedHandoverObject);
+            if (managerPermRef) {
+              managerPermRef.toggleRowSelection(item, selectGroup.includes(`${item.name}&${item.id}`));
+              if (selectGroup.length < 1) {
+                managerPermRef.clearSelection();
+              }
             }
           });
         }, 0);
@@ -162,30 +174,38 @@
       },
 
       fetchSelectedGroupCount () {
-        setTimeout(() => {
-          const paginationWrapper = this.$refs.manageTableRef.$refs.paginationWrapper;
-          const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
-          if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
-            selectCount[0].children[0].innerHTML = this.managerSelectData.length;
+        this.$nextTick(() => {
+          const selectGroup = uniqWith([...this.selectedManagerGroup, ...this.managerSelectData], isEqual);
+          const permRef = this.$refs[`manageTableRef_${this.managerPermData.id}`];
+          if (permRef && permRef.$refs && permRef.$refs.paginationWrapper) {
+            const paginationWrapper = permRef.$refs.paginationWrapper;
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
+              selectCount[0].children[0].innerHTML = selectGroup.length;
+            }
           }
-        }, 0);
+        });
       },
 
       fetchSelectedGroups (type, payload, row) {
+        const selectList = uniqWith([...this.selectedManagerGroup, ...this.managerSelectData], isEqual);
         const typeMap = {
           multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (isChecked) {
-              this.managerSelectData.push(row);
+              selectList.push(row);
+              this.managerSelectData = [...selectList];
             } else {
-              this.managerSelectData = this.managerSelectData.filter((item) => item.id !== row.id);
+              this.managerSelectData = selectList.filter((item) => `${item.name}&${item.id}&${this.managerPermData.id}` !== `${row.name}&${row.id}&${this.managerPermData.id}`);
             }
+            this.$emit('manager-selection-change', this.managerSelectData);
             this.fetchSelectedGroupCount();
           },
           all: () => {
-            const selectGroups = this.managerSelectData.filter((item) =>
-              !this.managerList.map((v) => v.id).includes(item.id));
+            const tableList = this.managerPermData.list.map((v) => `${v.name}&${v.id}&${this.managerPermData.id}`);
+            const selectGroups = selectList.filter((item) => !tableList.includes(`${item.name}&${item.id}&${this.managerPermData.id}`));
             this.managerSelectData = [...selectGroups, ...payload];
+            this.$emit('manager-selection-change', this.managerSelectData);
             this.fetchSelectedGroupCount();
           }
         };
@@ -194,12 +214,10 @@
 
       handleSelectAll (selection) {
         this.fetchSelectedGroups('all', selection);
-        this.$emit('manager-selection-change', this.managerSelectData);
       },
 
       handleSelect (selection, row) {
         this.fetchSelectedGroups('multiple', selection, row);
-        this.$emit('manager-selection-change', this.managerSelectData);
       },
 
       handlePageChange (current) {

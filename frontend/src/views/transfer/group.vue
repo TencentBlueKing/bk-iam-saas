@@ -1,5 +1,8 @@
 <template>
-  <div class="iam-transfer-group-wrapper" v-bkloading="{ isLoading: groupPermData.loading, opacity: 1 }">
+  <div
+    class="iam-transfer-group-wrapper"
+    v-bkloading="{ isLoading: groupPermData.loading, opacity: 1 }"
+  >
     <div class="transfer-group-content" ref="transferGroupContent">
       <div class="content">
         <div
@@ -84,8 +87,8 @@
               </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.permTransfer['交接对象']`)" width="300">
-              <template slot-scope="{ row }">
-                <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length">
+              <template slot-scope="{ row, $index }">
+                <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length > 0">
                   <Icon type="arrows-left" />
                   <IamEditMemberSelector
                     mode="detail"
@@ -95,7 +98,7 @@
                     :index="$index"
                   />
                 </div>
-                <span>--</span>
+                <span v-else>--</span>
               </template>
             </bk-table-column>
             <template slot="empty">
@@ -120,8 +123,8 @@
 </template>
 
 <script>
-  import { mapGetters } from 'vuex';
-  import { cloneDeep } from 'lodash';
+  import { cloneDeep, uniqWith, isEqual } from 'lodash';
+  import { getNowTimeExpired } from '@/common/util';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   export default {
     components: {
@@ -130,6 +133,10 @@
     props: {
       curPermData: {
         type: Object
+      },
+      selectedPersonalGroup: {
+        type: Array,
+        default: () => []
       },
       selectedHandoverObject: {
         type: Array,
@@ -141,7 +148,6 @@
         groupExpanded: true,
         groupShowAll: false,
         isSelectAllChecked: false,
-        groupList: [],
         groupSelectData: [],
         groupNotTransferCount: 0,
         groupPermData: {},
@@ -154,7 +160,6 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId']),
       formatRoleMembers () {
         return (payload) => {
           if (payload && payload.length) {
@@ -174,12 +179,6 @@
       }
     },
     watch: {
-      curPermData: {
-        handler (value) {
-          this.groupPermData = cloneDeep(value);
-        },
-        deep: true
-      },
       selectedHandoverObject: {
         handler (value) {
           this.groupPermData.list.forEach((item) => {
@@ -191,86 +190,67 @@
     },
     methods: {
       handleGetCheckData () {
-        const selectGroup = this.groupPermData.list.length ? this.groupSelectData.map(item => String(item.id)) : [];
-        this.groupPermData.list.forEach((item) => {
-          setTimeout(() => {
+        this.groupPermData = cloneDeep(this.curPermData);
+        const selectList = uniqWith(
+          [
+            ...this.selectedPersonalGroup,
+            ...this.groupSelectData
+          ],
+          isEqual
+        );
+        const selectGroup = selectList.map((item) => `${item.name}&${item.id}`);
+        this.$nextTick(() => {
+          this.groupPermData.loading = false;
+          this.groupPermData.list.forEach((item) => {
+            if (String(item.department_id) !== '0' || item.expired_at < getNowTimeExpired()) {
+              item.canNotTransfer = true;
+            }
+            this.$set(item, 'handover_object', this.selectedHandoverObject);
             const groupPermRef = this.$refs[`groupTableRef_${this.groupPermData.id}`];
             if (groupPermRef) {
-              if (selectGroup.includes(String(item.id))) {
-                groupPermRef.toggleRowSelection(item, true);
-              }
-              if (this.groupSelectData.length < 1) {
+              groupPermRef.toggleRowSelection(item, selectGroup.includes(`${item.name}&${item.id}`));
+              if (selectGroup.length < 1) {
                 groupPermRef.clearSelection();
               }
             }
-          }, 0);
+          });
+          this.fetchSelectedGroupCount();
         });
-        console.log(this.groupPermData.list, 4444);
-        this.fetchSelectedGroupCount();
       },
 
-      // handleGroupExpanded () {
-      //   this.groupExpanded = !this.groupExpanded;
-      //   if (this.groupExpanded) {
-      //     this.handleGetCheckData();
-      //   }
-      // },
-
-      // handleGroupShowAll () {
-      //   this.groupShowAll = !this.groupShowAll;
-      //   if (!this.groupShowAll) {
-      //     setTimeout(() => {
-      //       const top = this.$refs.transferGroupContent.getBoundingClientRect().top
-      //         + this.pageContainer.scrollTop;
-
-      //       this.pageContainer.scrollTo({
-      //         top: top - 61, // 减去顶导的高度 61
-      //         behavior: 'smooth'
-      //       });
-      //     }, 10);
-      //   }
-      // },
-
       fetchSelectedGroupCount () {
-        // setTimeout(() => {
-        //   const paginationWrapper = this.$refs.groupTableRef.$refs.paginationWrapper;
-        //   if (paginationWrapper && paginationWrapper.getElementsByClassName('bk-page-selection-count')) {
-        //     const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
-        //     if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
-        //       selectCount[0].children[0].innerHTML = this.groupSelectData.length;
-        //     }
-        //   }
-        // }, 0);
         this.$nextTick(() => {
-          console.log(this.groupSelectData);
+          const selectGroup = uniqWith([...this.selectedPersonalGroup, ...this.groupSelectData], isEqual);
           const permRef = this.$refs[`groupTableRef_${this.groupPermData.id}`];
           if (permRef && permRef.$refs && permRef.$refs.paginationWrapper) {
             const paginationWrapper = permRef.$refs.paginationWrapper;
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
-              selectCount[0].children[0].innerHTML = this.groupSelectData.length;
+              selectCount[0].children[0].innerHTML = selectGroup.length;
             }
           }
         });
       },
 
       fetchSelectedGroups (type, payload, row) {
+        const selectList = uniqWith([...this.selectedPersonalGroup, ...this.groupSelectData], isEqual);
         const typeMap = {
           multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (isChecked) {
-              this.groupSelectData.push(row);
+              selectList.push(row);
+              this.groupSelectData = [...selectList];
             } else {
-              this.groupSelectData = this.groupSelectData.filter((item) => item.id !== row.id);
+              this.groupSelectData = selectList.filter((item) => `${item.name}&${item.id}` !== `${row.name}&${row.id}`);
             }
+            this.$emit('group-selection-change', this.groupSelectData);
             this.fetchSelectedGroupCount();
           },
           all: () => {
-            const validGroupList = payload.filter(item => !item.canNotTransfer);
-            const selectGroups = this.groupSelectData.filter((item) =>
-              !this.groupList.map((v) => v.id).includes(item.id)
-            );
-            this.groupSelectData = [...selectGroups, ...validGroupList];
+            const tableList = this.groupPermData.list.filter((item) => !item.canNotTransfer).map((v) => `${v.name}&${v.id}`);
+            const selectGroups = selectList.filter((item) => !tableList.includes(`${item.name}&${item.id}`));
+            this.groupSelectData = [...selectGroups, ...payload];
+            this.$emit('group-selection-change', this.groupSelectData);
             this.fetchSelectedGroupCount();
           }
         };
@@ -279,12 +259,10 @@
 
       handleSelectAll (selection) {
         this.fetchSelectedGroups('all', selection);
-        this.$emit('group-selection-change', this.groupSelectData);
       },
 
       handleSelect (selection, row) {
         this.fetchSelectedGroups('multiple', selection, row);
-        this.$emit('group-selection-change', this.groupSelectData);
       },
 
       handlePageChange (current) {

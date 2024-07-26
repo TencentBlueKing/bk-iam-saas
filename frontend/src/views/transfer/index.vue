@@ -75,18 +75,27 @@
                   </div>
                 </div>
                 <component
-                  :is="curCom(activeTab)"
                   :ref="`childPerm_${activeTab}`"
+                  :mode="activeTab"
+                  :is="curCom(activeTab)"
+                  :is-show-system="true"
+                  :is-show-operate="false"
                   :cur-perm-data="formatTabPermData"
+                  :pagination="formatTabPermData.pagination"
+                  :table-column-config="tableColumnConfig"
                   :selected-handover-object="formData.members"
-                  :description="formData.reason"
+                  :selected-personal-group="groupSelectData"
+                  :selected-manager-group="managerSelectData"
+                  :cur-selected-group="policySelectData"
                   @on-page-change="handlePageChange"
                   @on-limit-change="handleLimitChange"
+                  @on-select-perm="handleCustomSelection"
                   @group-selection-change="handleGroupSelection"
-                  @custom-selection-change="handleCustomSelection"
                   @manager-selection-change="handleManagerSelection"
                 />
-                <!-- <p class="name-empty-error" v-if="isShowReasonError">{{ reasonValidateText }}</p> -->
+                <p class="name-empty-error" v-if="isShowPreviewError">
+                  {{ $t(`m.permTransfer['还未选择权限']`) }}
+                </p>
               </IamFormItem>
             </bk-form>
           </div>
@@ -114,12 +123,15 @@
 
 <script>
   import { mapGetters } from 'vuex';
+  import { cloneDeep } from 'lodash';
   import { ALL_PERM_GROUP_LIST } from '@/common/constants';
-  import { existValue, formatCodeData, sleep, getNowTimeExpired } from '@/common/util';
+  import { existValue, formatCodeData, getNowTimeExpired, classifyArrayByField } from '@/common/util';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
+  import PermSystem from '@/model/my-perm-system';
+  import PermPolicy from '@/model/my-perm-policy';
   import BkUserSelector from '@blueking/user-selector';
+  import Custom from '@/views/my-perm/components/custom-perm-table.vue';
   import Group from './group.vue';
-  import Custom from './custom.vue';
   import Manager from './manager.vue';
 
   export default {
@@ -136,8 +148,8 @@
         enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
         allPermTab: [],
         groupSelectData: [],
-        customSelectData: {},
         managerSelectData: [],
+        policySelectData: [],
         initConfigData: {
           loading: false,
           pagination: {
@@ -154,8 +166,13 @@
           },
           list: []
         },
+        tableColumnConfig: {
+          isShowSystem: true,
+          isShowTransferObject: true,
+          isShowOperate: false
+        },
         formData: {
-          members: [],
+          members: ['edwin'],
           reason: ''
         },
         submitDataBack: {},
@@ -163,6 +180,7 @@
         isShowReasonError: false,
         submitLoading: false,
         isPermissionsPrompt: false,
+        isShowPreviewError: true,
         isFixedFooter: false,
         isLoading: false,
         activeTab: 'personalPerm',
@@ -220,23 +238,20 @@
       this.fetchInitData();
     },
     mounted () {
-      console.log(this.handoverData, '交接数据');
-      this.handleGetPageHeight();
-      window.addEventListener('resize', this.handleGetPageHeight);
-      this.$once('hook:beforeDestroy', () => {
-        window.removeEventListener('resize', this.handleGetPageHeight);
-      });
-      this.submitDataBack = Object.assign({}, {
-        ...this.formData,
-        ...this.customSelectData,
-        ...{
-          list: [...this.groupSelectData, ...this.managerSelectData]
-        }
-      });
+      this.getMountedLoadData();
     },
     methods: {
       async fetchInitData () {
-        await Promise.all([this.fetchPersonalGroupData(), this.fetchManagerGroupData()]);
+        const reqList = [
+          this.fetchPersonalGroupData()
+        ];
+        if (this.isShowCustomPerm) {
+          reqList.push(this.fetchCustomPermData());
+        }
+        if (this.isShowManagerPerm) {
+          reqList.push(this.fetchManagerGroupData());
+        }
+        await Promise.all(reqList);
       },
 
       async fetchPersonalGroupData () {
@@ -263,24 +278,18 @@
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          curData.list && curData.list.forEach((v) => {
-            if (String(v.department_id) !== '0' || v.expired_at < getNowTimeExpired()) {
-              v.canNotTransfer = true;
-            }
-            this.$set(v, 'reason', this.formData.reason);
-            this.$set(v, 'handover_object', this.formData.members);
+          this.$nextTick(() => {
+            const permRef = this.$refs[`childPerm_${this.activeTab}`];
+            permRef && permRef.handleGetCheckData();
           });
         } catch (e) {
           curData = Object.assign(curData, {
+            loading: false,
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
-        } finally {
-          sleep(500).then(() => {
-            curData.loading = false;
-          });
         }
       },
 
@@ -306,25 +315,96 @@
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          curData.list.forEach((v) => {
-            this.$set(v, 'handover_object', this.formData.members);
+          this.$nextTick(() => {
+            const permRef = this.$refs[`childPerm_${this.activeTab}`];
+            permRef && permRef.handleGetCheckData();
           });
         } catch (e) {
           curData = Object.assign(curData, {
+            loading: false,
+            list: [],
+            emptyData: formatCodeData(e.code, emptyData),
+            pagination: { ...pagination, ...{ count: 0 } }
+          });
+          this.messageAdvancedError(e);
+        }
+      },
+
+      async fetchCustomPermData () {
+        let curData = this.allPermTab.find((v) => ['customPerm', 'renewalCustomPerm'].includes(v.id));
+        if (!curData) {
+          return;
+        }
+        curData.loading = true;
+        const { emptyData, pagination } = curData;
+        try {
+          const externalSystemParams = this.externalSystemId ? { system_id: this.externalSystemId } : '';
+          const { code, data } = await this.$store.dispatch('permApply/getHasPermSystem', externalSystemParams);
+          const list = data || [];
+          const systemPolicyList = list.map((item) => {
+            const sys = new PermSystem(item);
+            sys.loading = false;
+            sys.policyList = [];
+            return sys;
+          });
+          curData = Object.assign(curData, {
+            list: systemPolicyList,
+            emptyData: formatCodeData(code, emptyData, list.length === 0)
+          });
+          if (list.length) {
+            let policyList = [];
+            curData.list.forEach(async (item) => {
+              await Promise.all([this.handleSystemExpanded(item)]);
+              policyList = [...policyList, ...item.policyList];
+              curData = Object.assign(curData, {
+                policyList,
+                pagination: { ...pagination, ...{ current: 1, count: policyList.length } }
+              });
+              this.$nextTick(() => {
+                const permRef = this.$refs[`childPerm_${this.activeTab}`];
+                if (permRef && permRef.handleGetSelectedPerm) {
+                  permRef.handleGetSelectedPerm();
+                }
+              });
+            });
+          }
+        } catch (e) {
+          curData = Object.assign(curData, {
+            loading: false,
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
         } finally {
-          sleep(500).then(() => {
-            curData.loading = false;
+          curData.loading = false;
+        }
+      },
+
+      async handleSystemExpanded (sys) {
+        try {
+          const { data } = await this.$store.dispatch('permApply/getPolicies', { system_id: sys.id });
+          const alreadyLoadedList = cloneDeep(sys.policyList);
+          sys.policyList = (data || []).map((item) => {
+            const policy = {
+              ...new PermPolicy(item),
+              system_id: sys.id,
+              system_name: sys.name,
+              canNotTransfer: item.expired_at < getNowTimeExpired()
+            };
+            const foundPolicy = alreadyLoadedList.find((v) => `${v.id}&${v.policy_id}` === `${policy.id}&${policy.policy_id}`);
+            policy.transferChecked = foundPolicy ? foundPolicy.transferChecked : false;
+            console.log(5555);
+            return policy;
           });
+        } catch (e) {
+          this.messageAdvancedError(e);
         }
       },
       
       async handleSubmit () {
-        if (this.formData.members.length && this.user.username === this.formData.members[0]) {
+        const { members, reason } = this.formData;
+        if (members.length && members.includes(this.user.username)) {
           this.isPermissionsPrompt = true;
           return;
         }
@@ -333,35 +413,28 @@
           return;
         }
         if (!this.groupSelectData.length
-          && !Object.keys(this.customSelectData).length
+          && !this.policySelectData.length
           && !this.managerSelectData.length
         ) {
-          this.messageWarn(this.$t(`m.permTransfer['还未选择权限']`));
+          this.isShowPreviewError = true;
           this.scrollToLocation(this.$refs.formPermReview);
           return;
         }
-        const groupIds = [];
-        const roleIds = [];
         const customPolicies = [];
-        this.groupSelectData.forEach(item => {
-          groupIds.push(item.id);
-        });
-        this.managerSelectData.forEach(item => {
-          roleIds.push(item.id);
-        });
-        Object.keys(this.customSelectData).forEach((key) => {
-          const customPolicy = {
-            system_id: key,
-            policy_ids: []
-          };
-          this.customSelectData[key].forEach((policyInfo) => {
-            customPolicy.policy_ids.push(policyInfo.policy_id);
-          });
-          customPolicies.push(customPolicy);
-        });
+        const groupIds = this.groupSelectData.map((item) => item.id);
+        const roleIds = this.managerSelectData.map((item) => item.id);
+        if (this.policySelectData.length) {
+          const systemList = await classifyArrayByField(this.policySelectData, 'system_id');
+          for (const [key, value] of systemList.entries()) {
+            customPolicies.push({
+              system_id: key,
+              policy_ids: value.map((v) => v.policy_id)
+            });
+          }
+        }
         const submitData = {
-          handover_to: this.formData.members[0],
-          reason: this.formData.reason,
+          reason,
+          handover_to: members[0],
           handover_info: {
             group_ids: groupIds,
             role_ids: roleIds,
@@ -404,15 +477,18 @@
           const typeMap = {
             personalPerm: async () => {
               await this.fetchPersonalGroupData();
-              this.$nextTick(() => {
-                this.$refs[`childPerm_${this.activeTab}`].handleGetCheckData();
-              });
+            },
+            customPerm: async () => {
+              await this.fetchCustomPermData();
+              setTimeout(() => {
+                const permRef = this.$refs[`childPerm_${this.activeTab}`];
+                if (permRef && permRef.handleGetSelectedPerm) {
+                  permRef.handleGetSelectedPerm();
+                }
+              }, 0);
             },
             managerPerm: async () => {
               await this.fetchManagerGroupData();
-              this.$nextTick(() => {
-                this.$refs[`childPerm_${this.activeTab}`].handleGetCheckData();
-              });
             }
           };
           if (typeMap[this.activeTab]) {
@@ -422,26 +498,42 @@
       },
 
       handlePageChange (payload) {
+        if (['customPerm'].includes(this.activeTab)) {
+          const curData = this.allPermTab.find((v) => v.id === 'customPerm');
+          if (curData) {
+            curData.pagination = Object.assign(curData.pagination, payload);
+          }
+          return;
+        }
         this.handleGetPaginationData(payload);
       },
 
       handleLimitChange (payload) {
+        if (['customPerm'].includes(this.activeTab)) {
+          const curData = this.allPermTab.find((v) => v.id === 'customPerm');
+          if (curData) {
+            curData.pagination = Object.assign(curData.pagination, payload);
+          }
+          return;
+        }
         this.handleGetPaginationData(payload);
       },
 
       handleGroupSelection (payload) {
         this.groupSelectData.splice(0, this.groupSelectData.length, ...payload);
+        this.handlePreviewPermValidator();
         this.handleRtxLeavePage();
       },
 
       handleCustomSelection (payload) {
-        this.customSelectData = Object.assign({}, payload);
-        console.log(this.customSelectData);
+        this.policySelectData = [...payload];
+        this.handlePreviewPermValidator();
         this.handleRtxLeavePage();
       },
 
       handleManagerSelection (payload) {
         this.managerSelectData.splice(0, this.managerSelectData.length, ...payload);
+        this.handlePreviewPermValidator();
         this.handleRtxLeavePage();
       },
 
@@ -503,6 +595,13 @@
         return !this.isShowReasonError && !this.isShowMemberError;
       },
 
+      handlePreviewPermValidator () {
+        this.isShowPreviewError = !(this.groupSelectData.length > 0
+          || this.managerSelectData.length > 0
+          || this.policySelectData.length > 0
+        );
+      },
+
       handleCancel () {
         let cancelHandler = Promise.resolve();
         if (window.changeDialog) {
@@ -524,7 +623,7 @@
           ...this.formData,
           ...this.customSelectData,
           ...{
-            list: [...this.groupSelectData, ...this.managerSelectData]
+            list: [...this.groupSelectData, ...this.managerSelectData, ...this.policySelectData]
           }
         };
         window.changeDialog = JSON.stringify(this.submitDataBack) !== JSON.stringify(submitData);
@@ -539,6 +638,7 @@
       },
 
       getAllPermHandoverTab () {
+        const defaultPermTab = ALL_PERM_GROUP_LIST.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id));
         if (existValue('externalApp') && this.externalSystemId) {
           let hidePermTab = [];
           if (!this.isShowCustomPerm) {
@@ -547,20 +647,41 @@
           if (!this.isShowManagerPerm) {
             hidePermTab = [...hidePermTab, ...['managerPerm']];
           }
-          this.allPermTab = ALL_PERM_GROUP_LIST.filter((item) => !hidePermTab.includes(item.id)).map((v) => {
+          this.allPermTab = defaultPermTab.filter((item) => !hidePermTab.includes(item.id)).map((v) => {
             return {
               ...v,
               ...this.initConfigData
             };
           });
         } else {
-          this.allPermTab = ALL_PERM_GROUP_LIST.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).map((v) => {
+          this.allPermTab = defaultPermTab.map((v) => {
             return {
               ...v,
              ...this.initConfigData
             };
           });
         }
+      },
+
+      getMountedLoadData () {
+        console.log(this.handoverData, '交接数据');
+        if (this.handoverData.length) {
+          this.groupSelectData = this.handoverData.filter((v) => ['personalPerm', 'renewalPersonalPerm'].includes(v.mode_type));
+          this.managerSelectData = this.handoverData.filter((v) => ['managerPerm'].includes(v.mode_type));
+          this.policySelectData = this.handoverData.filter((v) => ['customPerm', 'renewalCustomPerm'].includes(v.mode_type));
+          this.handlePreviewPermValidator();
+        }
+        this.submitDataBack = Object.assign({}, {
+          ...this.formData,
+          ...{
+            list: [...this.groupSelectData, ...this.managerSelectData, ...this.policySelectData]
+          }
+        });
+        this.handleGetPageHeight();
+        this.$once('hook:beforeDestroy', () => {
+          window.removeEventListener('resize', this.handleGetPageHeight);
+        });
+        window.addEventListener('resize', this.handleGetPageHeight);
       }
     }
   };
@@ -578,6 +699,7 @@
     .horizontal-item {
       padding: 0;
       margin-bottom: 32px;
+      box-shadow: 0;
       .label {
         min-width: 0 !important;
         width: 0;
@@ -665,6 +787,9 @@
           }
         }
       }
+    }
+    .fixed {
+      box-shadow: none;
     }
   }
   /deep/ .transfer-footer {

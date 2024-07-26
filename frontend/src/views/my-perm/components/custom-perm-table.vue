@@ -18,11 +18,19 @@
       <bk-table-column
         type="selection"
         align="center"
+        :selectable="row => !row.canNotTransfer"
       />
+      <template v-if="tableColumnConfig.isShowSystem">
+        <bk-table-column :label="$t(`m.set['系统名称']`)" fixed="left">
+          <template slot-scope="{ row }">
+            <span v-bk-tooltips="{ content: row.system_name }">{{ row.system_name }}</span>
+          </template>
+        </bk-table-column>
+      </template>
       <bk-table-column
         :label="$t(`m.common['操作']`)"
         :min-width="200"
-        :fixed="'left'"
+        :fixed="!tableColumnConfig.isShowSystem ? 'left' : ''"
       >
         <template slot-scope="{ row }">
           <span
@@ -89,13 +97,6 @@
               ]"
             >
               <IamEffectCondition :value="_.environments" :is-empty="!_.environments.length" />
-              <Icon
-                type="detail-new"
-                class="effect-detail-icon"
-                :title="$t(`m.common['详情']`)"
-                v-if="isShowPreview(row)"
-                @click.stop="handleEnvironmentsViewResource(_, row)"
-              />
             </div>
           </div>
           <div v-else class="condition-table-cell empty-text">
@@ -108,66 +109,85 @@
         :min-width="100"
         :label="$t(`m.common['有效期']`)"
       />
-      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right" :width="formatOperate">
-        <template slot-scope="{ row }">
-          <div class="custom-perm-operate-column">
-            <div class="custom-actions-item">
-              <bk-popconfirm
-                trigger="click"
-                placement="bottom-end"
-                ext-popover-cls="iam-custom-popover-confirm delete-popover-wrapper"
-                :width="280"
-                @confirm="handleSubmitDelete"
-              >
-                <div slot="content">
-                  <div class="popover-title">
-                    <div class="popover-title-text">
-                      {{ delActionDialogTitle }}
+      <template v-if="tableColumnConfig.isShowTransferObject">
+      </template>
+      <bk-table-column :label="$t(`m.permTransfer['交接对象']`)" width="300">
+        <template slot-scope="{ row, $index }">
+          <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length > 0">
+            <Icon type="arrows-left" />
+            <IamEditMemberSelector
+              mode="detail"
+              field="role_members"
+              width="300"
+              :value="formatRoleMembers(row.handover_object)"
+              :index="$index"
+            />
+          </div>
+          <span v-else>--</span>
+        </template>
+      </bk-table-column>
+      <template v-if="tableColumnConfig.isShowOperate">
+        <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right" :width="formatOperate">
+          <template slot-scope="{ row }">
+            <div class="custom-perm-operate-column">
+              <div class="custom-actions-item">
+                <bk-popconfirm
+                  trigger="click"
+                  placement="bottom-end"
+                  ext-popover-cls="iam-custom-popover-confirm delete-popover-wrapper"
+                  :width="280"
+                  @confirm="handleSubmitDelete"
+                >
+                  <div slot="content">
+                    <div class="popover-title">
+                      <div class="popover-title-text">
+                        {{ delActionDialogTitle }}
+                      </div>
                     </div>
-                  </div>
-                  <div class="popover-content">
-                    <div class="popover-content-item">
-                      <span class="popover-content-item-label">
-                        {{ $t(`m.userOrOrg['操作对象']`) }}{{ $t(`m.common['：']`)}}
-                      </span>
-                      <span class="popover-content-item-value"> {{ user.name }}</span>
-                    </div>
-                    <div v-if="delActionList.length" class="delete-tips">
-                      <p class="delete-tips-title">
-                        {{ delActionDialogTip }}
-                      </p>
-                      <div class="delete-tips-content">
-                        <p v-for="item in delActionList" :key="item.id">
-                          <Icon bk type="info-circle-shape" class="warn" />
-                          <span>{{ item.name }}</span>
+                    <div class="popover-content">
+                      <div class="popover-content-item">
+                        <span class="popover-content-item-label">
+                          {{ $t(`m.userOrOrg['操作对象']`) }}{{ $t(`m.common['：']`)}}
+                        </span>
+                        <span class="popover-content-item-value"> {{ user.name }}</span>
+                      </div>
+                      <div v-if="delActionList.length" class="delete-tips">
+                        <p class="delete-tips-title">
+                          {{ delActionDialogTip }}
                         </p>
+                        <div class="delete-tips-content">
+                          <p v-for="item in delActionList" :key="item.id">
+                            <Icon bk type="info-circle-shape" class="warn" />
+                            <span>{{ item.name }}</span>
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <bk-button type="primary" text @click="handleShowDelDialog(row)">
-                  {{ $t(`m.userGroupDetail['删除操作权限']`) }}
+                  <bk-button type="primary" text @click="handleShowDelDialog(row)">
+                    {{ $t(`m.userGroupDetail['删除操作权限']`) }}
+                  </bk-button>
+                </bk-popconfirm>
+              </div>
+              <div class="custom-actions-item" v-if="isShowPreview(row)">
+                <bk-button type="primary" text @click="handleViewResource(row)">
+                  {{ $t(`m.userGroupDetail['查看实例权限']`) }}
                 </bk-button>
-              </bk-popconfirm>
+              </div>
+              <div class="custom-actions-item" v-if="isShowRenewal(row)">
+                <bk-button type="primary" text @click="handleViewResource(row)">
+                  {{ $t(`m.renewal['续期']`) }}
+                </bk-button>
+              </div>
+              <div class="custom-actions-item">
+                <bk-button type="primary" text @click="handleViewResource(row)">
+                  {{ $t(`m.perm['交接']`) }}
+                </bk-button>
+              </div>
             </div>
-            <div class="custom-actions-item" v-if="isShowPreview(row)">
-              <bk-button type="primary" text @click="handleViewResource(row)">
-                {{ $t(`m.userGroupDetail['查看实例权限']`) }}
-              </bk-button>
-            </div>
-            <div class="custom-actions-item" v-if="isShowRenewal(row)">
-              <bk-button type="primary" text @click="handleViewResource(row)">
-                {{ $t(`m.renewal['续期']`) }}
-              </bk-button>
-            </div>
-            <div class="custom-actions-item">
-              <bk-button type="primary" text @click="handleViewResource(row)">
-                {{ $t(`m.perm['交接']`) }}
-              </bk-button>
-            </div>
-          </div>
-        </template>
-      </bk-table-column>
+          </template>
+        </bk-table-column>
+      </template>
       <template slot="empty">
         <ExceptionEmpty
           :type="policyEmptyData.type"
@@ -250,31 +270,6 @@
       </div>
     </bk-sideslider>
 
-    <!-- 生效时间编辑功能需要产品确认 暂时隐藏 -->
-    <bk-sideslider
-      :is-show="isShowResourceInstanceEffectTime"
-      :title="environmentsSliderTitle"
-      :width="640"
-      quick-close
-      @update:isShow="handleEffectTimeCancel"
-      :ext-cls="'relate-instance-sideslider'"
-    >
-      <div slot="content" class="sideslider-content">
-        <IamEffectConditionEdit
-          ref="sidesliderRef"
-          :data="environmentsEffectData"
-        />
-      </div>
-      <div slot="footer" style="margin-left: 25px">
-        <bk-button theme="primary" @click="handleEffectTimeSubmit">
-          {{ $t(`m.common['保存']`) }}
-        </bk-button>
-        <bk-button style="margin-left: 8px" @click="handleEffectTimeCancel">
-          {{ $t(`m.common['取消']`) }}
-        </bk-button>
-      </div>
-    </bk-sideslider>
-
     <DeleteActionDialog
       :show.sync="isShowDeleteDialog"
       :loading="deleteDialog.loading"
@@ -300,7 +295,7 @@
   import RenderDetail from '@/components/iam-render-detail';
   import IamPopoverConfirm from '@/components/iam-popover-confirm';
   import IamEffectCondition from '@/components/iam-effect-condition';
-  import IamEffectConditionEdit from '@/components/iam-sideslider-effect-condition';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   export default {
     provide: function () {
       return {
@@ -309,9 +304,9 @@
     },
     components: {
       IamPopoverConfirm,
-      RenderDetail,
       IamEffectCondition,
-      IamEffectConditionEdit,
+      IamEditMemberSelector,
+      RenderDetail,
       DeleteActionDialog
     },
     props: {
@@ -352,6 +347,23 @@
             count: 0
           };
         }
+      },
+      curPermData: {
+        type: Object
+      },
+      tableColumnConfig: {
+        type: Object,
+        default: () => {
+          return {
+            isShowSystem: false,
+            isShowTransferObject: false,
+            isShowOperate: true
+          };
+        }
+      },
+      selectedHandoverObject: {
+        type: Array,
+        default: () => []
       },
       curSelectedGroup: {
         type: Array,
@@ -395,6 +407,7 @@
         isShowResourceInstanceEffectTime: false,
         params: {},
         searchParams: {},
+        customPermData: {},
         deleteDialog: {
           visible: false,
           title: this.$t(`m.dialog['确认删除']`),
@@ -424,6 +437,23 @@
         return (payload) => {
           const result = this.renewalCustomPerm.some((v) => v.id === payload.policy_id);
           return result;
+        };
+      },
+      formatRoleMembers () {
+        return (payload) => {
+          if (payload && payload.length) {
+            const hasName = payload.some((v) => v.username);
+            if (!hasName) {
+              payload = payload.map(v => {
+                return {
+                  username: v,
+                  readonly: false
+                };
+              });
+            }
+            return payload;
+          }
+          return payload || [];
         };
       },
       formatInstanceCount () {
@@ -506,6 +536,29 @@
       curSelectedGroup: {
         handler (value) {
           this.currentSelectList = [...value];
+        },
+        deep: true
+      },
+      curPermData: {
+        handler (value) {
+          const { policyList, pagination } = value;
+          this.pagination.count = policyList.length || 0;
+          this.policyListBack = [...policyList || []];
+          this.policyList = this.handleGetDataByPage(
+            this.pagination.current,
+            {
+              list: this.policyListBack,
+              pagination
+            }
+          );
+        },
+        deep: true
+      },
+      selectedHandoverObject: {
+        handler (value) {
+          this.policyList.forEach((item) => {
+            this.$set(item, 'handover_object', value);
+          });
         },
         deep: true
       }
@@ -634,8 +687,12 @@
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
               // 查找当前系统下的操作
-              const actionsLen = payload.filter((v) => `${v.mode_type}&${v.system_id}` === `${this.mode}&${this.systemId}`).length;
-              selectCount[0].children[0].innerHTML = actionsLen;
+              if (['permTransfer'].includes(this.$route.name)) {
+                selectCount[0].children[0].innerHTML = payload.length;
+              } else {
+                const actionsLen = payload.filter((v) => `${v.mode_type}&${v.system_id}` === `${this.mode}&${this.systemId}`).length;
+                selectCount[0].children[0].innerHTML = actionsLen;
+              }
             }
           }
         });
@@ -644,7 +701,7 @@
       handleSelectionChange (selection, row) {
         row = Object.assign(row, {
           mode_type: this.mode,
-          system_id: this.systemId
+          system_id: row.system_id || this.systemId
         });
         this.fetchSelectedGroups('multiple', selection, row);
       },
@@ -656,7 +713,7 @@
               ...v,
               ...{
                 mode_type: this.mode,
-                system_id: this.systemId
+                system_id: v.system_id || this.systemId
               }
             };
           });
@@ -681,11 +738,12 @@
 
       handlePageChange (page) {
         this.$emit('on-page-change', page);
+        const pagination = Object.assign(this.pagination, { current: page });
         this.policyList = this.handleGetDataByPage(
           page,
           {
             list: this.policyListBack,
-            pagination: this.pagination
+            pagination
           }
         );
         // 切换分页时自动勾选已选的数据
@@ -706,15 +764,23 @@
       },
 
       handleGetSelectedPerm () {
-        const policyData = this.currentSelectList.map((v) => `${v.name}&${v.id}`);
-        this.fetchCustomTotal(this.currentSelectList);
+        const selectList = uniqWith([...this.currentSelectList, ...this.curSelectedGroup], isEqual);
+        const policyData = selectList.map((v) => `${v.name}&${v.id}`);
         this.$nextTick(() => {
-          this.policyList.forEach((item) => {
-            if (policyData.includes(`${item.name}&${item.id}`)) {
-              this.$refs[`customPermRef_${this.mode}_${this.systemId}`].toggleRowSelection(item, true);
-            }
-          });
+          const permRef = this.$refs[`customPermRef_${this.mode}_${this.systemId}`];
+          console.log(111);
+          if (permRef) {
+            this.policyList.forEach((item) => {
+              console.log(permRef, policyData.includes(`${item.name}&${item.id}`));
+              this.$set(item, 'handover_object', this.selectedHandoverObject);
+              permRef.toggleRowSelection(item, policyData.includes(`${item.name}&${item.id}`));
+              // if (!selectList.length) {
+              //   permRef.clearSelection();
+              // }
+            });
+          }
         });
+        this.fetchCustomTotal(selectList);
       },
 
       handleActionLinearData () {
@@ -950,20 +1016,6 @@
         );
       },
 
-      handleEffectTimeCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(
-          () => {
-            this.isShowResourceInstanceEffectTime = false;
-            this.resetDataAfterClose();
-          },
-          (_) => _
-        );
-      },
-
       handleViewResource (payload) {
         const params = [];
         this.curId = payload.id;
@@ -1005,14 +1057,6 @@
         this.isShowSideSlider = true;
       },
 
-      handleEnvironmentsViewResource (payload, data) {
-        this.environmentsEffectData = payload.environments;
-        this.isShowEffectConditionSlider = true;
-        this.environmentsSliderTitle = this.$t(`m.info['关联侧边栏操作生效条件']`, {
-          value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}`
-        });
-      },
-
       handlerReduceInstance (payload, data) {
         if (data.resource_groups.length >= 2) {
           const { id, related_resource_types: relatedResourceTypes } = payload;
@@ -1029,12 +1073,6 @@
 
       handleViewEffectCondition () {
         this.isShowResourceInstanceEffectTime = true;
-      },
-
-      handleEffectTimeSubmit () {
-        const environments = this.$refs.sidesliderRef.handleGetValue();
-        console.log(this.curIndex, this.curGroupIndex, environments);
-        window.changeAlert = false;
       },
 
       handleAfterDeleteLeave () {
@@ -1074,4 +1112,24 @@
 <style lang="postcss" scoped>
 @import '@/css/mixins/custom-popover-confirm.css';
 @import '../common/css/custom-perm-table.css';
+/deep/ .transfer-object-column {
+  display: flex;
+  align-items: center;
+  .iamcenter-arrows-left {
+    color: #ff9c01;
+    font-size: 16px;
+    margin-right: 5px;
+    transform: rotate(180deg);
+  }
+  .iam-edit-selector {
+    width: 100%;
+    .edit-content {
+      max-width: 100%;
+      .member-item {
+        background-color: #f0f5ff;
+        color: #3a84ff;
+      }
+    }
+  }
+}
 </style>
