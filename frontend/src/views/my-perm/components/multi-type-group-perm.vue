@@ -5,6 +5,7 @@
       { 'is-show-notice': showNoticeAlert && showNoticeAlert() }
     ]"
   >
+    {{ permData.hasPerm }}
     <template v-if="permData.hasPerm">
       <RenderPermItem
         v-for="(item, index) in allPermItem"
@@ -232,13 +233,12 @@
             true: () => {
               if (['renewalPerm'].includes(this.groupData.value)) {
                 return this.renewalCustomPerm.length;
-              } else {
-                const countList = payload.list.map((v) => v.count);
-                payload.pagination.count = countList.reduce((prev, cur) => {
-                 return cur + prev;
-               }, 0);
-               return payload.pagination.count;
               }
+              const countList = payload.list.map((v) => v.count);
+              payload.pagination.count = countList.reduce((prev, cur) => {
+               return cur + prev;
+             }, 0);
+             return payload.pagination.count;
             },
             false: () => {
               return payload.pagination.count;
@@ -258,7 +258,9 @@
           this.curSelectedGroup = [];
           this.handleSelectedGroup([]);
           this.fetchRefreshPermData();
-          this.comKey = +new Date();
+          if (['customPerm'].includes(newValue.value)) {
+            this.comKey = +new Date();
+          }
         },
         immediate: true
       },
@@ -329,11 +331,9 @@
             emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(curData.emptyData);
           // 跨页全选
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
-          this.emptyPermData = formatCodeData(e.code, { ...emptyData, ...{ tipType: 'refresh' } });
           curData = Object.assign(curData, {
             list: [],
             listBack: [],
@@ -437,7 +437,6 @@
             emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(curData.emptyData);
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
@@ -446,7 +445,6 @@
             emptyData: formatCodeData(e.code, { ...emptyData, ...{ tipType: 'refresh' } }),
             pagination: { ...pagination, ...{ count: 0 } }
           });
-          this.emptyPermData = formatCodeData(e.code, emptyData);
           this.messageAdvancedError(e);
         } finally {
           curData.loading = false;
@@ -480,7 +478,6 @@
             emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(curData.emptyData);
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
@@ -489,7 +486,6 @@
             emptyData: formatCodeData(e.code, { ...emptyData, ...{ tipType: 'refresh' } }),
             pagination: { ...pagination, ...{ count: 0 } }
           });
-          this.emptyPermData = formatCodeData(e.code, emptyData);
           this.messageAdvancedError(e);
         } finally {
           curData.loading = false;
@@ -510,15 +506,23 @@
         const { emptyData, pagination } = curData;
         try {
           curData.loading = true;
-          const params = {};
+          let params = {};
+          let url = 'permApply/getHasPermSystem';
           if (Object.keys(this.curSearchParams).length > 0) {
             params.system_id = this.curSearchParams.system_id;
           }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
           }
+          if (this.isSearchResource && this.curSearchParams.system_id) {
+            url = 'perm/getPoliciesSearch';
+            params = {
+              ...params,
+              ...this.curSearchParams
+            };
+          }
           const { code, data } = await this.$store.dispatch(
-            'permApply/getHasPermSystem',
+            url,
             params
           );
           const totalCount = data.length || 0;
@@ -537,10 +541,14 @@
           });
           curData = Object.assign(curData, {
             list: result || [],
-            listBack: result || [],
-            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            listBack: !this.isSearchResource ? result : [],
+            emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
+          if (this.isSearchResource && this.curSearchParams.system_id) {
+            curData.list = curData.listBack.filter((item) => item.id === this.curSearchParams.system_id);
+          }
+          console.log(curData, 555);
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
@@ -569,7 +577,6 @@
           curData.loading = true;
           const { current, limit } = pagination;
           const params = {
-            ...this.curSearchParams,
             limit,
             offset: (current - 1) * limit,
             with_super: true
@@ -598,9 +605,6 @@
           sleep(300).then(() => {
             curData.loading = false;
           });
-          if (['managerPerm'].includes(this.queryGroupData.value)) {
-            this.emptyPermData = cloneDeep(curData.emptyData);
-          }
         }
       },
 
@@ -632,7 +636,6 @@
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(curData.emptyData);
           // 跨页全选
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
@@ -770,6 +773,11 @@
             return typeMap['all']();
           }
           return typeMap[this.queryGroupData.value]();
+        }
+        if (!this.permData.hasPerm) {
+          let reqCode = 0;
+          reqCode = this.allPermItem.find((v) => ['refresh'].includes(v.emptyData.tipType)) ? 500 : 0;
+          this.emptyPermData = formatCodeData(reqCode, { ...this.emptyPermData, ...{ tipType: this.isSearchResource ? 'search' : '' } });
         }
       },
 
@@ -969,6 +977,7 @@
         this.resetPagination();
         this.curSearchParams = {};
         this.isSearchResource = false;
+        console.log(4444);
         this.fetchRefreshPermData();
         this.$emit('on-clear');
       },

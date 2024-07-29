@@ -227,7 +227,7 @@
                 {{ $t(`m.renewal['续期']`) }}
               </bk-button>
               <bk-button
-                v-if="isShowHandover"
+                v-if="isShowHandover(row)"
                 theme="primary"
                 text
                 class="operate-btn"
@@ -346,6 +346,7 @@
     data () {
       return {
         PERMANENT_TIMESTAMP,
+        isAllowHandover: window.ENABLE_PERMISSION_HANDOVER.toLowerCase() === 'true',
         isShowPermSideSlider: false,
         isShowRenewalSlider: false,
         isShowTempSlider: false,
@@ -371,11 +372,13 @@
       ...mapGetters(['user']),
       isShowRenewal () {
         return (payload) => {
-          return this.formatExpired(payload.expired_at) && ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalRenewalPerm'].includes(this.mode);
+          return this.formatExpireSoon(payload.expired_at) && ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalRenewalPerm'].includes(this.mode);
         };
       },
       isShowHandover () {
-        return window.ENABLE_PERMISSION_HANDOVER.toLowerCase() === 'true' && this.isHasHandover;
+        return (payload) => {
+          return this.isAllowHandover && (payload.expired_at >= getNowTimeExpired() || ['managerPerm'].includes(this.mode));
+        };
       },
       isShowDetailEntry () {
         return !['customPerm', 'managerPerm'].includes(this.mode);
@@ -577,6 +580,9 @@
               }
             });
             this.$store.commit('perm/updateRenewalData', list);
+            this.$router.push({
+              name: 'permRenewal'
+            });
           },
           handover: () => {
             list.push({

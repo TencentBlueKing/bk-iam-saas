@@ -325,19 +325,20 @@
       isNoBatchHandover () {
         if (this.currentSelectList.length > 0) {
           const expiredGroup = this.currentSelectList.filter((item) =>
-            ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm', ''].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+            ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
           );
-          if (expiredGroup.length === this.currentSelectList.length) {
-            return true;
-          }
+          return expiredGroup.length === this.currentSelectList.length;
         }
         return !this.currentSelectList.length;
       },
       isNoBatchRenewal () {
-        const selectGroup = this.currentSelectList.filter((item) =>
-          ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
-        );
-        return !(selectGroup.length > 0);
+        if (this.currentSelectList.length) {
+          const expiredGroup = this.currentSelectList.filter((item) =>
+            ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+          );
+          return !(expiredGroup.length > 0);
+        }
+        return !this.currentSelectList.length;
       },
       formatSearchData () {
         const typeMap = {
@@ -371,15 +372,17 @@
               }
             },
             renewal: () => {
+              const isExistRenewal = this.currentSelectList.find((item) => renewalTypeList.includes(item.mode_type));
               const selectGroup = this.currentSelectList.filter((item) =>
                 renewalTypeList.includes(item.mode_type) && item.expired_at < getNowTimeExpired()
               );
-              if (!this.currentSelectList.length) {
-                return this.$t(`m.perm['未勾选用户组，无法去续期']`);
+              if (this.currentSelectList.length) {
+                if (!selectGroup.length && !isExistRenewal) {
+                  return this.$t(`m.perm['未勾选个人用户组权限或自定义操作选择前，无法去续期']`);
+                }
+                return this.$t(`m.renewal['没有需要续期的权限']`);
               }
-              if (!selectGroup.length && !['personalPerm', 'customPerm'].includes(this.groupData.value)) {
-                return this.$t(`m.perm['未勾选个人用户组权限或自定义操作选择前，无法去续期']`);
-              }
+              return this.$t(`m.perm['未勾选用户组，无法去续期']`);
             },
             handover: () => {
               const noHandoverList = this.currentSelectList.filter((item) =>
@@ -455,7 +458,6 @@
           ...searchParams,
           ...this.formData
         };
-        console.log(6666, params);
         this.isSearchPerm = emptyData.tipType === 'search';
         this.curSearchParams = cloneDeep(params);
         this.curSearchPagination = cloneDeep(pagination);
@@ -473,7 +475,6 @@
       handleSearchSelect () {},
 
       handleSelectGroupPerm (payload) {
-        // console.log(this.currentSelectList, 555);
         this.currentSelectList = [...payload];
       },
 
@@ -486,6 +487,7 @@
       },
 
       handleBatch (payload) {
+        const renewalTypeList = ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'];
         const typeMap = {
           quit: () => {
             if (!this.isNoBatchQuit) {
@@ -496,8 +498,10 @@
             }
           },
           renewal: () => {
-            const selectGroup = this.currentSelectList.filter((item) => ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired());
-            if (!this.isNoBatchHandover && selectGroup.length > 0) {
+            const selectGroup = this.currentSelectList.filter((item) =>
+              renewalTypeList.includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+            );
+            if (!this.isNoBatchRenewal && selectGroup.length > 0) {
               this.$store.commit('perm/updateRenewalData', selectGroup);
               this.$router.push({
                 name: 'permRenewal'
@@ -506,7 +510,11 @@
           },
           handover: () => {
             if (!this.isNoBatchHandover) {
-              this.$store.commit('perm/updateHandoverData', this.currentSelectList);
+              const list = this.currentSelectList.filter((item) =>
+                (renewalTypeList.includes(item.mode_type) && item.expired_at >= getNowTimeExpired())
+                || ['managerPerm'].includes(item.mode_type)
+              );
+              this.$store.commit('perm/updateHandoverData', list);
               this.$router.push({
                 name: 'permTransfer'
               });
@@ -516,7 +524,7 @@
             if (!this.isNoBatchDelete) {
               this.curSliderName = 'deleteAction';
               this.batchSliderTitle = this.$t(`m.perm['批量删除操作权限']`);
-              this.sliderGroupPermList = this.currentSelectList.filter((item) => ['customPerm'].includes(item.mode_type));
+              this.sliderGroupPermList = this.currentSelectList.filter((item) => ['customPerm', 'renewalCustomPerm'].includes(item.mode_type));
               this.isShowBatchSlider = true;
             }
           }
@@ -525,7 +533,10 @@
       },
 
       handleReset () {
-
+        this.handleRefreshGroup();
+        this.$nextTick(() => {
+          this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        });
       },
 
       handleOperateSubmit () {

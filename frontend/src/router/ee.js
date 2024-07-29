@@ -170,7 +170,7 @@ const RenewalNotice = () => import(/* webpackChunkName: 'approvalProcess' */ '..
 const UserGroupSetting = () => import(/* webpackChunkName: 'userGroupSetting' */ '../views/user-group-setting');
 
 // 权限续期
-const PermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/perm-renewal');
+const PermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/my-perm/perm-renewal');
 
 // 组织权限续期
 const GroupPermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/group-perm-renewal');

@@ -158,7 +158,6 @@
         const selectGroup = selectList.map((item) => `${item.name}&${item.id}`);
         setTimeout(() => {
           this.managerPermData.loading = false;
-          console.log(this.selectedHandoverObject);
           const managerPermRef = this.$refs[`manageTableRef_${this.managerPermData.id}`];
           this.managerPermData.list.forEach((item) => {
             this.$set(item, 'handover_object', this.selectedHandoverObject);

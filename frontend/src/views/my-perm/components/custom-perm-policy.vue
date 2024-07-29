@@ -201,16 +201,16 @@
         handler (v) {
           this.curSelectedGroup = [];
           this.handleGetSystemData(v);
-          // console.log(55555);
         },
         immediate: true
       },
       emptyData: {
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
-          // if (this.isSearchPerm || ['search'].includes(value.tipType)) {
-          //   this.handleSystemSearch();
-          // }
+          console.log(value);
+          if (this.isSearchPerm || ['search'].includes(value.tipType)) {
+            this.handleSystemSearch();
+          }
         },
         immediate: true
       }

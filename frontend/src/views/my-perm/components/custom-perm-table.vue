@@ -3,6 +3,7 @@
     <bk-table
       v-if="!loading"
       :ref="`customPermRef_${mode}_${systemId}`"
+      :key="tableKey"
       :data="policyList"
       :header-border="false"
       :outer-border="false"
@@ -110,22 +111,22 @@
         :label="$t(`m.common['有效期']`)"
       />
       <template v-if="tableColumnConfig.isShowTransferObject">
+        <bk-table-column :label="$t(`m.permTransfer['交接对象']`)" width="300">
+          <template slot-scope="{ row, $index }">
+            <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length > 0">
+              <Icon type="arrows-left" />
+              <IamEditMemberSelector
+                mode="detail"
+                field="role_members"
+                width="300"
+                :value="formatRoleMembers(row.handover_object)"
+                :index="$index"
+              />
+            </div>
+            <span v-else>--</span>
+          </template>
+        </bk-table-column>
       </template>
-      <bk-table-column :label="$t(`m.permTransfer['交接对象']`)" width="300">
-        <template slot-scope="{ row, $index }">
-          <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length > 0">
-            <Icon type="arrows-left" />
-            <IamEditMemberSelector
-              mode="detail"
-              field="role_members"
-              width="300"
-              :value="formatRoleMembers(row.handover_object)"
-              :index="$index"
-            />
-          </div>
-          <span v-else>--</span>
-        </template>
-      </bk-table-column>
       <template v-if="tableColumnConfig.isShowOperate">
         <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right" :width="formatOperate">
           <template slot-scope="{ row }">
@@ -175,12 +176,12 @@
                 </bk-button>
               </div>
               <div class="custom-actions-item" v-if="isShowRenewal(row)">
-                <bk-button type="primary" text @click="handleViewResource(row)">
+                <bk-button type="primary" text @click="handleOperate(row, 'renewal')">
                   {{ $t(`m.renewal['续期']`) }}
                 </bk-button>
               </div>
-              <div class="custom-actions-item">
-                <bk-button type="primary" text @click="handleViewResource(row)">
+              <div class="custom-actions-item" v-if="isShowHandover(row)">
+                <bk-button type="primary" text @click="handleOperate(row, 'handover')">
                   {{ $t(`m.perm['交接']`) }}
                 </bk-button>
               </div>
@@ -253,23 +254,6 @@
       </div>
     </bk-sideslider>
 
-    <bk-sideslider
-      :is-show="isShowEffectConditionSlider"
-      :title="environmentsSliderTitle"
-      :width="640"
-      quick-close
-      ext-cls="effect-condition-side"
-      @update:isShow="handleResourceCancel"
-    >
-      <div slot="content">
-        <IamEffectCondition
-          :value="environmentsEffectData"
-          :is-empty="!environmentsEffectData.length"
-          @on-view="handleViewEffectCondition"
-        />
-      </div>
-    </bk-sideslider>
-
     <DeleteActionDialog
       :show.sync="isShowDeleteDialog"
       :loading="deleteDialog.loading"
@@ -288,7 +272,7 @@
   import { cloneDeep, isEqual, uniqWith } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, getNowTimeExpired } from '@/common/util';
   import { leaveConfirm } from '@/common/leave-confirm';
   import PermPolicy from '@/model/my-perm-policy';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
@@ -395,6 +379,7 @@
         currentInstanceGroupName: '',
         delActionDialogTitle: '',
         delActionDialogTip: '',
+        tableKey: -1,
         environmentsSliderTitle: this.$t(`m.common['生效条件']`),
         batchDisabled: false,
         disabled: true,
@@ -437,6 +422,11 @@
         return (payload) => {
           const result = this.renewalCustomPerm.some((v) => v.id === payload.policy_id);
           return result;
+        };
+      },
+      isShowHandover () {
+        return (payload) => {
+          return payload.expired_at >= getNowTimeExpired();
         };
       },
       formatRoleMembers () {
@@ -541,16 +531,8 @@
       },
       curPermData: {
         handler (value) {
-          const { policyList, pagination } = value;
-          this.pagination.count = policyList.length || 0;
-          this.policyListBack = [...policyList || []];
-          this.policyList = this.handleGetDataByPage(
-            this.pagination.current,
-            {
-              list: this.policyListBack,
-              pagination
-            }
-          );
+          // 处理多系统操作合成一个表格
+          this.handleGetPolicyData(value);
         },
         deep: true
       },
@@ -719,6 +701,37 @@
           });
         }
         this.fetchSelectedGroups('all', selection);
+      },
+
+      handleOperate (payload, type) {
+        const list = [];
+        const typeMap = {
+          renewal: () => {
+            list.push({
+              ...payload,
+              ...{
+                mode_type: this.mode
+              }
+            });
+            this.$store.commit('perm/updateRenewalData', list);
+            this.$router.push({
+              name: 'permRenewal'
+            });
+          },
+          handover: () => {
+            list.push({
+              ...payload,
+              ...{
+                mode_type: this.mode
+              }
+            });
+            this.$store.commit('perm/updateHandoverData', list);
+            this.$router.push({
+              name: 'permTransfer'
+            });
+          }
+        };
+        return typeMap[type]();
       },
 
       handleGetDataByPage (page, payload) {
@@ -1069,6 +1082,19 @@
           }
           this.handleDeleteActionOrInstance(data, 'groupInstance');
         }
+      },
+
+      handleGetPolicyData (payload) {
+        const { policyList, pagination } = payload;
+        this.pagination.count = policyList.length || 0;
+        this.policyListBack = [...policyList || []];
+        this.policyList = this.handleGetDataByPage(
+          this.pagination.current,
+          {
+            list: this.policyListBack,
+            pagination
+          }
+        );
       },
 
       handleViewEffectCondition () {

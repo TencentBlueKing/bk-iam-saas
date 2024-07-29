@@ -317,6 +317,7 @@
           });
           this.$nextTick(() => {
             const permRef = this.$refs[`childPerm_${this.activeTab}`];
+            console.log(permRef);
             permRef && permRef.handleGetCheckData();
           });
         } catch (e) {
@@ -394,7 +395,6 @@
             };
             const foundPolicy = alreadyLoadedList.find((v) => `${v.id}&${v.policy_id}` === `${policy.id}&${policy.policy_id}`);
             policy.transferChecked = foundPolicy ? foundPolicy.transferChecked : false;
-            console.log(5555);
             return policy;
           });
         } catch (e) {
@@ -479,13 +479,17 @@
               await this.fetchPersonalGroupData();
             },
             customPerm: async () => {
+              console.log(curData);
+              if (curData.policyList.length) {
+                this.$nextTick(() => {
+                  const permRef = this.$refs[`childPerm_customPerm`];
+                  if (permRef && permRef.handleGetPolicyData) {
+                    permRef.handleGetPolicyData(curData);
+                  }
+                });
+                return;
+              }
               await this.fetchCustomPermData();
-              setTimeout(() => {
-                const permRef = this.$refs[`childPerm_${this.activeTab}`];
-                if (permRef && permRef.handleGetSelectedPerm) {
-                  permRef.handleGetSelectedPerm();
-                }
-              }, 0);
             },
             managerPerm: async () => {
               await this.fetchManagerGroupData();
@@ -766,6 +770,12 @@
                       }
                     }
                   }
+                }
+              }
+              .custom-perm-table-wrapper {
+                .bk-table {
+                  border: 1px solid #e6e6e6;
+                  border-top: 0;
                 }
               }
             }
