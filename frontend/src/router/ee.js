@@ -334,7 +334,6 @@ export const routes = [
         path: 'perm-renewal',
         name: 'permRenewal',
         meta: {
-          headerTitle: il8n('renewal', '申请续期'),
           backRouter: 'myPerm'
         },
         component: PermRenewal
@@ -709,7 +708,6 @@ export const routes = [
         path: 'perm-transfer',
         name: 'permTransfer',
         meta: {
-          headerTitle: il8n('permTransfer', '权限交接'),
           backRouter: 'myPerm'
         },
         component: PermTransfer

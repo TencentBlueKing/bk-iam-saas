@@ -8,18 +8,18 @@
       { 'no-fixed-footer-wrapper': !isFixedFooter }
     ]"
   >
-    <bk-button
-      v-if="isShowHandoverHistory"
-      text
-      class="handover-history-btn"
-      @click="handleNavPermTransferHistory"
-    >
-      {{ $t(`m.permTransfer['交接历史']`) }}
-    </bk-button>
     <smart-action
       class="iam-transfer-group-wrapper"
       v-bkloading="{ isLoading, opacity: 1 }"
     >
+      <bk-button
+        v-if="isShowHandoverHistory"
+        text
+        class="handover-history-btn"
+        @click="handleNavPermTransferHistory"
+      >
+        {{ $t(`m.permTransfer['交接历史']`) }}
+      </bk-button>
       <render-horizontal-block class="transfer-group-content">
         <div class="content">
           <div ref="formWrapper" class="transfer-content">
@@ -100,7 +100,7 @@
             </bk-form>
           </div>
         </div>
-        <div class="transfer-footer no-fixed-footer" v-if="!isFixedFooter">
+        <div class="transfer-footer" v-if="!isFixedFooter">
           <bk-button theme="primary" @click.stop="handleSubmit">
             {{ $t(`m.common['提交']`) }}
           </bk-button>
@@ -233,9 +233,11 @@
         deep: true
       }
     },
-    created () {
+    async created () {
+      const { isBatch } = this.$route.query;
+      this.$store.commit('setHeaderTitle', isBatch ? this.$t(`m.permTransfer['批量权限交接']`) : this.$t(`m.permTransfer['权限交接']`));
       this.getAllPermHandoverTab();
-      this.fetchInitData();
+      await this.fetchInitData();
     },
     mounted () {
       this.getMountedLoadData();
@@ -290,6 +292,8 @@
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
+        } finally {
+          this.handleGetPageHeight();
         }
       },
 
@@ -317,7 +321,6 @@
           });
           this.$nextTick(() => {
             const permRef = this.$refs[`childPerm_${this.activeTab}`];
-            console.log(permRef);
             permRef && permRef.handleGetCheckData();
           });
         } catch (e) {
@@ -379,6 +382,7 @@
           this.messageAdvancedError(e);
         } finally {
           curData.loading = false;
+          this.handleGetPageHeight();
         }
       },
 
@@ -446,7 +450,7 @@
           await this.$store.dispatch('perm/permTransfer', submitData);
           this.$bkMessage({
             theme: 'success',
-            delay: 500,
+            delay: 100,
             message: this.$t(`m.permTransfer['权限交接成功']`),
             onClose: () => {
               this.$router.push({
@@ -467,7 +471,6 @@
         if (curData) {
           this.handleGetPaginationData(curData.pagination);
         }
-        this.handleGetPageHeight();
       },
 
       handleGetPaginationData (payload) {
@@ -479,7 +482,6 @@
               await this.fetchPersonalGroupData();
             },
             customPerm: async () => {
-              console.log(curData);
               if (curData.policyList.length) {
                 this.$nextTick(() => {
                   const permRef = this.$refs[`childPerm_customPerm`];
@@ -487,6 +489,7 @@
                     permRef.handleGetPolicyData(curData);
                   }
                 });
+                this.handleGetPageHeight();
                 return;
               }
               await this.fetchCustomPermData();
@@ -634,11 +637,12 @@
       },
 
       handleGetPageHeight () {
-        this.$nextTick(() => {
+        setTimeout(() => {
+          // 第一个32和24代表上下外边距， 第二个32代表按钮的行高
           const noticeComHeight = this.showNoticeAlert && this.showNoticeAlert() ? 40 : 0;
-          const viewHeight = window.innerHeight - 51 - 51 - noticeComHeight;
+          const viewHeight = window.innerHeight - 51 - 51 - 32 - 32 - 24 - noticeComHeight;
           this.isFixedFooter = this.$refs.iamTransferPerm.offsetHeight > viewHeight;
-        });
+        }, 200);
       },
 
       getAllPermHandoverTab () {
@@ -668,7 +672,6 @@
       },
 
       getMountedLoadData () {
-        console.log(this.handoverData, '交接数据');
         if (this.handoverData.length) {
           this.groupSelectData = this.handoverData.filter((v) => ['personalPerm', 'renewalPersonalPerm'].includes(v.mode_type));
           this.managerSelectData = this.handoverData.filter((v) => ['managerPerm'].includes(v.mode_type));
@@ -693,6 +696,7 @@
 
 <style lang="postcss" scoped>
 .iam-transfer-wrapper {
+  min-height: auto;
   .handover-history-btn {
      width: 100%;
      position: relative;

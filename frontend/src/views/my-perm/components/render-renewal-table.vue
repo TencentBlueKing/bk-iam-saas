@@ -9,10 +9,9 @@
       :key="tableKey"
       :outer-border="false"
       :header-border="false"
-      :max-height="500"
       :pagination="pagination"
-      @page-change="pageChange"
-      @page-limit-change="limitChange"
+      @page-change="handlePageChange"
+      @page-limit-change="handleLimitChange"
       @select="handlerChange"
       @select-all="handlerAllChange"
       @filter-change="handleFilterChange"
@@ -154,7 +153,7 @@
             :prop="item.prop"
             :min-width="150">
             <template slot-scope="{ row }">
-              <div class="condition-table-cell" v-if="!!row.action.related_environments.length">
+              <div class="condition-table-cell" v-if="row.action && row.action.related_environments.length">
                 <div
                   v-for="(_, groIndex) in row.policy.resource_groups"
                   :key="_.id"
@@ -328,11 +327,11 @@
 </template>
 
 <script>
-  import { cloneDeep } from 'lodash';
+  import { cloneDeep, uniqWith, isEqual } from 'lodash';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { leaveConfirm } from '@/common/leave-confirm';
-  import { formatCodeData, existValue } from '@/common/util';
+  import { formatCodeData, existValue, getNowTimeExpired } from '@/common/util';
   import RenderExpireDisplay from '@/components/render-renewal-dialog/display';
   import RenderDetail from '@/components/iam-render-detail';
   import RenderPermSideSlider from '@/views/my-perm/components/render-group-perm-side-slider';
@@ -444,6 +443,7 @@
     },
     computed: {
       ...mapGetters(['user', 'externalSystemId']),
+      ...mapGetters('perm', ['renewalData']),
       isShowPreview () {
         return (payload) => {
           return payload.policy_id;
@@ -548,8 +548,8 @@
             if (this.renewalTime === PERMANENT_TIMESTAMP) {
               return this.renewalTime;
             }
-            if (payload < this.user.timestamp) {
-              return this.user.timestamp + this.renewalTime;
+            if (payload < getNowTimeExpired()) {
+              return getNowTimeExpired() + this.renewalTime;
             }
             return payload + this.renewalTime;
           };
@@ -569,8 +569,8 @@
           if (value === PERMANENT_TIMESTAMP) {
             return value;
           }
-          if (payload < this.user.timestamp) {
-            return this.user.timestamp + value;
+          if (payload < getNowTimeExpired()) {
+            return getNowTimeExpired() + value;
           }
           return payload + value;
         };
@@ -587,14 +587,30 @@
           this.allData = cloneDeep(value);
           this.allDataBack = cloneDeep(value);
           this.pagination = Object.assign(this.pagination, { count: this.count });
+          // 处理如果跳转过来有选中的数据则默认不全选
+          if (this.renewalData.length) {
+            const selectedList = [...this.renewalData].map((v) => {
+              return {
+                ...v,
+                ...{
+                  mode_type: ['personalPerm', 'renewalPersonalPerm', 'group'].includes(v.mode_type) ? 'group' : 'custom'
+                }
+              };
+            });
+            this.currentSelectList = uniqWith([...selectedList, ...this.currentSelectList], isEqual);
+          }
           this.$nextTick(() => {
             const tableItem = {
               group: () => {
                 this.tableList.splice(0, this.tableList.length, ...value);
-                this.currentSelectList = this.tableList.filter(item =>
-                  this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                if (!this.renewalData.length) {
+                  this.currentSelectList = this.tableList.filter((item) =>
+                    this.getDays(item.expired_at) < EXPIRED_DISTRICT
+                  );
+                }
                 this.tableList.forEach(item => {
-                  if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                  this.$set(item, 'mode_type', this.type);
+                  if (this.currentSelectList.map((v) => v.id).includes(item.id)) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
                   this.fetchCustomSelection();
@@ -603,16 +619,21 @@
               custom: async () => {
                 const result = await this.getCurPageData(this.pagination.current);
                 this.tableList.splice(0, this.tableList.length, ...result);
-                this.currentSelectList = this.allData.filter(item =>
-                  this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                if (!this.renewalData.length) {
+                  this.currentSelectList = this.allData.filter((item) =>
+                    this.getDays(item.expired_at) < EXPIRED_DISTRICT
+                  );
+                }
                 this.allData.forEach(item => {
+                  this.$set(item, 'mode_type', this.type);
                   if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
                     this.systemFilter.push({
                       text: item.system.name,
                       value: item.system.id
                     });
                   }
-                  if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                  const selectedPerm = this.currentSelectList.map((v) => v.id);
+                  if (selectedPerm.includes(item.id) || selectedPerm.includes(item.policy.id)) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
                   this.fetchCustomSelection();
@@ -639,7 +660,7 @@
     },
     methods: {
       getDays (payload) {
-        const dif = payload - this.user.timestamp;
+        const dif = payload - getNowTimeExpired();
         if (dif < 1) {
           return 0;
         }
@@ -687,25 +708,27 @@
         this.$emit('on-filter-system', { list: this.allData });
       },
 
-      pageChange (page = 1) {
+      handlePageChange (current = 1) {
         this.pagination = Object.assign(
           this.pagination,
           {
-            current: page
+            current
           }
         );
         this.fetchTableData();
+        this.$emit('on-page-change', current);
       },
 
-      limitChange (currentLimit, prevLimit) {
+      handleLimitChange (limit) {
         this.pagination = Object.assign(
           this.pagination,
           {
             current: 1,
-            limit: currentLimit
+            limit
           }
         );
         this.fetchTableData();
+        this.$emit('on-limit-change', limit);
       },
 
       fetchCustomSelection () {
@@ -714,13 +737,23 @@
           if (this.$refs.permTableRef && selectionCount && selectionCount.length && selectionCount[0].children) {
             const selectList = this.curFilterSystem && ['custom'].includes(this.type)
               ? this.currentSelectList.filter((item) => item.system.id === this.curFilterSystem)
-              : cloneDeep(this.currentSelectList);
+              : cloneDeep(this.currentSelectList.filter((item) => item.mode_type === this.type));
             selectionCount[0].children[0].innerHTML = selectList.length;
           }
         });
       },
 
       handlerAllChange (selection) {
+        if (selection.length > 0) {
+          selection = selection.map((v) => {
+            return {
+              ...v,
+              ...{
+                mode_type: this.type
+              }
+            };
+          });
+        }
         const tableList = this.type === 'custom' ? cloneDeep(this.allData) : cloneDeep(this.tableList);
         const selectGroups = this.currentSelectList.filter(item =>
           !tableList.map(v => v.id.toString()).includes(item.id.toString()));
@@ -729,6 +762,7 @@
       },
 
       handlerChange (selection, row) {
+        this.$set(row, 'mode_type', this.type);
         const isChecked = selection.length && selection.indexOf(row) !== -1;
         if (isChecked) {
           this.currentSelectList.push(row);
@@ -801,27 +835,6 @@
         window.changeAlert = 'iamSidesider';
         this.isShowSideSlider = true;
       },
-
-      // handleViewResource (groupItem, payload) {
-      //   const params = [];
-      //   if (groupItem.related_resource_types.length) {
-      //     groupItem.related_resource_types.forEach(item => {
-      //       const { name, type, condition } = item;
-      //       params.push({
-      //         name: type,
-      //         label: this.$t(`m.info['tab操作实例']`, { value: name }),
-      //         tabType: 'resource',
-      //         data: condition,
-      //         systemId: item.system_id,
-      //         resource_group_id: groupItem.id
-      //       });
-      //     });
-      //   }
-      //   this.previewData = cloneDeep(params);
-      //   this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
-      //   window.changeAlert = 'iamSidesider';
-      //   this.isShowSideSlider = true;
-      // },
 
       handleBatchDelete () {
         window.changeAlert = true;
@@ -982,7 +995,6 @@
               this.pagination = Object.assign(this.pagination, { current: 1 });
               await this.fetchTableData();
             } catch (e) {
-              console.error(e);
               this.messageAdvancedError(e);
             } finally {
               this.batchQuitLoading = false;
@@ -1043,7 +1055,6 @@
           this.originalCustomTmplList = cloneDeep(res.data);
           this.handleActionLinearData();
         } catch (e) {
-          console.error(e);
           this.actionLoading = false;
           this.messageAdvancedError(e);
         }
@@ -1242,9 +1253,8 @@
 
 <style lang="postcss" scoped>
 .iam-perm-renewal-table-wrapper {
-  min-height: 200px;
   .iam-perm-renewal-btn {
-    margin-top: 20px;
+    margin-top: 16px;
   }
   /deep/ .perm-renewal-table {
     /* border: none; */

@@ -5,7 +5,6 @@
       { 'is-show-notice': showNoticeAlert && showNoticeAlert() }
     ]"
   >
-    {{ permData.hasPerm }}
     <template v-if="permData.hasPerm">
       <RenderPermItem
         v-for="(item, index) in allPermItem"
@@ -548,7 +547,6 @@
           if (this.isSearchResource && this.curSearchParams.system_id) {
             curData.list = curData.listBack.filter((item) => item.id === this.curSearchParams.system_id);
           }
-          console.log(curData, 555);
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {

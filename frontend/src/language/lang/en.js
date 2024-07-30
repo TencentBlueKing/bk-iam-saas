@@ -399,7 +399,8 @@ export const m = {
         '模板名称不能为空': 'Template name cannot be empty',
         '模板成员不能为空': 'Template member cannot be empty',
         '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered',
-         '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons'
+        '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons',
+        '请输入续期理由': 'Please enter renewal reason'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -1122,6 +1123,7 @@ export const m = {
         '续期': 'Renewal',
         '申请续期': 'Apply for renewal',
         '权限续期': 'Permission renewal',
+        '批量权限续期': 'Batch permission renewal',
         '用户组续期': 'UserGroup renewal',
         '批量续期': 'Multi-renewal',
         '选择权限': 'Select permission',
@@ -1411,6 +1413,7 @@ export const m = {
     },
     permTransfer: {
         '权限交接': 'Permission handover',
+        '批量权限交接': 'Batch permission handover',
         '还未选择权限': 'No permissions have been selected',
         '权限交接理由必填': 'The reason for the handover of rights is required',
         '权限交接理由最长不超过100个字符': 'The reason for the handover of rights can be no longer than 100 characters',

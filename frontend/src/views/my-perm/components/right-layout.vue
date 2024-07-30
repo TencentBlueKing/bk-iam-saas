@@ -334,11 +334,18 @@
       isNoBatchRenewal () {
         if (this.currentSelectList.length) {
           const expiredGroup = this.currentSelectList.filter((item) =>
-            ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+            ['personalPerm', 'customPerm', 'renewalPersonalPerm', 'renewalCustomPerm'].includes(item.mode_type) && this.formatExpireSoon(item.expired_at)
           );
           return !(expiredGroup.length > 0);
         }
         return !this.currentSelectList.length;
+      },
+      formatExpireSoon () {
+        return (payload) => {
+          const dif = payload - getNowTimeExpired();
+          const days = Math.ceil(dif / (24 * 3600));
+          return days < 16;
+        };
       },
       formatSearchData () {
         const typeMap = {
@@ -499,12 +506,18 @@
           },
           renewal: () => {
             const selectGroup = this.currentSelectList.filter((item) =>
-              renewalTypeList.includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+              renewalTypeList.includes(item.mode_type) && this.formatExpireSoon(item.expired_at)
             );
             if (!this.isNoBatchRenewal && selectGroup.length > 0) {
-              this.$store.commit('perm/updateRenewalData', selectGroup);
+              const list = this.currentSelectList.filter((item) =>
+                (renewalTypeList.includes(item.mode_type) && this.formatExpireSoon(item.expired_at))
+              );
+              this.$store.commit('perm/updateRenewalData', list);
               this.$router.push({
-                name: 'permRenewal'
+                name: 'permRenewal',
+                query: {
+                  isBatch: true
+                }
               });
             }
           },
@@ -516,7 +529,10 @@
               );
               this.$store.commit('perm/updateHandoverData', list);
               this.$router.push({
-                name: 'permTransfer'
+                name: 'permTransfer',
+                query: {
+                  isBatch: true
+                }
               });
             }
           },

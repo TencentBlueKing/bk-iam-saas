@@ -33,7 +33,6 @@
       :size="setting.size"
       :data="memberTemplateList"
       :custom-header-color="'#fafbfd'"
-      :dark-header="true"
       :row-class-name="getRowClass"
       :max-height="tableHeight"
       :pagination="pagination"

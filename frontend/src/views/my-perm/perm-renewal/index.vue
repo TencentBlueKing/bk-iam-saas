@@ -1,12 +1,20 @@
 <template>
-  <smart-action :class="['iam-perm-renewal-wrapper', { 'iam-perm-renewal-wrapper-lang': !curLanguageIsCn }]">
+  <smart-action
+    ref="iamRenewalPerm"
+    :class="[
+      'iam-perm-renewal-wrapper',
+      { 'iam-perm-renewal-wrapper-lang': !curLanguageIsCn },
+      { 'no-fixed-footer-wrapper': !isFixedFooter }
+    ]"
+  >
     <render-horizontal-block :label="$t(`m.renewal['续期时长']`)" :required="true">
       <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
     </render-horizontal-block>
     <render-horizontal-block
       ext-cls="reason-wrapper"
       :label="$t(`m.renewal['续期理由']`)"
-      :required="true">
+      :required="true"
+    >
       <section ref="reasonRef">
         <bk-input
           type="textarea"
@@ -17,13 +25,13 @@
           @input="handleReasonInput"
           @blur="handleReasonBlur"
         />
-        <p class="error-tips reason-error-tips" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
+        <p class="error-tips reason-error-tips" v-if="isShowReasonError">{{ $t(`m.verify['请输入续期理由']`) }}</p>
       </section>
     </render-horizontal-block>
     <render-horizontal-block
-      :label="$t(`m.renewal['选择权限']`)"
+      :label="$t(`m.userOrOrg['续期预览']`)"
       :required="true">
-      <bk-tab
+      <!-- <bk-tab
         ref="tabRef"
         ext-cls="iam-renewal-tab-cls"
         :key="tabKey"
@@ -35,28 +43,36 @@
           v-bind="panel"
           :key="index">
           <template slot="label">
-            <span class="panel-name">
-              <span>{{ panel.label }}</span>
-              <span :style="{ 'color': active === panel.name ? '#3a84ff' : '' }">({{panel.total}})</span>
+            <span
+              :class="[
+                'panel-content',
+                { 'is-active': active === panel.name }
+              ]"
+            >
+              <span class="panel-name">{{ panel.label }}</span>
+              <span class="panel-count">{{panel.total}}</span>
             </span>
           </template>
         </bk-tab-panel>
-      </bk-tab>
-      <!-- <div
-        v-for="item in allPermTab"
-        :key="item.id"
-        :class="[
-          'transfer-preview-tab',
-          { 'is-active': activeTab === item.id }
-        ]"
-        @click.stop="handleTabChange(item)"
-      >
-        <div class="transfer-preview-tab-item">
-          <span class="tab-name">{{ item.name }}</span>
-          <span class="tab-count">{{ item.pagination.count }}</span>
+      </bk-tab> -->
+      <div class="renewal-preview">
+        <div
+          v-for="item in panels"
+          :key="item.name"
+          :class="[
+            'renewal-preview-tab',
+            { 'is-active': active === item.name }
+          ]"
+          @click.stop="handleTabChange(item.name)"
+        >
+          <div class="renewal-preview-tab-item">
+            <span class="tab-name">{{ item.label }}</span>
+            <span class="tab-count">{{ item.total }}</span>
+          </div>
         </div>
-      </div> -->
-      <render-table
+      </div>
+      <RenderTable
+        :ref="`permRenewalRef_${active}`"
         :renewal-time="expiredAt"
         :type="active"
         :data="getTableList"
@@ -66,25 +82,26 @@
         @on-select="handleSelected"
         @on-change-count="handleChangeCount"
         @on-filter-system="handleFilterSystem"
+        @on-page-change="handlePageChange"
+        @on-limit-change="handleLimitChange"
       />
-      <div class="transfer-footer no-fixed-footer" v-if="!isFixedFooter">
-        <bk-button theme="primary" @click.stop="handleSubmit">
-          <span v-bk-tooltips="{ content: $t(`m.renewal['暂无将过期的权限']`), extCls: 'iam-tooltips-cls' }">
+      <div class="renewal-footer" v-if="!isFixedFooter">
+        <bk-popover
+          ext-cls="iam-tooltips-cls"
+          :content="$t(`m.renewal['暂无将过期的权限']`)"
+          :disabled="isEmpty"
+        >
+          <bk-button theme="primary" :loading="submitLoading" @click="handleSubmit">
             {{ $t(`m.common['提交']`) }}
-          </span>
-        </bk-button>
+          </bk-button>
+        </bk-popover>
         <bk-button @click.stop="handleCancel">
           {{ $t(`m.common['取消']`) }}
         </bk-button>
       </div>
     </render-horizontal-block>
     <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择过期权限']`) }}</p>
-    <div slot="action" class="transfer-footer" v-if="isFixedFooter">
-      <!-- <bk-button theme="primary" disabled v-if="isEmpty">
-        <span v-bk-tooltips="{ content: $t(`m.renewal['暂无将过期的权限']`), extCls: 'iam-tooltips-cls' }">
-          {{ $t(`m.common['提交']`) }}
-        </span>
-      </bk-button> -->
+    <div slot="action" class="renewal-footer" v-if="isFixedFooter">
       <bk-popover
         ext-cls="iam-tooltips-cls"
         :content="$t(`m.renewal['暂无将过期的权限']`)"
@@ -100,7 +117,7 @@
 </template>
 
 <script>
-  import _ from 'lodash';
+  import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData, getNowTimeExpired } from '@/common/util';
@@ -110,6 +127,7 @@
   import PermPolicy from '@/model/my-perm-policy';
 
   export default {
+    inject: ['showNoticeAlert'],
     components: {
       IamDeadline,
       RenderTable
@@ -169,7 +187,7 @@
       getTableList () {
           const panelData = this.panels.find(item => item.name === this.active);
           if (panelData) {
-            this.curEmptyData = _.cloneDeep(panelData.emptyData);
+            this.curEmptyData = cloneDeep(panelData.emptyData);
             return panelData.data;
           }
           return [];
@@ -216,11 +234,17 @@
       }
     },
     async created () {
-      this.isEmpty = false;
       this.curSelectedList = [];
-      const query = this.$route.query;
-      this.active = query.tab || 'group';
+      const { tab, isBatch } = this.$route.query;
+      this.active = tab || 'group';
+      this.$store.commit('setHeaderTitle', isBatch ? this.$t(`m.renewal['批量权限续期']`) : this.$t(`m.renewal['权限续期']`));
       await this.fetchData();
+    },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.handleGetPageHeight);
+      });
+      window.addEventListener('resize', this.handleGetPageHeight);
     },
     methods: {
       async fetchData () {
@@ -254,36 +278,39 @@
               emptyData: formatCodeData(customCode, this.panels[1].emptyData, customList.length === 0)
             });
           }
-          this.tabKey = +new Date();
+          // this.tabKey = +new Date();
           this.fetchActiveTabData(this.panels);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.curEmptyData = formatCodeData(code, this.curEmptyData);
+          this.curEmptyData = formatCodeData(e.code, this.curEmptyData);
           this.messageAdvancedError(e);
+        } finally {
+          this.handleGetPageHeight();
         }
       },
 
-      async fetchActiveTabData (payload) {
-        const activeItem = {
-          group: () => {
-            return !(payload[0].total > 0);
-          },
-          custom: () => {
-            return !(payload[1] && payload[1].total > 0);
-          }
-        };
-        this.isEmpty = activeItem[this.active]();
-        this.tabKey = +new Date();
+      fetchActiveTabData (payload) {
+        this.isEmpty = payload.some((v) => v.total > 0);
+        // this.tabKey = +new Date();
+      },
+
+      handleGetPageHeight () {
+        setTimeout(() => {
+          // 第一个32和24代表上下外边距， 第二个32代表按钮的行高
+          const noticeComHeight = this.showNoticeAlert && this.showNoticeAlert() ? 40 : 0;
+          const viewHeight = window.innerHeight - 51 - 51 - 32 - 32 - 24 - noticeComHeight;
+          this.isFixedFooter = this.$refs.iamRenewalPerm.$refs.smartActionWrapper.offsetHeight > viewHeight;
+        }, 0);
       },
 
       handleTabChange (payload) {
-        this.$nextTick(() => {
-          this.$refs.tabRef
-            && this.$refs.tabRef.$refs.tabLabel
-            && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
-        });
+        this.active = payload;
+        // this.$nextTick(() => {
+        //   this.$refs.tabRef
+        //     && this.$refs.tabRef.$refs.tabLabel
+        //     && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+        // });
         window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`);
+        this.handleGetPageHeight();
       },
 
       handleFilterSystem (payload) {
@@ -294,9 +321,9 @@
             customData = Object.assign(customData, {
               total: list.length
             });
-            this.$refs.tabRef
-              && this.$refs.tabRef.$refs.tabLabel
-              && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+            // this.$refs.tabRef
+            //   && this.$refs.tabRef.$refs.tabLabel
+            //   && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
           }
         });
       },
@@ -316,28 +343,32 @@
       },
 
       handleSelected (type, value) {
-        if (type === 'group') {
-          this.panels[0].count = this.panels[0].total;
-          this.curSelectedList = value;
-        } else {
-          if (this.panels[1]) {
+        this.isShowErrorTips = false;
+        const typeMap = {
+          group: () => {
+            this.panels[0].count = this.panels[0].total;
+            this.curSelectedList = value;
+          },
+          custom: () => {
             this.panels[1].count = value.length;
             this.curSelectedList = value;
           }
+        };
+        if (typeMap[type]) {
+          return typeMap[type]();
         }
-        this.isShowErrorTips = false;
-        this.$nextTick(() => {
-          this.$refs.tabRef
-            && this.$refs.tabRef.$refs.tabLabel
-            && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
-        });
+        // this.$nextTick(() => {
+        //   this.$refs.tabRef
+        //     && this.$refs.tabRef.$refs.tabLabel
+        //     && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+        // });
       },
 
       handleChangeCount (count, data) {
         const tabMap = {
           group: () => {
             this.$set(this.panels[0], 'total', count);
-            this.tabKey = +new Date();
+            // this.tabKey = +new Date();
           },
           custom: async () => {
             if (this.panels[1]) {
@@ -351,43 +382,71 @@
         return tabMap[this.active]();
       },
 
-      async handleSubmit () {
-        if (this.curSelectedList.length < 1) {
-          this.isShowErrorTips = true;
-          return;
-        }
-        if (!this.reason) {
-          this.isShowReasonError = true;
-          this.scrollToLocation(this.$refs.reasonRef);
-          return;
-        }
-        this.submitLoading = true;
-        const isGroup = this.active === 'group';
-        const params = {
-          reason: this.reason
-        };
-        if (isGroup) {
+      handlePageChange () {
+        this.handleGetPageHeight();
+      },
+
+      handleLimitChange () {
+        this.handleGetPageHeight();
+      },
+
+      // 续期个人用户组
+      async fetchRenewalPersonalPerm () {
+        try {
+          const renewalGroup = this.curSelectedList.filter((v) => ['group'].includes(v.mode_type));
+          if (!renewalGroup.length) {
+            return;
+          }
+          const params = {
+            reason: this.reason,
+            groups: renewalGroup.map(({ id, name, description, expired_at }) => ({ id, name, description, expired_at }))
+          };
           if (this.externalSystemId) {
             params.source_system_id = this.externalSystemId;
           }
-          params.groups = this.curSelectedList.map(
-            ({ id, name, description, expired_at }) => ({ id, name, description, expired_at })
-          );
-        } else {
-          params.policies = this.curSelectedList.map(({ id, expired_at }) => ({ id, expired_at }));
-        }
-        const dispatchMethod = isGroup ? 'groupPermRenewal' : 'customPermRenewal';
-        try {
-          await this.$store.dispatch(`renewal/${dispatchMethod}`, params);
-          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 3000);
-          this.$router.push({
-            name: 'apply'
-          });
+          await this.$store.dispatch(`renewal/groupPermRenewal`, params);
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }
+      },
+
+      // 续期自定义权限
+      async fetchRenewalCustomPerm () {
+        try {
+          const renewalCustom = this.curSelectedList.filter((v) => ['custom'].includes(v.mode_type));
+          if (!renewalCustom.length) {
+            return;
+          }
+          const params = {
+            reason: this.reason,
+            policies: renewalCustom.map(({ id, expired_at }) => ({ id, expired_at }))
+          };
+          await this.$store.dispatch(`renewal/customPermRenewal`, params);
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.submitLoading = false;
+        }
+      },
+
+      async handleSubmit () {
+        if (!this.reason) {
+          this.isShowReasonError = true;
+          this.scrollToLocation(this.$refs.reasonRef);
+          return;
+        }
+        if (this.curSelectedList.length < 1) {
+          this.isShowErrorTips = true;
+          return;
+        }
+        this.submitLoading = true;
+        await Promise.all([this.fetchRenewalPersonalPerm(), this.fetchRenewalCustomPerm()]);
+        this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 3000);
+        this.$router.push({
+          name: 'apply'
+        });
       },
 
       handleCancel () {
@@ -401,6 +460,7 @@
 
 <style lang="postcss" scoped>
 .iam-perm-renewal-wrapper {
+  min-height: auto;
   .horizontal-item {
     padding: 0 32px 24px 24px;
     margin-bottom: 0;
@@ -411,11 +471,6 @@
       min-width: 88px !important;
       width: 0;
     }
-  }
-  .panel-name {
-    margin: 0 3px;
-    display: inline-block;
-    vertical-align: middle;
   }
   .error-tips {
     position: relative;
@@ -433,13 +488,49 @@
       }
     }
   }
-  /deep/ .iam-renewal-tab-cls {
-    background-color: #DCDEE5;
-    .bk-tab-section {
-      padding: 0;
+  .renewal-preview {
+    display: flex;
+    background-color: #F0F1F5;
+    color: #313238;
+    font-size: 14px;
+    border: 1px solid #DCDEE5;
+    &-tab {
+      min-width: 140px;
+      border-right: 1px solid #DCDEE5;
+      cursor: pointer;
+      &-item {
+        display: flex;
+        align-items: center;
+        padding: 11px 16px 12px 16px;
+        .tab-count {
+          min-width: 16px;
+          height: 16px;
+          line-height: 16px;
+          padding: 0 8px;
+          margin-left: 8px;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 12px;
+          color: #63656E;
+          background-color: #DCDEE5;
+        }
+      }
+      &.is-active {
+        margin-bottom: -1px;
+        color: #3a84ff;
+        background-color: #ffffff;
+        border-top: 4px solid #3a84ff;
+        .renewal-preview-tab-item {
+          padding: 7px 16px 12px 16px;
+          .tab-count {
+            background-color: #E1ECFF;
+            color: #3a84ff;
+          }
+        }
+      }
     }
   }
-  /deep/ .transfer-footer {
+  /deep/ .renewal-footer {
     font-size: 0;
     padding-left: 112px;
     .bk-button {
@@ -457,8 +548,19 @@
         width: 0;
       }
     }
-    /deep/ .transfer-footer {
+    /deep/ .renewal-footer {
       padding-left: 175px;
+    }
+  }
+   &.no-fixed-footer-wrapper {
+    .horizontal-item {
+      .renewal-footer {
+        margin-top: 32px;
+        padding-left: 0;
+      }
+    }
+    /deep/ [role~="action-position"] {
+      display: none;
     }
   }
 }
