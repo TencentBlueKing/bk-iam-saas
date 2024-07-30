@@ -781,15 +781,10 @@
         const policyData = selectList.map((v) => `${v.name}&${v.id}`);
         this.$nextTick(() => {
           const permRef = this.$refs[`customPermRef_${this.mode}_${this.systemId}`];
-          console.log(111);
           if (permRef) {
             this.policyList.forEach((item) => {
-              console.log(permRef, policyData.includes(`${item.name}&${item.id}`));
               this.$set(item, 'handover_object', this.selectedHandoverObject);
               permRef.toggleRowSelection(item, policyData.includes(`${item.name}&${item.id}`));
-              // if (!selectList.length) {
-              //   permRef.clearSelection();
-              // }
             });
           }
         });

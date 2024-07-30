@@ -172,7 +172,7 @@
           isShowOperate: false
         },
         formData: {
-          members: ['edwin'],
+          members: [],
           reason: ''
         },
         submitDataBack: {},

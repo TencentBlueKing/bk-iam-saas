@@ -32,6 +32,13 @@
           &-fixed-right {
             border-bottom: 0;
           }
+          .can-view {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+              color: #699df4;
+            }
+          }
           .perm-group-name {
             display: flex;
             align-items: center;

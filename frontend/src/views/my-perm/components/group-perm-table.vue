@@ -609,7 +609,7 @@
             this.curGroupName = name;
             this.curGroupId = id;
             this.isShowPermSideSlider = true;
-            bus.$on('on-drawer-side', { width: 960 });
+            bus.$emit('on-drawer-side', { width: 960 });
           },
           memberTemplate: async () => {
             await this.fetchDetailInfo(template_id, template_name);

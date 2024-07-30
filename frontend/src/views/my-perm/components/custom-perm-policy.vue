@@ -207,7 +207,6 @@
       emptyData: {
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
-          console.log(value);
           if (this.isSearchPerm || ['search'].includes(value.tipType)) {
             this.handleSystemSearch();
           }

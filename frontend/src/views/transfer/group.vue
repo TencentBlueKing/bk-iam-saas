@@ -35,9 +35,10 @@
                       content: row.name
                     }"
                     :class="[
-                      'single-hide',
+                      'can-view single-hide',
                       { 'has-icon': row.canNotTransfer }
                     ]"
+                    @click.stop="handleViewDetail(row)"
                   >
                     {{ row.name }}
                   </span>
@@ -119,16 +120,26 @@
           </p> -->
       </div>
     </div>
+    
+    <RenderGroupPermSideSlider
+      :show="isShowPermSideSlider"
+      :name="curGroupName"
+      :group-id="curGroupId"
+      @animation-end="handleAnimationEnd"
+    />
   </div>
 </template>
 
 <script>
   import { cloneDeep, uniqWith, isEqual } from 'lodash';
+  import { bus } from '@/common/bus';
   import { getNowTimeExpired } from '@/common/util';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+  import RenderGroupPermSideSlider from '@/views/my-perm/components/render-group-perm-side-slider';
   export default {
     components: {
-      IamEditMemberSelector
+      IamEditMemberSelector,
+      RenderGroupPermSideSlider
     },
     props: {
       curPermData: {
@@ -148,6 +159,9 @@
         groupExpanded: true,
         groupShowAll: false,
         isSelectAllChecked: false,
+        isShowPermSideSlider: false,
+        curGroupName: '',
+        curGroupId: '',
         groupSelectData: [],
         groupNotTransferCount: 0,
         groupPermData: {},
@@ -218,6 +232,13 @@
         });
       },
 
+      handleViewDetail ({ id, name, template_name, template_id }) {
+        this.curGroupName = name;
+        this.curGroupId = id;
+        this.isShowPermSideSlider = true;
+        bus.$emit('on-drawer-side', { width: 960 });
+      },
+
       fetchSelectedGroupCount () {
         this.$nextTick(() => {
           const selectGroup = uniqWith([...this.selectedPersonalGroup, ...this.groupSelectData], isEqual);
@@ -273,6 +294,12 @@
       handleLimitChange (limit) {
         const pagination = Object.assign(this.groupPermData.pagination, { current: 1, limit });
         this.$emit('on-limit-change', pagination);
+      },
+      
+      handleAnimationEnd () {
+        this.curGroupName = '';
+        this.curGroupId = '';
+        this.isShowPermSideSlider = false;
       },
       
       handleEmptyRefresh () {

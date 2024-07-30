@@ -884,8 +884,9 @@
       },
 
       handleSelectedGroup (payload) {
-        this.$emit('on-selected-group', payload);
         this.curSelectedGroup = [...payload];
+        console.log(this.curSelectedGroup, payload);
+        this.$emit('on-selected-group', this.curSelectedGroup);
       },
 
       handleRefreshGroup (payload, current) {
