@@ -138,8 +138,8 @@
     inject: ['showNoticeAlert'],
     components: {
       Group,
-      Custom,
       Manager,
+      Custom,
       BkUserSelector
     },
     data () {
@@ -229,6 +229,15 @@
       formData: {
         handler () {
           this.handleRtxLeavePage();
+        },
+        deep: true
+      },
+      activeTab: {
+        handler () {
+          // const list = [...this.groupSelectData, ...this.managerSelectData, ...this.policySelectData];
+          // if(list.length) {
+          //   handleGetSelectedPerm
+          // }
         },
         deep: true
       }
@@ -366,6 +375,7 @@
               });
               this.$nextTick(() => {
                 const permRef = this.$refs[`childPerm_${this.activeTab}`];
+                console.log(permRef, 554555);
                 if (permRef && permRef.handleGetSelectedPerm) {
                   permRef.handleGetSelectedPerm();
                 }
@@ -386,15 +396,15 @@
         }
       },
 
-      async handleSystemExpanded (sys) {
+      async handleSystemExpanded (payload) {
         try {
-          const { data } = await this.$store.dispatch('permApply/getPolicies', { system_id: sys.id });
-          const alreadyLoadedList = cloneDeep(sys.policyList);
-          sys.policyList = (data || []).map((item) => {
+          const { data } = await this.$store.dispatch('permApply/getPolicies', { system_id: payload.id });
+          const alreadyLoadedList = cloneDeep(payload.policyList);
+          payload.policyList = (data || []).map((item) => {
             const policy = {
               ...new PermPolicy(item),
-              system_id: sys.id,
-              system_name: sys.name,
+              system_id: payload.id,
+              system_name: payload.name,
               canNotTransfer: item.expired_at < getNowTimeExpired()
             };
             const foundPolicy = alreadyLoadedList.find((v) => `${v.id}&${v.policy_id}` === `${policy.id}&${policy.policy_id}`);
@@ -628,7 +638,6 @@
       handleRtxLeavePage () {
         const submitData = {
           ...this.formData,
-          ...this.customSelectData,
           ...{
             list: [...this.groupSelectData, ...this.managerSelectData, ...this.policySelectData]
           }
@@ -642,7 +651,7 @@
           const noticeComHeight = this.showNoticeAlert && this.showNoticeAlert() ? 40 : 0;
           const viewHeight = window.innerHeight - 51 - 51 - 32 - 32 - 24 - noticeComHeight;
           this.isFixedFooter = this.$refs.iamTransferPerm.offsetHeight > viewHeight;
-        }, 200);
+        }, 0);
       },
 
       getAllPermHandoverTab () {
@@ -816,6 +825,12 @@
   }
   /deep/ [role~="action-position"] {
     margin-top: 0 !important;
+    height: 48px !important;
+    .fixed {
+      margin-top: 0 !important;
+      height: 48px;
+      line-height: 48px;
+    }
   }
   &-lang {
     /deep/ .iam-transfer-group-wrapper {

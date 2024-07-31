@@ -67,7 +67,7 @@
         >
           <div class="renewal-preview-tab-item">
             <span class="tab-name">{{ item.label }}</span>
-            <span class="tab-count">{{ item.total }}</span>
+            <span class="tab-count">{{ item.count }}</span>
           </div>
         </div>
       </div>
@@ -77,9 +77,10 @@
         :type="active"
         :data="getTableList"
         :count="formatCount"
+        :all-renewal-perm="getAllRenewalPerm"
         :loading="tableLoading"
         :empty-data="curEmptyData"
-        @on-select="handleSelected"
+        @on-select="handleSelectedPerm"
         @on-change-count="handleChangeCount"
         @on-filter-system="handleFilterSystem"
         @on-page-change="handlePageChange"
@@ -89,9 +90,9 @@
         <bk-popover
           ext-cls="iam-tooltips-cls"
           :content="$t(`m.renewal['暂无将过期的权限']`)"
-          :disabled="isEmpty"
+          :disabled="!isEmpty"
         >
-          <bk-button theme="primary" :loading="submitLoading" @click="handleSubmit">
+          <bk-button theme="primary" :loading="submitLoading" :disabled="isEmpty" @click="handleSubmit">
             {{ $t(`m.common['提交']`) }}
           </bk-button>
         </bk-popover>
@@ -105,9 +106,9 @@
       <bk-popover
         ext-cls="iam-tooltips-cls"
         :content="$t(`m.renewal['暂无将过期的权限']`)"
-        :disabled="isEmpty"
+        :disabled="!isEmpty"
       >
-        <bk-button theme="primary" :loading="submitLoading" @click="handleSubmit">
+        <bk-button theme="primary" :loading="submitLoading" :disabled="isEmpty" @click="handleSubmit">
           {{ $t(`m.common['提交']`) }}
         </bk-button>
       </bk-popover>
@@ -120,7 +121,7 @@
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
-  import { formatCodeData, getNowTimeExpired } from '@/common/util';
+  import { existValue, formatCodeData, getNowTimeExpired } from '@/common/util';
   import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import RenderTable from '../components/render-renewal-table';
@@ -192,12 +193,16 @@
           }
           return [];
       },
+      getAllRenewalPerm () {
+        const result = this.panels.map((v) => v.data).flat(2);
+        return result;
+      },
       formatCount () {
         const panel = this.panels.find(item => item.name === this.active);
         if (panel) {
-          return panel.total;
+          return panel.count;
         }
-        return this.panels[0].total;
+        return this.panels[0].count;
       },
       formatExpireSoon () {
         return (payload) => {
@@ -215,7 +220,7 @@
     watch: {
       panels: {
         handler (value) {
-          this.fetchActiveTabData(value);
+          this.handleIsAllEmpty(value);
         },
         immediate: true
       },
@@ -228,13 +233,9 @@
         },
         immediate: true,
         deep: true
-      },
-      active () {
-        this.fetchActiveTabData(this.panels);
       }
     },
     async created () {
-      this.curSelectedList = [];
       const { tab, isBatch } = this.$route.query;
       this.active = tab || 'group';
       this.$store.commit('setHeaderTitle', isBatch ? this.$t(`m.renewal['批量权限续期']`) : this.$t(`m.renewal['权限续期']`));
@@ -249,48 +250,73 @@
     methods: {
       async fetchData () {
         this.tableLoading = true;
+        await Promise.all([this.fetchPersonalGroupPerm(), this.fetchCustomPerm()]);
+        this.handleIsAllEmpty(this.panels);
+      },
+
+      async fetchPersonalGroupPerm () {
+        let curData = this.panels.find((v) => ['group'].includes(v.name));
+        if (!curData) {
+          return;
+        }
+        const params = {
+          page_size: 10,
+          page: 1
+        };
+        if (this.externalSystemId) {
+          params.system_id = this.externalSystemId;
+        }
         try {
-          const userGroupParams = {
-            page_size: 10,
-            page: 1
-          };
-          if (this.externalSystemId) {
-            userGroupParams.system_id = this.externalSystemId;
-          }
-          const resultList = await Promise.all([
-            this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
-            this.$store.dispatch('renewal/getExpireSoonPerm')
-          ]).finally(() => {
-            this.tableLoading = false;
+          const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', params);
+          curData = Object.assign(curData, {
+            data: data.results && data.results.map((v) => {
+              return {
+                ...v,
+                ...{
+                  mode_type: 'group'
+                }
+              };
+            }),
+            count: data.count,
+            emptyData: formatCodeData(code, this.panels[0].emptyData, data.results.length === 0)
           });
-          const { code, data } = resultList[0];
-          const { code: customCode, data: customList } = resultList[1];
-          this.panels[0].emptyData
-            = formatCodeData(code, this.panels[0].emptyData, data.results.length === 0);
-          this.panels[0] = Object.assign(this.panels[0], { data: data.results, total: data.count });
-          if (this.panels[1]) {
-            customList.forEach((item) => {
-              item.policy = new PermPolicy(item.policy);
-            });
-            this.panels[1] = Object.assign(this.panels[1], {
-              data: customList,
-              total: customList.length,
-              emptyData: formatCodeData(customCode, this.panels[1].emptyData, customList.length === 0)
-            });
-          }
-          // this.tabKey = +new Date();
-          this.fetchActiveTabData(this.panels);
         } catch (e) {
           this.curEmptyData = formatCodeData(e.code, this.curEmptyData);
           this.messageAdvancedError(e);
         } finally {
+          this.tableLoading = false;
           this.handleGetPageHeight();
         }
       },
 
-      fetchActiveTabData (payload) {
-        this.isEmpty = payload.some((v) => v.total > 0);
-        // this.tabKey = +new Date();
+      async fetchCustomPerm () {
+        let curData = this.panels.find((v) => ['custom'].includes(v.name));
+        if ((existValue('externalApp') && this.externalSystemId) || !curData) {
+          return;
+        }
+        try {
+          const { code, data } = await this.$store.dispatch('renewal/getExpireSoonPerm');
+          const customList = data || [];
+          customList.forEach((item) => {
+            item.mode_type = 'custom';
+            item.policy = new PermPolicy(item.policy);
+          });
+          curData = Object.assign(curData, {
+            data: customList,
+            count: customList.length,
+            emptyData: formatCodeData(code, curData.emptyData, customList.length === 0)
+          });
+        } catch (e) {
+          this.messageAdvancedError(e);
+          this.curEmptyData = formatCodeData(e.code, this.curEmptyData);
+        } finally {
+          this.tableLoading = false;
+          this.handleGetPageHeight();
+        }
+      },
+
+      handleIsAllEmpty (payload) {
+        this.isEmpty = payload.every((v) => v.count < 1);
       },
 
       handleGetPageHeight () {
@@ -304,11 +330,6 @@
 
       handleTabChange (payload) {
         this.active = payload;
-        // this.$nextTick(() => {
-        //   this.$refs.tabRef
-        //     && this.$refs.tabRef.$refs.tabLabel
-        //     && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
-        // });
         window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`);
         this.handleGetPageHeight();
       },
@@ -321,9 +342,6 @@
             customData = Object.assign(customData, {
               total: list.length
             });
-            // this.$refs.tabRef
-            //   && this.$refs.tabRef.$refs.tabLabel
-            //   && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
           }
         });
       },
@@ -342,26 +360,9 @@
         this.expiredAt = payload || ONE_DAY_TIMESTAMP;
       },
 
-      handleSelected (type, value) {
+      handleSelectedPerm (type, value) {
         this.isShowErrorTips = false;
-        const typeMap = {
-          group: () => {
-            this.panels[0].count = this.panels[0].total;
-            this.curSelectedList = value;
-          },
-          custom: () => {
-            this.panels[1].count = value.length;
-            this.curSelectedList = value;
-          }
-        };
-        if (typeMap[type]) {
-          return typeMap[type]();
-        }
-        // this.$nextTick(() => {
-        //   this.$refs.tabRef
-        //     && this.$refs.tabRef.$refs.tabLabel
-        //     && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
-        // });
+        this.curSelectedList = [...value];
       },
 
       handleChangeCount (count, data) {
@@ -391,7 +392,7 @@
       },
 
       // 续期个人用户组
-      async fetchRenewalPersonalPerm () {
+      async handleSubmitPersonalPerm () {
         try {
           const renewalGroup = this.curSelectedList.filter((v) => ['group'].includes(v.mode_type));
           if (!renewalGroup.length) {
@@ -413,7 +414,7 @@
       },
 
       // 续期自定义权限
-      async fetchRenewalCustomPerm () {
+      async handleSubmitCustomPerm () {
         try {
           const renewalCustom = this.curSelectedList.filter((v) => ['custom'].includes(v.mode_type));
           if (!renewalCustom.length) {
@@ -421,7 +422,12 @@
           }
           const params = {
             reason: this.reason,
-            policies: renewalCustom.map(({ id, expired_at }) => ({ id, expired_at }))
+            policies: renewalCustom.map(({ policy_id: policyIid, policy, expired_at }) => {
+              return {
+                expired_at,
+                id: policy ? policy.policy_id : policyIid
+              };
+            })
           };
           await this.$store.dispatch(`renewal/customPermRenewal`, params);
         } catch (e) {
@@ -442,7 +448,7 @@
           return;
         }
         this.submitLoading = true;
-        await Promise.all([this.fetchRenewalPersonalPerm(), this.fetchRenewalCustomPerm()]);
+        await Promise.all([this.handleSubmitPersonalPerm(), this.handleSubmitCustomPerm()]);
         this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 3000);
         this.$router.push({
           name: 'apply'
@@ -461,6 +467,7 @@
 <style lang="postcss" scoped>
 .iam-perm-renewal-wrapper {
   min-height: auto;
+  margin-bottom: 24px;
   .horizontal-item {
     padding: 0 32px 24px 24px;
     margin-bottom: 0;
@@ -540,6 +547,12 @@
   }
   /deep/ [role~="action-position"] {
     margin-top: 0 !important;
+    height: 48px !important;
+    .fixed {
+      margin-top: 0 !important;
+      height: 48px;
+      line-height: 48px;
+    }
   }
   &-lang {
     .horizontal-item {

@@ -683,7 +683,11 @@
       handleSelectionChange (selection, row) {
         row = Object.assign(row, {
           mode_type: this.mode,
-          system_id: row.system_id || this.systemId
+          system_id: row.system_id || this.systemId,
+          system: {
+            id: row.system_id,
+            name: row.system_name || ''
+          }
         });
         this.fetchSelectedGroups('multiple', selection, row);
       },
@@ -695,7 +699,11 @@
               ...v,
               ...{
                 mode_type: this.mode,
-                system_id: v.system_id || this.systemId
+                system_id: v.system_id || this.systemId,
+                system: {
+                  id: v.system_id || this.systemId,
+                  name: v.system_name || ''
+                }
               }
             };
           });

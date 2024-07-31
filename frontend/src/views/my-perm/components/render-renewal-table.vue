@@ -12,8 +12,8 @@
       :pagination="pagination"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
-      @select="handlerChange"
-      @select-all="handlerAllChange"
+      @select="handleSelectionChange"
+      @select-all="handleAllSelectionChange"
       @filter-change="handleFilterChange"
     >
       <bk-table-column type="selection" align="center" :selectable="getIsSelect" />
@@ -340,9 +340,6 @@
   import IamEffectCondition from '@/components/iam-effect-condition';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
 
-  // 过期时间的天数区间
-  const EXPIRED_DISTRICT = 15;
-
   export default {
     name: '',
     components: {
@@ -364,6 +361,10 @@
         default: 15552000
       },
       data: {
+        type: Array,
+        default: () => []
+      },
+      allRenewalPerm: {
         type: Array,
         default: () => []
       },
@@ -598,16 +599,15 @@
               };
             });
             this.currentSelectList = uniqWith([...selectedList, ...this.currentSelectList], isEqual);
+          } else {
+            this.currentSelectList = this.allRenewalPerm.filter((item) =>
+              this.getDays(item.expired_at) < 16
+            );
           }
           this.$nextTick(() => {
             const tableItem = {
               group: () => {
                 this.tableList.splice(0, this.tableList.length, ...value);
-                if (!this.renewalData.length) {
-                  this.currentSelectList = this.tableList.filter((item) =>
-                    this.getDays(item.expired_at) < EXPIRED_DISTRICT
-                  );
-                }
                 this.tableList.forEach(item => {
                   this.$set(item, 'mode_type', this.type);
                   if (this.currentSelectList.map((v) => v.id).includes(item.id)) {
@@ -616,15 +616,10 @@
                   this.fetchCustomSelection();
                 });
               },
-              custom: async () => {
-                const result = await this.getCurPageData(this.pagination.current);
+              custom: () => {
+                const result = this.getCurPageData(this.pagination.current);
                 this.tableList.splice(0, this.tableList.length, ...result);
-                if (!this.renewalData.length) {
-                  this.currentSelectList = this.allData.filter((item) =>
-                    this.getDays(item.expired_at) < EXPIRED_DISTRICT
-                  );
-                }
-                this.allData.forEach(item => {
+                this.allData.forEach((item) => {
                   this.$set(item, 'mode_type', this.type);
                   if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
                     this.systemFilter.push({
@@ -632,8 +627,8 @@
                       value: item.system.id
                     });
                   }
-                  const selectedPerm = this.currentSelectList.map((v) => v.id);
-                  if (selectedPerm.includes(item.id) || selectedPerm.includes(item.policy.id)) {
+                  const selectedPerm = this.currentSelectList.map((v) => `${item.policy ? item.policy.policy_id : v.id}&${this.type}`);
+                  if (selectedPerm.includes(`${item.id}&${this.type}`)) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
                   this.fetchCustomSelection();
@@ -737,15 +732,92 @@
           if (this.$refs.permTableRef && selectionCount && selectionCount.length && selectionCount[0].children) {
             const selectList = this.curFilterSystem && ['custom'].includes(this.type)
               ? this.currentSelectList.filter((item) => item.system.id === this.curFilterSystem)
-              : cloneDeep(this.currentSelectList.filter((item) => item.mode_type === this.type));
+              : this.currentSelectList.filter((item) => item.mode_type === this.type);
+            console.log(this.currentSelectList, 54444);
             selectionCount[0].children[0].innerHTML = selectList.length;
           }
         });
       },
 
-      handlerAllChange (selection) {
-        if (selection.length > 0) {
-          selection = selection.map((v) => {
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: () => {
+            const typeMap = {
+              group: () => {
+                const isChecked = payload.length && payload.indexOf(row) !== -1;
+                if (isChecked) {
+                  this.currentSelectList.push(row);
+                } else {
+                  this.currentSelectList = this.currentSelectList.filter(
+                    (item) => `${item.id}&${this.type}` !== `${row.id}&${this.type}`
+                  );
+                }
+                this.fetchCustomSelection();
+              },
+              custom: async () => {
+                const isChecked = payload.length && payload.indexOf(row) !== -1;
+                if (isChecked) {
+                  this.currentSelectList.push(row);
+                } else {
+                  this.currentSelectList = this.currentSelectList.filter(
+                    (item) => `${item.policy ? item.policy.policy_id : item.id}&${this.type}` !== `${row.policy ? row.policy.policy_id : row.id}&${this.type}`
+                  );
+                }
+                this.fetchCustomSelection();
+              }
+            };
+            if (typeMap[this.type]) {
+              return typeMap[this.type]();
+            }
+          },
+          all: () => {
+            const typeMap = {
+              group: () => {
+                const curModeList = this.currentSelectList.filter((item) => ['group'].includes(item.mode_type));
+                const noCurModeList = this.currentSelectList.filter((item) => !['group'].includes(item.mode_type));
+                const tableIdList = this.tableList.map((v) => `${v.id}&${this.type}`);
+                const selectGroups = curModeList.filter((item) => !tableIdList.includes(`${item.id}&${this.type}`));
+                this.currentSelectList = [...selectGroups, ...payload, ...noCurModeList];
+                this.fetchCustomSelection();
+              },
+              custom: () => {
+                // const curModeList = this.currentSelectList.filter((item) => ['custom'].includes(item.mode_type));
+                // const noCurModeList = this.currentSelectList.filter((item) => !['custom'].includes(item.mode_type));
+                // const tableIdList = payload || this.tableList.map((v) => `${v.policy ? v.policy.policy_id : v.id}&${this.type}`);
+                // const selectGroups = curModeList.filter((item) => {
+                //   const curType = `${item.policy ? item.policy.policy_id : item.id}&${this.type}`;
+                //   return !tableIdList.includes(curType);
+                // }
+                // );
+                // this.currentSelectList = [...selectGroups, ...noCurModeList];
+                // console.log(tableIdList, selectGroups, curModeList, payload, this.currentSelectList);
+                console.log(payload, this.tableList);
+                this.tableList.forEach((item) => {
+                  const policyId = `${item.policy ? item.policy.policy_id : item.id}&${this.type}`;
+                  const curData = this.currentSelectList.find((v) => `${v.policy ? v.policy.policy_id : v.id}&${this.type}` === policyId);
+                  console.log(curData, 555);
+                  if (payload.length && !curData) {
+                    this.currentSelectList.push(item);
+                  }
+                  if (!payload.length && curData) {
+                    this.currentSelectList = this.currentSelectList.filter((v) => `${v.policy ? v.policy.policy_id : v.id}&${this.type}` !== policyId);
+                  }
+                });
+                this.fetchCustomSelection();
+              }
+            };
+            if (typeMap[this.type]) {
+              return typeMap[this.type]();
+            }
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handleAllSelectionChange (selection) {
+        let list = cloneDeep(selection);
+        if (list.length > 0) {
+          list = list.map((v) => {
             return {
               ...v,
               ...{
@@ -754,24 +826,13 @@
             };
           });
         }
-        const tableList = this.type === 'custom' ? cloneDeep(this.allData) : cloneDeep(this.tableList);
-        const selectGroups = this.currentSelectList.filter(item =>
-          !tableList.map(v => v.id.toString()).includes(item.id.toString()));
-        this.currentSelectList = [...selectGroups, ...selection];
-        this.fetchCustomSelection();
+        console.log(list, '全选');
+        this.fetchSelectedGroups('all', list);
       },
 
-      handlerChange (selection, row) {
+      handleSelectionChange (selection, row) {
         this.$set(row, 'mode_type', this.type);
-        const isChecked = selection.length && selection.indexOf(row) !== -1;
-        if (isChecked) {
-          this.currentSelectList.push(row);
-        } else {
-          this.currentSelectList = this.currentSelectList.filter(
-            (item) => item.id.toString() !== row.id.toString()
-          );
-        }
-        this.fetchCustomSelection();
+        this.fetchSelectedGroups('multiple', selection, row);
       },
 
       handleViewDetail (payload) {
@@ -906,29 +967,28 @@
               const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams);
               this.tableList = data.results || [];
               this.renewalGroupCount = data.count || 0;
+              this.pagination = Object.assign(this.pagination, { count: data.count });
+              this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData, this.renewalGroupCount === 0);
               this.$nextTick(() => {
-                const currentSelectList = this.currentSelectList.map(item => item.id.toString());
+                const currentSelectList = this.currentSelectList.map(item => `${item.id}&${this.type}`);
                 this.tableList.forEach((item) => {
-                  if (currentSelectList.includes(item.id.toString())) {
+                  if (currentSelectList.includes(`${item.id}&${this.type}`)) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
                 });
               });
-              this.pagination = Object.assign(this.pagination, { count: data.count });
-              this.emptyRenewalData
-                = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
             },
-            custom: () => {
-              this.tableList = this.getCurPageData(current);
+            custom: async () => {
+              this.tableList = await this.getCurPageData(current);
               if (!this.tableList.length && this.curFilterSystem) {
                 this.emptyRenewalData.tipType = 'search';
                 this.emptyRenewalData = formatCodeData(0, this.emptyRenewalData, true);
               }
               this.$nextTick(() => {
+                const selectedPerm = this.currentSelectList.map((v) => v.id);
                 this.allData.forEach(item => {
-                  if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
-                    this.$refs.permTableRef
-                      && this.$refs.permTableRef.toggleRowSelection(item, true);
+                  if (selectedPerm.includes(item.id) || selectedPerm.includes(item.policy.id)) {
+                    this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
                 });
               });

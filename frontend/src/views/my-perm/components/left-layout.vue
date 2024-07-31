@@ -245,6 +245,7 @@
           font-size: 13px;
         }
         .icon {
+          color: #c4c6cc;
           font-size: 14px;
           margin-right: 8px;
         }
@@ -261,6 +262,11 @@
         padding: 8px;
         background-color: #e1ecff;
         color: #3a84ff;
+        .renewal-perm-label {
+          .icon {
+            color: #3a84ff;
+          }
+        }
         .renewal-perm-total {
           background-color: #a3c5fd;
           color: #ffffff;

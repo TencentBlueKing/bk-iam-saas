@@ -68,10 +68,11 @@
           :mode="mode"
           :key="`${sys.id}_${mode}`"
           :system-id="sys.id"
+          :system-name="sys.name"
           :pagination="sys.pagination"
           :renewal-custom-perm="renewalCustomPerm"
           :group-data="groupData"
-          :cur-selected-group="curSelectedGroup"
+          :cur-selected-group="curSelectedCustom"
           :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
           :is-search-perm="isSearchPerm"
@@ -173,7 +174,7 @@
         isDisabledOperate: false,
         customKey: -1,
         systemPolicyList: [],
-        curSelectedGroup: [],
+        curSelectedCustom: [],
         emptyPolicyData: {
           type: 'empty',
           text: '暂无数据',
@@ -199,7 +200,7 @@
     watch: {
       list: {
         handler (v) {
-          this.curSelectedGroup = [];
+          this.curSelectedCustom = [];
           this.handleGetSystemData(v);
         },
         immediate: true
@@ -281,6 +282,7 @@
 
       handleAllSystemChange (payload) {
         this.isAllSystem = payload;
+        let list = [];
         this.$nextTick(() => {
           this.systemPolicyList.forEach((item) => {
             const permRef = this.$refs[`customPermTable_${item.id}_${this.mode}`];
@@ -289,18 +291,23 @@
               customPermRef && permRef[0].policyListBack.forEach((sub) => {
                 this.$set(sub, 'mode_type', this.mode);
                 this.$set(sub, 'system_id', item.id);
+                this.$set(sub, 'system', {
+                  id: item.id,
+                  name: item.name || ''
+                });
                 customPermRef.toggleRowSelection(sub, payload);
                 if (payload) {
                   permRef[0].currentSelectList.push(sub);
-                  this.curSelectedGroup.push(sub);
+                  list.push(sub);
                 } else {
                   permRef[0].currentSelectList = [];
-                  this.curSelectedGroup = [];
+                  list = [];
                 }
               });
             }
           });
-          this.$emit('on-selected-group', this.curSelectedGroup);
+          this.curSelectedCustom = [...list];
+          this.$emit('on-select-custom-perm', this.curSelectedCustom);
         });
       },
 
@@ -330,12 +337,12 @@
       },
 
       handleSelectPerm (payload) {
-        this.curSelectedGroup = uniqWith([...payload], isEqual);
-        this.$emit('on-selected-group', this.curSelectedGroup);
+        this.curSelectedCustom = uniqWith([...payload], isEqual);
+        this.$emit('on-select-custom-perm', this.curSelectedCustom);
         // 判断是否系统全选
         const isCustom = ['customPerm', 'renewalCustomPerm'].includes(this.mode);
         if (isCustom) {
-          const customList = this.curSelectedGroup.filter((v) => ['customPerm', 'renewalCustomPerm'].includes(v.mode_type));
+          const customList = this.curSelectedCustom.filter((v) => ['customPerm', 'renewalCustomPerm'].includes(v.mode_type));
           const countList = this.systemPolicyList.map((v) => v.count);
           const customTotal = countList.reduce((prev, cur) => {
             return cur + prev;

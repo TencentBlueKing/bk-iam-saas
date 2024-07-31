@@ -479,8 +479,6 @@
         this.fetchRemoteTable();
       },
 
-      handleSearchSelect () {},
-
       handleSelectGroupPerm (payload) {
         this.currentSelectList = [...payload];
       },
@@ -509,9 +507,13 @@
               renewalTypeList.includes(item.mode_type) && this.formatExpireSoon(item.expired_at)
             );
             if (!this.isNoBatchRenewal && selectGroup.length > 0) {
-              const list = this.currentSelectList.filter((item) =>
-                (renewalTypeList.includes(item.mode_type) && this.formatExpireSoon(item.expired_at))
-              );
+              const list = selectGroup.map((item) => {
+                if (['customPerm', 'renewalCustomPerm'].includes(item.mode_type)) {
+                  this.$set(item, 'policy', { policy_id: item.policy_id, name: item.name });
+                }
+                return item;
+              });
+              console.log(list);
               this.$store.commit('perm/updateRenewalData', list);
               this.$router.push({
                 name: 'permRenewal',

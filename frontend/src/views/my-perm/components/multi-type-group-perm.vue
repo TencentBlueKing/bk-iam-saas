@@ -49,6 +49,7 @@
             @on-page-change="handlePageChange(...arguments, item)"
             @on-limit-change="handleLimitChange(...arguments, item)"
             @on-selected-group="handleSelectedGroup"
+            @on-select-custom-perm="handleSelectedCustom"
             @on-quit-group="handleQuitGroup"
             @on-clear="handleEmptyClear"
             @on-refresh="handleEmptyRefresh"
@@ -138,6 +139,7 @@
         }),
         allPermItemBack: [],
         curSelectedGroup: [],
+        curSelectedCustomPerm: [],
         renewalCustomPerm: [],
         defaultExpandItem: [],
         queryGroupData: {},
@@ -252,14 +254,8 @@
     watch: {
       groupData: {
         handler (newValue, oldValue) {
-          this.isFirstReq = !oldValue;
-          this.queryGroupData = cloneDeep(newValue);
-          this.curSelectedGroup = [];
-          this.handleSelectedGroup([]);
-          this.fetchRefreshPermData();
-          if (['customPerm'].includes(newValue.value)) {
-            this.comKey = +new Date();
-          }
+          //  切换左侧权限重置数据
+          this.handleResetGroup(newValue, oldValue);
         },
         immediate: true
       },
@@ -795,8 +791,9 @@
       handleGetSelectedGroups (payload) {
         setTimeout(() => {
           const tableRefList = this.$refs.childPermTable;
+          const selectedGroup = [...this.curSelectedGroup, this.curSelectedCustomPerm];
           const curData = this.allPermItem.find((item) => item.id === payload);
-          const curSelectedId = this.curSelectedGroup.map((item) => `${item.id}&${item.name}&${item.mode_type}`);
+          const curSelectedId = selectedGroup.map((item) => `${item.id}&${item.name}&${item.mode_type}`);
           if (curData && tableRefList && tableRefList.length > 0) {
             const curTableRef = tableRefList.find((v) => v.mode === curData.id);
             if (curTableRef) {
@@ -808,7 +805,7 @@
                   }
                 }
               });
-              curTableRef.fetchCustomTotal && curTableRef.fetchCustomTotal(this.curSelectedGroup, curData.id);
+              curTableRef.fetchCustomTotal && curTableRef.fetchCustomTotal(selectedGroup, curData.id);
             }
           }
         }, 0);
@@ -873,7 +870,8 @@
 
       handleExpanded (value, payload) {
         if (!value) {
-          const selectedGroup = this.curSelectedGroup.filter((v) => v.mode_type !== payload.id);
+          const selectList = [...this.curSelectedGroup, ...this.curSelectedCustomPerm];
+          const selectedGroup = selectList.filter((v) => v.mode_type !== payload.id);
           this.handleSelectedGroup(selectedGroup);
           bus.$emit('on-remove-toggle-checkbox', selectedGroup);
         }
@@ -885,8 +883,12 @@
 
       handleSelectedGroup (payload) {
         this.curSelectedGroup = [...payload];
-        console.log(this.curSelectedGroup, payload);
-        this.$emit('on-selected-group', this.curSelectedGroup);
+        this.$emit('on-selected-group', [...this.curSelectedGroup, ...this.curSelectedCustomPerm]);
+      },
+
+      handleSelectedCustom (payload) {
+        this.curSelectedCustomPerm = [...payload];
+        this.$emit('on-selected-group', [...this.curSelectedGroup, ...this.curSelectedCustomPerm]);
       },
 
       handleRefreshGroup (payload, current) {
@@ -928,7 +930,8 @@
           this.isBatchDelAction = isBatchDelAction || false;
           if (curData) {
             curData.pagination.current = 1;
-            this.curSelectedGroup = this.curSelectedGroup.filter((v) => v.mode_type !== active);
+            this.curSelectedGroup = [...this.curSelectedCustomPerm].filter((v) => v.mode_type !== active);
+            this.curSelectedCustomPerm = [...this.curSelectedCustomPerm].filter((v) => v.mode_type !== active);
             if (['renewalPerm'].includes(this.queryGroupData.value)) {
               return;
             }
@@ -965,6 +968,18 @@
           this.isSearchResource = isSearchPerm || false;
           this.fetchRefreshPermData();
         });
+      },
+
+      handleResetGroup (newValue, oldValue) {
+        this.isFirstReq = !oldValue;
+        this.queryGroupData = cloneDeep(newValue);
+        this.curSelectedGroup = [];
+        this.curSelectedCustomPerm = [];
+        this.handleSelectedGroup([]);
+        this.fetchRefreshPermData();
+        if (['customPerm'].includes(newValue.value)) {
+          this.comKey = +new Date();
+        }
       },
   
       handleEmptyRefresh () {
