@@ -82,6 +82,7 @@
                   :is-show-operate="false"
                   :cur-perm-data="formatTabPermData"
                   :pagination="formatTabPermData.pagination"
+                  :empty-data="formatTabPermData.emptyData"
                   :table-column-config="tableColumnConfig"
                   :selected-handover-object="formData.members"
                   :selected-personal-group="groupSelectData"
@@ -231,15 +232,6 @@
           this.handleRtxLeavePage();
         },
         deep: true
-      },
-      activeTab: {
-        handler () {
-          // const list = [...this.groupSelectData, ...this.managerSelectData, ...this.policySelectData];
-          // if(list.length) {
-          //   handleGetSelectedPerm
-          // }
-        },
-        deep: true
       }
     },
     async created () {
@@ -375,7 +367,6 @@
               });
               this.$nextTick(() => {
                 const permRef = this.$refs[`childPerm_${this.activeTab}`];
-                console.log(permRef, 554555);
                 if (permRef && permRef.handleGetSelectedPerm) {
                   permRef.handleGetSelectedPerm();
                 }
@@ -580,7 +571,7 @@
       },
 
       handleReasonBlur (payload) {
-        if (payload.trim() === '') {
+        if (!payload.trim()) {
           this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`);
           this.isShowReasonError = true;
         }

@@ -4,6 +4,7 @@
       <bk-checkbox
         ext-cls="all-system-checkbox"
         v-model="isAllSystem"
+        :disabled="isAllDisabled"
         @change="handleAllSystemChange"
       >
         {{ $t(`m.perm['跨系统全选']`) }}
@@ -170,6 +171,7 @@
     },
     data () {
       return {
+        isAllDisabled: true,
         isAllSystem: false,
         isDisabledOperate: false,
         customKey: -1,
@@ -312,7 +314,8 @@
       },
 
       handleChangePolicyPerm (payload, row) {
-        row.pagination = { ...payload };
+        row.pagination = Object.assign(row.pagination, payload);
+        this.isAllDisabled = row.pagination.count === 0;
       },
 
       handlePageChange (payload, row) {

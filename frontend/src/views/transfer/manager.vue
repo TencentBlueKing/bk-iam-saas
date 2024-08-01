@@ -82,6 +82,17 @@
       curPermData: {
         type: Object
       },
+      emptyData: {
+        type: Object,
+        default: () => {
+          return {
+            type: '',
+            text: '',
+            tip: '',
+            tipType: ''
+          };
+        }
+      },
       selectedManagerGroup: {
         type: Array,
         default: () => []
@@ -104,12 +115,6 @@
           current: 1,
           limit: 10,
           count: 0
-        },
-        emptyData: {
-          type: '',
-          text: '',
-          tip: '',
-          tipType: ''
         }
       };
     },

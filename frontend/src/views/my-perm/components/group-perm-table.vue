@@ -31,7 +31,7 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            :min-width="200"
+            :min-width="300"
             :fixed="'left'"
           >
             <template slot-scope="{ row }">
@@ -270,7 +270,11 @@
       </template>
     </bk-table>
 
-    <MemberTemplateDetailSlider :show.sync="isShowTempSlider" :cur-detail-data="tempDetailData" />
+    <MemberTemplateDetailSlider
+      :show.sync="isShowTempSlider"
+      :cur-detail-data="tempDetailData"
+      :is-show-operate="false"
+    />
 
     <RenderGroupPermSideSlider
       :show="isShowPermSideSlider"
@@ -804,6 +808,7 @@
       color: #FE9C00;
       border-radius: 2px;
       padding: 4px 8px;
+      font-size: 12px;
     }
     .is-expiring-soon {
       color: #FE9C00;

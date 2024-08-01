@@ -618,16 +618,17 @@
               },
               custom: () => {
                 const result = this.getCurPageData(this.pagination.current);
+                const selectedPerm = this.currentSelectList.map((v) => `${v.policy ? v.policy.policy_id : v.id}&${this.type}`);
                 this.tableList.splice(0, this.tableList.length, ...result);
                 this.allData.forEach((item) => {
                   this.$set(item, 'mode_type', this.type);
-                  if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
+                  const cuSystem = this.systemFilter.find((v) => v.value === item.system.id);
+                  if (!cuSystem) {
                     this.systemFilter.push({
                       text: item.system.name,
                       value: item.system.id
                     });
                   }
-                  const selectedPerm = this.currentSelectList.map((v) => `${item.policy ? item.policy.policy_id : v.id}&${this.type}`);
                   if (selectedPerm.includes(`${item.id}&${this.type}`)) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
@@ -667,24 +668,29 @@
       },
 
       getTableProps (payload) {
-        if (payload === 'group') {
-          return [
-            { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
-            { label: this.$t(`m.common['描述']`), prop: 'description' },
-            { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
-            { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
-            { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
+        const typeMap = {
+          group: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
+              { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
             // { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
-          ];
-        }
-        return [
-          { label: this.$t(`m.common['系统名']`), prop: 'system' },
-          { label: this.$t(`m.common['操作']`), prop: 'action' },
-          { label: this.$t(`m.common['资源实例']`), prop: 'policy' },
-          { label: this.$t(`m.common['生效条件']`), prop: 'effective_condition' },
-          { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
-          // { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
-        ];
+            ];
+          },
+          custom: () => {
+            return [
+              { label: this.$t(`m.common['系统名']`), prop: 'system' },
+              { label: this.$t(`m.common['操作']`), prop: 'action' },
+              { label: this.$t(`m.common['资源实例']`), prop: 'policy' },
+              { label: this.$t(`m.common['生效条件']`), prop: 'effective_condition' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
+              // { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+            ];
+          }
+        };
+        return typeMap[payload] ? typeMap[payload]() : typeMap['group']();
       },
 
       systemFilterMethod (value, row, column) {
@@ -733,7 +739,6 @@
             const selectList = this.curFilterSystem && ['custom'].includes(this.type)
               ? this.currentSelectList.filter((item) => item.system.id === this.curFilterSystem)
               : this.currentSelectList.filter((item) => item.mode_type === this.type);
-            console.log(this.currentSelectList, 54444);
             selectionCount[0].children[0].innerHTML = selectList.length;
           }
         });
@@ -781,25 +786,15 @@
                 this.fetchCustomSelection();
               },
               custom: () => {
-                // const curModeList = this.currentSelectList.filter((item) => ['custom'].includes(item.mode_type));
-                // const noCurModeList = this.currentSelectList.filter((item) => !['custom'].includes(item.mode_type));
-                // const tableIdList = payload || this.tableList.map((v) => `${v.policy ? v.policy.policy_id : v.id}&${this.type}`);
-                // const selectGroups = curModeList.filter((item) => {
-                //   const curType = `${item.policy ? item.policy.policy_id : item.id}&${this.type}`;
-                //   return !tableIdList.includes(curType);
-                // }
-                // );
-                // this.currentSelectList = [...selectGroups, ...noCurModeList];
-                // console.log(tableIdList, selectGroups, curModeList, payload, this.currentSelectList);
-                console.log(payload, this.tableList);
+                const curModeList = this.currentSelectList.filter((item) => ['custom'].includes(item.mode_type));
+                const isCurPage = curModeList.length - payload.length === this.pagination.limit;
                 this.tableList.forEach((item) => {
                   const policyId = `${item.policy ? item.policy.policy_id : item.id}&${this.type}`;
                   const curData = this.currentSelectList.find((v) => `${v.policy ? v.policy.policy_id : v.id}&${this.type}` === policyId);
-                  console.log(curData, 555);
                   if (payload.length && !curData) {
                     this.currentSelectList.push(item);
                   }
-                  if (!payload.length && curData) {
+                  if ((!payload.length || isCurPage) && curData) {
                     this.currentSelectList = this.currentSelectList.filter((v) => `${v.policy ? v.policy.policy_id : v.id}&${this.type}` !== policyId);
                   }
                 });
@@ -826,7 +821,6 @@
             };
           });
         }
-        console.log(list, '全选');
         this.fetchSelectedGroups('all', list);
       },
 
@@ -1286,9 +1280,9 @@
         }
       },
 
-      handleEmptyRefresh () {
+      async handleEmptyRefresh () {
         this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
-        this.fetchTableData();
+        await this.fetchTableData();
       },
 
       async resetTableData () {

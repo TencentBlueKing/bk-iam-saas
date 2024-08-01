@@ -370,7 +370,7 @@
           const typeMap = {
             quit: () => {
               const personalPerm = this.currentSelectList.filter((item) => ['personalPerm', 'renewalPersonalPerm'].includes(item.mode_type));
-              const noQuitList = personalPerm.filter((item) => item.department_id !== 0 && this.isAdminGroup(item));
+              const noQuitList = personalPerm.filter((item) => item.department_id < 1 && this.isAdminGroup(item));
               if (!personalPerm.length || !this.currentSelectList.length) {
                 return this.$t(`m.perm['未勾选用户组，无法选择退出']`);
               }
@@ -513,7 +513,6 @@
                 }
                 return item;
               });
-              console.log(list);
               this.$store.commit('perm/updateRenewalData', list);
               this.$router.push({
                 name: 'permRenewal',

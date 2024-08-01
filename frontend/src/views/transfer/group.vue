@@ -145,6 +145,17 @@
       curPermData: {
         type: Object
       },
+      emptyData: {
+        type: Object,
+        default: () => {
+          return {
+            type: '',
+            text: '',
+            tip: '',
+            tipType: ''
+          };
+        }
+      },
       selectedPersonalGroup: {
         type: Array,
         default: () => []
@@ -164,13 +175,7 @@
         curGroupId: '',
         groupSelectData: [],
         groupNotTransferCount: 0,
-        groupPermData: {},
-        emptyData: {
-          type: '',
-          text: '',
-          tip: '',
-          tipType: ''
-        }
+        groupPermData: {}
       };
     },
     computed: {

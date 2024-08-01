@@ -301,6 +301,10 @@
         type: String,
         default: ''
       },
+      systemName: {
+        type: String,
+        default: ''
+      },
       isSearchPerm: {
         type: Boolean,
         default: false
@@ -605,13 +609,36 @@
           let policyList = data || [];
           if (this.groupData && ['renewalPerm'].includes(this.groupData.value)) {
             const renewalCustomPerm = this.renewalCustomPerm.map((v) => `${v.policy.id}&${v.policy.name}`);
-            policyList = policyList.filter((v) => renewalCustomPerm.includes(`${v.id}&${v.name}`));
+            policyList = (data || []).filter((v) => renewalCustomPerm.includes(`${v.id}&${v.name}`));
           }
           if (policyList.length) {
+            const linearActionList = this.linearActionList.filter((item) =>
+              policyList.map((v) => v.id).includes(item.id)
+            );
             this.policyList = policyList.map((item) => {
-              const relatedEnvironments = this.linearActionList.find((v) => v.id === item.id);
-              item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
-              return new PermPolicy(item);
+              let relatedPolicyActions = [];
+              const curAction = linearActionList.find((v) => v.id === item.id);
+              // 处理多系统批量删除操作时，如果当前存在被关联操作，则同步删除依赖当前操作的数据
+              const relatedData = linearActionList.filter((v) => v.related_actions.includes(item.id));
+              if (relatedData.length) {
+                const relatedIdList = relatedData.map((v) => v.id);
+                relatedPolicyActions = (data || []).filter((v) => relatedIdList.includes(v.id));
+              }
+              if (curAction) {
+                const { related_actions: relatedActions, related_environments: relatedEnvironments } = curAction;
+                item.related_actions = relatedActions || [];
+                item.related_environments = relatedEnvironments || [];
+              }
+              return {
+                ...new PermPolicy(item),
+                ...{
+                  related_policy_actions: relatedPolicyActions,
+                  system: {
+                    id: this.systemId,
+                    name: this.systemName
+                  }
+                }
+              };
             });
           }
           this.policyListBack = cloneDeep(this.policyList);
@@ -721,7 +748,13 @@
                 mode_type: this.mode
               }
             });
-            this.$store.commit('perm/updateRenewalData', list);
+            const selectGroup = list.map((item) => {
+              if (['customPerm', 'renewalCustomPerm'].includes(item.mode_type)) {
+                this.$set(item, 'policy', { policy_id: item.policy_id, name: item.name });
+              }
+              return item;
+            });
+            this.$store.commit('perm/updateRenewalData', selectGroup);
             this.$router.push({
               name: 'permRenewal'
             });
@@ -791,8 +824,9 @@
           const permRef = this.$refs[`customPermRef_${this.mode}_${this.systemId}`];
           if (permRef) {
             this.policyList.forEach((item) => {
+              const curPolicy = `${item.name}&${item.policy ? item.policy.policy_id : item.id}`;
               this.$set(item, 'handover_object', this.selectedHandoverObject);
-              permRef.toggleRowSelection(item, policyData.includes(`${item.name}&${item.id}`));
+              permRef.toggleRowSelection(item, policyData.includes(curPolicy));
             });
           }
         });
@@ -802,12 +836,12 @@
       handleActionLinearData () {
         const linearActions = [];
         this.systemActionList.forEach((item) => {
-          // item.actions = item.actions.filter(v => !v.hidden);
+          item.actions = item.actions.filter((v) => !v.hidden);
           item.actions.forEach((act) => {
             linearActions.push(act);
           });
           (item.sub_groups || []).forEach((sub) => {
-            // sub.actions = sub.actions.filter(v => !v.hidden);
+            sub.actions = sub.actions.filter((v) => !v.hidden);
             sub.actions.forEach((act) => {
               linearActions.push(act);
             });
@@ -875,6 +909,7 @@
           this.resetDataAfterClose();
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.handleRefreshData();
+          this.handleGetSelectedPerm();
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -900,8 +935,8 @@
               policyIds: this.curDeleteIds,
               systemId: this.systemId
             });
-            const deletePolicyList = this.policyList.filter((item) => this.curDeleteIds.includes(item.policy_id));
-            const policyList = this.policyList.filter((item) => !this.curDeleteIds.includes(item.policy_id));
+            const deletePolicyList = this.policyListBack.filter((item) => this.curDeleteIds.includes(item.policy_id));
+            const policyList = this.policyListBack.filter((item) => !this.curDeleteIds.includes(item.policy_id));
             this.currentSelectList = this.currentSelectList.filter(
               (item) => !this.curDeleteIds.includes(item.policy_id)
             );
@@ -927,6 +962,7 @@
           this.messageAdvancedError(e);
         } finally {
           this.deleteDialog.loading = false;
+          this.handleGetSelectedPerm();
         }
       },
       
@@ -939,19 +975,19 @@
         const { id, name, condition } = payload;
         let delRelatedActions = [];
         this.delActionList = [];
-        const policyIdList = this.policyList.map((v) => v.id);
+        const policyIdList = this.policyListBack.map((v) => v.id);
         const linearActionList = this.linearActionList.filter((item) =>
           policyIdList.includes(item.id)
         );
         const curAction = linearActionList.find((item) => item.id === id);
         const hasRelatedActions
-          = curAction && curAction.related_actions && curAction.related_actions.length;
+          = curAction && curAction.related_actions && curAction.related_actions.length > 0;
         linearActionList.forEach((item) => {
           // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
           if (
             hasRelatedActions
             && item.related_actions
-            && item.related_actions.length
+            && item.related_actions.length > 0
             && item.id !== id
           ) {
             delRelatedActions = item.related_actions.filter((v) => curAction.related_actions.includes(v));
@@ -1098,6 +1134,7 @@
             pagination
           }
         );
+        this.handleGetSelectedPerm();
       },
 
       handleViewEffectCondition () {

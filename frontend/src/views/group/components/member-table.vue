@@ -233,7 +233,7 @@
               </template>
             </bk-table-column>
           </template>
-          <template v-else-if="item.prop === 'operate'">
+          <template v-else-if="item.prop === 'operate' && isShowOperate">
             <bk-table-column
               :key="item.prop"
               :label="item.label"
@@ -391,6 +391,10 @@
       showExpiredAt: {
         type: Boolean,
         default: false
+      },
+      isShowOperate: {
+        type: Boolean,
+        default: true
       }
     },
     data () {

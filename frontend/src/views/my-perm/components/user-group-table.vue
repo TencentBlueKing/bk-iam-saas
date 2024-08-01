@@ -30,6 +30,23 @@
             </template>
           </bk-table-column>
         </template>
+        <template v-else-if="item.prop === 'related_policy_actions'">
+          <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop">
+            <template slot-scope="{ row }">
+              <template v-if="row.related_policy_actions && row.related_policy_actions.length > 0">
+                <span
+                  v-bk-tooltips="{
+                    content: formatRelatedPolicy(row.related_policy_actions),
+                    placements: ['left-start']
+                  }"
+                >
+                  {{ formatRelatedPolicy(row.related_policy_actions) }}
+                </span>
+              </template>
+              <span v-else>--</span>
+            </template>
+          </bk-table-column>
+        </template>
         <template v-else-if="item.prop === 'operate'">
           <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop" :fixed="'right'" :width="80">
             <template slot-scope="{ row }">
@@ -99,6 +116,16 @@
         }
       };
     },
+    computed: {
+      formatRelatedPolicy () {
+        return (payload) => {
+          if (payload && payload.length) {
+            return payload.map((v) => v.name).join();
+          }
+          return '--';
+        };
+      }
+    },
     watch: {
       list: {
         handler (value) {
@@ -134,6 +161,7 @@
           deleteAction: () => {
             return [
               { label: this.$t(`m.common['操作名']`), prop: 'name', isViewDetail: false },
+              { label: this.$t(`m.perm['关联操作']`), prop: 'related_policy_actions' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           }
@@ -180,8 +208,11 @@
         if (!this.tableList.length) {
           this.tableEmptyData = formatCodeData(0, this.tableEmptyData, true);
         }
+        let noSelectTableList = [];
         // 需要处理不能移除的用户组权限
-        const noSelectTableList = [...this.noShowList];
+        if (['quit'].includes(this.mode)) {
+          noSelectTableList = [...this.noShowList];
+        }
         const list = [...this.tableList, ...noSelectTableList];
         this.handlePageChange(this.pagination.current);
         this.$emit('on-remove-group', list);

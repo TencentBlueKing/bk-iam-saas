@@ -47,7 +47,12 @@
       </div>
       <div slot="footer">
         <div class="iam-batch-operate-side-footer">
-          <bk-button theme="primary" class="member-footer-btn" :loading="submitLoading" @click="handleSubmit">
+          <bk-button
+            theme="primary"
+            class="member-footer-btn"
+            :loading="submitLoading"
+            @click="handleSubmit"
+          >
             {{ $t(`m.common['提交']`) }}
           </bk-button>
           <bk-button theme="default" class="member-footer-btn" @click="handleCancel('cancel')">
@@ -171,6 +176,7 @@
           },
           deleteAction: () => {
             const list = this.selectTableList.filter((item) => ['customPerm', 'renewalCustomPerm'].includes(item.mode_type));
+            this.noSelectTableList = list.map((item) => item.related_policy_actions).flat(2);
             return list.length;
           }
         };
@@ -196,6 +202,9 @@
         const modeMap = {
           quit: () => {
             return this.$t(`m.info['不可移出的用户组如下']`, { value: list });
+          },
+          deleteAction: () => {
+            return this.$t(`m.perm['注意删除依赖操作时会同步删除关联操作']`);
           }
         };
         return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';
@@ -205,6 +214,7 @@
       show: {
         handler (value) {
           if (value) {
+            this.noSelectTableList = [];
             [this.groupListBack, this.selectTableList] = [this.groupList, this.groupList];
             this.submitFormData = Object.assign({}, {
               selectTableList: this.selectTableList
@@ -246,11 +256,21 @@
               this.submitLoading = true;
               const list = this.selectTableList.filter((item) => ['customPerm', 'renewalCustomPerm'].includes(item.mode_type));
               if (list.length) {
+                // 获取有依赖操作的数据
                 const systemList = classifyArrayByField(list, 'system_id');
                 for (const [key, value] of systemList.entries()) {
+                  let relatedPolicyIds = [];
                   const policyIds = value.map((v) => v.policy_id);
+                  const hasRelatedData = value.filter((item) =>
+                    item.related_policy_actions && item.related_policy_actions.length > 0
+                  );
+                  if (hasRelatedData.length) {
+                    relatedPolicyIds = hasRelatedData.map((item) => item.related_policy_actions)
+                      .flat(2)
+                      .map((v) => v.policy_id);
+                  }
                   await this.$store.dispatch('permApply/deletePerm', {
-                    policyIds,
+                    policyIds: [...policyIds, ...relatedPolicyIds],
                     systemId: key
                   });
                 }
