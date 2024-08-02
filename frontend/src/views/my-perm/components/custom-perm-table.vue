@@ -655,6 +655,7 @@
           this.messageAdvancedError(e);
         } finally {
           this.initRequestQueue.shift();
+          this.handleGetSelectedPerm();
           this.$emit('on-change-policy-perm', {
             current,
             limit,

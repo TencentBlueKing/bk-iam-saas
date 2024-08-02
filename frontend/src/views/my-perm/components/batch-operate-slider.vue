@@ -214,7 +214,7 @@
       show: {
         handler (value) {
           if (value) {
-            this.noSelectTableList = [];
+            this.resetData();
             [this.groupListBack, this.selectTableList] = [this.groupList, this.groupList];
             this.submitFormData = Object.assign({}, {
               selectTableList: this.selectTableList
@@ -320,6 +320,7 @@
         this.submitFormData = {};
         this.submitFormDataBack = {};
         this.selectTableList = [];
+        this.noSelectTableList = [];
         this.isShowGroupError = false;
       }
     }
