@@ -691,7 +691,6 @@
             const { data } = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: this.applyGroupData.system_id });
             this.handleFormatRecursion(data || []);
           } catch (e) {
-            console.error(e);
             this.messageAdvancedError(e);
           }
         }

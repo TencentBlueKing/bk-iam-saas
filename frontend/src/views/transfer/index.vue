@@ -173,7 +173,7 @@
           isShowOperate: false
         },
         formData: {
-          members: [],
+          members: ['edwin'],
           reason: ''
         },
         submitDataBack: {},
@@ -441,7 +441,7 @@
           reason,
           handover_to: members[0],
           handover_info: {
-            group_ids: groupIds,
+            group_ids: [1074] || groupIds,
             role_ids: roleIds,
             custom_policies: customPolicies
           }

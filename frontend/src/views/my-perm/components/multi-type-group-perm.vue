@@ -142,6 +142,7 @@
         curSelectedCustomPerm: [],
         renewalCustomPerm: [],
         defaultExpandItem: [],
+        renewalTabItem: ['renewalPersonalPerm', 'renewalCustomPerm'],
         queryGroupData: {},
         curSearchParams: {},
         permData: {
@@ -181,6 +182,10 @@
       },
       isHideApply () {
         return this.externalSystemsLayout.myPerm.hideApplyBtn;
+      },
+      // 是否是外部系统内嵌
+      isExternalApp () {
+        return existValue('externalApp') && this.externalSystemId;
       },
       isShowPerm () {
         return (payload) => {
@@ -442,7 +447,9 @@
           });
           this.messageAdvancedError(e);
         } finally {
-          curData.loading = false;
+          sleep(500).then(() => {
+            curData.loading = false;
+          });
         }
       },
 
@@ -483,13 +490,15 @@
           });
           this.messageAdvancedError(e);
         } finally {
-          curData.loading = false;
+          sleep(500).then(() => {
+            curData.loading = false;
+          });
         }
       },
 
       // 获取有权限的所有系统列表
       async fetchCustomPermSearch () {
-        if (existValue('externalApp') && this.externalSystemId) {
+        if (this.isExternalApp) {
           return;
         }
         // 是否是续期选项
@@ -503,7 +512,7 @@
           curData.loading = true;
           let params = {};
           let url = 'permApply/getHasPermSystem';
-          if (Object.keys(this.curSearchParams).length > 0) {
+          if (Object.keys(this.curSearchParams).length > 0 && this.curSearchParams.system_id) {
             params.system_id = this.curSearchParams.system_id;
           }
           if (this.externalSystemId) {
@@ -516,11 +525,33 @@
               ...this.curSearchParams
             };
           }
-          const { code, data } = await this.$store.dispatch(
-            url,
-            params
-          );
+          const { code, data } = await this.$store.dispatch(url, params);
           const totalCount = data.length || 0;
+          // 如果是搜索接口，需要从已有权限的系统过滤当前搜索系统数据
+          if (this.isSearchResource) {
+            if (!this.curSearchParams.system_id || totalCount === 0) {
+              curData = Object.assign(curData, {
+                list: [],
+                emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, true),
+                pagination: Object.assign(curData.pagination, { count: 0 })
+              });
+              return;
+            }
+            const searchData = {
+              list: curData.listBack.filter((item) => item.id === this.curSearchParams.system_id),
+              emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: 'search' } }, totalCount === 0),
+              pagination: Object.assign(curData.pagination, { count: totalCount })
+            };
+            curData = Object.assign(curData, searchData);
+            if (curData.list.length) {
+              curData.list.forEach((item) => {
+                item.count = totalCount;
+                item.pagination.count = totalCount;
+              });
+            }
+            this.handleGetSelectedGroups(curData.id);
+            return;
+          }
           const result = (data || []).map((v) => {
             return {
               ...v,
@@ -536,13 +567,10 @@
           });
           curData = Object.assign(curData, {
             list: result || [],
-            listBack: !this.isSearchResource ? result : [],
+            listBack: result || [],
             emptyData: formatCodeData(code, { ...emptyData, ...{ tipType: this.isSearchResource ? 'search' : '' } }, totalCount === 0),
-            pagination: { ...pagination, ...{ count: totalCount } }
+            pagination: Object.assign(pagination, { count: totalCount })
           });
-          if (this.isSearchResource && this.curSearchParams.system_id) {
-            curData.list = curData.listBack.filter((item) => item.id === this.curSearchParams.system_id);
-          }
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
@@ -559,7 +587,7 @@
 
       // 获取管理员权限
       async fetchManagerPermSearch () {
-        if (existValue('externalApp') && this.externalSystemId) {
+        if (this.isExternalApp) {
           return;
         }
         let curData = this.allPermItem.find((item) => item.id === 'managerPerm');
@@ -573,7 +601,8 @@
           const params = {
             limit,
             offset: (current - 1) * limit,
-            with_super: true
+            with_super: true,
+            name: this.curSearchParams.manager_name || undefined
           };
           const { code, data } = await this.$store.dispatch(
             'role/getRatingManagerList',
@@ -649,7 +678,7 @@
 
       // 获取即将过期的自定义权限
       async fetchExpiredCustomPerm () {
-        if (existValue('externalApp') && this.externalSystemId) {
+        if (this.isExternalApp) {
           return;
         }
         try {
@@ -677,7 +706,9 @@
       async fetchInitData () {
         const typeMap = {
           all: async () => {
-            this.defaultExpandItem = ['personalPerm'];
+            if (['all'].includes(this.queryGroupData.value)) {
+              this.defaultExpandItem = ['personalPerm'];
+            }
             const externalReqList = [
               this.fetchExpiredGroupPerm(),
               this.fetchUserGroupSearch(),
@@ -698,17 +729,11 @@
               await Promise.all([...externalReqList, ...noExternalReqList]);
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0 && this.user.timestamp);
             }
-            this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
-            bus.$emit('on-update-all-perm', {
-              allPerm: this.allPermItem,
-              renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPerm: this.renewalCustomPerm,
-              isBatchDelAction: this.isBatchDelAction
-            });
-            this.handleDefaultExpand(this.defaultExpandItem);
+            this.handleGetPermData();
+            this.isFirstReq = false;
           },
           renewalPerm: async () => {
-            this.defaultExpandItem = ['renewalPersonalPerm', 'renewalCustomPerm'];
+            this.defaultExpandItem = this.isExternalApp ? ['renewalPersonalPerm'] : this.renewalTabItem;
             const initReqList = [
               this.fetchExpiredGroupPerm(),
               this.fetchUserGroupSearch(),
@@ -763,21 +788,19 @@
           }
         };
         if (typeMap[this.queryGroupData.value]) {
+          // 处理重置操作或者清空搜索条件下，如果当前选择项不在全部权限，则需要重新获取所有权限类型的数量
           if (this.isFirstReq) {
             return typeMap['all']();
           }
           return typeMap[this.queryGroupData.value]();
         }
-        if (!this.permData.hasPerm) {
-          let reqCode = 0;
-          reqCode = this.allPermItem.find((v) => ['refresh'].includes(v.emptyData.tipType)) ? 500 : 0;
-          this.emptyPermData = formatCodeData(reqCode, { ...this.emptyPermData, ...{ tipType: this.isSearchResource ? 'search' : '' } });
-        }
       },
 
       handleGetPermData () {
-        const curPermData = this.allPermItem.filter((item) => this.defaultExpandItem.includes(item.id));
-        this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
+        if (!['all'].includes(this.queryGroupData.value)) {
+          const curPermData = this.allPermItem.filter((item) => this.defaultExpandItem.includes(item.id));
+          this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
+        }
         this.$set(this.permData, 'hasPerm', this.isHasHandover);
         bus.$emit('on-update-all-perm', {
           allPerm: this.allPermItem,
@@ -785,6 +808,45 @@
           renewalCustomPerm: this.renewalCustomPerm,
           isBatchDelAction: this.isBatchDelAction
         });
+        if (this.isSearchResource) {
+          let curSearchExpand = {};
+          const typeMap = {
+            all: () => {
+              curSearchExpand = this.allPermItem.filter((item) =>
+                !this.renewalTabItem.includes(item.id)).find((v) => v.pagination.count > 0
+              );
+              if (curSearchExpand) {
+                this.defaultExpandItem = [`${curSearchExpand.id}`];
+              }
+            },
+            renewalPerm: () => {
+              const tabItem = this.isExternalApp ? ['renewalPersonalPerm'] : this.renewalTabItem;
+              curSearchExpand = this.allPermItem.filter((item) =>
+                tabItem.includes(item.id)).find((v) => v.pagination.count > 0
+              );
+              if (curSearchExpand) {
+                this.defaultExpandItem = [`${curSearchExpand.id}`];
+              }
+            },
+            memberTempPerm: () => {
+              curSearchExpand = this.allPermItem.filter((item) =>
+                ['userTempPerm', 'departTempPerm'].includes(item.id)).find((v) => v.pagination.count > 0
+              );
+              if (curSearchExpand) {
+                this.defaultExpandItem = [`${curSearchExpand.id}`];
+              }
+            },
+            other: () => {
+              this.defaultExpandItem = [`${this.queryGroupData.value}`];
+            }
+          };
+          typeMap[this.queryGroupData.value] ? typeMap[this.queryGroupData.value]() : typeMap['other']();
+        }
+        if (!this.permData.hasPerm) {
+          let reqCode = 0;
+          reqCode = this.allPermItem.find((v) => ['refresh'].includes(v.emptyData.tipType)) ? 500 : 0;
+          this.emptyPermData = formatCodeData(reqCode, { ...this.emptyPermData, ...{ tipType: this.isSearchResource ? 'search' : '' } });
+        }
         this.handleDefaultExpand(this.defaultExpandItem);
       },
 
@@ -961,7 +1023,7 @@
             delete this.curSearchParams.resource_instances;
           }
           Object.keys(this.curSearchParams).forEach((item) => {
-            if (['name', 'description', 'id'].includes(item) && !this.curSearchParams[item]) {
+            if (!this.curSearchParams[item]) {
               delete this.curSearchParams[item];
             }
           });
@@ -983,16 +1045,14 @@
       },
   
       handleEmptyRefresh () {
-        this.resetPagination();
+        this.fetchRefreshPermData();
         this.$emit('on-refresh');
       },
   
       handleEmptyClear () {
-        this.resetPagination();
         this.curSearchParams = {};
         this.isSearchResource = false;
-        console.log(4444);
-        this.fetchRefreshPermData();
+        this.isFirstReq = true;
         this.$emit('on-clear');
       },
 

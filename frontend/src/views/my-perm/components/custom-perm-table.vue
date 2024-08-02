@@ -438,7 +438,7 @@
           if (payload && payload.length) {
             const hasName = payload.some((v) => v.username);
             if (!hasName) {
-              payload = payload.map(v => {
+              payload = payload.map((v) => {
                 return {
                   username: v,
                   readonly: false
@@ -496,7 +496,7 @@
       },
       formatOperate () {
         const isCN = ['zh-cn'].includes(window.CUR_LANGUAGE);
-        return isCN ? 260 : 410;
+        return isCN ? 260 : 470;
       }
     },
     watch: {
@@ -591,7 +591,7 @@
         try {
           let url = '';
           let queryParams = {};
-          if (this.isSearchPerm) {
+          if (this.isSearchPerm && this.curSearchParams.system_id) {
             url = 'perm/getPoliciesSearch';
             queryParams = {
             ...this.searchParams

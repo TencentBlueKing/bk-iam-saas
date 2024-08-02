@@ -210,9 +210,9 @@
       emptyData: {
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
-          if (this.isSearchPerm || ['search'].includes(value.tipType)) {
-            this.handleSystemSearch();
-          }
+          // if (this.isSearchPerm || ['search'].includes(value.tipType)) {
+          //   this.handleSystemSearch();
+          // }
         },
         immediate: true
       }
@@ -262,24 +262,6 @@
         } catch (e) {
           this.messageAdvancedError(e);
         }
-      },
-
-      async handleGetSystemAction () {
-        const externalParams = {};
-        if (this.externalSystemId) {
-          externalParams.system_id = this.externalSystemId;
-        }
-        this.emptyPolicyData.tipType = '';
-        const { code, data } = await this.$store.dispatch(
-          'permApply/getHasPermSystem',
-          externalParams
-        );
-        this.handleGetSystemData(data || []);
-        this.emptyPolicyData = formatCodeData(
-          code,
-          this.emptyPolicyData,
-          data.length === 0
-        );
       },
 
       handleAllSystemChange (payload) {
@@ -381,7 +363,7 @@
             }
           };
         });
-        this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
+        this.systemPolicyList = [...systemPolicyList];
         this.systemPolicyList.sort((curr, next) => curr.name.localeCompare(next.name));
         if (this.externalSystemId && this.systemPolicyList.length > 1) {
           const externalSystemIndex = this.systemPolicyList.findIndex(
@@ -401,18 +383,17 @@
         }
         if (this.isSearchPerm) {
           this.emptyPolicyData.tipType = 'search';
+          this.$nextTick(() => {
+            if (this.curSearchParams.system_id) {
+              const customRef = this.$refs[`customPermTable_${this.curSearchParams.system_id}_${this.mode}`];
+              if (customRef && customRef.length) {
+                customRef[0].fetchActions(this.curSearchParams.system_id);
+                customRef[0].fetchPolicy({ systemId: this.curSearchParams.system_id });
+              }
+            }
+          });
         }
         this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, systemPolicyList.length === 0);
-      },
-
-      // 搜索自定义权限
-      handleSystemSearch () {
-        // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
-        const { id, description, name, system_id: systemId } = this.curSearchParams;
-        const noValue = !id && !name && !description;
-        // 筛选搜索的系统id
-        const curSystemList = this.systemPolicyList.filter((item) => item.id === systemId && noValue);
-        this.handleGetSystemData(curSystemList || []);
       },
       
       handleEmptyClear () {

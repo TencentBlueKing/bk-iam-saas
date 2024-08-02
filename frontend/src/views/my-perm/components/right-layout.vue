@@ -193,7 +193,7 @@
       :title="batchSliderTitle"
       :group-data="groupData"
       :group-list="sliderGroupPermList"
-      @on-submit="handleOperateSubmit"
+      @on-slider-submit="handleOperateSubmit"
     />
 
     <RenderGroupPermSideSlider
@@ -278,6 +278,7 @@
         sliderGroupPermList: [],
         formData: {
           name: '',
+          manager_name: '',
           id: '',
           description: ''
         },
@@ -352,7 +353,7 @@
           managerPerm: () => {
             return [
               {
-                id: 'name',
+                id: 'manager_name',
                 name: this.$t(`m.permTransfer['管理员名称']`),
                 default: true
               }
@@ -416,7 +417,8 @@
       },
       groupData: {
         handler () {
-          this.handleRefreshGroup();
+          this.currentSelectList = [];
+          this.sliderGroupPermList = [];
         },
         deep: true
       }
@@ -438,15 +440,6 @@
       });
     },
     methods: {
-      async handleSelectSearch (payload) {
-        const { name } = payload;
-        this.isSearchPerm = true;
-        this.curSearchParams = {};
-        this.curSearchPagination = Object.assign(this.curSearchPagination, { current: 1, limit: 10 });
-        this.formData.name = name;
-        this.fetchRemoteTable();
-      },
-
       fetchRemoteTable () {
         const params = {
           ...this.curSearchParams,
@@ -459,20 +452,27 @@
         });
       },
 
+      handleSelectSearch (payload) {
+        this.isSearchPerm = true;
+        this.curSearchParams = {};
+        this.curSearchPagination = Object.assign(this.curSearchPagination, { current: 1, limit: 10 });
+        this.formData.manager_name = payload.manager_name || '';
+        this.fetchRemoteTable();
+      },
+
       handleRemoteTable (payload) {
-        const { emptyData, pagination, searchParams } = payload;
+        const { pagination, searchParams } = payload;
         const params = {
           ...searchParams,
           ...this.formData
         };
-        this.isSearchPerm = emptyData.tipType === 'search';
+        this.isSearchPerm = !!(searchParams.system_id || Object.values(this.formData).some((v) => v !== ''));
         this.curSearchParams = cloneDeep(params);
         this.curSearchPagination = cloneDeep(pagination);
         this.fetchRemoteTable();
       },
 
       handleRefreshTable () {
-        console.log('重置');
         this.curEmptyData.tipType = '';
         this.isSearchPerm = false;
         this.curSearchParams = {};
@@ -484,11 +484,27 @@
       },
 
       handleSearch () {
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
+        this.$nextTick(() => {
+          this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
+        });
       },
 
       handleClearSearch () {
-        this.handleSearch();
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        this.formData = Object.assign({
+          name: '',
+          id: '',
+          description: ''
+        });
+        this.searchList = [];
+        if (['managerPerm'].includes(this.groupData.value)) {
+          this.fetchRemoteTable();
+          return;
+        }
+        this.$nextTick(() => {
+          this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        });
       },
 
       handleBatch (payload) {
@@ -556,8 +572,16 @@
         });
       },
 
-      handleOperateSubmit () {
-
+      handleOperateSubmit ({ list, type }) {
+        const typeMap = {
+          quit: () => {
+            this.currentSelectList = this.currentSelectList.filter((v) => list.includes(v.id));
+          },
+          deleteAction: () => {
+            this.currentSelectList = this.currentSelectList.filter((v) => list.includes(v.policy_id));
+          }
+        };
+        return typeMap[type]();
       },
 
       handleToggleExpand () {
@@ -581,6 +605,7 @@
         this.curSearchParams = {};
         this.formData = Object.assign(this.formData, {
           name: '',
+          manager_name: '',
           id: '',
           description: ''
         });

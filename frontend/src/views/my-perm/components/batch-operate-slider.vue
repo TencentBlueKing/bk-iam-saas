@@ -244,6 +244,8 @@
               }
               this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
               bus.$emit('on-update-perm-group', { active: 'personalPerm' });
+              // 同步更新批量操作下拉菜单下选择的数据
+              this.$emit('on-slider-submit', { list, type: this.curSliderName });
               this.$emit('update:show', false);
             } catch (e) {
               this.messageAdvancedError(e);
@@ -256,6 +258,7 @@
               this.submitLoading = true;
               const list = this.selectTableList.filter((item) => ['customPerm', 'renewalCustomPerm'].includes(item.mode_type));
               if (list.length) {
+                let allSubmitPolicy = [];
                 // 获取有依赖操作的数据
                 const systemList = classifyArrayByField(list, 'system_id');
                 for (const [key, value] of systemList.entries()) {
@@ -269,8 +272,9 @@
                       .flat(2)
                       .map((v) => v.policy_id);
                   }
+                  allSubmitPolicy = [...policyIds, ...relatedPolicyIds];
                   await this.$store.dispatch('permApply/deletePerm', {
-                    policyIds: [...policyIds, ...relatedPolicyIds],
+                    policyIds: allSubmitPolicy,
                     systemId: key
                   });
                 }
@@ -279,6 +283,8 @@
                 bus.$emit('on-update-perm-group', { active: isRenewalPerm ? 'renewalCustomPerm' : 'customPerm', isBatchDelAction: true });
                 // 刷新自定义权限表格，更新可续期自定义权限数量
                 bus.$emit('on-all-delete-policy', { allDeletePolicy: systemList });
+                // 同步更新批量操作下拉菜单下选择的数据
+                this.$emit('on-slider-submit', { list: allSubmitPolicy, type: this.curSliderName });
                 this.$emit('update:show', false);
               }
             } catch (e) {

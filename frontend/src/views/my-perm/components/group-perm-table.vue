@@ -474,13 +474,7 @@
           [
             () => ['personalPerm', 'renewalPersonalPerm'].includes(this.mode),
             () => {
-              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 150 : 200;
-            }
-          ],
-          [
-            () => ['customPerm', 'renewalCustomPerm'].includes(this.mode),
-            () => {
-              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 200 : 300;
+              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 150 : 300;
             }
           ]
         ];
