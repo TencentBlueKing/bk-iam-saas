@@ -160,8 +160,8 @@
           },
           deleteAction: () => {
             return [
-              { label: this.$t(`m.common['操作名']`), prop: 'name', isViewDetail: false },
-              { label: this.$t(`m.perm['关联操作']`), prop: 'related_policy_actions' },
+              { label: this.$t(`m.common['操作']`), prop: 'name', isViewDetail: false },
+              { label: this.$t(`m.common['关联操作']`), prop: 'related_policy_actions' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           }

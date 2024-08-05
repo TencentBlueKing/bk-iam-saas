@@ -794,11 +794,12 @@ export const getRoutePath = (subPath) => {
 
 /**
  * 根据指定字段作为key值对数组结构进行分类
- * @param {arr} value 传入的数组
+ * @param {arr}  传入的数组
+ *  @param {generateKey}  指定分类的key值，可以是组合key
  */
-export const classifyArrayByField = (arr, field) => {
+export const classifyArrayByField = (arr, generateKey) => {
   return arr.reduce((map, obj) => {
-    const key = obj[field];
+    const key = typeof generateKey === 'string' && obj[generateKey] ? obj[generateKey] : generateKey(obj);
     if (!map.has(key)) {
       map.set(key, []);
     }

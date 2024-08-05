@@ -8,7 +8,7 @@
       :header-border="false"
       :outer-border="false"
       :class="[
-        { 'is-hide-pagination': policyListBack.length < 10 }
+        { 'is-hide-pagination': isHidePagination }
       ]"
       :pagination="pagination"
       @page-change="handlePageChange"
@@ -432,6 +432,9 @@
         return (payload) => {
           return payload.expired_at >= getNowTimeExpired();
         };
+      },
+      isHidePagination () {
+       return this.policyListBack.length < 10 && ['myPerm'].includes(this.$route.name);
       },
       formatRoleMembers () {
         return (payload) => {
