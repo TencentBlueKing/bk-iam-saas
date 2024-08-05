@@ -634,7 +634,7 @@ export const m = {
         '普通成员': 'Ordinary Member',
         '退出登录': 'Sign out',
         '我的管理空间': 'My Management Space',
-        '资源权限管理': 'Resource Perm Management',
+        '资源权限管理': 'Resource Permission Management',
         '发起需求': 'Initiate Request',
         '工作台': 'Workspace',
         '开发者': 'Developers',
@@ -656,7 +656,7 @@ export const m = {
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
-        '人员模板': 'Members Template',
+        '人员模板': 'Member Templates',
         '用户/组织': 'User/Organization',
         '续期通知': 'Renewal Notice'
     },
