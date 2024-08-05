@@ -14,9 +14,8 @@
         </div>
         <div class="content" v-show="customExpanded">
           <div class="slot-content">
-            <template v-for="(sys, sysIndex) in systemPolicyList">
-              <div class="system-list-wrapper" :class="sysIndex > 0 ? 'iam-perm-ext-cls' : ''"
-                :key="sys.id">
+            <div v-for="(sys, sysIndex) in systemPolicyList" :key="sys.id">
+              <div class="system-list-wrapper" :class="sysIndex > 0 ? 'iam-perm-ext-cls' : ''">
                 <div class="system-list-item-header" @click="handleSystemExpanded(sys)">
                   <Icon bk class="system-list-item-expanded"
                     :type="sys.expanded ? 'angle-down' : 'angle-right'" />
@@ -36,7 +35,7 @@
                     @custom-selection-change="handleCustomSelection(...arguments, sys)" />
                 </div>
               </div>
-            </template>
+            </div>
           </div>
         </div>
       </div>
@@ -180,6 +179,7 @@
     }
   };
 </script>
-<style lang="postcss">
-    @import './custom.css';
+
+<style lang="postcss" scoped>
+@import './common/css/custom.css';
 </style>

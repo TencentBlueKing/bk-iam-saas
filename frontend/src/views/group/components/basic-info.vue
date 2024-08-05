@@ -16,50 +16,23 @@
           @blur="handleNameBlur"
           @change="handleNameChange" />
         <p class="name-empty-error" v-if="isShowNameError">{{ nameValidateText }}</p>
-      </iam-form-item>
-      <!-- <iam-form-item label="审批流程" required property="approval_process_id">
-                <bk-select
-                    :value="formData.approval_process_id"
-                    style="width: 450px;"
-                    :disabled="false"
-                    @change="handleProcessChange"
-                    searchable>
-                    <bk-option v-for="option in processList"
-                        :key="option.id"
-                        :id="option.id"
-                        :name="option.name">
-                    </bk-option>
-                </bk-select>
-            </iam-form-item> -->
-      <!-- <iam-form-item :label="$t(`m.common['描述']`)" required>
-                <bk-input
-                    :value="formData.description"
-                    type="textarea"
-                    :placeholder="$t(`m.verify['用户组描述提示']`)"
-                    maxlength="255"
-                    :ext-cls="isShowDescError ? 'group-desc-error' : ''"
-                    data-test-id="group_input_groupDesc"
-                    @input="handleDescInput"
-                    @blur="handleDescBlur"
-                    @change="handleDescChange" />
-                <p class="desc-empty-error" v-if="isShowDescError">{{ descValidateText }}</p>
-            </iam-form-item> -->
-      <iam-form-item :label="$t(`m.common['描述']`)">
-        <bk-input
-          :value="formData.description"
-          type="textarea"
-          :placeholder="$t(`m.verify['请输入']`)"
-          maxlength="255"
-          data-test-id="group_input_groupDesc"
-          @input="handleDescInput"
-          @blur="handleDescBlur"
-          @change="handleDescChange" />
-      </iam-form-item>
-    </bk-form>
+        <iam-form-item :label="$t(`m.common['描述']`)">
+          <bk-input
+            :value="formData.description"
+            type="textarea"
+            :placeholder="$t(`m.verify['请输入']`)"
+            maxlength="255"
+            data-test-id="group_input_groupDesc"
+            @input="handleDescInput"
+            @blur="handleDescBlur"
+            @change="handleDescChange" />
+        </iam-form-item>
+      </iam-form-item></bk-form>
   </div>
 </template>
+
 <script>
-    // import _ from 'lodash'
+  import { isEmojiCharacter } from '@/common/util';
   const getDefaultData = () => ({
     name: '',
     approval_process_id: 1,
@@ -115,8 +88,10 @@
     },
     methods: {
       handleNameInput (payload) {
-        this.isShowNameError = false;
-        this.nameValidateText = '';
+        this.isShowNameError = !this.formData.name.trim() || isEmojiCharacter(this.formData.name);
+        if (payload) {
+          window.changeAlert = true;
+        }
       },
 
       handleDescInput () {
@@ -140,23 +115,26 @@
       handleNameBlur (payload) {
         const maxLength = 32;
         const minLength = 5;
-        if (payload === '') {
+        const inputValue = payload.trim();
+        this.nameValidateText = '';
+        this.isShowNameError = false;
+        if (!inputValue) {
           this.nameValidateText = this.$t(`m.verify['用户组名必填']`);
           this.isShowNameError = true;
         }
+        if (isEmojiCharacter(inputValue)) {
+          this.nameValidateText = this.$t(`m.verify['用户组名不允许输入表情字符']`);
+          this.isShowNameError = true;
+        }
         if (!this.isShowNameError) {
-          if (payload.trim().length > maxLength) {
+          if (inputValue.length > maxLength) {
             this.nameValidateText = this.$t(`m.verify['用户组名最长不超过32个字符']`);
             this.isShowNameError = true;
           }
-          if (payload.trim().length < minLength) {
+          if (inputValue.length < minLength) {
             this.nameValidateText = this.$t(`m.verify['用户组名最短不少于5个字符']`);
             this.isShowNameError = true;
           }
-          // if (!/^[^\s]*$/g.test(payload)) {
-          //     this.nameValidateText = this.$t(`m.verify['用户组名不允许空格']`)
-          //     this.isShowNameError = true
-          // }
         }
       },
 

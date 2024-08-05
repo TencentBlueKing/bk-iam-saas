@@ -966,7 +966,6 @@
 
       handleSelect (value) {
         const { id, disabled, method } = value;
-        console.log(value);
         if (!disabled) {
           this.selectKeyword = id;
           this.$refs.userGroupSelect.close();

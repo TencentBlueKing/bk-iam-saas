@@ -161,8 +161,8 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-    getHasPermSystem ({ commit, state, dispatch }, params, config) {
-      const queryParams = params ? `?${json2Query(params)}` : '';
+    getHasPermSystem ({ commit, state, dispatch }, params = {}, config) {
+      const queryParams = Object.keys(params).length > 0 ? `?${json2Query(params)}` : '';
       return http.get(`${AJAX_URL_PREFIX}/policies/systems/${queryParams}`, config);
     },
 
@@ -236,7 +236,7 @@ export default {
          * @return {Promise} promise 对象
          */
 
-    deleteRosourceGroupPerm ({ commit, state, dispatch }, { id, resourceGroupId }, config) {
+    deleteResourceGroupPerm ({ commit, state, dispatch }, { id, resourceGroupId }, config) {
       return http.delete(`${AJAX_URL_PREFIX}/policies/${id}/${resourceGroupId}/`, config);
     },
 

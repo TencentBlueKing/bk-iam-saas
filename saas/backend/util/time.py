@@ -29,6 +29,14 @@ def utc_string_to_local(str_time):
     return utc_to_local(t)
 
 
+def utc_string_to_timestamp(str_time: str) -> int:
+    """
+    后端UTC时间转换为时间戳
+    """
+    t = string_to_datetime(str_time, fmt="%Y-%m-%dT%H:%M:%SZ")
+    return int(t.timestamp())
+
+
 def utc_to_local(utc_time):
     tz = timezone.get_current_timezone()
     dt = datetime.datetime.utcnow()

@@ -41,6 +41,7 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { isEmojiCharacter } from '@/common/util';
   import RenderLayout from '@/views/group/common/render-layout';
@@ -83,8 +84,12 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
+      isStaff () {
+        return this.user.role.type === 'staff';
+      },
       formatEdit () {
-        return this.curDetailData.readonly ? 'detail' : 'edit';
+        return this.curDetailData.readonly || this.isStaff ? 'detail' : 'edit';
       }
     },
     methods: {

@@ -77,7 +77,7 @@ export default {
          * @return {Promise} promise 对象
          */
 
-    deleteRosourceGroupPerm ({ commit, state, dispatch }, { id, resourceGroupId }, config) {
+    deleteResourceGroupPerm ({ commit, state, dispatch }, { id, resourceGroupId }, config) {
       return http.delete(`${AJAX_URL_PREFIX}/policies/${id}/${resourceGroupId}/`, config);
     },
 

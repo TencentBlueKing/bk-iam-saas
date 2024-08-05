@@ -16,6 +16,7 @@
       :cur-detail-data="curDetailData"
       :is-show-tab="false"
       :show-expired-at="false"
+      :is-show-operate="isShowOperate"
       :display-set="displaySet"
     />
   </div>
@@ -34,6 +35,10 @@
         default: () => {
           return {};
         }
+      },
+      isShowOperate: {
+        type: Boolean,
+        default: true
       }
     },
     data () {
@@ -49,10 +54,6 @@
       };
     },
     methods: {
-      async fetchTempMemberList () {
-        // this.$refs.memberTable && this.$refs.memberTable.fetchMemberList();
-      },
-
       handleMemberDelete (type, payload) {
         window.changeDialog = true;
         if (type === 'user') {

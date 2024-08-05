@@ -162,6 +162,7 @@
     }
   };
 </script>
-<style lang="postcss">
-    @import './group.css';
+
+<style lang="postcss" scoped>
+@import './common/css/group.css';
 </style>

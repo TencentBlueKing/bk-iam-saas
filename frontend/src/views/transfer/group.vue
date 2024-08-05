@@ -1,237 +1,282 @@
 <template>
-  <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
-    v-bkloading="{ isLoading, opacity: 1 }">
-    <template v-if="!isLoading && !isEmpty">
-      <div class="transfer-group-content" ref="transferGroupContent">
-        <div class="header" @click="handleGroupExpanded">
-          <Icon bk class="expanded-icon" :type="groupExpanded ? 'down-shape' : 'right-shape'" />
-          <label class="title"> {{$t(`m.permTransfer['用户组权限交接']`)}} </label>
-          <div class="sub-title" v-if="groupNotTransferCount > 0">
-            <i class="iam-icon iamcenter-warning-fill not-transfer-icon"></i>
-            {{$t(`m.permTransfer['无法交接用户组：']`)}}{{groupNotTransferCount}}{{$t(`m.common['个']`)}}
-            <span class="reason">{{$t(`m.permTransfer['（通过组织加入、已过期的组无法交接）']`)}}</span>
-          </div>
+  <div
+    class="iam-transfer-group-wrapper"
+    v-bkloading="{ isLoading: groupPermData.loading, opacity: 1 }"
+  >
+    <div class="transfer-group-content" ref="transferGroupContent">
+      <div class="content">
+        <div
+          :class="[
+            'slot-content',
+            { 'set-top-border': groupNotTransferCount > 0 }
+          ]"
+        >
+          <bk-table
+            size="small"
+            :ref="`groupTableRef_${groupPermData.id}`"
+            :border="false"
+            :header-border="false"
+            :outer-border="false"
+            :data="groupPermData.list"
+            :pagination="groupPermData.pagination"
+            :header-cell-class-name="getCellClass"
+            :cell-class-name="getCellClass"
+            @select="handleSelect"
+            @select-all="handleSelectAll"
+            @page-change="handlePageChange"
+            @page-limit-change="handleLimitChange"
+          >
+            <bk-table-column type="selection" align="center" :selectable="(row) => !row.canNotTransfer" />
+            <bk-table-column :label="$t(`m.userGroup['用户组名']`)" :min-width="300" fixed="left">
+              <template slot-scope="{ row }">
+                <div class="perm-group-name">
+                  <span
+                    v-bk-tooltips="{
+                      content: row.name
+                    }"
+                    :class="[
+                      'can-view single-hide',
+                      { 'has-icon': row.canNotTransfer }
+                    ]"
+                    @click.stop="handleViewDetail(row)"
+                  >
+                    {{ row.name }}
+                  </span>
+                  <i
+                    v-if="row.canNotTransfer"
+                    v-bk-tooltips="{
+                      content: $t(`m.permTransfer['（通过组织加入、已过期的组无法交接）']`)
+                    }"
+                    class="iam-icon iamcenter-warning-fill not-transfer-icon"
+                  />
+                </div>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.common['描述']`)" width="220" :show-overflow-tooltip="true">
+              <template slot-scope="{ row }">
+                <span>{{row.description}}</span>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.grading['管理空间']`)" width="300">
+              <template slot-scope="{ row }">
+                <span
+                  :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }"
+                  v-bk-tooltips="{
+                    content: row.role.name,
+                    disabled: !row.role.name
+                  }"
+                >
+                  {{ row.role ? row.role.name : '--' }}
+                </span>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.levelSpace['管理员']`)" width="300">
+              <template slot-scope="{ row, $index }">
+                <IamEditMemberSelector
+                  mode="detail"
+                  field="role_members"
+                  width="300"
+                  :placeholder="$t(`m.verify['请输入']`)"
+                  :value="formatRoleMembers(row.role_members)"
+                  :index="$index"
+                />
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.common['有效期']`)" width="220">
+              <template slot-scope="{ row }">
+                <span>{{ row.expired_at_display }}</span>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.permTransfer['交接对象']`)" width="300">
+              <template slot-scope="{ row, $index }">
+                <div class="transfer-object-column" v-if="row.handover_object && row.handover_object.length > 0">
+                  <Icon type="arrows-left" />
+                  <IamEditMemberSelector
+                    mode="detail"
+                    field="role_members"
+                    width="300"
+                    :value="formatRoleMembers(row.handover_object)"
+                    :index="$index"
+                  />
+                </div>
+                <span v-else>--</span>
+              </template>
+            </bk-table-column>
+            <template slot="empty">
+              <ExceptionEmpty
+                :type="emptyData.type"
+                :empty-text="emptyData.text"
+                :tip-text="emptyData.tip"
+                :tip-type="emptyData.tipType"
+                @on-refresh="handleEmptyRefresh"
+              />
+            </template>
+          </bk-table>
         </div>
-        <div class="content" v-if="groupExpanded">
-          <div class="slot-content">
-            <bk-table
-              :style="{ maxHeight: groupShowAll ? 'none' : '254px' }"
-              border
-              ref="groupTableRef"
-              :data="groupList"
-              size="small"
-              :class="{ 'set-border': isLoading }"
-              :header-cell-class-name="getCellClass"
-              :cell-class-name="getCellClass"
-              :pagination="pagination"
-              @select="handleSelect"
-              @select-all="handleSelectAll"
-              @page-change="handlePageChange"
-              @page-limit-change="handleLimitChange">
-              <bk-table-column type="selection" align="center" :selectable="row => !row.canNotTransfer">
-              </bk-table-column>
-              <bk-table-column :label="$t(`m.userGroup['用户组名']`)" width="300">
-                <template slot-scope="{ row }">
-                  <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }">
-                    {{row.name}}
-                    <i class="iam-icon iamcenter-warning-fill not-transfer-icon"
-                      v-if="row.canNotTransfer"></i>
-                  </span>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t(`m.approvalProcess['来源']`)" width="300">
-                <template slot-scope="{ row }">
-                  <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }"
-                    :title="row.role && row.role.name ? row.role.name : ''">
-                    {{ row.role ? row.role.name : '--' }}
-                  </span>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t(`m.perm['加入方式']`)" width="350">
-                <template slot-scope="{ row }">
-                  <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }"
-                    v-if="row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
-                  <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }"
-                    v-else :title="`${$t(`m.perm['通过组织加入']`)}${$t(`m.common['：']`)}${row.department_name}`">
-                    {{ $t(`m.perm['通过组织加入']`) }}: {{ row.department_name }}
-                  </span>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t(`m.common['有效期']`)" width="220">
-                <template slot-scope="{ row }">
-                  <span>{{row.expired_at_display}}</span>
-                </template>
-              </bk-table-column>
-            </bk-table>
-          </div>
-          <p class="expand-action" @click="handleGroupShowAll" v-if="groupList.length > 5">
+        <!-- <p class="expand-action" @click="handleGroupShowAll" v-if="groupList.length > 5">
             <Icon :type="groupShowAll ? 'up-angle' : 'down-angle'" />
             <template v-if="!groupShowAll">{{ $t(`m.common['点击展开']`) }}</template>
             <template v-else>{{ $t(`m.common['点击收起']`) }}</template>
-          </p>
-        </div>
-      </div>
-    </template>
-    <div v-if="!isLoading && isEmpty" style="height: 60px;">
-      <div class="empty-wrapper">
-        <!-- <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
-        <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
-          @on-refresh="handleEmptyRefresh"
-        />
+          </p> -->
       </div>
     </div>
+    
+    <RenderGroupPermSideSlider
+      :show="isShowPermSideSlider"
+      :name="curGroupName"
+      :group-id="curGroupId"
+      @animation-end="handleAnimationEnd"
+    />
   </div>
 </template>
-<script>
-  import { mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
 
+<script>
+  import { cloneDeep, uniqWith, isEqual } from 'lodash';
+  import { bus } from '@/common/bus';
+  import { getNowTimeExpired } from '@/common/util';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+  import RenderGroupPermSideSlider from '@/views/my-perm/components/render-group-perm-side-slider';
   export default {
-    name: '',
     components: {
+      IamEditMemberSelector,
+      RenderGroupPermSideSlider
+    },
+    props: {
+      curPermData: {
+        type: Object
+      },
+      emptyData: {
+        type: Object,
+        default: () => {
+          return {
+            type: '',
+            text: '',
+            tip: '',
+            tipType: ''
+          };
+        }
+      },
+      selectedPersonalGroup: {
+        type: Array,
+        default: () => []
+      },
+      selectedHandoverObject: {
+        type: Array,
+        default: () => []
+      }
     },
     data () {
       return {
-        isEmpty: false,
-        isLoading: false,
-        groupList: [],
         groupExpanded: true,
         groupShowAll: false,
-        groupNotTransferCount: 0,
         isSelectAllChecked: false,
+        isShowPermSideSlider: false,
+        curGroupName: '',
+        curGroupId: '',
         groupSelectData: [],
-        pageContainer: null,
-        pagination: {
-          current: 1,
-          limit: 10,
-          count: 0
-        },
-        emptyData: {
-          type: '',
-          text: '',
-          tip: '',
-          tipType: ''
-        }
+        groupNotTransferCount: 0,
+        groupPermData: {}
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemId'])
+      formatRoleMembers () {
+        return (payload) => {
+          if (payload && payload.length) {
+            const hasName = payload.some((v) => v.username);
+            if (!hasName) {
+              payload = payload.map(v => {
+                return {
+                  username: v,
+                  readonly: false
+                };
+              });
+            }
+            return payload;
+          }
+          return payload || [];
+        };
+      }
     },
-    mounted () {
-      this.pageContainer = document.querySelector('.main-scroller');
-      this.fetchData();
+    watch: {
+      selectedHandoverObject: {
+        handler (value) {
+          this.groupPermData.list.forEach((item) => {
+            this.$set(item, 'handover_object', value);
+          });
+        },
+        deep: true
+      }
     },
     methods: {
-      async fetchData () {
-        this.isLoading = true;
-        try {
-          const { current, limit } = this.pagination;
-          const userGroupParams = {
-            page_size: limit,
-            page: current
-          };
-          if (this.externalSystemId) {
-            userGroupParams.system_id = this.externalSystemId;
-          }
-          const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', userGroupParams);
-          const groupList = data.results || [];
-          this.pagination.count = data.count || 0;
-          this.groupList.splice(0, this.groupList.length, ...groupList);
-          this.isEmpty = groupList.length < 1;
-          this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);
-          this.handleGetCheckData();
-        } catch (e) {
-          console.error(e);
-          this.emptyData = formatCodeData(e.code, this.emptyData);
-          this.messageAdvancedError(e);
-        } finally {
-          this.isLoading = false;
-        }
-      },
-
       handleGetCheckData () {
-        const selectGroup = this.groupSelectData.length
-          ? this.groupSelectData.map(item => String(item.id)) : [];
-        this.groupList.forEach(item => {
-          if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
-            this.groupNotTransferCount += 1;
-            item.canNotTransfer = true;
-          }
-          setTimeout(() => {
-            if (selectGroup.includes(String(item.id))) {
-              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+        this.groupPermData = cloneDeep(this.curPermData);
+        const selectList = uniqWith(
+          [
+            ...this.selectedPersonalGroup,
+            ...this.groupSelectData
+          ],
+          isEqual
+        );
+        const selectGroup = selectList.map((item) => `${item.name}&${item.id}`);
+        this.$nextTick(() => {
+          this.groupPermData.loading = false;
+          this.groupPermData.list.forEach((item) => {
+            if (String(item.department_id) !== '0' || item.expired_at < getNowTimeExpired()) {
+              item.canNotTransfer = true;
             }
-            if (this.groupSelectData.length < 1) {
-              this.$refs.groupTableRef && this.$refs.groupTableRef.clearSelection();
+            this.$set(item, 'handover_object', this.selectedHandoverObject);
+            const groupPermRef = this.$refs[`groupTableRef_${this.groupPermData.id}`];
+            if (groupPermRef) {
+              groupPermRef.toggleRowSelection(item, selectGroup.includes(`${item.name}&${item.id}`));
+              if (selectGroup.length < 1) {
+                groupPermRef.clearSelection();
+              }
             }
-          }, 0);
+          });
+          this.fetchSelectedGroupCount();
         });
-        this.fetchSelectedGroupCount();
       },
 
-      handleEmptyRefresh () {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
-        this.fetchData();
-      },
-
-      handleGroupExpanded () {
-        this.groupExpanded = !this.groupExpanded;
-        if (this.groupExpanded) {
-          this.handleGetCheckData();
-        }
-      },
-
-      handleGroupShowAll () {
-        this.groupShowAll = !this.groupShowAll;
-        if (!this.groupShowAll) {
-          setTimeout(() => {
-            const top = this.$refs.transferGroupContent.getBoundingClientRect().top
-              + this.pageContainer.scrollTop;
-
-            this.pageContainer.scrollTo({
-              top: top - 61, // 减去顶导的高度 61
-              behavior: 'smooth'
-            });
-            // this.$refs.transferGroupContent.scrollIntoView({
-            //     behavior: 'smooth'
-            // })
-          }, 10);
-        }
+      handleViewDetail ({ id, name, template_name, template_id }) {
+        this.curGroupName = name;
+        this.curGroupId = id;
+        this.isShowPermSideSlider = true;
+        bus.$emit('on-drawer-side', { width: 960 });
       },
 
       fetchSelectedGroupCount () {
-        setTimeout(() => {
-          const paginationWrapper = this.$refs.groupTableRef.$refs.paginationWrapper;
-          if (paginationWrapper && paginationWrapper.getElementsByClassName('bk-page-selection-count')) {
+        this.$nextTick(() => {
+          const selectGroup = uniqWith([...this.selectedPersonalGroup, ...this.groupSelectData], isEqual);
+          const permRef = this.$refs[`groupTableRef_${this.groupPermData.id}`];
+          if (permRef && permRef.$refs && permRef.$refs.paginationWrapper) {
+            const paginationWrapper = permRef.$refs.paginationWrapper;
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
-              selectCount[0].children[0].innerHTML = this.groupSelectData.length;
+              selectCount[0].children[0].innerHTML = selectGroup.length;
             }
           }
-        }, 0);
+        });
       },
 
       fetchSelectedGroups (type, payload, row) {
+        const selectList = uniqWith([...this.selectedPersonalGroup, ...this.groupSelectData], isEqual);
         const typeMap = {
           multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (isChecked) {
-              this.groupSelectData.push(row);
+              selectList.push(row);
+              this.groupSelectData = [...selectList];
             } else {
-              this.groupSelectData = this.groupSelectData.filter((item) => item.id !== row.id);
+              this.groupSelectData = selectList.filter((item) => `${item.name}&${item.id}` !== `${row.name}&${row.id}`);
             }
+            this.$emit('group-selection-change', this.groupSelectData);
             this.fetchSelectedGroupCount();
           },
           all: () => {
-            const validGroupList = payload.filter(item => !item.canNotTransfer);
-            const selectGroups = this.groupSelectData.filter((item) =>
-              !this.groupList.map((v) => v.id).includes(item.id));
-            this.groupSelectData = [...selectGroups, ...validGroupList];
+            const tableList = this.groupPermData.list.filter((item) => !item.canNotTransfer).map((v) => `${v.name}&${v.id}`);
+            const selectGroups = selectList.filter((item) => !tableList.includes(`${item.name}&${item.id}`));
+            this.groupSelectData = [...selectGroups, ...payload];
+            this.$emit('group-selection-change', this.groupSelectData);
             this.fetchSelectedGroupCount();
           }
         };
@@ -239,32 +284,34 @@
       },
 
       handleSelectAll (selection) {
-        // this.isSelectAllChecked = !!selection.length;
         this.fetchSelectedGroups('all', selection);
-        this.$emit('group-selection-change', this.groupSelectData);
       },
 
       handleSelect (selection, row) {
-        // const validGroupList = this.groupList.filter(item => !item.canNotTransfer);
-        // this.isSelectAllChecked = selection.length === validGroupList.length;
         this.fetchSelectedGroups('multiple', selection, row);
-        this.$emit('group-selection-change', this.groupSelectData);
       },
 
-      handlePageChange (page) {
-        this.pagination = Object.assign(this.pagination, { current: page });
-        this.fetchData();
+      handlePageChange (current) {
+        const pagination = Object.assign(this.groupPermData.pagination, { current });
+        this.$emit('on-page-change', pagination);
       },
 
-      handleLimitChange (currentLimit, prevLimit) {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
-        this.fetchData();
-        // this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
+      handleLimitChange (limit) {
+        const pagination = Object.assign(this.groupPermData.pagination, { current: 1, limit });
+        this.$emit('on-limit-change', pagination);
+      },
+      
+      handleAnimationEnd () {
+        this.curGroupName = '';
+        this.curGroupId = '';
+        this.isShowPermSideSlider = false;
+      },
+      
+      handleEmptyRefresh () {
+        const pagination = Object.assign(this.groupPermData.pagination, { current: 1, limit: 10 });
+        this.$emit('on-page-change', pagination);
       },
 
-      /**
-       * getCellClass
-       */
       getCellClass ({ row, column, rowIndex, columnIndex }) {
         if (columnIndex === 0) {
           return 'checkbox-cell-wrapper';
@@ -274,6 +321,7 @@
     }
   };
 </script>
+
 <style lang="postcss">
-    @import './group.css';
+@import './common/css/group.css';
 </style>

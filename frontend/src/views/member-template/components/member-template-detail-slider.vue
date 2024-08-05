@@ -40,6 +40,7 @@
             :key="comKey"
             :cur-detail-data="curDetailData"
             :tab-active="tabActive"
+            :is-show-operate="isShowOperate"
             @on-associate-change="handleAssociateChange"
           />
         </div>
@@ -63,6 +64,10 @@
       show: {
         type: Boolean,
         default: false
+      },
+      isShowOperate: {
+        type: Boolean,
+        default: true
       },
       curDetailData: {
         type: Object,
@@ -134,9 +139,9 @@
             });
           },
           template_member: () => {
-            this.$nextTick(() => {
-              this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchTempMemberList();
-            });
+            // this.$nextTick(() => {
+            //   this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchTempMemberList();
+            // });
           },
           associate_groups: () => {
             this.$nextTick(() => {

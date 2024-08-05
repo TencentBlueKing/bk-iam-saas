@@ -65,7 +65,7 @@
       <bk-button theme="primary" :loading="submitLoading" v-else @click="handleSubmit">
         {{ $t(`m.common['提交']`) }}
       </bk-button>
-      <bk-button style="margin-left: 6px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+      <bk-button style="margin-left: 6px;" @click="handleCancel">{{ $t(`m.common['取消111']`) }}</bk-button>
     </div>
   </smart-action>
 </template>

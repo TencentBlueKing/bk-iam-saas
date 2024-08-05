@@ -52,7 +52,10 @@ const ApplyJoinUserGroup = () =>
 const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 
 // 我的权限
-const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
+const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/my-perm');
+
+// 我的权限
+// const MyPermission = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
 
 // 申请权限外链页面
 const ApplyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm/apply-perm');
@@ -169,7 +172,7 @@ const RenewalNotice = () => import(/* webpackChunkName: 'approvalProcess' */ '..
 const UserGroupSetting = () => import(/* webpackChunkName: 'userGroupSetting' */ '../views/user-group-setting');
 
 // 权限续期
-const PermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/perm-renewal');
+const PermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/my-perm/perm-renewal');
 
 // 组织权限续期
 const GroupPermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/group-perm-renewal');
@@ -275,10 +278,18 @@ export const routes = [
         alias: '',
         meta: {
           headerTitle: il8n('nav', '我的权限')
-          // hasPageTab: true
         },
         component: MyPerm
       },
+      // {
+      //   path: 'my-permission',
+      //   name: 'myPermission',
+      //   alias: '',
+      //   meta: {
+      //     headerTitle: il8n('nav', '我的权限')
+      //   },
+      //   component: MyPermission
+      // },
       {
         path: 'my-perm/apply-perm',
         name: 'applyPerm',
@@ -325,7 +336,6 @@ export const routes = [
         path: 'perm-renewal',
         name: 'permRenewal',
         meta: {
-          headerTitle: il8n('renewal', '申请续期'),
           backRouter: 'myPerm'
         },
         component: PermRenewal
@@ -700,7 +710,6 @@ export const routes = [
         path: 'perm-transfer',
         name: 'permTransfer',
         meta: {
-          headerTitle: il8n('permTransfer', '权限交接'),
           backRouter: 'myPerm'
         },
         component: PermTransfer

@@ -19,15 +19,16 @@
       <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
         <template slot-scope="{ row }">
           <template v-if="!row.isEmpty">
-            <template v-for="(relatedGroup, relatedGroupIndex) in row.resource_groups">
-              <div :key="relatedGroupIndex" style="display: inline-block;padding: 5px 0;">
-                <p class="related-resource-item"
+            <div v-for="(relatedGroup, relatedGroupIndex) in row.resource_groups" :key="relatedGroupIndex">
+              <div style="display: inline-block;padding: 5px 0;">
+                <p
+                  class="related-resource-item"
                   v-for="item in relatedGroup.related_resource_types"
                   :key="item.type">
                   {{`${item.name}：${item.value}`}}
                 </p>
               </div>
-            </template>
+            </div>
           </template>
           <template v-else>
             {{ $t(`m.common['无需关联实例']`) }}
@@ -93,8 +94,9 @@
     }
   };
 </script>
-<style lang='postcss'>
-    .iam-transfer-custom-table {
-        min-height: 101px;
-    }
+
+<style lang='postcss' scoped>
+.iam-transfer-custom-table {
+  min-height: 101px;
+}
 </style>

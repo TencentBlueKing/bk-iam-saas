@@ -1,6 +1,6 @@
 <template>
-  <div class="smart-action-wraper" ref="smartActionWraper">
-    <div>
+  <div class="smart-action-wrapper" ref="smartActionWrapper">
+    <div ref="smartActionContent">
       <slot />
     </div>
     <div ref="actionPosition" :style="positionStyles" role="action-position">
@@ -151,32 +151,31 @@
     }
   };
 </script>
+
 <style lang='postcss' scoped>
-    .smart-action-wraper {
-        .fixed {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            /* z-index: 1999; */
-            z-index: 1899;
-            display: flex;
-            align-items: center;
-            height: 52px;
-            line-height: 52px;
-            background: #fff;
-            box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
-        }
-
-        .external-dialog-fixed-custom,
-        .external-page-fixed-custom {
-           box-shadow: none;
-           border-top: 1px solid #dcdee5;
-           padding-left: 0px !important;
-        }
-
-        .external-page-fixed-custom {
-            padding-left: 24px !important;
-        }
-    }
+.smart-action-wrapper {
+  .fixed {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* z-index: 1999; */
+    z-index: 1899;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    line-height: 52px;
+    background: #fff;
+    box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
+  }
+  .external-dialog-fixed-custom,
+  .external-page-fixed-custom {
+    box-shadow: none;
+    border-top: 1px solid #dcdee5;
+    padding-left: 0px !important;
+  }
+  .external-page-fixed-custom {
+    padding-left: 24px !important;
+  }
+}
 </style>
