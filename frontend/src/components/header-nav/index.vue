@@ -626,13 +626,24 @@
         window.location.reload();
       },
         
-      handleChangeLocale (language) {
+      async handleChangeLocale (language) {
         Cookie.remove('blueking_language', { path: '' });
         Cookie.set('blueking_language', language, {
-          domain: window.BK_DOMAIN
+          expires: 3600,
+          domain: window.BK_DOMAIN || window.location.hostname.replace(/^.*(\.[^.]+\.[^.]+)$/, '$1')
         });
+        // if (window.BK_COMPONENT_API_URL) {
+        //   jsonpRequest(`${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/`, { language });
+        // }
         this.setMagicBoxLocale(language);
-        jsonpRequest(`${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${language}`, { language });
+        if (window.BK_COMPONENT_API_URLl) {
+          const url = `${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/`;
+          try {
+            await jsonpRequest(url, { language: language });
+          } finally {
+            window.location.reload();
+          }
+        }
       },
 
       handleSwitchIdentity () {

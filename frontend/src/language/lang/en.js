@@ -797,7 +797,7 @@ export const m = {
         '通过组织加入': 'Through Organization',
         '组权限': 'Permissions',
         '所属组织用户组权限': 'Group Permissions of the Organization',
-        '所属人员模板用户组权限': 'Member Template User Group Permissions',
+        '所属人员模板用户组权限': 'Group Permissions of Member Templates',
         '临时权限申请': 'Apply for temporary permissions',
         '一组实例权限': ' A Set of Instance Permissions',
         '不能删除当前操作': 'Unable to delete current permission',
