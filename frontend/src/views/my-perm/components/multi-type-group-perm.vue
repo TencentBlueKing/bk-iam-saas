@@ -632,7 +632,7 @@
             limit,
             offset: (current - 1) * limit,
             with_super: true,
-            name: this.curSearchParams.manager_name || undefined
+            name: this.curSearchParams.manager_name || ''
           };
           const { code, data } = await this.$store.dispatch(
             'role/getRatingManagerList',
@@ -883,7 +883,7 @@
       handleGetSelectedGroups (payload) {
         setTimeout(() => {
           const tableRefList = this.$refs.childPermTable;
-          const selectedGroup = [...this.curSelectedGroup, this.curSelectedCustomPerm];
+          const selectedGroup = [...this.curSelectedGroup, ...this.curSelectedCustomPerm];
           const curData = this.allPermItem.find((item) => item.id === payload);
           const curSelectedId = selectedGroup.map((item) => `${item.id}&${item.name}&${item.mode_type}`);
           if (curData && tableRefList && tableRefList.length > 0) {
@@ -1180,7 +1180,7 @@
     }
   }
   &.is-resource-search {
-    height: calc(100% - 180px);
+    height: calc(100% - 200px);
   }
   &.is-custom-search {
     height: calc(100% - 80px);

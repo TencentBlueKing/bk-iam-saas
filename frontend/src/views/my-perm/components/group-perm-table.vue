@@ -495,6 +495,8 @@
       mode: {
         handler (value) {
           this.tableProps = this.getTableProps(value);
+          // 处理搜索不到数据后清空搜索条回显已选权限
+          this.handleGetSelectedPerm();
         },
         immediate: true
       },
@@ -544,6 +546,24 @@
           this.isShowTempSlider = true;
         } catch (e) {
           this.messageAdvancedError(e);
+        }
+      },
+
+      handleGetSelectedPerm () {
+        if (this.curSelectedGroup.length) {
+          const list = cloneDeep(this.curSelectedGroup);
+          this.$nextTick(() => {
+            const groupPermRef = this.$refs[`groupPermRef_${this.mode}`];
+            const selectGroup = list.map((v) => `${v.id}&${v.name}&${v.mode_type}`);
+            if (groupPermRef) {
+              this.list.forEach((v) => {
+                if (selectGroup.includes(`${v.id}&${v.name}&${this.mode}`)) {
+                  groupPermRef.toggleRowSelection(v, true);
+                }
+              });
+            }
+          });
+          this.fetchCustomTotal(list);
         }
       },
 
