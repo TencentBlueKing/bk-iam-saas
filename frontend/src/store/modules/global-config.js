@@ -34,9 +34,9 @@ export default {
         separator: '|' // 网站名称路由分隔符
       },
       name: '权限中心',
-      nameEn: 'BK_IAM',
+      nameEn: 'IAM',
       brandName: '腾讯蓝鲸智云',
-      brandNameEn: 'BlueKing',
+      brandNameEn: 'Tencent BlueKing',
       appLogo: require('@/images/logo.svg'),
       favicon: require('@/images/logo.svg'),
       version: ''

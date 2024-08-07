@@ -51,27 +51,28 @@ export default class RelateResourceTypes {
     if (payload.isTempora) { // 临时权限标识
       this.condition = payload.condition;
       this.conditionBackup = payload.condition;
-    } else {
-      const isEmpty = !payload.condition
-      || ((payload.condition.length > 0)
-        && payload.condition.every(item =>
-          (item.attributes && item.attributes.length < 1)
-          && (item.instance && item.instance.length < 1)
-          && (item.instances && item.instances.length < 1)
-        ));
-      if (isEmpty) {
-        this.condition = ['none'];
-        this.conditionBackup = ['none'];
-        return;
-      }
-      this.condition = payload.condition.map(
-        item => new Condition(item, '', flag, true, true, instanceNotDisabled)
-      ) || [];
-    
-      this.conditionBackup = payload.condition.map(
-        item => new Condition(item, '', flag, true, true, instanceNotDisabled)
-      ) || [];
+      return;
     }
+    const isEmpty = !payload.condition || ((payload.condition.length > 0)
+      && payload.condition.every((item) =>
+        (item.attributes && item.attributes.length < 1)
+      && (item.instance && item.instance.length < 1)
+          && (item.instances && item.instances.length < 1)
+      )
+    );
+    // 无限制申请页面首次加载不存在无限制场景需要置空
+    if (isEmpty || (payload.isNoPermApplyPage && (!payload.condition || !payload.condition.length))) {
+      this.condition = ['none'];
+      this.conditionBackup = ['none'];
+      return;
+    }
+    this.condition = payload.condition.map(
+      (item) => new Condition(item, '', flag, true, true, instanceNotDisabled)
+    ) || [];
+  
+    this.conditionBackup = payload.condition.map(
+      (item) => new Condition(item, '', flag, true, true, instanceNotDisabled)
+    ) || [];
   }
 
   get isDefaultLimit () {

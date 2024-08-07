@@ -43,6 +43,8 @@ export default class Policy {
     this.count = payload.count || 0;
     this.tag = payload.tag || '';
     this.isTempora = payload.isTempora || false;
+    // 是否是无权限申请页面
+    this.isNoPermApplyPage = payload.isNoPermApplyPage || false;
     this.isShowCustom = false;
     this.customValue = '';
     this.environment = payload.environment || {};
@@ -96,20 +98,29 @@ export default class Policy {
     }
 
     this.resource_groups = payload.resource_groups.reduce((prev, item) => {
-      const relatedRsourceTypes = item.related_resource_types.map(
-        item => new RelateResourceTypes({ ...item, isTempora: payload.isTempora },
-          action, flag, instanceNotDisabled, this.isNew)
+      const relatedResourceTypes = item.related_resource_types.map((item) =>
+        new RelateResourceTypes(
+          {
+            ...item,
+            isTempora: payload.isTempora,
+            isNoPermApplyPage: payload.isNoPermApplyPage
+          },
+          action,
+          flag,
+          instanceNotDisabled,
+          this.isNew
+        )
       );
             
       if ((this.related_environments && !!this.related_environments.length)) {
         const environments = item.environments && !!item.environments.length ? item.environments : [];
-        prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: environments });
+        prev.push({ id: item.id, related_resource_types: relatedResourceTypes, environments: environments });
       } else {
         if (item.environments && !!item.environments.length) {
           // eslint-disable-next-line max-len
-          prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: item.environments });
+          prev.push({ id: item.id, related_resource_types: relatedResourceTypes, environments: item.environments });
         } else {
-          prev.push({ id: item.id, related_resource_types: relatedRsourceTypes });
+          prev.push({ id: item.id, related_resource_types: relatedResourceTypes });
         }
       }
       return prev;

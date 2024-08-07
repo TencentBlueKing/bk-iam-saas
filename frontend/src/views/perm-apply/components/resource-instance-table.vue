@@ -1152,6 +1152,7 @@
           resItem.isLimitExceeded = false;
           resItem.isError = true;
         } else {
+          resItem.condition = data;
           const { isMainAction, related_actions } = this.tableList[this.curIndex];
           // 如果为主操作
           if (isMainAction) {
