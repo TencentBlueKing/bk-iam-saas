@@ -35,7 +35,7 @@ export default {
       },
       name: '权限中心',
       nameEn: 'IAM',
-      brandName: '腾讯蓝鲸智云',
+      brandName: '蓝鲸智云',
       brandNameEn: 'Tencent BlueKing',
       appLogo: require('@/images/logo.svg'),
       favicon: require('@/images/logo.svg'),
