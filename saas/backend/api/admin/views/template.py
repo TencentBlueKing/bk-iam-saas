@@ -55,16 +55,23 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
         queryset = RoleListQuery(role, request.user).query_template()
 
-        # 查询role的system-actions set
+        # 查询 role 的 system-actions set
         role_system_actions = RoleListQuery(role).get_scope_system_actions()
-        page = self.paginate_queryset(queryset)
 
-        if page is not None:
-            serializer = AdminTemplateListSLZ(page, many=True, role_system_actions=role_system_actions)
-            return self.get_paginated_response(serializer.data)
+        # 强制分页
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request, view=self)
 
-        serializer = AdminTemplateListSLZ(queryset, many=True, role_system_actions=role_system_actions)
-        return Response(serializer.data)
+        if page is None:
+            return Response(
+                {
+                    "detail": "Pagination is required, but no valid page parameters were provided."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = AdminTemplateListSLZ(page, many=True,
+                                          role_system_actions=role_system_actions)
+        return paginator.get_paginated_response(serializer.data)
 
     @swagger_auto_schema(
         operation_description="创建模板",
