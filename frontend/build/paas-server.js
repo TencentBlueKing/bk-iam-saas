@@ -70,8 +70,7 @@ const GLOBAL_VAR = {
   BK_DOCS_URL_PREFIX: process.env.BK_DOCS_URL_PREFIX || '',
   BK_DOMAIN: process.env.BK_DOMAIN || '',
   BK_SHARED_RES_URL: process.env.BK_SHARED_RES_URL || '',
-  BK_APP_CODE: process.env.BK_APP_CODE || '',
-  VERSION: process.env.VERSION || ''
+  BK_APP_CODE: process.env.BK_APP_CODE || ''
 };
 
 // APA 重定向回首页，由首页Route响应处理
