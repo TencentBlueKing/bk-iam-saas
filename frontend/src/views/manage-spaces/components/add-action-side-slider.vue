@@ -22,7 +22,7 @@
               @enter="handleSearch"
               @right-icon-click="handleSearch"
             />
-            <div class="icon-iamcenter-wrapper" @click.stop="refreshList">
+            <div class="icon-iamcenter-wrapper" @click.stop="handleRefreshList">
               <i class="iam-icon iamcenter-refresh" />
             </div>
           </div>
@@ -603,71 +603,64 @@
       },
 
       handleDefaultData (payload, data) {
-        this.tagActionListBackUp = [];
-        this.systemData[payload].list = _.cloneDeep(data);
-        this.systemData[payload].list.forEach(item => {
-          if (!item.actions) {
-            item.actions = [];
-          }
-          if (!item.sub_groups) {
-            item.sub_groups = [];
-          }
-          let allChecked = true;
-          if (['myManageSpaceCreate', 'authorBoundaryEditFirstLevel'].includes(this.$route.name)) {
-            item.actions = item.actions.filter(v => !v.hidden);
-          }
-          item.actions.forEach(act => {
-            act.$id = `${payload}&${act.id}`;
-            act.related_resource_types.forEach(v => {
-              v.type = v.id;
-            });
-            this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id));
-            if (!act.checked) {
-              allChecked = false;
+        if (this.systemData[payload]) {
+          this.tagActionListBackUp = [];
+          this.$set(this.systemData[payload], 'count', 0);
+          this.$set(this.systemData[payload], 'list', _.cloneDeep(data));
+          this.systemData[payload].list.forEach((item) => {
+            if (!item.actions) {
+              item.actions = [];
             }
-            if (act.checked) {
-              this.tagActionListBackUp.push(act.id);
+            if (!item.sub_groups) {
+              item.sub_groups = [];
             }
-            this.linearAction.push(act);
-          });
-          item.sub_groups.forEach(act => {
+            let allChecked = true;
             if (['myManageSpaceCreate', 'authorBoundaryEditFirstLevel'].includes(this.$route.name)) {
-              act.actions = act.actions.filter(v => !v.hidden);
+              item.actions = item.actions.filter(v => !v.hidden);
             }
-            (act.actions || []).forEach(v => {
-              v.$id = `${payload}&${v.id}`;
-              v.related_resource_types.forEach(subItem => {
-                subItem.type = subItem.id;
+            item.actions.forEach(act => {
+              act.$id = `${payload}&${act.id}`;
+              act.related_resource_types.forEach(v => {
+                v.type = v.id;
               });
-              this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id));
-              if (!v.checked) {
+              this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id));
+              if (!act.checked) {
                 allChecked = false;
               }
-
-              if (v.checked) {
-                this.tagActionListBackUp.push(v.id);
+              if (act.checked) {
+                this.tagActionListBackUp.push(act.id);
               }
-              this.linearAction.push(v);
+              this.linearAction.push(act);
             });
-          });
-          this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
-        });
-        this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
-
-        if (this.defaultValue.length > 0) {
-          const curAllActionIds = [];
-          this.systemData[payload].list.forEach(item => {
-            item.actions.forEach(act => {
-              curAllActionIds.push(act.$id);
-            });
-            item.sub_groups.forEach(sub => {
-              (sub.actions || []).forEach(v => {
-                curAllActionIds.push(v.$id);
+            item.sub_groups.forEach(act => {
+              if (['myManageSpaceCreate', 'authorBoundaryEditFirstLevel'].includes(this.$route.name)) {
+                act.actions = act.actions.filter(v => !v.hidden);
+              }
+              (act.actions || []).forEach(v => {
+                v.$id = `${payload}&${v.id}`;
+                v.related_resource_types.forEach(subItem => {
+                  subItem.type = subItem.id;
+                });
+                this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id));
+                if (!v.checked) {
+                  allChecked = false;
+                }
+                if (v.checked) {
+                  this.tagActionListBackUp.push(v.id);
+                }
+                this.linearAction.push(v);
               });
             });
+            this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
           });
-          const intersection = curAllActionIds.filter(item => this.defaultValue.includes(item));
-          this.systemData[payload].count = this.tagActionListBackUp.length || intersection.length;
+          const curSystem = this.systemList.find((item) => item.id === payload);
+          if (curSystem) {
+            const hasSelectedActions = this.linearAction.filter((v) => v.checked);
+            this.systemData[payload] = Object.assign(this.systemData[payload], {
+              system_name: curSystem.name,
+              count: hasSelectedActions.length
+            });
+          }
         }
       },
 
@@ -892,6 +885,7 @@
         this.isFilter = false;
         this.curSystem = '';
         this.curSelectValue = [];
+        this.linearAction = [];
       },
 
       fetchErrorMsg (payload) {
@@ -933,8 +927,7 @@
       handleEmptyClear () {
         this.keyword = '';
         this.emptyData.tipType = '';
-        this.fetchSystems();
-        // this.requestQueue = [];
+        this.handleRefreshList();
       },
 
       handleEmptyRefresh () {
@@ -942,8 +935,9 @@
         this.fetchSystems();
       },
 
-      refreshList () {
+      handleRefreshList () {
         this.keyword = '';
+        this.linearAction = [];
         this.fetchSystems();
       }
     }

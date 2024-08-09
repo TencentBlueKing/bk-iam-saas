@@ -285,7 +285,7 @@
         return nameMap[this.curSliderName]();
       },
       formatListHeight () {
-        if (this.showNoticeAlert) {
+        if (this.showNoticeAlert && this.showNoticeAlert()) {
           if (this.isNoExpandNoSearchData) {
             return {
               height: 'calc(100vh - 265px)'

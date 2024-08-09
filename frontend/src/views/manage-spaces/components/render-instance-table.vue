@@ -1503,8 +1503,8 @@
                 }
                 td:first-child .cell,
                 th:first-child .cell {
-                    /* padding-left: 15px; */
-                    padding-left: 10px;
+                    padding-left: 15px;
+                    /* padding-left: 10px; */
                 }
             }
             .relation-content-wrapper,
@@ -1552,7 +1552,7 @@
             }
 
             .action-name {
-                margin-left: 6px;
+                /* margin-left: 6px; */
                 display: inline-block;
                 max-width: 200px;
                 overflow: hidden;
@@ -1575,7 +1575,8 @@
             height: calc(100vh - 114px);
         }
         .bk-sideslider-footer {
-            background-color: #f5f6fa!important;
+            /* background-color: #f5f6fa!important; */
+            background-color: #ffffff !important;
             border-color: #dcdee5!important;
         }
     }

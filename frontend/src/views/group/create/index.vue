@@ -127,7 +127,7 @@
     <add-perm-sideslider
       :is-show.sync="isShowAddSideslider"
       :custom-perm="originalList"
-      :template="tempalteDetailList"
+      :template="templateDetailList"
       :aggregation="aggregationData"
       :authorization="authorizationData"
       :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
@@ -217,7 +217,7 @@
 
         tableList: [],
         tableListBackup: [],
-        tempalteDetailList: [],
+        templateDetailList: [],
         aggregationData: {},
         authorizationData: {},
         aggregationDataByCustom: {},
@@ -419,26 +419,19 @@
        * handleSubmitPerm
        */
       handleSubmitPerm (templates, aggregation, authorization) {
-        // debugger
-        if (this.isAllExpanded) {
-          this.isAllExpanded = false;
-          this.handleAggregateAction(false);
-        }
-
         this.aggregationData = aggregation;
         this.authorizationData = authorization;
-
         let hasDeleteTemplateList = [];
         let hasAddTemplateList = [];
-        if (this.tempalteDetailList.length > 0) {
+        if (this.templateDetailList.length > 0) {
           const intersection = templates.filter(
-            item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
+            item => this.templateDetailList.map(sub => sub.id).includes(item.id)
           );
           // 判断权限模板数量没做任何变动时
-          if (JSON.stringify(this.tempalteDetailList) === JSON.stringify(templates)) {
+          if (JSON.stringify(this.templateDetailList) === JSON.stringify(templates)) {
             hasAddTemplateList = _.cloneDeep(templates);
           } else {
-            hasDeleteTemplateList = this.tempalteDetailList.filter(
+            hasDeleteTemplateList = this.templateDetailList.filter(
               item => !intersection.map(sub => sub.id).includes(item.id)
             );
             hasAddTemplateList = [
@@ -449,14 +442,12 @@
         } else {
           hasAddTemplateList = templates;
         }
-        this.tempalteDetailList = _.cloneDeep(templates);
-        
+        this.templateDetailList = _.cloneDeep(templates);
         if (hasDeleteTemplateList.length > 0) {
           this.tableList = this.tableList.filter(
             item => !hasDeleteTemplateList.map(sub => sub.id).includes(item.detail.id)
           );
         }
-
         if (this.hasDeleteCustomList.length > 0) {
           this.tableList = this.tableList.filter(item => {
             return item.detail.id === CUSTOM_PERM_TEMPLATE_ID
@@ -464,7 +455,7 @@
                 .map(sub => sub.$id).includes(`${item.detail.system.id}&${item.id}`);
           });
         }
-
+        const temps = [];
         const tempList = [];
         hasAddTemplateList.forEach(item => {
           const temp = _.cloneDeep(item);
@@ -476,27 +467,6 @@
             tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
           });
         });
-        // this.hasAddCustomList.forEach(item => {
-        //   if (!item.resource_groups || !item.resource_groups.length) {
-        //     item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
-        //   }
-        //   tempList.push(new GroupPolicy(item, 'add', 'custom', {
-        //     system: {
-        //       id: item.system_id,
-        //       name: item.system_name
-        //     },
-        //     id: CUSTOM_PERM_TEMPLATE_ID
-        //   }));
-        // });
-
-        // if (this.tableList.length < 1) {
-        //   this.tableList = _.cloneDeep(tempList);
-        // } else {
-        //   this.tableList.push(..._.cloneDeep(tempList));
-        // }
-        // this.tableListBackup = _.cloneDeep(this.tableList);
-
-        const temps = [];
         this.tableList.forEach(item => {
           if (item.detail.id === CUSTOM_PERM_TEMPLATE_ID) {
             if (item.isAggregate) {
@@ -506,7 +476,6 @@
             }
           }
         });
-        
         console.log('this.hasAddCustomList', this.hasAddCustomList);
         const addCustomList = this.originalList.filter(item => !temps.includes(item.$id));
         addCustomList.forEach(item => {
@@ -521,15 +490,17 @@
             id: CUSTOM_PERM_TEMPLATE_ID
           }));
         });
-
         this.tableList.push(...tempList);
         this.tableListBackup = _.cloneDeep(this.tableList);
-
+        // 处理当前是聚合形态再新增数据需要重新组装成非聚合形态，兼容新增的数据会存在可以聚合的数据业务场景
+        if (this.isAllExpanded) {
+          this.handleAggregateAction(false);
+        }
+        this.isAllExpanded = false;
         // 处理聚合的数据，将表格数据按照相同的聚合id分配好
         this.handleAggregateData();
         // 处理为批量无限制， 默认为新增的操作选中无实例
         this.handleUnlimitedActionChange(this.isAllUnlimited);
-
         this.$nextTick(() => {
           if (hasDeleteTemplateList.length > 0 || this.hasDeleteCustomList.length > 0) {
             this.setCurMapData(hasDeleteTemplateList);
@@ -611,9 +582,6 @@
         }
       },
 
-      /**
-       * handleAggregateData
-       */
       handleAggregateData () {
         // debugger
         this.allAggregationData = Object.assign(this.aggregationData, this.aggregationDataByCustom);
@@ -740,15 +708,12 @@
         console.warn(this.tableList);
       },
 
-      /**
-       * handleAggregateAction
-       */
       handleAggregateAction (payload) {
         if (this.isAggregateDisabled) {
           return;
         }
         this.isAllExpanded = payload;
-        const tempData = [];
+        let tempData = [];
         let templateIds = [];
         let instancesDisplayData = {};
         if (payload) {
@@ -762,10 +727,13 @@
           for (const [key, value] of this.curMap.entries()) {
             if (value.length === 1) {
               tempData.push(...value);
+              tempData = _.uniqWith(tempData, _.isEqual);
             } else {
               let curInstances = [];
-              const conditions = value.map(subItem => subItem.resource_groups[0]
-                .related_resource_types[0].condition);
+              // 这里避免从模板选择的权限和自定义权限下的操作是一致的，所以需要去重
+              tempData = _.uniqWith(tempData, _.isEqual);
+              const conditions = value.map((subItem) => subItem.resource_groups
+                && subItem.resource_groups[0].related_resource_types[0].condition);
               // 是否都选择了实例
               const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
               if (isAllHasInstance) {
