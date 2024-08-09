@@ -1090,7 +1090,14 @@
             if (!item.resource_groups || !item.resource_groups.length) {
               item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
             }
-            return new Policy({ ...item, tag: 'add' }, 'custom');
+            return new Policy(
+              {
+                ...item,
+                tag: 'add',
+                isNoPermApplyPage: !!(this.routerQuery.cache_id && !this.isShowHasUserGroup)
+              },
+              'custom'
+            );
           });
           this.tableRecommendData = data;
           this.tableRecommendData.forEach(item => {
@@ -2324,7 +2331,8 @@
               return new Policy({
                 ...item,
                 related_actions: relatedActions,
-                tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
+                tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : '',
+                isNoPermApplyPage: !!(this.routerQuery.cache_id && !this.isShowHasUserGroup)
               });
             });
             this.tableData = data || [];

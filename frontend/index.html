@@ -33,7 +33,6 @@
                 const BK_COMPONENT_API_URL = '{{ BK_COMPONENT_API_URL }}' || ''
                 const BK_SHARED_RES_URL = '{{ BK_SHARED_RES_URL }}' || ''
                 const BK_APP_CODE = '{{ BK_APP_CODE }}' || ''
-                const VERSION = '{{ VERSION }}' || ''
                 document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
                 window.LOGIN_SERVICE_URL = LOGIN_SERVICE_URL
                 window.AJAX_URL_PREFIX = AJAX_URL_PREFIX
@@ -57,7 +56,6 @@
                 window.BK_COMPONENT_API_URL = BK_COMPONENT_API_URL
                 window.BK_SHARED_RES_URL = BK_SHARED_RES_URL
                 window.BK_APP_CODE = BK_APP_CODE
-                window.VERSION = VERSION
             })()
 
             function getLanguage () {
@@ -77,9 +75,9 @@
                     CUR_LANGUAGE = 'zh-cn'
                 }
                 if (CUR_LANGUAGE === 'en') {
-                    document.title = 'BKIAM | Tencent Blueking'
+                    document.title = 'lAM | Tencent BlueKing'
                 } else {
-                    document.title = '权限中心 | 腾讯蓝鲸智云'
+                    document.title = '权限中心 | 蓝鲸智云'
                 }
 
                 return CUR_LANGUAGE

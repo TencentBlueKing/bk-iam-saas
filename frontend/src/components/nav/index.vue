@@ -685,7 +685,7 @@
           if (item.path === this.$route.path) {
             // 因为vuex是同步操作，需要从缓存里获取最新的位置处理多个标签页之间不同权限页面之间的切换场景
             const storageNavIndex = window.localStorage.getItem('index');
-            if (this.index !== storageNavIndex) {
+            if (this.index !== Number(storageNavIndex)) {
               return;
             }
             bus.$emit('reload-page', item);
