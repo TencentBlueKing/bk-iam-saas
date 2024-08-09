@@ -5,14 +5,14 @@ info:
   title: API Gateway Resources
   description: ''
 schemes:
-- http
+  - http
 paths:
   /api/v1/engine/batch-search:
     post:
       operationId: engine_batch_search
       description: 批量检索
       tags:
-      - engine
+        - engine
       responses:
         default:
           description: ''
@@ -29,20 +29,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.engine}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.engine}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/engine/healthz:
     get:
       operationId: engine_healthz
       description: 检查engine服务是否健康
       tags:
-      - engine
+        - engine
       responses:
         default:
           description: ''
@@ -59,21 +59,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.engine}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.engine}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/engine/ping:
     get:
       operationId: engine_ping
       description: 检查engine连通性
       tags:
-      - engine
+        - engine
       responses:
         default:
           description: ''
@@ -90,21 +90,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.engine}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.engine}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/engine/search:
     post:
       operationId: engine_search
       description: 检索
       tags:
-      - engine
+        - engine
       responses:
         default:
           description: ''
@@ -121,20 +121,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.engine}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.engine}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/engine/version:
     get:
       operationId: engine_version
       description: 检查engine程序版本
       tags:
-      - engine
+        - engine
       responses:
         default:
           description: ''
@@ -151,20 +151,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.engine}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.engine}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
   /api/v1/model/systems:
     post:
       operationId: system_create
       description: 新增 system
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -181,20 +181,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}:
     get:
       operationId: system_get
       description: 查询 system
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -211,19 +211,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     put:
       operationId: system_update
       description: 更新 system
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -240,20 +240,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/actions:
     delete:
       operationId: system_batch_delete_actions
       description: 批量删除actions
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -270,19 +270,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: system_add_actions
       description: 新增actions
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -299,20 +299,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/actions/{action_id}:
     delete:
       operationId: system_delete_action
       description: 删除action
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -329,19 +329,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     put:
       operationId: system_update_action
       description: 更新action
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -358,20 +358,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/actions/{action_id}/policies:
     delete:
       operationId: system_delete_action_policies
       description: 删除action的policies
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -388,20 +388,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/clients:
     get:
       operationId: system_get_clients
       description: 查询 system clients
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -418,20 +418,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/configs/{name}:
     post:
       operationId: system_add_configs
       description: 配置新增name=common_actions/feature_shield_rules/resource_creator_actions
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -448,19 +448,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     put:
       operationId: system_update_configs
       description: 配置更新name=common_actions/feature_shield_rules/resource_creator_actions
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -477,20 +477,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/instance-selections:
     delete:
       operationId: system_batch_delete_instance_selections
       description: 批量删除 instance-selections
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -507,19 +507,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: system_add_instance_selections
       description: 新增instance_selections
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -536,20 +536,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/instance-selections/{instance_selection_id}:
     delete:
       operationId: system_delete_instance_selection
       description: 删除 instance_selection
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -566,19 +566,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     put:
       operationId: system_update_instance_selection
       description: 更新 instance_selection
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -595,20 +595,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/query:
     get:
       operationId: system_query
       description: 查询 system 通用信息
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -625,20 +625,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/resource-types:
     delete:
       operationId: system_batch_delete_resource_types
       description: 批量删除 resource_type
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -655,19 +655,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: system_add_resource_types
       description: 新增resource_type
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -684,20 +684,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/resource-types/{resource_type_id}:
     delete:
       operationId: system_delete_resource_types
       description: 删除 resource_type
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -714,19 +714,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     put:
       operationId: system_update_resource_types
       description: 更新 resource_type
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -743,20 +743,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/model/systems/{system_id}/token:
     get:
       operationId: system_get_token
       description: 查询 system token
       tags:
-      - model
+        - model
       responses:
         default:
           description: ''
@@ -773,19 +773,19 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
   /api/v1/open/application/:
     post:
       operationId: application
       description: 接入系统权限申请
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -799,19 +799,19 @@ paths:
           path: /api/v1/open/application/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/application/approval_bot/role/:
     post:
       operationId: approval_bot_callback_role
       description: 审批机器人角色回调
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -825,19 +825,19 @@ paths:
           path: /api/v1/open/application/approval_bot/role/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/application/approval_bot/user/:
     post:
       operationId: approval_bot_callback_user
       description: 审批机器人用户续期回调
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -851,19 +851,19 @@ paths:
           path: /api/v1/open/application/approval_bot/user/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/application/policies/:
     post:
       operationId: application_grant_policy
       description: 创建自定义权限申请单
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -877,19 +877,19 @@ paths:
           path: /api/v1/open/application/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/application/{sn}/:
     get:
       operationId: application_detail
       description: 申请单详情
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -903,19 +903,19 @@ paths:
           path: /api/v1/open/application/{sn}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/authorization/batch_instance/:
     post:
       operationId: authorization_batch_instance
       description: 批量操作批量资源授权回收, deprecated
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -929,19 +929,19 @@ paths:
           path: /api/v1/open/authorization/batch_instance/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/authorization/batch_path/:
     post:
       operationId: authorization_batch_path
       description: 批量操作批量拓扑层级授权/回收
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -955,19 +955,19 @@ paths:
           path: /api/v1/open/authorization/batch_path/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/authorization/batch_resource_creator_action/:
     post:
       operationId: authorization_batch_resource_creator_action
       description: 新建关联授权
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -981,19 +981,19 @@ paths:
           path: /api/v1/open/authorization/batch_resource_creator_action/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/authorization/instance/:
     post:
       operationId: authorization_instance
       description: 单个资源授权回收, deprecated
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1007,19 +1007,19 @@ paths:
           path: /api/v1/open/authorization/instance/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/authorization/path/:
     post:
       operationId: authorization_path
       description: 单个拓扑层级授权/回收
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1033,19 +1033,19 @@ paths:
           path: /api/v1/open/authorization/path/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/authorization/resource_creator_action/:
     post:
       operationId: authorization_resource_creator_action
       description: 新建关联授权
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1059,19 +1059,19 @@ paths:
           path: /api/v1/open/authorization/resource_creator_action/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/authorization/resource_creator_action_attribute/:
     post:
       operationId: authorization_resource_creator_action_attribute
       description: 新建关联授权-属性授权
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1085,19 +1085,19 @@ paths:
           path: /api/v1/open/authorization/resource_creator_action_attribute/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/departments/{department_id}/groups:
     get:
       operationId: open_departments_groups
       description: 查询部门加入的组列表(注意部门-组关系存在有限期, 只会返回未过期的组列表)
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1114,20 +1114,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/grade_managers/:
     get:
       operationId: management_grade_managers_list
       description: 查询分级管理员列表
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1141,18 +1141,18 @@ paths:
           path: /api/v1/open/management/grade_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: management_grade_managers
       description: 创建分级管理员
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1166,19 +1166,19 @@ paths:
           path: /api/v1/open/management/grade_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/grade_managers/{id}/:
     put:
       operationId: management_grade_managers_update
       description: 修改分级管理员
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1192,19 +1192,19 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/grade_managers/{id}/groups/:
     get:
       operationId: management_grade_manager_groups
       description: 分级管理员的用户组列表
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1218,18 +1218,18 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: management_grade_manager_create_groups
       description: 分级管理员批量创建用户组
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1243,19 +1243,19 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/grade_managers/{id}/members/:
     delete:
       operationId: management_delete_grade_manager_members
       description: 批量删除分级管理员成员
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1269,18 +1269,18 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     get:
       operationId: management_grade_manager_members
       description: 分级管理员成员列表
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1294,18 +1294,18 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: management_add_grade_manager_members
       description: 批量添加分级管理员成员
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1319,19 +1319,19 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/groups/applications/:
     post:
       operationId: management_groups_applications
       description: 创建用户组申请单
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1345,19 +1345,19 @@ paths:
           path: /api/v1/open/management/groups/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/groups/{id}/:
     delete:
       operationId: management_grade_manager_delete_group
       description: 分级管理员删除用户组
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1371,18 +1371,18 @@ paths:
           path: /api/v1/open/management/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     put:
       operationId: management_grade_manager_update_group
       description: 分级管理员更新用户组
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1396,19 +1396,19 @@ paths:
           path: /api/v1/open/management/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/groups/{id}/actions/policies/:
     delete:
       operationId: management_groups_policies_revoke_by_action
       description: 用户组按整个操作权限回收
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1422,19 +1422,19 @@ paths:
           path: /api/v1/open/management/groups/{id}/actions/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/groups/{id}/members/:
     delete:
       operationId: management_delete_group_members
       description: 用户组删除成员
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1448,18 +1448,18 @@ paths:
           path: /api/v1/open/management/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     get:
       operationId: management_group_members
       description: 用户组成员列表
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1473,18 +1473,18 @@ paths:
           path: /api/v1/open/management/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: management_add_group_members
       description: 用户组添加成员
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1498,19 +1498,19 @@ paths:
           path: /api/v1/open/management/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/groups/{id}/policies/:
     delete:
       operationId: management_groups_policies_delete
       description: 用户组权限回收
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1524,18 +1524,18 @@ paths:
           path: /api/v1/open/management/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: management_groups_policies
       description: 用户组授权
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1549,19 +1549,19 @@ paths:
           path: /api/v1/open/management/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/users/grade_managers/:
     get:
       operationId: management_users_grade_managers
       description: 用户加入的分级管理员列表
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1575,19 +1575,19 @@ paths:
           path: /api/v1/open/management/users/grade_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/management/users/grade_managers/{id}/groups/:
     get:
       operationId: management_users_grade_managers_groups
       description: 用户在某个分级管理员下加入的用户组列表
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1601,19 +1601,19 @@ paths:
           path: /api/v1/open/management/users/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/systems/{system_id}/policies:
     get:
       operationId: open_system_policies
       description: 拉取系统下某个操作的策略列表
       tags:
-      - system
+        - system
       responses:
         default:
           description: ''
@@ -1630,20 +1630,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/systems/{system_id}/policies/-/subjects:
     get:
       operationId: open_system_policies_subjects
       description: 根据策略 ID 拉群策略对应的用户信息
       tags:
-      - system
+        - system
       responses:
         default:
           description: ''
@@ -1660,20 +1660,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/systems/{system_id}/policies/{policy_id}:
     get:
       operationId: open_system_get_policy
       description: 获取某条策略详情
       tags:
-      - system
+        - system
       responses:
         default:
           description: ''
@@ -1690,20 +1690,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/users/{user_id}/groups:
     get:
       operationId: open_user_groups
       description: 查询用户加入的组列表(注意用户-组关系存在有限期, 只会返回未过期的组列表)
       tags:
-      - open
+        - open
       responses:
         default:
           description: ''
@@ -1720,20 +1720,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/policy/auth:
     post:
       operationId: policy_auth
       description: 直接鉴权
       tags:
-      - policy
+        - policy
       responses:
         default:
           description: ''
@@ -1750,20 +1750,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/policy/auth_by_actions:
     post:
       operationId: policy_auth_by_actions
       description: 批量action直接鉴权
       tags:
-      - policy
+        - policy
       responses:
         default:
           description: ''
@@ -1780,20 +1780,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/policy/auth_by_resources:
     post:
       operationId: policy_auth_by_resources
       description: 批量资源直接鉴权
       tags:
-      - policy
+        - policy
       responses:
         default:
           description: ''
@@ -1810,20 +1810,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/policy/query:
     post:
       operationId: policy_query
       description: 策略查询
       tags:
-      - policy
+        - policy
       responses:
         default:
           description: ''
@@ -1840,20 +1840,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/policy/query_by_actions:
     post:
       operationId: policy_query_by_actions
       description: 批量拉取一批操作的权限策略
       tags:
-      - policy
+        - policy
       responses:
         default:
           description: ''
@@ -1870,20 +1870,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/policy/query_by_ext_resources:
     post:
       operationId: policy_query_by_ext_resources
       description: 批量第三方依赖鉴权策略查询
       tags:
-      - policy
+        - policy
       responses:
         default:
           description: ''
@@ -1900,20 +1900,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/systems/{system_id}/policies:
     get:
       operationId: system_policies
       description: 拉取系统下某个操作的策略列表(废弃, 请使用open_system_policies)
       tags:
-      - system
+        - system
       responses:
         default:
           description: ''
@@ -1930,20 +1930,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/systems/{system_id}/policies/-/subjects:
     get:
       operationId: system_policies_subjects
       description: 根据策略 ID 拉群策略对应的用户信息(废弃, 请使用open_system_policies_subjects)
       tags:
-      - system
+        - system
       responses:
         default:
           description: ''
@@ -1960,20 +1960,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/systems/{system_id}/policies/{policy_id}:
     get:
       operationId: system_get_policy
       description: 获取某条策略详情(废弃, 请使用open_system_get_policy)
       tags:
-      - system
+        - system
       responses:
         default:
           description: ''
@@ -1990,20 +1990,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/web/:
     x-bk-apigateway-method-any:
       operationId: api_v1_web_any
       description: SaaS调用后台 API 入口
       tags:
-      - web
+        - web
       responses:
         default:
           description: ''
@@ -2020,21 +2020,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/applications/{callback_id}/approve/:
     post:
       operationId: v2_management_application_approve
       description: 申请单审批回调
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2048,20 +2048,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/applications/{callback_id}/approve/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/applications/{callback_id}/cancel/:
     put:
       operationId: v2_management_application_cancel
       description: 取消申请单
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2075,20 +2075,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/applications/{callback_id}/cancel/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/departments/{department_id}/groups/belong/:
     get:
       operationId: v2_management_check_department_group_belong
       description: 批量校验部门是否归属用户组
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2102,20 +2102,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/departments/{department_id}/groups/belong/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/:
     post:
       operationId: v2_management_grade_manager_create
       description: 创建分级管理员
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2129,20 +2129,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/-/applications/:
     post:
       operationId: v2_management_grade_manager_applications
       description: 创建分级管理员申请
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2156,20 +2156,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/-/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/:
     delete:
       operationId: v2_management_delete_grade_manager
       description: 删除分级管理员
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2183,19 +2183,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     get:
       operationId: v2_management_grade_manager_detail
       description: 分级管理员详情
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2209,19 +2209,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     put:
       operationId: v2_management_update_grade_manager
       description: 更新分级管理员
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2235,20 +2235,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/applications/:
     post:
       operationId: v2_management_update_grade_manager_application
       description: 创建更新分级管理员申请
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2262,20 +2262,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/:
     get:
       operationId: v2_management_grade_manager_list_groups
       description: 分级管理员用户组列表
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2289,19 +2289,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: v2_management_grade_manager_create_groups
       description: 分级管理员批量创建用户组
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2315,20 +2315,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subject_templates/:
     get:
       operationId: v2_management_grade_manager_list_subject_templates
       description: 分级管理员人员模版列表
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2342,20 +2342,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subject_templates/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/:
     get:
       operationId: v2_management_grade_manager_list_subset_manager
       description: 分级管理员查询二级管理员列表
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2369,19 +2369,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: v2_management_grade_manager_create_subset_manager
       description: 分级管理员创建二级管理员
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2395,20 +2395,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/-/applications/:
     post:
       operationId: v2_management_groups_applications
       description: 创建用户组申请单
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2422,20 +2422,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/-/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/:
     post:
       operationId: v2_management_groups_renew_applications
       description: 用户组续期申请单
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2449,20 +2449,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/:
     delete:
       operationId: v2_management_grade_manager_delete_group
       description: 分级管理员删除用户组
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2476,19 +2476,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     put:
       operationId: v2_management_grade_manager_update_group
       description: 分级管理员更新用户组
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2502,20 +2502,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/actions/-/policies/:
     delete:
       operationId: v2_management_groups_policies_revoke_by_action
       description: 用户组按整个操作权限回收
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2529,20 +2529,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/actions/-/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/members/:
     delete:
       operationId: v2_management_delete_group_members
       description: 用户组删除成员
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2556,19 +2556,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     get:
       operationId: v2_management_group_members
       description: 用户组成员列表
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2582,19 +2582,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: v2_management_add_group_members
       description: 用户组添加成员
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2608,20 +2608,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/expired_at/:
     put:
       operationId: v2_management_update_group_members_expired_at
       description: 更新用户组成员有效期
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2635,20 +2635,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/expired_at/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/policies/:
     delete:
       operationId: v2_management_groups_policies_revoke
       description: 用户组权限回收
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2662,19 +2662,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     get:
       operationId: v2_management_groups_policies_list
       description: 查询用户组自定义权限
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2688,19 +2688,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: v2_management_groups_policies_grant
       description: 用户组授权
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2714,20 +2714,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/policies/-/actions/:
     get:
       operationId: v2_management_groups_policies_action_list
       description: 查询用户组有权限的操作
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2741,20 +2741,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/-/actions/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/subset_managers/{id}/:
     delete:
       operationId: v2_management_subset_manager_delete
       description: 删除二级管理员
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2768,19 +2768,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     get:
       operationId: v2_management_subset_manager_detail
       description: 二级管理员详情
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2794,19 +2794,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: v2_management_subset_manager_update
       description: 二级管理员更新
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2820,20 +2820,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/:
     get:
       operationId: v2_management_subset_manager_list_groups
       description: 二级管理员用户组列表
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2847,19 +2847,19 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
     post:
       operationId: v2_management_subset_manager_create_groups
       description: 二级管理员批量创建用户组
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2873,20 +2873,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/users/{user_id}/groups/belong/:
     get:
       operationId: v2_management_check_user_group_belong
       description: 批量校验用户是否归属用户组
       tags:
-      - open
-      - v2
+        - open
+        - v2
       responses:
         default:
           description: ''
@@ -2900,20 +2900,20 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/users/{user_id}/groups/belong/
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/policy/systems/{system_id}/auth/:
     post:
       operationId: v2_policy_auth
       description: v2直接鉴权
       tags:
-      - policy
-      - v2
+        - policy
+        - v2
       responses:
         default:
           description: ''
@@ -2930,21 +2930,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/policy/systems/{system_id}/auth_by_actions/:
     post:
       operationId: v2_policy_auth_by_actions
       description: 批量操作鉴权
       tags:
-      - policy
-      - v2
+        - policy
+        - v2
       responses:
         default:
           description: ''
@@ -2961,21 +2961,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/policy/systems/{system_id}/query/:
     post:
       operationId: v2_policy_query
       description: 策略查询
       tags:
-      - policy
-      - v2
+        - policy
+        - v2
       responses:
         default:
           description: ''
@@ -2992,21 +2992,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v2/policy/systems/{system_id}/query_by_actions/:
     post:
       operationId: v2_policy_query_by_actions
       description: 批量操作策略查询
       tags:
-      - policy
-      - v2
+        - policy
+        - v2
       responses:
         default:
           description: ''
@@ -3023,20 +3023,20 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /healthz:
     get:
       operationId: healthz
       description: 接口检查服务是否健康
       tags:
-      - basic
+        - basic
       responses:
         default:
           description: ''
@@ -3053,21 +3053,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /metrics:
     get:
       operationId: metrics
       description: 接口暴露程序metrics
       tags:
-      - basic
+        - basic
       responses:
         default:
           description: ''
@@ -3084,21 +3084,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /ping:
     get:
       operationId: ping
       description: 接口检查连通性
       tags:
-      - basic
+        - basic
       responses:
         default:
           description: ''
@@ -3115,21 +3115,21 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /version:
     get:
       operationId: version
       description: 接口检查程序版本
       tags:
-      - basic
+        - basic
       responses:
         default:
           description: ''
@@ -3146,167 +3146,251 @@ paths:
           upstreams:
             loadbalance: roundrobin
             hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: []
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/admin/groups/:
-      post:
-          operationId: admin_create_groups
-          description: 超管批量创建用户组
-          tags:
-              - open
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: true
-              allowApplyPermission: true
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: post
-                  path: /api/v1/open/admin/groups/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
+    post:
+      operationId: admin_create_groups
+      description: 超管批量创建用户组
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/admin/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
   /api/v1/open/admin/groups/{id}/:
-      delete:
-          operationId: admin_delete_group
-          description: 超管删除指定用户组
-          tags:
-              - open
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: true
-              allowApplyPermission: true
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: delete
-                  path: /api/v1/open/admin/groups/{id}/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
-      put:
-          operationId: admin_update_group
-          description: 超管更新指定用户组
-          tags:
-              - open
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: true
-              allowApplyPermission: true
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: put
-                  path: /api/v1/open/admin/groups/{id}/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
+    delete:
+      operationId: admin_delete_group
+      description: 超管删除指定用户组
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/open/admin/groups/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
+    put:
+      operationId: admin_update_group
+      description: 超管更新指定用户组
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/open/admin/groups/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
   /api/v1/open/admin/groups/{id}/policies/:
-      post:
-          operationId: admin_groups_policies_grant
-          description: 超管授权用户组
-          tags:
-              - open
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: true
-              allowApplyPermission: true
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: post
-                  path: /api/v1/open/admin/groups/{id}/policies/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
+    post:
+      operationId: admin_groups_policies_grant
+      description: 超管授权用户组
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/admin/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
   /api/v1/open/admin/systems/{system_id}/provider_config/:
-      get:
-          operationId: admin_list_provider_config
-          description: 系统回调信息查询
-          tags:
-              - open
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: true
-              allowApplyPermission: true
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: get
-                  path: /api/v1/open/admin/systems/{system_id}/provider_config/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
+    get:
+      operationId: admin_list_provider_config
+      description: 系统回调信息查询
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/admin/systems/{system_id}/provider_config/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
   /api/v1/open/admin/templates/:
-      post:
-          operationId: admin_create_templates
-          description: 超管创建模板
-          tags:
-              - open
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: true
-              allowApplyPermission: true
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: post
-                  path: /api/v1/open/admin/templates/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
+    post:
+      operationId: admin_create_templates
+      description: 超管创建模板
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/admin/templates/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
+  /api/v1/open/admin/systems/:
+    get:
+      operationId: open_admin_systems
+      description: 获取系统列表
+      tags:
+        - open
+        - open/admin
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/admin/systems/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
+  /api/v1/open/admin/roles/system_managers/systems/{system_id}/members/:
+    get:
+      operationId: open_admin_roles_system_managers_members
+      description: 获取某个系统的系统管理员列表
+      tags:
+        - open
+        - open/admin
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/admin/roles/system_managers/systems/{system_id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
+  /api/v1/model/share/systems/{system_id}/query:
+    get:
+      operationId: model_share_system_query
+      description: '模型共享: 查询 system 通用信息'
+      tags:
+        - securityAudit
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/model/share/systems/{system_id}/query
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:

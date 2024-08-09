@@ -125,9 +125,9 @@
   import { buildURLParams } from '@/common/url';
   import { formatI18nKey, jsonpRequest, getManagerMenuPerm } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
-  import SystemLog from '../system-log';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
-  import Cookie from 'js-cookie';
+  import SystemLog from '../system-log';
+  import Cookies from 'js-cookie';
   import magicbox from 'bk-magic-vue';
   import logoSvg from '@/images/logo.svg';
 
@@ -623,16 +623,40 @@
         locale.use(magicBoxLanguageMap[formatI18nKey()]);
         window.CUR_LANGUAGE = formatI18nKey();
         this.$i18n.locale = formatI18nKey();
-        window.location.reload();
       },
         
-      handleChangeLocale (language) {
-        Cookie.remove('blueking_language', { path: '' });
-        Cookie.set('blueking_language', language, {
-          domain: window.BK_DOMAIN
-        });
+      async handleChangeLocale (language) {
+        const curDomain = window.BK_DOMAIN || window.location.hostname.replace(/^.*(\.[^.]+\.[^.]+)$/, '$1');
+        Cookies.remove(
+          'blueking_language',
+          {
+            expires: -1,
+            domain: curDomain,
+            path: ''
+          }
+        );
+        // 增加语言cookie有效期为一年
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        Cookies.set(
+          'blueking_language',
+          language,
+          {
+            expires: expires,
+            domain: curDomain
+          }
+        );
         this.setMagicBoxLocale(language);
-        jsonpRequest(`${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${language}`, { language });
+        if (window.BK_COMPONENT_API_URL) {
+          const url = `${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/`;
+          try {
+            await jsonpRequest(url, { language });
+          } finally {
+            window.location.reload();
+          }
+          return;
+        }
+        window.location.reload();
       },
 
       handleSwitchIdentity () {
