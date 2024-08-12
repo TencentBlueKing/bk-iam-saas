@@ -1069,9 +1069,9 @@
         this.curSelectedCustomPerm = [];
         this.handleSelectedGroup([]);
         this.fetchRefreshPermData();
-        if (['customPerm'].includes(newValue.value)) {
-          this.comKey = +new Date();
-        }
+        // if (['customPerm'].includes(newValue.value)) {
+        //   this.comKey = +new Date();
+        // }
       },
   
       handleEmptyRefresh () {
