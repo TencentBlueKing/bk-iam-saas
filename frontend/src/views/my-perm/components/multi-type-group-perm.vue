@@ -422,7 +422,6 @@
             });
             this.handleGetDataByPage(current, curData);
           }
-          this.emptyPermData = formatCodeData(code, emptyData);
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
@@ -736,9 +735,6 @@
       async fetchInitData () {
         const typeMap = {
           all: async () => {
-            if (['all'].includes(this.queryGroupData.value)) {
-              this.defaultExpandItem = ['personalPerm'];
-            }
             const externalReqList = [
               this.fetchExpiredGroupPerm(),
               this.fetchUserGroupSearch(),
@@ -758,6 +754,10 @@
             } else {
               await Promise.all([...externalReqList, ...noExternalReqList]);
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0 && this.user.timestamp);
+            }
+            const curData = this.allPermItem.find((v) => v.pagination.count > 0);
+            if (curData && ['all'].includes(this.queryGroupData.value)) {
+              this.defaultExpandItem = [curData.id];
             }
             this.handleGetPermData();
             this.isFirstReq = false;
@@ -905,7 +905,7 @@
 
       handleDefaultExpand (payload) {
         this.$nextTick(() => {
-          this.allPermItem.forEach((item) => {
+          this.allPermItem && this.allPermItem.forEach((item) => {
             const permRef = this.$refs[`rTemplateItem_${item.id}`];
             if (permRef && permRef.length && payload.includes(item.id)) {
               item.expanded = true;

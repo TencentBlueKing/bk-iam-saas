@@ -505,13 +505,14 @@
     watch: {
       systemId: {
         async handler (value) {
+          console.log(8888);
           this.currentSelectList = [];
           this.initRequestQueue = [];
           this.policyList = [];
           this.policyListBack = [];
           if (value) {
             this.initRequestQueue = ['permTable'];
-            await Promise.all([this.fetchActions(value), this.fetchPolicy({ systemId: value })]);
+            // await Promise.all([this.fetchActions(value), this.fetchPolicy({ systemId: value })]);
           }
         },
         immediate: true

@@ -381,19 +381,17 @@
             );
           }
         }
-        if (this.isSearchPerm) {
-          this.emptyPolicyData.tipType = 'search';
-          this.$nextTick(() => {
-            if (this.curSearchParams.system_id) {
-              const customRef = this.$refs[`customPermTable_${this.curSearchParams.system_id}_${this.mode}`];
-              if (customRef && customRef.length) {
-                customRef[0].fetchActions(this.curSearchParams.system_id);
-                customRef[0].fetchPolicy({ systemId: this.curSearchParams.system_id });
-              }
+        this.$nextTick(() => {
+          console.log(this.systemPolicyList);
+          this.systemPolicyList && this.systemPolicyList.forEach((item) => {
+            const customRef = this.$refs[`customPermTable_${item.id}_${this.mode}`];
+            if (customRef && customRef.length) {
+              customRef[0].fetchActions(item.id);
+              customRef[0].fetchPolicy({ systemId: item.id });
             }
           });
-        }
-        this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, systemPolicyList.length === 0);
+        });
+        this.emptyPolicyData = formatCodeData(0, { ...this.emptyPolicyData, ...{ tipType: this.isSearchPerm ? 'search' : '' } }, systemPolicyList.length === 0);
       },
       
       handleEmptyClear () {
