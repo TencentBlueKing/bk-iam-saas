@@ -311,11 +311,7 @@
       },
       appName () {
         // 如果未获取到配置，使用默认title
-        if (this.globalConfig) {
-          const { name, nameEn } = this.globalConfig;
-          return this.curLanguageIsCn ? name : nameEn;
-        }
-        return this.$t('m.nav["蓝鲸权限中心"]');
+        return this.globalConfig && this.globalConfig.i18n ? this.globalConfig.i18n.productName : this.$t('m.nav["蓝鲸权限中心"]');
       },
       appLogo () {
         // 如果未获取到配置，使用默认logo

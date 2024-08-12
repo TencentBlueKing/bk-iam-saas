@@ -33,8 +33,11 @@ export default {
         name: '', // 网站名
         separator: '|' // 网站名称路由分隔符
       },
+      i18n: {},
       name: '权限中心',
       nameEn: 'IAM',
+      productName: '权限中心',
+      productNameEn: 'BK IAM',
       brandName: '蓝鲸智云',
       brandNameEn: 'Tencent BlueKing',
       appLogo: require('@/images/logo.svg'),
