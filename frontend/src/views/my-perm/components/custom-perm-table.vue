@@ -1,7 +1,6 @@
 <template>
-  <div class="custom-perm-table-wrapper" v-bkloading="{ isLoading: loading, opacity: 1 }">
+  <div class="custom-perm-table-wrapper" v-bkloading="{ isLoading: isPolicyLoading, opacity: 1 }">
     <bk-table
-      v-if="!loading"
       :ref="`customPermRef_${mode}_${systemId}`"
       :key="tableKey"
       :data="policyList"
@@ -375,7 +374,6 @@
         currentSelectList: [],
         environmentsEffectData: [],
         systemActionList: [],
-        initRequestQueue: ['permTable'],
         curId: '',
         curPolicyId: '',
         sideSliderTitle: '',
@@ -394,6 +392,7 @@
         isShowSideSlider: false,
         isShowEffectConditionSlider: false,
         isShowResourceInstanceEffectTime: false,
+        isPolicyLoading: false,
         params: {},
         searchParams: {},
         customPermData: {},
@@ -414,9 +413,6 @@
     },
     computed: {
       ...mapGetters(['user', 'externalSystemId']),
-      loading () {
-        return this.initRequestQueue.length > 0;
-      },
       isShowPreview () {
         return (payload) => {
           return !payload.isEmpty && payload.policy_id !== '';
@@ -503,16 +499,12 @@
       }
     },
     watch: {
-      systemId: {
-        async handler (value) {
-          console.log(8888);
-          this.currentSelectList = [];
-          this.initRequestQueue = [];
-          this.policyList = [];
-          this.policyListBack = [];
-          if (value) {
-            this.initRequestQueue = ['permTable'];
-            // await Promise.all([this.fetchActions(value), this.fetchPolicy({ systemId: value })]);
+      groupData: {
+        handler (newValue, oldValue) {
+          if (oldValue && JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+            this.currentSelectList = [];
+            this.policyList = [];
+            this.policyListBack = [];
           }
         },
         immediate: true
@@ -591,6 +583,7 @@
       },
 
       async fetchPolicy (params) {
+        this.isPolicyLoading = true;
         const { current, limit } = this.pagination;
         try {
           let url = '';
@@ -658,7 +651,7 @@
           this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
           this.messageAdvancedError(e);
         } finally {
-          this.initRequestQueue.shift();
+          this.isPolicyLoading = false;
           this.handleGetSelectedPerm();
           this.$emit('on-change-policy-perm', {
             current,
@@ -856,7 +849,6 @@
       },
 
       handleRefreshData () {
-        this.initRequestQueue = ['permTable'];
         const params = {
           systemId: this.systemId
         };

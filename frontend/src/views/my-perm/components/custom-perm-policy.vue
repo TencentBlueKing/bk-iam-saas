@@ -200,19 +200,18 @@
       }
     },
     watch: {
-      list: {
-        handler (v) {
-          this.curSelectedCustom = [];
-          this.handleGetSystemData(v);
+      groupData: {
+        handler (newValue, oldValue) {
+          if (oldValue && JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+            this.curSelectedCustom = [];
+          }
         },
         immediate: true
       },
       emptyData: {
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
-          // if (this.isSearchPerm || ['search'].includes(value.tipType)) {
-          //   this.handleSystemSearch();
-          // }
+          this.handleGetSystemData(this.list);
         },
         immediate: true
       }
@@ -381,8 +380,8 @@
             );
           }
         }
+        // 选择直接调用子组件的异步接口，是因为这里存在多种业务场景下都会造成自定义权限数据变更
         this.$nextTick(() => {
-          console.log(this.systemPolicyList);
           this.systemPolicyList && this.systemPolicyList.forEach((item) => {
             const customRef = this.$refs[`customPermTable_${item.id}_${this.mode}`];
             if (customRef && customRef.length) {

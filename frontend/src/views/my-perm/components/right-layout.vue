@@ -610,7 +610,6 @@
       },
 
       handleRefreshGroup () {
-        this.currentSelectList = [];
         this.sliderGroupPermList = [];
         this.curSearchParams = {};
         this.formData = Object.assign(this.formData, {
