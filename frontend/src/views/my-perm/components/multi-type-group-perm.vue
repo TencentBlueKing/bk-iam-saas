@@ -2,7 +2,10 @@
   <div
     :class="[
       'perm-group-all-content',
-      { 'is-show-notice': showNoticeAlert && showNoticeAlert() }
+      { 'is-resource-search': isHasResourceSearch },
+      { 'is-custom-search': isCustomSearch },
+      { 'is-show-notice-no-search': isShowNoticeNoResourceSearch },
+      { 'is-show-notice-has-search': isShowNoticeHasResourceSearch }
     ]"
   >
     <template v-if="permData.hasPerm">
@@ -69,6 +72,15 @@
         />
       </div>
     </template>
+    <div
+      :class="[
+        'custom-footer-wrapper',
+        { 'custom-footer-wrapper-no-perm': !permData.hasPerm },
+        { 'hidden': isSubEnv || isHideApply }
+      ]"
+    >
+      <TheFooter />
+    </div>
   </div>
 </template>
 
@@ -79,11 +91,13 @@
   import { ALL_PERM_GROUP_LIST } from '@/common/constants';
   import { existValue, formatCodeData, getNowTimeExpired, sleep } from '@/common/util';
   import RenderPermItem from '@/components/iam-expand-perm/index.vue';
+  import TheFooter from '@/components/footer/index.vue';
   import CustomPermPolicy from './custom-perm-policy.vue';
   import GroupPermTable from './group-perm-table.vue';
   export default {
     inject: ['showNoticeAlert'],
     components: {
+      TheFooter,
       RenderPermItem,
       CustomPermPolicy,
       GroupPermTable
@@ -109,6 +123,7 @@
     },
     data () {
       return {
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         isFirstReq: false,
         isSearchResource: false,
         isHasHandover: false,
@@ -207,6 +222,21 @@
           }
           return !!result && payload.pagination.count > 0;
         };
+      },
+      isShowNoticeAlert () {
+        return this.showNoticeAlert && this.showNoticeAlert();
+      },
+      isCustomSearch () {
+        return ['managerPerm'].includes(this.groupData.value);
+      },
+      isHasResourceSearch () {
+        return this.enableGroupInstanceSearch && !['managerPerm'].includes(this.groupData.value);
+      },
+      isShowNoticeHasResourceSearch () {
+        return this.isShowNoticeAlert && this.isHasResourceSearch;
+      },
+      isShowNoticeNoResourceSearch () {
+        return this.isShowNoticeAlert && !this.isHasResourceSearch;
       },
       formatExtCls () {
         return (index) => {
@@ -392,7 +422,6 @@
             });
             this.handleGetDataByPage(current, curData);
           }
-          this.emptyPermData = formatCodeData(code, emptyData);
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
@@ -602,7 +631,7 @@
             limit,
             offset: (current - 1) * limit,
             with_super: true,
-            name: this.curSearchParams.manager_name || undefined
+            name: this.curSearchParams.manager_name || ''
           };
           const { code, data } = await this.$store.dispatch(
             'role/getRatingManagerList',
@@ -706,9 +735,6 @@
       async fetchInitData () {
         const typeMap = {
           all: async () => {
-            if (['all'].includes(this.queryGroupData.value)) {
-              this.defaultExpandItem = ['personalPerm'];
-            }
             const externalReqList = [
               this.fetchExpiredGroupPerm(),
               this.fetchUserGroupSearch(),
@@ -728,6 +754,10 @@
             } else {
               await Promise.all([...externalReqList, ...noExternalReqList]);
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0 && this.user.timestamp);
+            }
+            const curData = this.allPermItem.find((v) => v.pagination.count > 0);
+            if (curData && ['all'].includes(this.queryGroupData.value)) {
+              this.defaultExpandItem = [curData.id];
             }
             this.handleGetPermData();
             this.isFirstReq = false;
@@ -853,7 +883,7 @@
       handleGetSelectedGroups (payload) {
         setTimeout(() => {
           const tableRefList = this.$refs.childPermTable;
-          const selectedGroup = [...this.curSelectedGroup, this.curSelectedCustomPerm];
+          const selectedGroup = [...this.curSelectedGroup, ...this.curSelectedCustomPerm];
           const curData = this.allPermItem.find((item) => item.id === payload);
           const curSelectedId = selectedGroup.map((item) => `${item.id}&${item.name}&${item.mode_type}`);
           if (curData && tableRefList && tableRefList.length > 0) {
@@ -875,7 +905,7 @@
 
       handleDefaultExpand (payload) {
         this.$nextTick(() => {
-          this.allPermItem.forEach((item) => {
+          this.allPermItem && this.allPermItem.forEach((item) => {
             const permRef = this.$refs[`rTemplateItem_${item.id}`];
             if (permRef && permRef.length && payload.includes(item.id)) {
               item.expanded = true;
@@ -1039,9 +1069,9 @@
         this.curSelectedCustomPerm = [];
         this.handleSelectedGroup([]);
         this.fetchRefreshPermData();
-        if (['customPerm'].includes(newValue.value)) {
-          this.comKey = +new Date();
-        }
+        // if (['customPerm'].includes(newValue.value)) {
+        //   this.comKey = +new Date();
+        // }
       },
   
       handleEmptyRefresh () {
@@ -1069,7 +1099,7 @@
 .perm-group-all-content {
   position: relative;
   width: 100%;
-  height: calc(100% - 190px);
+  height: calc(100% - 120px);
   overflow-y: auto;
   &::-webkit-scrollbar {
     width: 8px;
@@ -1085,11 +1115,15 @@
     border-radius: 3px;
   }
   /deep/ .resource-perm-side-content-table {
-    margin: 12px 0;
+    /* margin: 12px 0; */
+    margin-bottom: 12px;
     background-color: #ffffff;
     display: none;
     &:hover {
       background-color: #ffffff;
+    }
+    &:first-child {
+      margin-top: 0;
     }
     .expand-header {
       padding-left: 13px;
@@ -1132,8 +1166,30 @@
     top: 45%;
     transform: translate(-50%, -45%);
   }
-  &.is-show-notice {
-    height: calc(100% - 230px);
+  .custom-footer-wrapper {
+    &.custom-footer-wrapper-no-perm {
+      .footer-content {
+        position: absolute;
+        left: 50%;
+        bottom: 30px;
+        transform: translate(-50%, 0px);
+      }
+    }
+    &.hidden {
+      display: none;
+    }
+  }
+  &.is-resource-search {
+    height: calc(100% - 200px);
+  }
+  &.is-custom-search {
+    height: calc(100% - 80px);
+  }
+  &.is-show-notice-no-search {
+    height: calc(100% - 150px);
+  }
+  &.is-show-notice-has-search {
+    height: calc(100% - 220px);
   }
 }
 </style>

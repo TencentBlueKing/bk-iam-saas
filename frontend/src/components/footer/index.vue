@@ -1,5 +1,5 @@
 <template>
-  <div class="footer-content" :style="navStickStyle">
+  <div class="footer-content">
     <div class="link-container">
       <!-- <div
         v-for="(item, index) in footerList"
@@ -49,17 +49,6 @@
     computed: {
       ...mapGetters(['versionLogs', 'nav-sticked', 'externalSystemId']),
       ...mapGetters('userGlobalConfig', ['globalConfig']),
-      navStickStyle () {
-        if (this.externalSystemId) {
-          return {
-            paddingLeft: '50px'
-          };
-        } else {
-          return {
-            paddingLeft: this.navStick ? '284px' : '84px'
-          };
-        }
-      },
       contact () {
         return this.curLanguageIsCn ? this.globalConfig.footerInfoHTML : this.globalConfig.footerInfoHTMLEn;
       },
@@ -79,10 +68,10 @@
 .footer-content {
   position: relative;
   left: 0;
-  bottom: 50px;
+  bottom: 0;
   height: 50px;
   line-height: 20px;
-  padding: 25px 0;
+  /* padding: 25px 0; */
   display: flex;
   flex-flow: column;
   align-items: center;

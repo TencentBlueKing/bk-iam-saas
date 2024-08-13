@@ -400,7 +400,8 @@ export const m = {
         '模板成员不能为空': 'Template member cannot be empty',
         '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered',
         '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons',
-        '请输入续期理由': 'Please enter renewal reason'
+        '请输入续期理由': 'Please enter renewal reason',
+        'ID必须是一个正整数': 'ID must be a positive integer'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -807,7 +808,7 @@ export const m = {
         '通过组织加入': 'Through Organization',
         '组权限': 'Permissions',
         '所属组织用户组权限': 'Group Permissions of the Organization',
-        '所属人员模板用户组权限': 'Member Template User Group Permissions',
+        '所属人员模板用户组权限': 'Group Permissions of Member Templates',
         '临时权限申请': 'Apply for temporary permissions',
         '一组实例权限': ' A Set of Instance Permissions',
         '不能删除当前操作': 'Unable to delete current permission',
@@ -833,7 +834,8 @@ export const m = {
         '未勾选自定义操作选择前，无法选择删除': 'Before selecting the custom operation, deletion cannot be selected',
         '未勾选个人用户组权限或自定义操作选择前，无法去续期': 'Before selecting individual user group permissions or custom operation options',
         '清空后，该系统的所有操作权限和资源实例权限都会被清空。': 'After clearing, all operation permissions and resource instance permissions of the system will be cleared.',
-        '注意删除依赖操作时会同步删除关联操作': 'Note that deleting dependencies will synchronize the deletion of associated operations'
+        '注意删除依赖操作时会同步删除关联操作': 'Note that deleting dependencies will synchronize the deletion of associated operations',
+        '输入ID、用户组名、描述等按回车键进行搜索': 'Enter ID, user group name and description, etc. Press Enter to search'
     },
     permTemplate: {
         '模板名': 'Template name',

@@ -31,7 +31,7 @@
                 :right-icon="'bk-icon icon-search'"
                 @right-icon-click="handleSearch"
                 @enter="handleSearch"
-                @clear="handleClearSearch"
+                @clear="handleClearName"
               />
             </iam-form-item>
             <iam-form-item
@@ -60,7 +60,7 @@
                 :right-icon="'bk-icon icon-search'"
                 @right-icon-click="handleSearch"
                 @enter="handleSearch"
-                @clear="handleClearSearch"
+                @clear="handleClearDescription"
               />
             </iam-form-item>
             <iam-form-item
@@ -483,6 +483,16 @@
         this.currentSelectList = [...payload];
       },
 
+      handleClearName () {
+        this.formData.name = '';
+        this.handleSearch();
+      },
+
+      handleClearDescription () {
+        this.formData.description = '';
+        this.handleSearch();
+      },
+
       handleSearch () {
         this.$nextTick(() => {
           this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
@@ -600,7 +610,6 @@
       },
 
       handleRefreshGroup () {
-        this.currentSelectList = [];
         this.sliderGroupPermList = [];
         this.curSearchParams = {};
         this.formData = Object.assign(this.formData, {
@@ -634,6 +643,7 @@
   height: calc(100vh - 114px);
   overflow: hidden;
   .batch-perm-operate {
+    margin-bottom: 12px;
     &-item {
       margin-right: 8px;
       .operate-dropdown-menu {

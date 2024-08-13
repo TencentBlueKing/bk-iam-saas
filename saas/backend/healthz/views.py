@@ -30,7 +30,7 @@ def healthz(request):
     checker = HealthChecker()
 
     data = {}
-    for name in ["mysql", "redis", "celery", "iam", "usermgr"]:
+    for name in ["mysql", "redis", "celery", "iam"]:
         ok, message = getattr(checker, name)()
         if not ok:
             return HttpResponseServerError(message)

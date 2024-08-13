@@ -200,19 +200,18 @@
       }
     },
     watch: {
-      list: {
-        handler (v) {
-          this.curSelectedCustom = [];
-          this.handleGetSystemData(v);
+      groupData: {
+        handler (newValue, oldValue) {
+          if (oldValue && JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+            this.curSelectedCustom = [];
+          }
         },
         immediate: true
       },
       emptyData: {
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
-          // if (this.isSearchPerm || ['search'].includes(value.tipType)) {
-          //   this.handleSystemSearch();
-          // }
+          this.handleGetSystemData(this.list);
         },
         immediate: true
       }
@@ -381,19 +380,17 @@
             );
           }
         }
-        if (this.isSearchPerm) {
-          this.emptyPolicyData.tipType = 'search';
-          this.$nextTick(() => {
-            if (this.curSearchParams.system_id) {
-              const customRef = this.$refs[`customPermTable_${this.curSearchParams.system_id}_${this.mode}`];
-              if (customRef && customRef.length) {
-                customRef[0].fetchActions(this.curSearchParams.system_id);
-                customRef[0].fetchPolicy({ systemId: this.curSearchParams.system_id });
-              }
+        // 选择直接调用子组件的异步接口，是因为这里存在多种业务场景下都会造成自定义权限数据变更
+        this.$nextTick(() => {
+          this.systemPolicyList && this.systemPolicyList.forEach((item) => {
+            const customRef = this.$refs[`customPermTable_${item.id}_${this.mode}`];
+            if (customRef && customRef.length) {
+              customRef[0].fetchActions(item.id);
+              customRef[0].fetchPolicy({ systemId: item.id });
             }
           });
-        }
-        this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, systemPolicyList.length === 0);
+        });
+        this.emptyPolicyData = formatCodeData(0, { ...this.emptyPolicyData, ...{ tipType: this.isSearchPerm ? 'search' : '' } }, systemPolicyList.length === 0);
       },
       
       handleEmptyClear () {

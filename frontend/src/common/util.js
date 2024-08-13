@@ -627,20 +627,58 @@ export function formatI18nKey () {
  * @param {callback} str 回调名
  *
  */
-export function jsonpRequest (url, params, callbackName) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    if (callbackName) {
-      callbackName = callbackName + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+// export function jsonpRequest (url, params, callbackName) {
+//   return new Promise((resolve, reject) => {
+//     const script = document.createElement('script');
+//     if (callbackName) {
+//       callbackName = callbackName + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+//     }
+//     Object.assign(params, callbackName ? { callback: callbackName } : {});
+//     const arr = Object.keys(params).map(key => `${key}=${params[key]}`);
+//     script.src = `${url}?${arr.join('&')}`;
+//     document.body.appendChild(script);
+//     if (callbackName) {
+//       window[callbackName] = (data) => {
+//         resolve(data);
+//       };
+//     }
+//   });
+// }
+export function jsonpRequest (url, data) {
+  if (!url) throw new Error('invalid URL');
+  const callback = `CALLBACK${Math.random().toString().slice(9, 18)}`;
+  const JSONP = document.createElement('script');
+  JSONP.setAttribute('type', 'text/javascript');
+  const headEle = document.getElementsByTagName('head')[0];
+  let query = '';
+  if (data) {
+    if (typeof data === 'string') {
+      query = `&${data}`;
+    } else if (typeof data === 'object') {
+      for (const [key, value] of Object.entries(data)) {
+        query += `&${key}=${encodeURIComponent(value)}`;
+      }
     }
-    Object.assign(params, callbackName ? { callback: callbackName } : {});
-    const arr = Object.keys(params).map(key => `${key}=${params[key]}`);
-    script.src = `${url}?${arr.join('&')}`;
-    document.body.appendChild(script);
-    if (callbackName) {
-      window[callbackName] = (data) => {
-        resolve(data);
+    query += `&_time=${Date.now()}`;
+  }
+  let promiseRejecter = null;
+  JSONP.src = `${url}?callback=${callback}${query}`;
+  JSONP.onerror = function (event) {
+    if (promiseRejecter) {
+      promiseRejecter = event;
+    }
+  };
+  return new Promise((resolve, reject) => {
+    promiseRejecter = reject;
+    try {
+      window[callback] = (result) => {
+        resolve(result);
+        headEle.removeChild(JSONP);
+        delete window[callback];
       };
+      headEle.appendChild(JSONP);
+    } catch (err) {
+      reject(err);
     }
   });
 }
