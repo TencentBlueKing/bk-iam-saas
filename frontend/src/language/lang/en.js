@@ -395,7 +395,8 @@ export const m = {
         '模板名称不能为空': 'Template name cannot be empty',
         '模板成员不能为空': 'Template member cannot be empty',
         '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered',
-         '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons'
+        '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons',
+        'ID必须是一个正整数': 'ID must be a positive integer'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -809,7 +810,8 @@ export const m = {
         '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)',
         '直接加入人员模板的用户组权限': 'Directly add user group permissions to personnel templates',
         '通过组织加入人员模板的用户组权限': 'User group permissions for joining member templates through organization',
-        '通过人员模板加入': 'Through Member Template'
+        '通过人员模板加入': 'Through Member Template',
+        '输入ID、用户组名、描述等按回车键进行搜索': 'Enter ID, user group name and description, etc. Press Enter to search'
     },
     permTemplate: {
         '模板名': 'Template name',

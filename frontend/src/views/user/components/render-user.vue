@@ -10,6 +10,7 @@
         :active="active"
         :min-select-width="'165px'"
         :max-select-width="'200px'"
+        :search-select-place-holder="$t(`m.perm['输入ID、用户组名、描述等按回车键进行搜索']`)"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
         @on-input-value="handleInputValue"
@@ -504,6 +505,13 @@
 
       async fetchRemoteTable (isRefreshCurCount = false) {
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
+        if (this.curSearchParams.id) {
+          const exp = /^[1-9]\d*$/;
+          if (!exp.test(this.curSearchParams.id)) {
+            this.curEmptyData = formatCodeData(0, { ...this.curEmptyData, ...{ tipType: 'search' } }, true);
+            return this.messageWarn(this.$t(`m.verify['ID必须是一个正整数']`));
+          }
+        }
         const typeMap = {
           GroupPerm: async () => {
             this.emptyData = _.cloneDeep(this.curEmptyData);

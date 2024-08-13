@@ -911,9 +911,13 @@
 
       fetchCustomTotal () {
         this.$nextTick(() => {
-          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.groupMemberRef && selectionCount && selectionCount.length && selectionCount[0].children) {
-            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+          const tableRef = this.$refs.groupMemberRef;
+          if (tableRef && tableRef.$refs && tableRef.$refs.paginationWrapper) {
+            const paginationWrapper = tableRef.$refs.paginationWrapper;
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount && selectCount.length && selectCount[0].children) {
+              selectCount[0].children[0].innerHTML = this.currentSelectList.length;
+            }
           }
         });
       },
