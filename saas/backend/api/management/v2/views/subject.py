@@ -28,7 +28,7 @@ from backend.apps.group.models import Group
 from backend.apps.subject_template.models import SubjectTemplateGroup
 from backend.biz.group import GroupBiz
 from backend.common.error_codes import error_codes
-from backend.component.iam import list_all_subject_groups
+from backend.component.iam import list_subject_groups_detail
 from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
 from backend.util.time import utc_string_to_timestamp
@@ -134,16 +134,14 @@ class ManagementMemberGroupDetailViewSet(GenericViewSet):
         """
         从后台查询加入的用户组详情
         """
-        # Note: 可能有性能问题，部分用户加入的用户组可能过多，后续可考虑后台支持 group_ids 过滤查询
-        #  这里参考了 [web api] /api/v1/roles/group_members/<subject_type>/<subject_id>/groups/
-        groups = list_all_subject_groups(subject.type, subject.id)
+        # Note: 后台支持 group_ids 过滤查询，但最多 100，数据量过多则需要分多次查询
+        groups = list_subject_groups_detail(subject.type, subject.id, group_ids)
         return {
             int(one["id"]): {
                 "expired_at": one["expired_at"],
                 "created_at": utc_string_to_timestamp(one["created_at"]),
             }
             for one in groups
-            if int(one["id"]) in group_ids
         }
 
     @swagger_auto_schema(
