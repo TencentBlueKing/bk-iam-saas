@@ -229,7 +229,6 @@ else:
     logging_directory.mkdir(exist_ok=True)
 
 # 是否总是打印日志到控制台，默认关闭
-logging_to_console = False
 LOGGING_ALWAYS_CONSOLE = env.bool("LOGGING_ALWAYS_CONSOLE", default=False)
 if LOGGING_ALWAYS_CONSOLE:
     logging_to_console = True
@@ -287,11 +286,10 @@ def build_logging_config(log_level: str, to_console: bool, file_directory: Optio
         logger_handlers_map[logger_name] = handlers
 
     # bk_audit 特殊 Handler
-    handlers_config["bk_audit"] = {"level": log_level, "class": "logging.NullHandler"}
+    handlers_config["bk_audit"] = {"class": "logging.NullHandler"}
     if file_directory:
         handlers_config["bk_audit"] = {
             "class": "concurrent_log_handler.ConcurrentRotatingFileHandler",
-            "level": log_level,
             "formatter": "bk_audit",
             "filename": str(file_directory / "audit.log"),
             "maxBytes": 1024 * 1024 * 10,
