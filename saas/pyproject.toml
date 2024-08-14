@@ -142,6 +142,7 @@ opentelemetry-semantic-conventions = "0.27b0"
 sqlparse = "0.4.4"
 urllib3 = "1.26.18"
 future = "0.18.3"
+concurrent-log-handler = "0.9.25"
 
 [tool.poetry.dev-dependencies]
 # For flake8 support pyproject.toml
