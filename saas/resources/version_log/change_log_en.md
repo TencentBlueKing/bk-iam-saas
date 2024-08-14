@@ -1,3 +1,26 @@
+<!-- 2024-08-14 -->
+# V1.10.30 Version Update Log
+
+### New Features
+
+* Added support for quick navigation to the admin menu page when the user has admin rights and the current page is under the personal workstation staff role scenario.
+* Upgraded global configuration version to support distinct wording for product name and title.
+
+### Bug Fixes
+
+* Fixed an issue where the user group -> hierarchical admin permissions occasionally auto-associated instances outside the authorized scope.
+* Fixed an issue with custom permission requests where batch editing operations displayed abnormal resource instances.
+* Fixed an issue where secondary admin -> hierarchical admin permissions occasionally auto-associated instances outside the authorized scope.
+* Fixed an issue where deleting the last template data on the last page of the personnel template prompted that the data did not exist.
+* Fixed an issue where the number of selected operations disappeared when viewing already selected data in custom permissions.
+* Fixed an issue where the frontend did not validate spaces input in recommended permissions when creating a new permission template and clicking save.
+* Fixed an issue where custom permissions in the user group resource instance table, after aggregation, occasionally resulted in `resource_group` being empty when re-aggregating after selecting a permission template.
+* Fixed an issue where instances could not be deleted when the custom permission view instance resource component had multiple resource type tabs.
+* Fixed an issue where new users with no permissions were redirected to the permission center with resource instances set to unrestricted instead of empty.
+* Modified the expiration period of the internationalization language cookie to default to one year.
+
+---
+
 <!-- 2024-06-25 -->
 ## V1.10.29 Version Update Log
 
