@@ -11,6 +11,8 @@ import hashlib
 import os
 import random
 import string
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from . import RequestIDFilter
@@ -207,160 +209,141 @@ FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = env.str("BKPAAS_STATIC_URL", default=SITE_URL + "staticfiles/")
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
-# 只对正式环境日志级别进行配置，可以在这里修改
-LOG_LEVEL = env.str("BKAPP_LOG_LEVEL", default="ERROR")
-_LOG_CLASS = "logging.handlers.RotatingFileHandler"
-if IS_LOCAL:
-    LOG_LEVEL = "DEBUG"
-    _LOG_DIR = os.path.join(os.path.dirname(BASE_DIR), "logs", APP_CODE)
-    _LOG_NAME_PREFIX = env.str("BKPAAS_LOG_NAME_PREFIX", default=APP_CODE)
-    _LOGGING_FORMAT = {
-        "format": (
-            "%(levelname)s [%(asctime)s] %(pathname)s "
-            "%(lineno)d %(funcName)s %(process)d %(thread)d "
-            "\n \t %(request_id)s\t%(message)s \n"
-        ),
-        "datefmt": "%Y-%m-%d %H:%M:%S",
-    }
-else:
-    _LOG_DIR = env.str("BKPAAS_APP_LOG_PATH", default="/")
-    _RAND_STR = "".join(random.sample(string.ascii_letters + string.digits, 4))
-    _LOG_NAME_PREFIX = "%s-%s" % (env.str("BKPAAS_PROCESS_TYPE"), _RAND_STR)
+# 日志等级，高于或等于该等级的日志才会被记录
+LOG_LEVEL = env.str("BKAPP_LOG_LEVEL", default=None) or env.str("LOG_LEVEL", default="ERROR")
+# 用于存放日志文件的目录，默认值为空，表示不使用任何文件，所有日志直接输出到控制台。
+# 可配置为有效目录，支持相对或绝对地址，比如："logs" 或 "/var/lib/app_logs/"。
+# 配置本选项后，原有的控制台日志输出将关闭。
+LOGGING_DIRECTORY = env.str("BKPAAS_APP_LOG_PATH", default=None) or env.str("LOGGING_DIRECTORY", default=None)
+# 日志文件格式，可选值为：json/text
+LOGGING_FILE_FORMAT = env.str("LOGGING_FILE_FORMAT", default="json")
 
-    _LOGGING_FORMAT = {
-        "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-        "fmt": (
-            "%(levelname)s %(asctime)s %(pathname)s %(lineno)d "
-            "%(funcName)s %(process)d %(thread)d %(request_id)s %(message)s"
-        ),
-    }
-if not os.path.exists(_LOG_DIR):
-    os.makedirs(_LOG_DIR)
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "filters": {
-        "request_id_filter": {
-            "()": RequestIDFilter,
+if LOGGING_DIRECTORY is None:
+    logging_to_console = True
+    logging_directory = None
+else:
+    logging_to_console = False
+    # The dir allows both absolute and relative path, when it's relative, combine
+    # the value with project's base directory
+    logging_directory = Path(BASE_DIR) / Path(LOGGING_DIRECTORY)
+    logging_directory.mkdir(exist_ok=True)
+
+# 是否总是打印日志到控制台，默认关闭
+logging_to_console = False
+LOGGING_ALWAYS_CONSOLE = env.bool("LOGGING_ALWAYS_CONSOLE", default=False)
+if LOGGING_ALWAYS_CONSOLE:
+    logging_to_console = True
+
+
+def build_logging_config(log_level: str, to_console: bool, file_directory: Optional[Path], file_format: str) -> Dict:
+    """Build the global logging config dict.
+
+    :param log_level: The log level.
+    :param to_console: If True, output the logs to the console.
+    :param file_directory: If the value is not None, output the logs to the given directory.
+    :param file_format: The format of the logging file, "json" or "text".
+    :return: The logging config dict.
+    """
+
+    def _build_file_handler(log_path: Path, filename: str, format: str) -> Dict:
+        if format not in ("json", "text"):
+            raise ValueError(f"Invalid file_format: {file_format}")
+        formatter = "verbose_json" if format == "json" else "verbose"
+        return {
+            "class": "concurrent_log_handler.ConcurrentRotatingFileHandler",
+            "level": log_level,
+            "formatter": formatter,
+            "filters": ["request_id_filter"],
+            "filename": str(log_path / filename),
+            # Set max file size to 100MB
+            "maxBytes": 100 * 1024 * 1024,
+            "backupCount": 5,
         }
-    },
-    "formatters": {
-        "verbose": _LOGGING_FORMAT,
-        "simple": {"format": "%(levelname)s %(message)s"},
-        "bk_audit": {"format": "%(message)s"},
-    },
-    "handlers": {
-        "null": {
-            "level": "DEBUG",
-            "class": "logging.NullHandler",
-        },
-        "console": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "simple"},
-        "root": {
-            "class": _LOG_CLASS,
+
+    handlers_config: Dict[str, Any] = {
+        "null": {"level": log_level, "class": "logging.NullHandler"},
+        "console": {
+            "level": log_level,
+            "class": "logging.StreamHandler",
             "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "%s-django.log" % _LOG_NAME_PREFIX),
-            "maxBytes": 1024 * 1024 * 10,
-            "backupCount": 5,
             "filters": ["request_id_filter"],
         },
-        "component": {
-            "class": _LOG_CLASS,
-            "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "%s-component.log" % _LOG_NAME_PREFIX),
-            "maxBytes": 1024 * 1024 * 10,
-            "backupCount": 5,
-            "filters": ["request_id_filter"],
-        },
-        "mysql": {
-            "class": _LOG_CLASS,
-            "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "%s-mysql.log" % _LOG_NAME_PREFIX),
-            "maxBytes": 1024 * 1024 * 10,
-            "backupCount": 5,
-            "filters": ["request_id_filter"],
-        },
-        "celery": {
-            "class": _LOG_CLASS,
-            "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "%s-celery.log" % _LOG_NAME_PREFIX),
-            "maxBytes": 1024 * 1024 * 10,
-            "backupCount": 5,
-            "filters": ["request_id_filter"],
-        },
-        "organization": {
-            "class": _LOG_CLASS,
-            "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "%s-json.log" % _LOG_NAME_PREFIX),
-            "maxBytes": 1024 * 1024 * 10,
-            "backupCount": 5,
-            "filters": ["request_id_filter"],
-        },
-        "bk_audit": {
-            "class": _LOG_CLASS,
+    }
+    # 生成指定 Logger 对应的 Handlers
+    logger_handlers_map: Dict[str, List[str]] = {}
+    for logger_name in ["root", "component", "celery", "organization"]:
+        handlers = []
+
+        if to_console:
+            handlers.append("console")
+
+        if file_directory:
+            # 生成 logger 对应日志文件的 Handler
+            handlers_config[logger_name] = _build_file_handler(
+                file_directory, f"{logger_name}-{file_format}.log", file_format
+            )
+            handlers.append(logger_name)
+
+        logger_handlers_map[logger_name] = handlers
+
+    # bk_audit 特殊 Handler
+    handlers_config["bk_audit"] = {"level": log_level, "class": "logging.NullHandler"}
+    if file_directory:
+        handlers_config["bk_audit"] = {
+            "class": "concurrent_log_handler.ConcurrentRotatingFileHandler",
+            "level": log_level,
             "formatter": "bk_audit",
-            "filename": os.path.join(_LOG_DIR, "%s-audit.log" % _LOG_NAME_PREFIX),
+            "filename": str(file_directory / "audit.log"),
             "maxBytes": 1024 * 1024 * 10,
             "backupCount": 5,
+        }
+
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "filters": {
+            "request_id_filter": {"()": RequestIDFilter},
         },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["null"],
-            "level": "INFO",
-            "propagate": True,
+        "formatters": {
+            "verbose": {
+                "format": (
+                    "%(name)s %(levelname)s [%(asctime)s] %(pathname)s %(lineno)d %(funcName)s %(process)d %(thread)d "
+                    "\n \t%(request_id)s\t%(message)s \n"
+                ),
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
+            "verbose_json": {
+                "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+                "fmt": (
+                    "%(name)s %(levelname)s %(asctime)s %(pathname)s %(lineno)d "
+                    "%(funcName)s %(process)d %(thread)d %(request_id)s %(message)s"
+                ),
+            },
+            "simple": {"format": "%(name)s %(levelname)s %(message)s"},
+            "bk_audit": {"format": "%(message)s"},
         },
-        "django.server": {
-            "handlers": ["console"],
-            "level": LOG_LEVEL,
-            "propagate": True,
+        "handlers": handlers_config,
+        # the root logger, 用于整个项目的默认 logger
+        "root": {"handlers": logger_handlers_map["root"], "level": log_level, "propagate": False},
+        "loggers": {
+            "django": {"handlers": ["null"], "level": "INFO", "propagate": True},
+            "django.server": {"handlers": ["console"], "level": log_level, "propagate": False},
+            "django.request": {"handlers": logger_handlers_map["root"], "level": log_level, "propagate": False},
+            # 除 root 外的其他指定 Logger
+            **{
+                logger_name: {"handlers": handlers, "level": log_level, "propagate": False}
+                for logger_name, handlers in logger_handlers_map.items()
+                if logger_name != "root"
+            },
+            # 普通app日志
+            "app": {"handlers": logger_handlers_map["root"], "level": LOG_LEVEL, "propagate": True},
+            # 审计日志文件
+            "bk_audit": {"handlers": ["bk_audit"], "level": "INFO", "propagate": True},
         },
-        "django.request": {
-            "handlers": ["root"],
-            "level": "ERROR",
-            "propagate": True,
-        },
-        "django.db.backends": {
-            "handlers": ["mysql"],
-            "level": LOG_LEVEL,
-            "propagate": True,
-        },
-        # the root logger ,用于整个project的logger
-        "root": {
-            "handlers": ["root"],
-            "level": LOG_LEVEL,
-            "propagate": True,
-        },
-        # 组件调用日志
-        "component": {
-            "handlers": ["component"],
-            "level": LOG_LEVEL,
-            "propagate": True,
-        },
-        "celery": {
-            "handlers": ["celery"],
-            "level": LOG_LEVEL,
-            "propagate": True,
-        },
-        # 普通app日志
-        "app": {
-            "handlers": ["root"],
-            "level": LOG_LEVEL,
-            "propagate": True,
-        },
-        # 组织架构同步日志
-        "organization": {
-            "handlers": ["root" if IS_LOCAL else "organization"],
-            "level": LOG_LEVEL,
-            "propagate": True,
-        },
-        # 审计日志文件
-        "bk_audit": {
-            "handlers": ["bk_audit"],
-            "level": "INFO",
-            "propagate": True,
-        },
-    },
-}
+    }
+
+
+LOGGING = build_logging_config(LOG_LEVEL, logging_to_console, logging_directory, LOGGING_FILE_FORMAT)
 
 APP_API_URL = APP_URL  # 前后端分离架构下, APP_URL 与 APP_API_URL 不一样
 
