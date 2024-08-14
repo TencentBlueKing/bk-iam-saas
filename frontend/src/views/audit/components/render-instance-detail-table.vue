@@ -6,7 +6,10 @@
       :outer-border="false"
       :header-border="false"
       :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }"
-      :cell-class-name="getCellClass">
+      :cell-class-name="getCellClass"
+      @cell-mouse-enter="handleCellMouseEnter"
+      @cell-mouse-leave="handleCellMouseLeave"
+    >
       <bk-table-column :label="$t(`m.common['操作']`)" :width="300">
         <template slot-scope="{ row }">
           <Icon
@@ -18,17 +21,20 @@
         </template>
       </bk-table-column>
       <bk-table-column
-        :label="$t(`m.common['所属系统']`)"
-        :filters="systemFilter"
-        :filter-method="systemFilterMethod"
-        :filter-multiple="false"
         prop="system_id"
-        :width="300">
+        column-key="filterTag"
+        :width="300"
+        :label="$t(`m.common['所属系统']`)"
+        :filter-multiple="false"
+        :filters="systemFilter"
+        :filter-method="handleSystemFilterMethod"
+        @filter-change="handleFilterChange"
+      >
         <template slot-scope="{ row }">
           <span :title="row.system_name">{{ row.system_name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)">
+      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" prop="resource_instance">
         <template slot-scope="{ row }">
           <template v-if="!row.isEmpty">
             <div v-for="_ in row.resource_groups" :key="_.id">
@@ -40,6 +46,7 @@
                   :data="item.condition"
                   :value="`${item.name}：${item.value}`"
                   :max-width="380"
+                  :is-show-popover="row.showPopover"
                   @on-view="handleViewResource(row)" />
               </p>
             </div>
@@ -55,11 +62,21 @@
             @click.stop="handleViewResource(row)" />
         </template>
       </bk-table-column>
+      <template slot="empty">
+        <ExceptionEmpty
+          :type="emptyData.type"
+          :empty-text="emptyData.text"
+          :tip-text="emptyData.tip"
+          :tip-type="emptyData.tipType"
+          @on-clear="handleEmptyClear"
+          @on-refresh="handleEmptyRefresh"
+        />
+      </template>
     </bk-table>
 
     <bk-sideslider
-      :is-show.sync="isShowSideslider"
-      :title="sidesliderTitle"
+      :is-show.sync="isShowSideSlider"
+      :title="sideSliderTitle"
       :width="960"
       :quick-close="true"
       @animation-end="handleAnimationEnd">
@@ -89,15 +106,23 @@
     data () {
       return {
         tableList: [],
-        policyCountMap: {},
+        tableListBack: [],
         initRequestQueue: [],
         curDeleteIds: [],
         previewData: [],
         curId: '',
         renderDetailCom: 'RenderDetail',
-        isShowSideslider: false,
-        sidesliderTitle: '',
-        systemFilter: []
+        isShowSideSlider: false,
+        sideSliderTitle: '',
+        curFilterSystem: '',
+        systemFilter: [],
+        policyCountMap: {},
+        emptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     computed: {
@@ -128,6 +153,7 @@
                 });
               }
             });
+            this.tableListBack = _.cloneDeep(this.tableList);
           }
         },
         immediate: true
@@ -135,21 +161,33 @@
     },
     methods: {
       handleAnimationEnd () {
-        this.sidesliderTitle = '';
+        this.sideSliderTitle = '';
         this.previewData = [];
         this.curId = '';
       },
 
-      systemFilterMethod (value, row, column) {
-        const property = column.property;
-        return row[property] === value;
+      handleCellMouseEnter (row, column, cell, event) {
+        if (['resource_instance'].includes(column.property)) {
+          this.$set(row, 'showPopover', true);
+        }
+      },
+      
+      handleCellMouseLeave (row, column, cell, event) {
+        if (['resource_instance'].includes(column.property)) {
+          this.$set(row, 'showPopover', false);
+        }
       },
 
-      getCellClass ({ row, column, rowIndex, columnIndex }) {
-        if (columnIndex === 2) {
-          return 'iam-perm-table-cell-cls';
-        }
-        return '';
+      handleSystemFilterMethod (value, row, column) {
+        const property = column.property;
+        this.curFilterSystem = value;
+        return row[property] === this.curFilterSystem;
+      },
+
+      handleFilterChange (payload) {
+        const { filterTag } = payload;
+        this.curFilterSystem = filterTag.length > 0 ? filterTag[0] : '';
+        this.emptyData.tipType = 'search';
       },
 
       handleViewResource (payload) {
@@ -171,8 +209,25 @@
           });
         }
         this.previewData = _.cloneDeep(params);
-        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
-        this.isShowSideslider = true;
+        this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+        this.isShowSideSlider = true;
+      },
+
+      handleEmptyClear () {
+        this.emptyData.tipType = '';
+        this.curFilterSystem = '';
+        this.tableList = _.cloneDeep(this.tableListBack);
+      },
+
+      handleEmptyRefresh () {
+        this.$emit('on-refresh');
+      },
+
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        if (columnIndex === 2) {
+          return 'iam-perm-table-cell-cls';
+        }
+        return '';
       }
     }
   };

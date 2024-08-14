@@ -394,7 +394,9 @@ export const m = {
         '请选择用户组成员复制': 'Please select user group member copy',
         '模板名称不能为空': 'Template name cannot be empty',
         '模板成员不能为空': 'Template member cannot be empty',
-        '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered'
+        '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered',
+        '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons',
+        'ID必须是一个正整数': 'ID must be a positive integer'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -633,7 +635,7 @@ export const m = {
         '普通成员': 'Ordinary Member',
         '退出登录': 'Sign out',
         '我的管理空间': 'My Management Space',
-        '资源权限管理': 'Resource Perm Management',
+        '资源权限管理': 'Resource Permission Management',
         '发起需求': 'Initiate Request',
         '工作台': 'Workspace',
         '开发者': 'Developers',
@@ -655,7 +657,7 @@ export const m = {
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
-        '人员模板': 'Members Template',
+        '人员模板': 'Member Templates',
         '用户/组织': 'User/Organization',
         '续期通知': 'Renewal Notice'
     },
@@ -796,7 +798,7 @@ export const m = {
         '通过组织加入': 'Through Organization',
         '组权限': 'Permissions',
         '所属组织用户组权限': 'Group Permissions of the Organization',
-        '所属人员模板用户组权限': 'Member Template User Group Permissions',
+        '所属人员模板用户组权限': 'Group Permissions of Member Templates',
         '临时权限申请': 'Apply for temporary permissions',
         '一组实例权限': ' A Set of Instance Permissions',
         '不能删除当前操作': 'Unable to delete current permission',
@@ -808,7 +810,8 @@ export const m = {
         '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)',
         '直接加入人员模板的用户组权限': 'Directly add user group permissions to personnel templates',
         '通过组织加入人员模板的用户组权限': 'User group permissions for joining member templates through organization',
-        '通过人员模板加入': 'Through Member Template'
+        '通过人员模板加入': 'Through Member Template',
+        '输入ID、用户组名、描述等按回车键进行搜索': 'Enter ID, user group name and description, etc. Press Enter to search'
     },
     permTemplate: {
         '模板名': 'Template name',

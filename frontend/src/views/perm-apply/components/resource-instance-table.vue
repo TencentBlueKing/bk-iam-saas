@@ -508,21 +508,24 @@
               return false;
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.isDefaultLimit;
+          return curData && curData.isDefaultLimit;
       },
       curAggregateFlag () {
           if (this.aggregateIndex === -1) {
               return 'add';
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.flag;
+          return curData && curData.flag;
       },
       curAggregateSelectionMode () {
           if (this.aggregateIndex === -1) {
               return 'all';
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.selectionMode;
+          if (curData) {
+            return curData.selectionMode;
+          }
+          return 'all';
       },
       isShowPreview () {
           if (this.curIndex === -1) {
@@ -1149,6 +1152,7 @@
           resItem.isLimitExceeded = false;
           resItem.isError = true;
         } else {
+          resItem.condition = data;
           const { isMainAction, related_actions } = this.tableList[this.curIndex];
           // 如果为主操作
           if (isMainAction) {

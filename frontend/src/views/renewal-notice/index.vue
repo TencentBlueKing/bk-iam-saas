@@ -4,7 +4,7 @@
       :class="[
         'renewal-notice-content',
         { 'renewal-notice-content-lang': !curLanguageIsCn },
-        { 'show-notice-alert': showNoticeAlert }
+        { 'show-notice-alert': showNoticeAlert && showNoticeAlert() }
       ]"
     >
       <template v-if="!isLoading && noticeForm.enable">
