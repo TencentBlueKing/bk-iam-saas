@@ -1161,18 +1161,18 @@
       },
 
       handleDeleteActionOrInstance (payload, type) {
-        let delRelatedActions = [];
+        // const delRelatedActions = [];
         this.delActionList = [];
         const { id, name, policy_id: policyId, condition } = payload;
         const policyIdList = this.allData.map(v => v.policy.id);
         const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
-        const curAction = linearActionList.find(item => item.id === id);
-        const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
+        // const curAction = linearActionList.find(item => item.id === id);
+        // const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
         linearActionList.forEach(item => {
           // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
-          if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {
-            delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
-          }
+          // if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {
+          //   delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
+          // }
           if (item.related_actions && item.related_actions.includes(id)) {
             this.delActionList.push(item);
           }
@@ -1188,12 +1188,12 @@
           actions: () => {
             this.isShowDeleteDialog = true;
             this.currentActionName = name;
-            if (!delRelatedActions.length && hasRelatedActions) {
-              const list = [...this.allData].filter(v => curAction.related_actions.includes(v.policy.id));
-              if (list.length) {
-                policyIds = policyIds.concat(list.map(v => v.policy.policy_id));
-              }
-            }
+            // if (!delRelatedActions.length && hasRelatedActions) {
+            //   const list = [...this.allData].filter(v => curAction.related_actions.includes(v.policy.id));
+            //   if (list.length) {
+            //     policyIds = policyIds.concat(list.map(v => v.policy.policy_id));
+            //   }
+            // }
             this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
             this.policyIdList = cloneDeep(this.curDeleteIds);
             this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, { value: this.$t(`m.dialog['删除操作权限']`) });

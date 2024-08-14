@@ -815,8 +815,9 @@
         this.handleGetSelectedPerm();
       },
 
-      handleGetSelectedPerm () {
-        const selectList = uniqWith([...this.currentSelectList, ...this.curSelectedGroup], isEqual);
+      handleGetSelectedPerm (payload) {
+        // payload用于重新传递组合后的权限数据以防止多类型勾选数量不一致
+        const selectList = payload || uniqWith([...this.currentSelectList, ...this.curSelectedGroup], isEqual);
         const policyData = selectList.map((v) => `${v.name}&${v.id}`);
         this.$nextTick(() => {
           const permRef = this.$refs[`customPermRef_${this.mode}_${this.systemId}`];
@@ -937,17 +938,16 @@
             this.currentSelectList = this.currentSelectList.filter(
               (item) => !this.curDeleteIds.includes(item.policy_id)
             );
-            await this.fetchActions(this.systemId);
             await this.fetchPolicy({ systemId: this.systemId });
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.$emit('on-select-perm', this.currentSelectList);
-            this.$emit('on-delete-action', policyList.length);
+            this.$emit('on-delete-action', { policyList, selectList: this.currentSelectList });
             // 处理删除续期数据同步更新其他选项的数量
             if (['renewalCustomPerm'].includes(this.mode)) {
               const list = deletePolicyList.map((v) => {
                 return {
-                    ...v,
-                    mode_type: 'renewalCustomPerm'
+                  ...v,
+                  mode_type: 'renewalCustomPerm'
                 };
               });
               bus.$emit('on-update-renewal-perm', {
@@ -959,7 +959,7 @@
           this.messageAdvancedError(e);
         } finally {
           this.deleteDialog.loading = false;
-          this.handleGetSelectedPerm();
+          this.handleGetSelectedPerm(this.currentSelectList);
         }
       },
       
@@ -970,32 +970,32 @@
       // 区分删除操作还是实例
       handleDeleteActionOrInstance (payload, type) {
         const { id, name, condition } = payload;
-        let delRelatedActions = [];
+        // const delRelatedActions = [];
         this.delActionList = [];
         const policyIdList = this.policyListBack.map((v) => v.id);
         const linearActionList = this.linearActionList.filter((item) =>
           policyIdList.includes(item.id)
         );
-        const curAction = linearActionList.find((item) => item.id === id);
-        const hasRelatedActions
-          = curAction && curAction.related_actions && curAction.related_actions.length > 0;
+        // const curAction = linearActionList.find((item) => item.id === id);
+        // const hasRelatedActions
+        //   = curAction && curAction.related_actions && curAction.related_actions.length > 0;
         linearActionList.forEach((item) => {
           // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
-          if (
-            hasRelatedActions
-            && item.related_actions
-            && item.related_actions.length > 0
-            && item.id !== id
-          ) {
-            delRelatedActions = item.related_actions.filter((v) => curAction.related_actions.includes(v));
-          }
+          // if (
+          //   hasRelatedActions
+          //   && item.related_actions
+          //   && item.related_actions.length > 0
+          //   && item.id !== id
+          // ) {
+          //   delRelatedActions = item.related_actions.filter((v) => curAction.related_actions.includes(v));
+          // }
           if (item.related_actions && item.related_actions.includes(id)) {
             this.delActionList.push(item);
           }
         });
         let policyIds = [payload.policy_id];
         if (this.delActionList.length) {
-          const list = this.policyList.filter((item) =>
+          const list = this.policyListBack.filter((item) =>
             this.delActionList.map((action) => action.id).includes(item.id)
           );
           policyIds = [payload.policy_id].concat(list.map((v) => v.policy_id));
@@ -1004,15 +1004,17 @@
         const typeMap = {
           action: () => {
             this.currentActionName = name;
-            if (!delRelatedActions.length && hasRelatedActions) {
-              const list = [...this.policyList].filter((v) =>
-                curAction.related_actions.includes(v.id)
-              );
-              if (list.length) {
-                policyIds = policyIds.concat(list.map((v) => v.policy_id));
-              }
-            }
-            this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
+            // 当前如果依赖关联的操作只剩下一条，删除当前操作的时候同步删除被依赖的操作
+            // if (!delRelatedActions.length && hasRelatedActions) {
+            //   const list = [...this.policyListBack].filter((v) =>
+            //     curAction.related_actions.includes(v.id)
+            //   );
+            //   if (list.length) {
+            //     this.delActionList = [...list];
+            //     policyIds = policyIds.concat(list.map((v) => v.policy_id));
+            //   }
+            // }
+            this.curDeleteIds = [...policyIds];
             this.policyIdList = cloneDeep(this.curDeleteIds);
             this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, {
               value: this.$t(`m.dialog['删除操作权限']`)

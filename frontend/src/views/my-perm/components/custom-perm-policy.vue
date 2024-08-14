@@ -208,7 +208,7 @@
         handler (newValue, oldValue) {
           // 处理清空任意一个搜索条件回显已选自定义权限数据，切换group类型清空已选权限
           this.curSelectedCustom = [...this.curSelectedCustomPerm, ...this.curSelectedCustom];
-          if (oldValue && JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+          if (oldValue && newValue.value !== oldValue.value) {
             this.curSelectedCustom = [];
           }
           this.handleSelectPerm(this.curSelectedCustom);
@@ -262,8 +262,12 @@
               count: 0,
               systemId: this.systemPolicyList[sysIndex].id
             });
-            this.handleAllSystemChange(false);
+            this.handleAllSystemChange(this.isAllSystem);
             this.systemPolicyList.splice(sysIndex, 1);
+            // 删了所有系统后，需要删除所有与之关联的权限操作
+            if (!this.systemPolicyList.length) {
+              this.$emit('on-delete-all-system');
+            }
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -285,7 +289,6 @@
                   id: item.id,
                   name: item.name || ''
                 });
-                customPermRef.toggleRowSelection(sub, payload);
                 if (payload) {
                   permRef[0].currentSelectList.push(sub);
                   list.push(sub);
@@ -294,6 +297,7 @@
                   list = [];
                 }
               });
+              permRef[0].handleGetSelectedPerm(list);
             }
           });
           this.curSelectedCustom = [...list];
@@ -303,7 +307,7 @@
 
       handleChangePolicyPerm (payload, row) {
         row.pagination = Object.assign(row.pagination, payload);
-        this.isAllDisabled = row.pagination.count === 0;
+        this.isAllDisabled = this.systemPolicyList.every((v) => v.count === 0) && row.pagination.count === 0;
       },
 
       handlePageChange (payload, row) {
@@ -315,7 +319,9 @@
       },
 
       handleExpanded (value, payload) {
-        console.log(value, payload);
+        if (value) {
+          this.handleGetSystemData(this.systemPolicyList);
+        }
       },
 
       handleShowDelConfirm (payload) {
@@ -333,8 +339,9 @@
         // 判断是否系统全选
         const isCustom = ['customPerm', 'renewalCustomPerm'].includes(this.mode);
         if (isCustom) {
+          const systemList = this.systemPolicyList.length > 0 ? this.systemPolicyList : this.list;
           const customList = this.curSelectedCustom.filter((v) => ['customPerm', 'renewalCustomPerm'].includes(v.mode_type));
-          const countList = this.list.map((v) => v.count);
+          const countList = systemList.map((v) => v.count);
           const customTotal = countList.reduce((prev, cur) => {
             return cur + prev;
           }, 0);
@@ -342,17 +349,18 @@
         }
       },
 
-      handleDeleteAction (policyListLen, sysIndex) {
-        this.isAllSystem = false;
-        this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
+      handleDeleteAction (payload, sysIndex) {
+        const { policyList, selectList } = payload;
+        this.$set(this.systemPolicyList[sysIndex], 'count', policyList.length);
         bus.$emit('on-update-perm-group', {
           active: this.mode,
-          count: policyListLen,
+          count: policyList.length,
           systemId: this.systemPolicyList[sysIndex].id
         });
         if (this.systemPolicyList[sysIndex].count < 1) {
           this.systemPolicyList.splice(sysIndex, 1);
         }
+        this.handleSelectPerm(selectList);
       },
 
       // 格式化系统列表数据
