@@ -332,6 +332,8 @@
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
+        } finally {
+          this.handleGetPageHeight();
         }
       },
 

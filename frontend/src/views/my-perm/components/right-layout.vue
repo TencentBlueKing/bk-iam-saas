@@ -31,7 +31,7 @@
                 :right-icon="'bk-icon icon-search'"
                 @right-icon-click="handleSearch"
                 @enter="handleSearch"
-                @clear="handleClearName"
+                @clear="handleClearInput('name')"
               />
             </iam-form-item>
             <iam-form-item
@@ -60,7 +60,7 @@
                 :right-icon="'bk-icon icon-search'"
                 @right-icon-click="handleSearch"
                 @enter="handleSearch"
-                @clear="handleClearDescription"
+                @clear="handleClearInput('description')"
               />
             </iam-form-item>
             <iam-form-item
@@ -483,13 +483,8 @@
         this.currentSelectList = [...payload];
       },
 
-      handleClearName () {
-        this.formData.name = '';
-        this.handleSearch();
-      },
-
-      handleClearDescription () {
-        this.formData.description = '';
+      handleClearInput (payload) {
+        this.formData[payload] = '';
         this.handleSearch();
       },
 

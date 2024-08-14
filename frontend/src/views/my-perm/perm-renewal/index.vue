@@ -31,30 +31,6 @@
     <render-horizontal-block
       :label="$t(`m.userOrOrg['续期预览']`)"
       :required="true">
-      <!-- <bk-tab
-        ref="tabRef"
-        ext-cls="iam-renewal-tab-cls"
-        :key="tabKey"
-        :active.sync="active"
-        :label-height="44"
-        @tab-change="handleTabChange">
-        <bk-tab-panel
-          v-for="(panel, index) in panels"
-          v-bind="panel"
-          :key="index">
-          <template slot="label">
-            <span
-              :class="[
-                'panel-content',
-                { 'is-active': active === panel.name }
-              ]"
-            >
-              <span class="panel-name">{{ panel.label }}</span>
-              <span class="panel-count">{{panel.total}}</span>
-            </span>
-          </template>
-        </bk-tab-panel>
-      </bk-tab> -->
       <div class="renewal-preview">
         <div
           v-for="item in panels"

@@ -48,6 +48,7 @@
             :group-data="groupData"
             :renewal-custom-perm="renewalCustomPerm"
             :cur-selected-group="curSelectedGroup"
+            :cur-selected-custom-perm="curSelectedCustomPerm"
             :delete-confirm-data="deleteConfirmData"
             @on-page-change="handlePageChange(...arguments, item)"
             @on-limit-change="handleLimitChange(...arguments, item)"

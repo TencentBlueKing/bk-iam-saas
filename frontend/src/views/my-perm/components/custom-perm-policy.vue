@@ -126,6 +126,10 @@
         type: Array,
         default: () => []
       },
+      curSelectedCustomPerm: {
+        type: Array,
+        default: () => []
+      },
       groupData: {
         type: Object
       },
@@ -202,9 +206,12 @@
     watch: {
       groupData: {
         handler (newValue, oldValue) {
+          // 处理清空任意一个搜索条件回显已选自定义权限数据，切换group类型清空已选权限
+          this.curSelectedCustom = [...this.curSelectedCustomPerm, ...this.curSelectedCustom];
           if (oldValue && JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
             this.curSelectedCustom = [];
           }
+          this.handleSelectPerm(this.curSelectedCustom);
         },
         immediate: true
       },
@@ -327,11 +334,11 @@
         const isCustom = ['customPerm', 'renewalCustomPerm'].includes(this.mode);
         if (isCustom) {
           const customList = this.curSelectedCustom.filter((v) => ['customPerm', 'renewalCustomPerm'].includes(v.mode_type));
-          const countList = this.systemPolicyList.map((v) => v.count);
+          const countList = this.list.map((v) => v.count);
           const customTotal = countList.reduce((prev, cur) => {
             return cur + prev;
           }, 0);
-          this.isAllSystem = customTotal === customList.length;
+          this.isAllSystem = customTotal > 0 && customTotal === customList.length;
         }
       },
 
