@@ -182,7 +182,7 @@
                     </p>
                     <p class="manual-error-text pr10" v-if="manualInputError">
                       {{ $t(`m.common['手动输入提示2']`) }}
-                      <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                      <template v-if="isShowScopeEntry">
                         {{ $t(`m.common['，']`) }}
                         {{ $t(`m.common['请尝试']`)
                         }}<span class="highlight" @click="handleSkip">
@@ -576,6 +576,9 @@
       },
       isOrganization () {
         return this.tabActive === 'organization';
+      },
+      isShowScopeEntry () {
+        return this.isHierarchicalAdmin.type === 'rating_manager' && !this.externalSystemsLayout.addMemberBoundary.hideScopeRangeEntry;
       },
       isManualInputOverLimit () {
         if (!this.manualValue) {
