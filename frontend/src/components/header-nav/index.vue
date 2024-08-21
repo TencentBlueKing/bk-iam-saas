@@ -664,10 +664,7 @@
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');
         window.localStorage.removeItem('applyGroupList');
-        const loginUrl = new URL(`${window.LOGIN_SERVICE_URL}/`);
-        loginUrl.searchParams.append('c_url', window.location.href);
-        loginUrl.searchParams.append('is_from_logout', 1);
-        window.location = loginUrl.href;
+        window.location = `${window.LOGIN_SERVICE_URL}/?c_url=${encodeURIComponent(window.location.href)}&is_from_logout=1`;
       },
 
       handleManager () {
