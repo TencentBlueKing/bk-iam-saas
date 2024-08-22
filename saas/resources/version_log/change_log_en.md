@@ -1,3 +1,17 @@
+<!-- 2024-08-22 -->
+# V1.10.31 Version Update Log
+
+### New Features
+
+* Super Admin API: Added template list and the ability to add members to user groups.
+
+### Bug Fixes
+
+* Embedded pages in BlueKing now hide the link to the authorization boundary entry.
+* Fixed multiple escapes of the redirect URL upon logout.
+
+---
+
 <!-- 2024-08-14 -->
 # V1.10.30 Version Update Log
 
