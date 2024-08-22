@@ -12,10 +12,10 @@ from rest_framework import serializers
 
 from backend.api.management.v2.serializers import ManagementGradeManagerGroupCreateSLZ
 from backend.apps.group.models import Group
-from backend.apps.group.serializers import GroupAuthorizationSLZ
+from backend.apps.group.serializers import GroupAddMemberSLZ, GroupAuthorizationSLZ
 from backend.apps.role.models import Role
 from backend.apps.role.serializers import BaseGradeMangerSLZ
-from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ
+from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
 from backend.service.constants import GroupMemberType, RoleType
 
 
@@ -34,6 +34,10 @@ class AdminGroupMemberSLZ(serializers.Serializer):
     id = serializers.CharField(label="成员id")
     name = serializers.CharField(label="名称")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
+
+
+class AdminGroupAddMemberSLZ(GroupAddMemberSLZ):
+    pass
 
 
 class AdminSubjectGroupSLZ(serializers.Serializer):
@@ -89,6 +93,14 @@ class SubjectSLZ(serializers.Serializer):
 class FreezeSubjectResponseSLZ(serializers.Serializer):
     type = serializers.CharField(label="SubjectType")
     id = serializers.CharField(label="SubjectID")
+
+
+class AdminTemplateListSchemaSLZ(TemplateListSchemaSLZ):
+    pass
+
+
+class AdminTemplateListSLZ(TemplateListSLZ):
+    pass
 
 
 class AdminTemplateCreateSLZ(TemplateCreateSLZ):
