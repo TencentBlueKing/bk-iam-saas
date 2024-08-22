@@ -495,6 +495,11 @@
       .main-scroller {
         height: calc(100% + 91px);
       }
+      .my-perm-container {
+        .main-scroller {
+          height: calc(100% + 51px);
+        }
+      }
       .user-org-perm-container {
         .main-scroller {
           height: calc(100% + 312px);

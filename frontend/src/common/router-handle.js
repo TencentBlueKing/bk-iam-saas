@@ -298,7 +298,6 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'addGroupPerm',
       'resourcePermiss',
       'ratingManager',
-      'gradingAdminCreate',
       'gradingAdminDetail',
       'gradingAdminEdit',
       'gradingAdminUpdateTemplate',

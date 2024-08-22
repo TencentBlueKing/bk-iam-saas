@@ -196,7 +196,7 @@
                   <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
                   <p class="manual-error-text pr10" v-if="manualInputError">
                     {{ $t(`m.common['手动输入提示2']`) }}
-                    <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                    <template v-if="isShowScopeEntry">
                       {{ $t(`m.common['，']`) }}{{ $t(`m.common['请尝试']`)
                       }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
                     </template>
@@ -610,7 +610,7 @@
       };
     },
     computed: {
-      ...mapGetters(['user', 'externalSystemId']),
+      ...mapGetters(['user', 'externalSystemId', 'externalSystemsLayout']),
       isLoading () {
         return this.requestQueue.length > 0;
       },
@@ -713,6 +713,9 @@
         // const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
         // const roleId = navCurRoleId || curRoleId;
         return this.user.role || {};
+      },
+      isShowScopeEntry () {
+        return this.isHierarchicalAdmin.type === 'rating_manager' && !this.externalSystemsLayout.addMemberBoundary.hideScopeRangeEntry;
       },
       nameType () {
         return (payload) => {

@@ -471,7 +471,8 @@ const store = new Vuex.Store({
       // 设置项目最大可授权范围
       addMemberBoundary: {
         customFooterClass: false, // 设置项目最大可授权范围, 底部插槽自定义样式
-        hideInfiniteTreeCount: false // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+        hideInfiniteTreeCount: false, // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+        hideScopeRangeEntry: false // 隐藏跳转到授权边界页面入口
       }
     },
     curTreeTableDataIndex: 0,
@@ -950,7 +951,8 @@ const store = new Vuex.Store({
         // 设置项目最大可授权范围
         addMemberBoundary: {
           customFooterClass: true, // 设置项目最大可授权范围, 底部插槽自定义样式
-          hideInfiniteTreeCount: true// 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+          hideInfiniteTreeCount: true, // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+          hideScopeRangeEntry: true // 隐藏跳转到授权边界页面入口
         }
       };
       commit('setExternalSystemsLayout', externalSystemsLayout);
