@@ -1,4 +1,13 @@
 <!-- 2024-08-22 -->
+# V1.10.32 Version Update Log
+
+### Bug Fixes
+
+* Fixed apigw resource definition yaml error
+
+---
+
+<!-- 2024-08-22 -->
 # V1.10.31 Version Update Log
 
 ### New Features
