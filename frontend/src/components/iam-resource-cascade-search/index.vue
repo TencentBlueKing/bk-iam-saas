@@ -335,11 +335,11 @@
             name: this.$t(`m.userGroup['用户组名']`),
             default: true
           },
-          {
-            id: 'id',
-            name: 'ID',
-            default: true
-          },
+          // {
+          //   id: 'id',
+          //   name: 'ID',
+          //   default: true
+          // },
           {
             id: 'description',
             name: this.$t(`m.common['描述']`),
