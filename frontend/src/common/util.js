@@ -827,5 +827,5 @@ export function getCopyValue (value) {
  */
 export const getRoutePath = (subPath) => {
   const path = subPath.startsWith('/') ? subPath.slice(1) : subPath;
-  return rootPath ? `${rootPath}${path}` : path;
+  return rootPath ? `${rootPath}${path}` : subPath;
 };
