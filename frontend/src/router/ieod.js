@@ -206,9 +206,10 @@ const NotFound = () => import(/* webpackChunkName: 'none' */ '../views/404');
 
 // Main
 const MainEntry = () => import(/* webpackChunkName: 'index' */ '../views');
+
 // 兼容容器化部署外部环境非根路径的path
 const SITE_URL = getRoutePath(window.SITE_URL);
-console.log(SITE_URL);
+
 export const routes = [
   {
     // path: window.SITE_URL,

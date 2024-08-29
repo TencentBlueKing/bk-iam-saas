@@ -210,6 +210,7 @@ const NotFound = () => import(/* webpackChunkName: 'none' */ '../views/404');
 const MainEntry = () => import(/* webpackChunkName: 'index' */ '../views');
 
 const SITE_URL = getRoutePath(window.SITE_URL);
+
 export const routes = [
   {
     path: SITE_URL,
