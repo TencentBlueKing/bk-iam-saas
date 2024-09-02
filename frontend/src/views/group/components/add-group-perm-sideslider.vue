@@ -32,7 +32,8 @@
                 :data="searchData"
                 :value="searchValue"
                 :quick-search-method="quickSearchMethod"
-                style="width: 240px; display: inline-block;" />
+                style="width: 240px; display: inline-block;"
+              />
               <div class="refresh-wrapper"
                 v-bk-tooltips="$t(`m.common['刷新']`)"
                 @click="handleRefresh">
@@ -361,7 +362,6 @@
           showSelectionCount: false
         });
         this.currentBackup = 1;
-        this.currentSelectList = [];
         this.requestQueueBySys = [];
         this.requestQueueByTemplate = [];
         this.selection = [];

@@ -666,7 +666,6 @@
       }
     },
     created () {
-      this.fetchInitData();
       this.$once('hook:beforeDestroy', () => {
         bus.$off('edit-member-boundary');
       });

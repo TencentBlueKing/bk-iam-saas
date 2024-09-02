@@ -581,6 +581,7 @@
             remoteMethod: this.handleGradeAdmin
           }
         ],
+        searchData: [],
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         curSelectMenu: '',
         curInputText: '',
@@ -644,7 +645,7 @@
           'is_selected': true
         }
       ];
-      this.searchData = this.enableGroupInstanceSearch ? this.initSearchData.filter(item => ['name', 'id', 'description', 'role_id'].includes(item.id)) : this.initSearchData;
+      this.searchData = this.enableGroupInstanceSearch ? this.initSearchData.filter(item => ['name', 'id', 'description', 'system_id', 'role_id'].includes(item.id)) : this.initSearchData;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
         return Object.prototype.toString.call(payload) === '[object Object]';
@@ -1266,6 +1267,17 @@
         } finally {
           // this.requestQueue.shift()
         }
+      },
+      
+      async handleRemoteSystem (value) {
+        const params = {};
+        if (this.externalSystemId) {
+          params.hidden = false;
+        }
+        const result = await this.$store.dispatch('system/getSystems', params).then(({ data }) => {
+          return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
+        });
+        return result || [];
       },
 
       // 管理空间数据
