@@ -1,3 +1,14 @@
+<!-- 2024-09-02 -->
+# V1.10.33 Version Update Log
+
+### Bug Fixes
+
+* Added system filter to the resource instance search when applying to join a user group.
+* Removed the refresh icon from the permission template addition in group permissions.
+* Compatible with non-root path deployment in containerized external environments.
+
+---
+
 <!-- 2024-08-22 -->
 # V1.10.32 Version Update Log
 
