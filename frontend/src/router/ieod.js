@@ -25,7 +25,6 @@
  */
 
 import il8n from '@/language';
-import { rootPath } from '@blueking/sub-saas/dist/main.js';
 import { getRoutePath } from '@/common/util';
 
 // 系统接入
@@ -208,10 +207,13 @@ const NotFound = () => import(/* webpackChunkName: 'none' */ '../views/404');
 // Main
 const MainEntry = () => import(/* webpackChunkName: 'index' */ '../views');
 
+// 兼容容器化部署外部环境非根路径的path
+const SITE_URL = getRoutePath(window.SITE_URL);
+
 export const routes = [
   {
     // path: window.SITE_URL,
-    path: rootPath,
+    path: SITE_URL,
     name: 'iamMain',
     component: MainEntry,
     children: [

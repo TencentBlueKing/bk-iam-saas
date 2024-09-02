@@ -87,7 +87,7 @@
             <IamResourceCascadeSearch
               ref="iamResourceSearchRef"
               :active="active"
-              :search-select-place-holder="$t(`m.perm['输入ID、用户组名、描述等按回车键进行搜索']`)"
+              :search-select-place-holder="$t(`m.perm['输入用户组名、描述等按回车键进行搜索']`)"
               @on-remote-table="handleRemoteTable"
               @on-refresh-table="handleRefreshTable"
               @on-input-value="handleInputValue"
@@ -624,14 +624,6 @@
       },
 
       async fetchRemoteTable (isRefreshCurCount = false) {
-        if (this.curSearchParams.id) {
-          const exp = /^[1-9]\d*$/;
-          if (!exp.test(this.curSearchParams.id)) {
-            this.componentLoading = false;
-            this.curEmptyData = formatCodeData(0, { ...this.curEmptyData, ...{ tipType: 'search' } }, true);
-            return this.messageWarn(this.$t(`m.verify['ID必须是一个正整数']`));
-          }
-        }
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
         const typeMap = {
           GroupPerm: async () => {
