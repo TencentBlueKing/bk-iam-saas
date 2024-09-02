@@ -34,11 +34,11 @@
                 :quick-search-method="quickSearchMethod"
                 style="width: 240px; display: inline-block;"
               />
-              <div class="refresh-wrapper"
+              <!-- <div class="refresh-wrapper"
                 v-bk-tooltips="$t(`m.common['刷新']`)"
                 @click="handleRefresh">
                 <Icon type="refresh" />
-              </div>
+              </div> -->
             </div>
           </render-search>
           <!-- eslint-disable max-len -->
