@@ -94,6 +94,7 @@
                 @on-load-more="handleLoadMore"
                 @on-page-change="handlePageChange"
                 @on-table-page-change="handleTablePageChange"
+                @on-table-empty-search="handleTableEmptySearch"
                 @async-load-nodes="handleAsyncNodes"
                 @async-load-table-nodes="handleAsyncNodes"
               />
@@ -1102,6 +1103,15 @@
 
       async handleAsyncNodes (node, index, flag) {
         console.log('handleAsyncNodes', node, index);
+        const chainLen = this.curChain.length;
+        // 兼容如果是实例视图最后一个节点且child_type为空，则代表没有下一级不需要调接口
+        if (!node.child_type && node.level + 1 >= chainLen) {
+          node.expanded = false;
+          node.async = false;
+          this.emptyTreeData = formatCodeData(0, this.emptyData, true);
+          this.removeAsyncNode();
+          return;
+        }
         window.changeAlert = true;
         const asyncItem = {
           ...ASYNC_ITEM,
@@ -1110,7 +1120,6 @@
         };
         const asyncData = new Node(asyncItem, node.level + 1, false, 'async');
         this.treeData.splice((index + 1), 0, asyncData);
-        const chainLen = this.curChain.length;
         const params = {
           limit: this.limit,
           offset: 0,
@@ -1633,6 +1642,11 @@
       // 多层拓扑分页
       async handleTablePageChange (node, index) {
         this.handleLoadMore(node, index, true);
+      },
+
+      handleTableEmptySearch ({ keyword }) {
+        this.emptyTreeData.tipType = keyword ? 'search' : 'empty';
+        this.emptyTreeData = formatCodeData(0, this.emptyData, true);
       }
     }
   };

@@ -1224,6 +1224,10 @@
             });
           }
         }
+        // 处理空数据搜索
+        if (!curNode && this.curTreeTableData.children && !this.curTreeTableData.children.length) {
+          this.$emit('on-table-empty-search', { keyword: this.tableKeyWord });
+        }
         setTimeout(() => {
           this.tableLoading = false;
         }, 1000);
