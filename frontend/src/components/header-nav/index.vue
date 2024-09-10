@@ -30,7 +30,7 @@
     </div>
     <div class="user fr">
       <div class="help-flag">
-        <Icon type="help-fill" style="color: #979ba5" />
+        <Icon type="help-fill" />
         <div :class="[
           'dropdown-panel',
           { 'lang-dropdown-panel': !curLanguageIsCn }
