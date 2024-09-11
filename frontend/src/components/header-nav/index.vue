@@ -170,7 +170,7 @@
     };
   };
 
-  const NORMAL_DOCU_LINK = '/IAM/UserGuide/Introduce/README.md';
+  const NORMAL_DOCU_LINK = '/IAM/1.12/UserGuide/Introduce/README.md';
   // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
   const docuLinkMap = new Map([

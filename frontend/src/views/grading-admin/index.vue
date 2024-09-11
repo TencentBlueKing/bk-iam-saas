@@ -864,7 +864,7 @@
       },
 
       handleOpenDocu () {
-        const GRADE_DOCU_LINK = '/IAM/UserGuide/Feature/ManagerCreate.md';
+        const GRADE_DOCU_LINK = '/IAM/1.12/UserGuide/Feature/ManagerCreate.md';
         window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
       }
 
