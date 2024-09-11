@@ -178,6 +178,7 @@ export const m = {
         '用户包含': 'User includes',
         '产品文档': 'Documentation',
         '问题反馈': 'Feedback',
+        '开源社区': 'Open Source',
         '正在同步中': 'Syncing',
         '新增': 'Add',
         '申请新建': 'Apply for new',
