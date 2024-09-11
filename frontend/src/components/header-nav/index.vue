@@ -42,6 +42,9 @@
           <div class="item" @click="handleOpenQuestion">
             {{ $t(`m.common['问题反馈']`) }}
           </div>
+          <div class="item" @click="handleOpenSource">
+            {{ $t(`m.common['开源社区']`) }}
+          </div>
         </div>
       </div>
       <div class="lang-flag">
@@ -170,7 +173,7 @@
     };
   };
 
-  const NORMAL_DOCU_LINK = '/IAM/1.12/UserGuide/Introduce/README.md';
+  const NORMAL_DOCU_LINK = '/IAM/UserGuide/Introduce/README.md';
   // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
   const docuLinkMap = new Map([
@@ -468,6 +471,10 @@
 
       handleOpenQuestion () {
         window.open(window.CE_URL);
+      },
+
+      handleOpenSource () {
+        window.open(`https://github.com/TencentBlueKing/bk-iam`);
       },
 
       back () {
