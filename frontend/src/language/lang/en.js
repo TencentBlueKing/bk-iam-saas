@@ -60,7 +60,7 @@ export const m = {
         '搜索无结果': 'Search result is empty',
         '退出': 'Quit',
         '批量移除': 'Multi-remove',
-        '版本日志': 'Release note',
+        '版本日志': 'Release Notes',
         '帮助文档': 'Help',
         '申请加入用户组': 'Apply for join group',
         '申请模板权限': 'Apply for template permissions',

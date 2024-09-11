@@ -304,6 +304,16 @@ export const routes = [
         component: MyManageSpaceCreate
       },
       {
+        path: ':id/my-manage-space/clone',
+        name: 'myManageSpaceClone',
+        meta: {
+          headerTitle: il8n('nav', '克隆管理空间'),
+          backRouter: 'myManageSpace'
+        },
+        props: true,
+        component: GradingAdminCreate
+      },
+      {
         path: 'my-manage-space/sub-detail',
         name: 'myManageSpaceSubDetail',
         meta: {

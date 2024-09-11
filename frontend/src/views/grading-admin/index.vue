@@ -1,11 +1,5 @@
 <template>
   <div class="iam-grading-admin-wrapper">
-    <!-- <bk-alert type="info" style="margin-bottom: 16px;">
-            <div slot="title">
-                {{ $t(`m.grading['页面提示']`) }}
-                <span class="detail-link" @click="handleOpenMoreLink">{{ $t(`m.common['更多详情']`) }}</span>
-            </div>
-        </bk-alert> -->
     <render-search>
       <bk-button theme="primary" @click="handleCreate" data-test-id="grading_btn_create">
         {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
@@ -454,10 +448,6 @@
         });
       },
 
-      handleOpenMoreLink () {
-        window.open(`${window.BK_DOCS_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`);
-      },
-
       refreshCurrentQuery () {
         const { limit, current } = this.pagination;
         const queryParams = {
@@ -835,11 +825,6 @@
             routerName = 'authorBoundary';
             this.$store.commit('updateIndex', 1);
             window.localStorage.setItem('index', 1);
-          },
-          clone: () => {
-            routerName = 'secondaryManageSpaceCreate';
-            this.$store.commit('updateIndex', 0);
-            window.localStorage.setItem('index', 0);
           }
         };
         routerNav[mode]();
@@ -879,7 +864,7 @@
       },
 
       handleOpenDocu () {
-        const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
+        const GRADE_DOCU_LINK = '/IAM/UserGuide/Feature/ManagerCreate.md';
         window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
       }
 
