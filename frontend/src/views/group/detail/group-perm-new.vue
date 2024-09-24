@@ -187,7 +187,7 @@
       mode: {
         handler (value) {
           console.log('value', value);
-          window.parent.postMessage({ type: 'IAM', data: { tab: 'group_perm' }, code: 'change_group_detail_tab' }, '*');
+          this.handleIframeSend({ tab: 'group_perm' }, 'change_group_detail_tab');
         },
         immediate: true
       }
@@ -524,16 +524,7 @@
             }
           };
           await this.$store.dispatch('userGroup/updateGroupPolicy', params);
-          if (existValue('externalApp') && this.externalSystemId) {
-            window.parent.postMessage(
-              {
-                type: 'IAM',
-                data: params,
-                code: 'submit_edit_group_perm'
-              },
-              '*'
-            );
-          }
+          this.handleIframeSend(params, 'submit_edit_group_perm');
           if (subItem.count > 0) {
             this.getGroupCustomPolicy(subItem);
           } else {
@@ -608,16 +599,7 @@
             item.custom_policy_count = 0;
           }
           this.policyList = subItem;
-          if (existValue('externalApp') && this.externalSystemId) {
-            window.parent.postMessage(
-              {
-                type: 'IAM',
-                data: params,
-                code: 'submit_delete_group_perm'
-              },
-              '*'
-            );
-          }
+          this.handleIframeSend(params, 'submit_delete_group_perm');
           if (isExistTemplate) {
             this.getGroupTemplateList(item);
           }
@@ -641,6 +623,19 @@
             ids: data.ids ? data.ids.join(',') : data.policy_id
           }
         }, item, {}, false);
+      },
+
+      handleIframeSend (payload, code) {
+        if (existValue('externalApp') && this.externalSystemId) {
+          window.parent.postMessage(
+            {
+              type: 'IAM',
+              data: payload,
+              code
+            },
+            '*'
+          );
+        }
       },
       
       handleEmptyRefresh () {
