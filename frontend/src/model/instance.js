@@ -115,12 +115,14 @@ export default class Instance {
       const len = item.length;
       const displayName = item.map(sub => sub.name).join('/');
       const tempPath = item.filter(v => v.id !== '*');
-      if (!tempList.some(sub => sub.id === item[len - 1].id && item[len - 1].id !== '*')) {
+      // 过滤重复id的数据，且最后一条path的实例范围不是无限制
+      const isUnique = !tempList.some(sub => sub.id === item[len - 1].id && item[len - 1].id !== '*');
+      if (isUnique) {
         let disabled = false;
         if (this.instanceNotDisabled) {
           disabled = false;
         } else {
-          // disabled = ['', 'custom'].includes(this.flag) ? !item.some(v => v.tag === 'add') : false;
+        // disabled = ['', 'custom'].includes(this.flag) ? !item.some(v => v.tag === 'add') : false;
           disabled = item.some(v => v.tag === 'add') ? false : item.some(subItem => subItem.disabled);
         }
         tempList.push({
@@ -129,7 +131,6 @@ export default class Instance {
           level: len - 1,
           type: item[len - 1].type,
           parentChain: tempPath.slice(0, tempPath.length - 1),
-          // disabled: item.some(v => v.tag === 'add') ? false : item.some(subItem => subItem.disabled),
           disabled: disabled,
           display_name: displayName
         });

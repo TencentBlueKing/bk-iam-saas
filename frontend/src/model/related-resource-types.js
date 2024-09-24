@@ -121,8 +121,8 @@ export default class RelateResourceTypes {
       }
       if (item.instance) {
         item.instance.forEach(ins => {
-          const curPath = uniqWith(ins.path, isEqual);
-          const pathLen = isArray(curPath) ? curPath.length : 0;
+          const curPath = isArray(ins.path) ? uniqWith(ins.path, isEqual) : [];
+          const pathLen = curPath.length;
           if (pathLen > 0) {
             if (!instanceStrMap[ins.name]) {
               instanceStrMap[ins.name] = pathLen;
