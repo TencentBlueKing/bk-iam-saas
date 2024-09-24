@@ -1244,35 +1244,43 @@
         curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex]];
         curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload;
-        const relatedList = _.cloneDeep(this.tableList.filter(item => {
+        const relatedList = this.tableList.filter(item => {
           return !item.isAggregate
             && relatedActions.includes(item.id)
             && curData.detail.system.id === item.detail.system.id
             && item.resource_groups[this.curGroupIndex]
-            && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty);
-        }));
+            && item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => !(sub.hasOwnProperty('empty') && sub.empty));
+        });
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
             delete item.policy_id;
             item.resource_groups[this.curGroupIndex].related_resource_types.forEach(resItem => {
-              resItem.condition.forEach(conditionItem => {
-                conditionItem.instances = conditionItem.instance || [];
-                conditionItem.attributes = conditionItem.attribute || [];
-                delete conditionItem.instance;
-                delete conditionItem.attribute;
-              });
+              if (resItem.condition.length && resItem.condition[0] !== 'none') {
+                resItem.condition.forEach(conditionItem => {
+                  conditionItem.instances = conditionItem.instance || [];
+                  conditionItem.attributes = conditionItem.attribute || [];
+                  delete conditionItem.instance;
+                  delete conditionItem.attribute;
+                });
+              }
             });
             item.expired_at = PERMANENT_TIMESTAMP;
           });
         }
         curData.resource_groups = curData.resource_groups.filter(item => item.related_resource_types);
-        const targetPolicies = relatedList.filter(item =>
-          item.resource_groups[this.curGroupIndex].related_resource_types
-          && item.resource_groups[this.curGroupIndex].related_resource_types.length
-          && (item.resource_groups[this.curGroupIndex].related_resource_types[0].condition.length === 0
-            || item.resource_groups[this.curGroupIndex].related_resource_types[0].condition.some(
-              (v) => v.instances.length > 0 || v.attributes.length > 0))
-        );
+        const targetPolicies = relatedList.filter(item => {
+          const relatedTypeList = item.resource_groups[this.curGroupIndex].related_resource_types;
+          return relatedTypeList
+            && relatedTypeList.length
+            && (relatedTypeList[0].condition.length === 0
+              || (relatedTypeList[0].condition.length > 0
+                && relatedTypeList[0].condition[0] !== 'none'
+                && relatedTypeList[0].condition.some((v) =>
+                  (v.instances.length > 0 && v.instances.some((p) => p.path.length > 0))
+                  || v.attributes.length > 0)
+              )
+            );
+        });
         try {
           const res = await this.$store.dispatch('permApply/getRelatedPolicy', {
             source_policy: curData,
@@ -1330,8 +1338,16 @@
                       resource.instances.forEach((ins) => {
                         ins.path.forEach((p, pathIndex) => {
                           if (p.length > 0) {
+                            // 处理授权范围是父级，但是选择了子集数据，需要查找所选数据是不是属于授权范围内的子集数据
+                            let curParentChain = [];
+                            const tempPath = p.filter(v => v.id !== '*');
+                            if (tempPath.length) {
+                              curParentChain = tempPath.slice(0, tempPath.length - 1);
+                            }
+                            // 判断授权范围是不是父级数据
+                            const isExistParent = curParentChain.filter((subPath) => scopeInsList.includes(`${subPath.id}&${subPath.name}&${subPath.type}`));
                             // 只获取授权范围内的资源实例
-                            ins.path[pathIndex] = p.filter((subPath) => scopeInsList.includes(`${subPath.id}&${subPath.name}&${subPath.type}`));
+                            ins.path[pathIndex] = p.filter((subPath) => scopeInsList.includes(`${subPath.id}&${subPath.name}&${subPath.type}`) || isExistParent.length > 0);
                           }
                         });
                         // 因为path链路是多维数组且无法确定链路数量，所以这里需要过滤掉空数组
@@ -1340,6 +1356,8 @@
                           ins.paths = _.cloneDeep(ins.path);
                         }
                       });
+                      // 这里会存在path的内容不在授权范围内会被过滤掉，而path内容是必填项
+                      resource.instances = resource.instances.filter((k) => k.path && k.path.length > 0);
                       if (resource.attributes && resource.attributes.length > 0
                         && scopeAttributeList && scopeAttributeList.length > 0
                       ) {
