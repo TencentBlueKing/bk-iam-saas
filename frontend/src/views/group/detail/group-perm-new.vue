@@ -98,7 +98,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, existValue } from '@/common/util';
   import GroupPolicy from '@/model/group-policy';
   import RenderPermItem from '../common/render-perm-item-new.vue';
   import RenderTemplateItem from '../common/render-template-item.vue';
@@ -515,14 +515,25 @@
         }
         subItem.editLoading = true;
         try {
-          await this.$store.dispatch('userGroup/updateGroupPolicy', {
+          const params = {
             id: this.groupId,
             data: {
               system_id: item.id,
               template_id: subItem.id,
               actions
             }
-          });
+          };
+          await this.$store.dispatch('userGroup/updateGroupPolicy', params);
+          if (existValue('externalApp') && this.externalSystemId) {
+            window.parent.postMessage(
+              {
+                type: 'IAM',
+                data: params,
+                code: 'submit_edit_group_perm'
+              },
+              '*'
+            );
+          }
           if (subItem.count > 0) {
             this.getGroupCustomPolicy(subItem);
           } else {
@@ -597,6 +608,16 @@
             item.custom_policy_count = 0;
           }
           this.policyList = subItem;
+          if (existValue('externalApp') && this.externalSystemId) {
+            window.parent.postMessage(
+              {
+                type: 'IAM',
+                data: params,
+                code: 'submit_delete_group_perm'
+              },
+              '*'
+            );
+          }
           if (isExistTemplate) {
             this.getGroupTemplateList(item);
           }
