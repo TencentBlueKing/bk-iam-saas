@@ -736,7 +736,7 @@
             window.localStorage.setItem('index', 1);
           },
           clone: () => {
-            routerName = 'gradingAdminCreate';
+            routerName = 'myManageSpaceClone';
             this.$store.commit('updateIndex', 0);
             window.localStorage.setItem('index', 0);
           },
@@ -969,7 +969,7 @@
         );
       },
       handleOpenDocu () {
-        const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
+        const GRADE_DOCU_LINK = '/IAM/UserGuide/Feature/UserApply.md';
         window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
       }
     }

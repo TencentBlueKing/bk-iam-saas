@@ -30,7 +30,7 @@
     </div>
     <div class="user fr">
       <div class="help-flag">
-        <Icon type="help-fill" style="color: #979ba5" />
+        <Icon type="help-fill" />
         <div :class="[
           'dropdown-panel',
           { 'lang-dropdown-panel': !curLanguageIsCn }
@@ -41,6 +41,9 @@
           </div>
           <div class="item" @click="handleOpenQuestion">
             {{ $t(`m.common['问题反馈']`) }}
+          </div>
+          <div class="item" @click="handleOpenSource">
+            {{ $t(`m.common['开源社区']`) }}
           </div>
         </div>
       </div>
@@ -468,6 +471,10 @@
 
       handleOpenQuestion () {
         window.open(window.CE_URL);
+      },
+
+      handleOpenSource () {
+        window.open(`https://github.com/TencentBlueKing/bk-iam`);
       },
 
       back () {

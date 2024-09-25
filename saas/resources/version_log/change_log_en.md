@@ -1,7 +1,24 @@
+<!-- 2024-09-25 -->
+# V1.10.34 Version Update Log
+
+### Features
+* Bk Devops User Group Permissions: Added support for adding, deleting, and editing event communication within embedded iframe pages, enhancing page interaction and data synchronization.
+
+### Feature Enhancements
+* Documentation Updates: Updated product documentation and the links in "My Management Space" to the latest versions, ensuring users have access to the most current help documents and guides.
+* Instance View Optimization: Optimized the interface for fetching data when the last node in the instance view and the current topology level's child_type is empty, ensuring unnecessary data retrieval is avoided.
+
+### Fixes
+* Path View Discrepancy: Fixed occasional issues where the number of instances displayed in the path view layer did not match the actual number of authorized instances.
+* Topology Data Flattening: Fixed issues where the flattened structure of topology data could not distinguish instance scopes, which could cause data inconsistencies when a hierarchical administrator's authorized instance scope was the parent level, but automatically associated subsets when selected.
+* Breadcrumb Navigation: Fixed issues with breadcrumb navigation in "My Management Space" that caused it to return to incorrect pages.
+
+---
+
 <!-- 2024-09-02 -->
 # V1.10.33 Version Update Log
 
-### Bug Fixes
+### Fixes
 
 * Added system filter to the resource instance search when applying to join a user group.
 * Removed the refresh icon from the permission template addition in group permissions.
@@ -12,7 +29,7 @@
 <!-- 2024-08-22 -->
 # V1.10.32 Version Update Log
 
-### Bug Fixes
+### Fixes
 
 * Fixed apigw resource definition yaml error
 
@@ -21,11 +38,11 @@
 <!-- 2024-08-22 -->
 # V1.10.31 Version Update Log
 
-### New Features
+### Features
 
 * Super Admin API: Added template list and the ability to add members to user groups.
 
-### Bug Fixes
+### Fixes
 
 * Embedded pages in BlueKing now hide the link to the authorization boundary entry.
 * Fixed multiple escapes of the redirect URL upon logout.
@@ -35,12 +52,12 @@
 <!-- 2024-08-14 -->
 # V1.10.30 Version Update Log
 
-### New Features
+### Features
 
 * Added support for quick navigation to the admin menu page when the user has admin rights and the current page is under the personal workstation staff role scenario.
 * Upgraded global configuration version to support distinct wording for product name and title.
 
-### Bug Fixes
+### Fixes
 
 * Fixed an issue where the user group -> hierarchical admin permissions occasionally auto-associated instances outside the authorized scope.
 * Fixed an issue with custom permission requests where batch editing operations displayed abnormal resource instances.
@@ -58,14 +75,14 @@
 <!-- 2024-06-25 -->
 ## V1.10.29 Version Update Log
 
-### New Features
+### Features
 
 * Added an npm integration plugin for unified management of configuration items like logo, footer, and title.
 * Replaced the batch aggregation method for all platform resource instances from the switch component to a custom tab component.
 * Enhanced the platform property view to be compatible with individual custom attribute sets from connected systems that require a personnel selector component.
 * Updated the layout of system addition and operation pages across the platform (refresh functionality is now open to all users, not just hierarchical administrators).
 
-### Bug Fixes
+### Fixes
 
 * Fixed the issue where applying for a user group—>where permissions to apply for permissions and commonly recommended permissions should hide operations provided by the connected system if no permissions exist.
 * Fixed the issue where switching systems during custom permission applications did not clear the resource instance table data.
@@ -76,7 +93,7 @@
 <!-- 2024-05-13 -->
 ## V1.10.28 Version Update Log
 
-### New Features
+### Features
 
 * Configuration of permission expiration reminder notification strategy
 * Added enterprise WeChat as an option for permission expiration reminder notifications
@@ -84,7 +101,7 @@
 * Added a management space filter in resource instance search for joining user group applications
 * New API - Create custom approval form for permission application, supporting custom approval content
 
-### Bug Fixes
+### Fixes
 
 * Fixed issue where directly accessing the management space and user group details page would redirect to the corresponding list page
 * Fixed data loss when searching resource instances with keywords
@@ -100,7 +117,7 @@
 <!-- 2024-04-25 -->
 # V1.10.27 Version Update Log
 
-### Bug Fixes
+### Fixes
 
 * System-registered non-apply operations take effect for "My Management Space"
 * Add support for fuzzy search of members (resolves the issue of not being able to search for users with login domains)
@@ -114,7 +131,7 @@
 
 * Dependency version upgrades
 
-### Bug Fixes
+### Fixes
 
 * Fixed issue with scheduled organization synchronization task becoming ineffective
 
@@ -123,7 +140,7 @@
 <!-- 2024-04-11 -->
 # V1.10.25 Version Update Log
 
-### New Features
+### Features
 
 * Added the ability to manage permissions for desired users/departments within the management space.
 * System administrators can now query personnel with permissions.
@@ -138,7 +155,7 @@
 
 * Resource instance IP selector revision
 
-### Bug Fixes
+### Fixes
 
 * Fixed my permissions ->Add cross page selection to user group permissions
 * Fixed my permissions ->Add cross page selection for administrator handover
@@ -148,7 +165,7 @@
 <!-- 2024-02-23 -->
 # V1.10.23 Version Update Log
 
-### Bug Fixes
+### Fixes
 
 * Fixed an issue where the user group only added permission templates, and the table data was cleared after quick close.
 * Fixed an issue where adding instances to permission templates couldn't be pasted in bulk.
@@ -160,7 +177,7 @@
 <!-- 2024-01-30 -->
 # V1.10.22 Version Update Log
 
-### Bug Fixes
+### Fixes
 
 * Fixed an issue in custom permission requests where the edit display fails to show selected resources instances of unlimited type data.
 * Fixed a problem in user groups where adding group permissions with varying path quantities resulted in an error message indicating that the hierarchical link list cannot be empty.
@@ -185,7 +202,7 @@
 
 * Optimized content for permission application forms.
 
-### Bug Fixes
+### Fixes
 
 * Fixed an issue where the maximum authorization scope selection within the Blue Ocean embedded page did not allow user selection after choosing an organization.
 * Fixed an problem where adding group permissions - adding operations and permission templates first, then canceling operations or reducing the number of permission templates, resulted in no display.
@@ -196,7 +213,7 @@
 <!-- 2023-12-26 -->
 # V1.10.19 Version Update Log
 
-### New Features
+### Features
 
 * Added a personnel template menu under the management space navigation bar.
 * Added the ability to associate personnel templates in user group details.
@@ -207,7 +224,7 @@
 * Added a personnel template option to the organization member selector, and manually input options now support special character separation as defined, with support for a maximum of 100 members at a time.
 * Added the option for full authorization scope in the embedded Blue Shield maximum authorization range dialog page, supporting authorization scope for all members.
 
-### Bug Fixes
+### Fixes
 
 * Fixed the issue where the total number of items in the transfer list interface was not synchronized with the total number obtained in the interface after searching for sensitivity levels.
 * Fixed the issue where clicking any placeholder in the textarea component triggers a blur event.
@@ -217,7 +234,7 @@
 <!-- 2023-11-28 -->
 # V1.10.18 Version Update Log
 
-### Bug Fixes
+### Fixes
 
 * Fixed a bug where authorization scope validation was not required in the organizational structure selector for IAM system and Blue Shield system
 * Fixed an issue where the calculation of renewal timestamps for user group members resulted in incorrect display of days due to rounding off floating point numbers
@@ -240,7 +257,7 @@
 * User module - Add resource instance search for user types
 * User module - Add ability to add members to organizational structure
 
-### Bug Fixes
+### Fixes
 * Frontend configuration to hide operations on certain pages (no longer handled through backend flags)
 * No response when administrator tries to add duplicate members (show tip when unable to add members)
 * Resolve issue with staff role showing no permissions in person selector
@@ -259,7 +276,7 @@
 * Added custom error message for exceeding 100 requests to join a user group.
 * Added group renewal for expired user groups in the "Apply to Join User Group" feature.
 
-### Bug Fixes
+### Fixes
 * Fixed an issue where creating or cloning a user group and re-editing the group permissions without changing the operations would not display the previously selected options.
 * Fixed the inability to batch paste multiple unrestricted operations under a hierarchical administrator.
 * Fixed an error in the aggregation of individual operations in batch operations, resulting in missing authorization scope data.
@@ -276,7 +293,7 @@
 <!-- 2023-09-19 -->
 # V1.10.15 Version Update Log
 
-### Bug Fixes
+### Fixes
 * Added support for BlueShield in user search for My Permissions.
 * Modified the second-level administrator name change to be case-insensitive.
 * Adjusted the synchronization strategy for adding new users.
@@ -286,7 +303,7 @@
 <!-- 2023-09-14 -->
 # V1.10.14 Version Update Log
 
-### Bug Fixes
+### Fixes
 * "Not Requestable" now takes effect in automatic recommendation rules.
 * BlueShield My Permissions page now displays BlueShield projects only in search criteria.
 * Fixed an issue with CDN hashing for static files.
@@ -296,7 +313,7 @@
 <!-- 2023-09-05 -->
 # V1.10.13 Version Update Log
 
-### New Features
+### Features
 * Added "not available for application" attribute setting to user groups
 
 ### Optimization Updates
@@ -307,7 +324,7 @@
 * Added search function to "My Permissions" page
 * Removed query type filter from resource permission management, default query type is now instance permission
 
-### Bug Fixes
+### Fixes
 * Fixed issue where clicking on renewal email link for Blue Shield project administrators resulted in blank webpage content
 * Fixed issue where user group member renewal effective time stamp calculation was incorrect
 * Fixed issue where Blue Shield permission transfer check for "disabled" was incorrect, added pagination to user group permission transfer and administrator transfer
@@ -319,12 +336,12 @@
 <!-- 2023-07-31 -->
 # V1.10.12 ChangeLog
 
-### New Features
+### Features
 * Custom permissions can be configured to allow multi-level administrator approval.
 * Batch unlimited permissions have been added to user group creation, cloning, and permission addition.
 * Batch copying of users and organization members has been added to user group management.
 
-### Bug Fixes
+### Fixes
 Fixed an issue where clicking on "synchronize" in the user module->user type would result in a third-party interface exception.
 
 ---
@@ -332,7 +349,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-07-26 -->
 # V1.10.11 ChangeLog
 
-### New Features
+### Features
 * Switching ESB interface login, supporting ESB authentication for application permissions.
 
 ---
@@ -340,7 +357,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-07-17 -->
 # V1.10.10 ChangeLog
 
-### New Features
+### Features
 * Add department display to user group member list
 * Add permission details to expired permission list
 * Allow optional selection for aggregated operations
@@ -351,7 +368,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-07-07 -->
 # V1.10.9 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the issue that the dependency operation was not synchronizing data when adding attribute conditions for user group permissions.
 * Fixed the issue that the system administrator member editing was abnormal, and the input box of the system administrator member was abnormal.
 * Added the requirement to add or remove all operation instances under a single system for "My Permissions".
@@ -362,7 +379,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-07-05 -->
 # V1.10.8 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixing front-end internationalization issues
 
 ---
@@ -370,10 +387,10 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-06-27 -->
 # V1.10.7 ChangeLog
 
-### New Features
+### Features
 * When deleting an instance with a custom permission, delete the instance that is dependent on the permission at the same time
 
-### Bug Fixes
+### Fixes
 * ITSM bill of lading form field internationalization
 * Language switching is set to BK_DOMAIN
 * Hierarchical administrator synchronization permission user group name internationalization
@@ -383,7 +400,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-06-21 -->
 # V1.10.6 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the issue where the default workflow for the graded administrator was empty
 * Fixed the issue with the audit log record table create name
 
@@ -392,7 +409,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-06-07 -->
 # V1.10.5 ChangeLog
 
-### New Features
+### Features
 * Applying for user group permissions can be done by operating and searching user groups in the instances
 
 ### Optimization Updates
@@ -403,10 +420,10 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-06-02 -->
 # V1.10.4 ChangeLog
 
-### New Features
+### Features
 * Added BCS automatic initialization of administrator user group, making it easier for administrators to set up the system.
 
-### Bug Fixes
+### Fixes
 * Fixed a bug in the user list query list to improve normal system operation efficiency.
 * Added max request number parameter for gunicorn to optimize system performance.
 
@@ -431,7 +448,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-05-18 -->
 # V1.10.1 ChangeLog
 
-### Bug Fixes
+### Fixes
 * The open api creation permission application form increases the expiration time
 * Fix the unprocessed permission removal when submitting a custom permission application
 
@@ -440,7 +457,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-05-10 -->
 # V1.10.0 ChangeLog
 
-### New Features
+### Features
 * Support secondary management space feature
 
 ---
@@ -448,7 +465,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-03-28 -->
 # V1.9.10 ChangeLog
 
-### New Features
+### Features
 * Add temporary permission switch
 * Modify the maximum number of tiered administrators that can be created in the api to 500
 
@@ -457,7 +474,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-02-20 -->
 # V1.9.9 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Management api user group authorization is not associated with resource instance conversion bug
 
 ---
@@ -465,10 +482,10 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2023-01-31 -->
 # V1.9.8 ChangeLog
 
-### New Features
+### Features
 * Initialize rating administrator update custom action
 
-### Bug Fixes
+### Fixes
 * Repair the healthz interface to actively close the mysql connection
 * Fix front-end experience issues
 
@@ -477,7 +494,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-12-22 -->
 # V1.9.7 ChangeLog
 
-### Bug Fixes
+### Fixes
 * An error is reported when the operation authority deletes some instances
 
 ---
@@ -485,7 +502,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-11-28 -->
 # V1.9.6 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the clone user group data is not displayed as empty on the first page
 
 ---
@@ -493,7 +510,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-11-22 -->
 # V1.9.5 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem that the user group may select an empty instance
 
 ### Optimization Updates
@@ -505,7 +522,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-11-08 -->
 # V1.9.4 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Repair chooseip topology components Click to see more missing search keywords
 
 ---
@@ -513,7 +530,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-11-02 -->
 # V1.9.3 ChangeLog
 
-### Bug Fixes
+### Fixes
 * The problem that the operation of user group authorization not associated with resource type does not take effect
 
 ---
@@ -521,7 +538,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-10-12 -->
 # V1.9.2 ChangeLog
 
-### New Features
+### Features
 * Merge changes from master branch
 * Optimize the sending logic of expired reminder emails
 
@@ -530,7 +547,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-08-25 -->
 # V1.9.1 ChangeLog
 
-### New Features
+### Features
 * Add management api v2
 
 ---
@@ -538,7 +555,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-07-15 -->
 # V1.9.0 ChangeLog
 
-### New Features
+### Features
 * User group configuration RBAC policy
 
 ---
@@ -546,7 +563,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-10-10 -->
 # V1.8.25 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Initialize the grading administrator to fix the inconsistency of the customization system
 
 ---
@@ -554,7 +571,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-27 -->
 # V1.8.24 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Front-end internationalization bug fixes
 
 ---
@@ -562,7 +579,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-27 -->
 # V1.8.23 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed frontend issues
 
 ---
@@ -570,7 +587,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-27 -->
 # V1.8.22 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed frontend issues
 
 ---
@@ -578,7 +595,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-26 -->
 # V1.8.21 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed frontend clone issue
 * Fixed the issue of batch editing of new user groups
 * Fixed the problem of duplication of new user group data
@@ -596,7 +613,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-24 -->
 # V1.8.20 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the bug of custom application renewal check instance number
 * Fix front-end experience issues
 
@@ -605,7 +622,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-23 -->
 # V1.8.19 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the display problem of expiration time within 1 day
 * Fix the error of expiry time of initial rating administrator members
 * Fixed some front-end experience issues
@@ -626,7 +643,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-09 -->
 # V1.8.17 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the bug that identity acquisition failed when switching navigation
 
 ---
@@ -637,7 +654,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Optimize the display of expiration time
 
-### Bug Fixes
+### Fixes
 * Fixed the bug that identity acquisition failed when switching navigation
 
 ---
@@ -645,7 +662,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-02 -->
 # V1.8.15 ChangeLog
 
-### Bug Fixes
+### Fixes
 * healthz modifies the celery check timeout
 * Fix the bug that the role has only one role and is a system administrator
 
@@ -654,7 +671,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-09-01 -->
 # V1.8.14 ChangeLog
 
-### Bug Fixes
+### Fixes
 * healthz relies on user management logic optimization
 * Fix the bug that the role is only the system administrator page
 
@@ -666,7 +683,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-08-25 -->
 # V1.8.13 ChangeLog
 
-### Bug Fixes
+### Fixes
 * No permission to jump to apply for recommendation permission to remove the user's existing permission
 * Update management class api error information
 * Multi-window page switching hierarchical administrator permission problem
@@ -676,7 +693,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-08-04 -->
 # V1.8.12 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Modify the header jump logic
 * Rating admin delete user group error
 
@@ -688,7 +705,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Listen to ipv6
 
-### Bug Fixes
+### Fixes
 * Modifying the basic information of the grading manager only checks the limit on the number of new members
 
 ---
@@ -696,7 +713,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-07-19 -->
 # V1.8.10 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix model_event change event fails to execute due to data conversion error
 
 ---
@@ -704,7 +721,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-07-12 -->
 # V1.8.9 ChangeLog
 
-### New Features
+### Features
 * Added grading administrator guidelines
 
 ---
@@ -712,7 +729,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-07-01 -->
 # V1.8.8 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Email copy adjustment
 * windows window title problem
 * Unlimited questions on demand
@@ -733,7 +750,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-06-21 -->
 # V1.8.6 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the issue that the newly created associated instance authorization API whitelist-monitoring whitelist does not take effect
 
 ---
@@ -741,7 +758,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-06-16 -->
 # V1.8.5 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem that the recommended action cannot be selected by clicking
 
 ---
@@ -749,7 +766,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-05-31 -->
 # V1.8.4 ChangeLog
 
-### New Features
+### Features
 * Added management API
    - delete user group policy
    - Support to recycle resource instance permissions of user group policy
@@ -770,7 +787,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Performance optimization - monthly audit table global variable cache
 * Swagger refactoring
 
-### Bug Fixes
+### Fixes
 * Fix front-end related experience issues
 
 ---
@@ -778,7 +795,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-05-16 -->
 # V1.8.3 ChangeLog
 
-### Bug Fixes
+### Fixes
 * When only temporary permissions, my permissions do not show problems
 * Temporary permission expiration time selection problem
 * request_id parameter error problem
@@ -788,7 +805,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-05-13 -->
 # V1.8.2 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Temporary permissions system switching operation is not clear
 * Temporary permissions Polymerization Operation Resources Selection Problems
 
@@ -797,7 +814,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-05-10 -->
 # V1.8.1 ChangeLog
 
-### New Features
+### Features
 * jump without permission to increase recommendation permission
 
 ---
@@ -805,7 +822,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-03-23 -->
 # V1.8.0 ChangeLog
 
-### New Features
+### Features
 * temporary permission
 
 ---
@@ -813,7 +830,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-05-19 -->
 # V1.7.19 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Unauthorized jump application has no dependent operation problem
 
 ---
@@ -821,7 +838,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-05-12 -->
 # V1.7.18 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Resource instance selection subordinate search error problem
 
 ---
@@ -829,7 +846,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-04-26 -->
 # V1.7.17 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed Aggregate operation unlimited problem
 
 ---
@@ -837,7 +854,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-04-25 -->
 # V1.7.16 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed Aggregate operation batch copy batch paste
 
 ---
@@ -845,7 +862,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-04-25 -->
 # V1.7.15 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed issues related to selection of aggregation operations
 * Approval process operation list supports internationalization
 
@@ -857,7 +874,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-04-21 -->
 # V1.7.14 ChangeLog
 
-### New Features
+### Features
 * The access system callback query instance list supports passing ancestor instances
 * Aggregation operations support aggregating multiple resource types at the same time
 
@@ -874,7 +891,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-04-13 -->
 # V1.7.12 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed internationalization related data
 
 ### Optimization Updates
@@ -885,7 +902,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-04-07 -->
 # V1.7.11 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the ITSM display problem of the application form for grading administrators
 * Fix front-end merge selection instance problem
 
@@ -897,7 +914,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-04-01 -->
 # V1.7.10 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Querying a subject with permission to fix a cross-system resource query error
 
 ---
@@ -905,7 +922,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-04-01 -->
 # V1.7.9 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the error of resource permission management query interface
 * Fixed the problem that when adding multiple group permissions to a user group across pages, the permission template selected across the pages would be missing after confirmation.
 * Fixed an issue where the application has associated permissions, and the default period will become unchangeable after selecting an instance
@@ -915,7 +932,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-03-24 -->
 # V1.7.8 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the issue that permissions could not be added under the rating administrator
 * Added system access instructions
 * Fixed the problem that the user group renewal application callback error was reported due to the absence of the user group
@@ -947,7 +964,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Connect to APIGateway's SaaS Open API, whose backend is adjusted from bkiam-saas-web to bkiam-saas-api
 
-### Bug Fixes
+### Fixes
 * Fixed issues related to front-end user group configuration permissions
 * Synchronized the organizational structure department and fixed the data error problem of department lft/rght/level
 
@@ -956,7 +973,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-03-02 -->
 # V1.7.4 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem of redis connection leak caused by healthz
 * Fixed the problem that the front-end user group configuration permissions did not display the resource type
 
@@ -965,7 +982,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-02-24 -->
 # V1.7.3 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix automatic registration apigateway configuration error
 
 ---
@@ -973,7 +990,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-02-24 -->
 # V1.7.2 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix permission template change operation error
 * Fix automatic registration apigateway configuration error
 
@@ -982,7 +999,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-02-21 -->
 # V1.7.1 ChangeLog
 
-### New Features
+### Features
 * Regularly clean up unquoted expressions in the background
 
 ### Optimization Updates
@@ -995,7 +1012,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2022-01-20 -->
 # V1.6.5 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix apigateway register settings error
 
 ### Optimization Updates
@@ -1007,7 +1024,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-12-23 -->
 # V1.6.4 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the permission transfer bug
 * Fix the script error of automatic registration apigateway
 * Fixed an error in the status of the synchronization ITSM application form
@@ -1017,7 +1034,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-12-21 -->
 # V1.6.3 ChangeLog
 
-### New Features
+### Features
 * query authorized subjects
 
 ---
@@ -1025,7 +1042,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-12-16 -->
 # V1.6.2 ChangeLog
 
-### New Features
+### Features
 * opentelemetry tracing
 
 ### Optimization Updates
@@ -1036,7 +1053,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-12-10 -->
 # V1.6.1 ChangeLog
 
-### New Features
+### Features
 * Permission transfer
 
 ### Optimization Updates
@@ -1050,7 +1067,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Do not delete back-end users and departments when the organizational structure is synchronized
 
-### Bug Fixes
+### Fixes
 * Lock the dependency package typing-extensions version to avoid deployment failure caused by automatic update to the latest version
 
 ---
@@ -1058,7 +1075,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-12-06 -->
 # V1.5.15 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the issue that celery_id was obtained as None after LongTask changed synchronization
 * Fixed the issue of incompatible action_id with the Scope data structure of the hierarchical administrator authority
 
@@ -1067,7 +1084,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-11-30 -->
 # V1.5.14 ChangeLog
 
-### New Features
+### Features
 * Support apigateway init with apis and docs
 
 ### Optimization Updates
@@ -1076,7 +1093,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Support to return exception information when calling a third-party interface fails
 * User group authorization is adjusted to execute tasks immediately
 
-### Bug Fixes
+### Fixes
 * Automatically update the resource instance name to be compatible with the access system callback exception
 * Solve the authorization exception when the resource instance view is empty
 
@@ -1085,7 +1102,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-11-23 -->
 # V1.5.13 ChangeLog
 
-### New Features
+### Features
 * Authorized API whitelist supports prefix matching rules
 * Automatically update the renamed resource instance in the strategy
 
@@ -1094,7 +1111,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Add line breaks to the log details in the synchronization record of the organizational structure
 * The access system management API supports the authorization of unlimited resource instances for the creation of hierarchical administrators and user group authorization interfaces
 
-### Bug Fixes
+### Fixes
 * Repair the authorization error of the user group template of the hierarchical administrator
 * Fix the bug that the permission of the recommended user group for jumping without permission has expired
 * The background task cleans up the audit exceptions of the expired members of the user group
@@ -1119,7 +1136,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * The redis version is downgraded to 2.10.6, as a celery broker
 
-### Bug Fixes
+### Fixes
 * Fix the log configuration of the containerized version
 * Fix redis timeout configuration problem
 
@@ -1128,7 +1145,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-10-20 -->
 # V1.5.10 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the issue of unauthorized access to the user group member list
 
 ---
@@ -1136,7 +1153,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-10-20 -->
 # V1.5.9 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix long task get results error
 
 ---
@@ -1148,7 +1165,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Optimize resource callback structure error prompt
 * Long-term task retry
 
-### Bug Fixes
+### Fixes
 * Fix the issue that the updated template is not synchronized to the user group permissions
 * Fixed the problem of cookie domain error when port is not 80/443
 * Uncheck the corresponding permission instance and report an error
@@ -1159,7 +1176,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-10-11 -->
 # V1.5.7 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem of multiple url splicing/causing access errors
 * Fix the problem of the wrong address of the front-end personnel list component range
 
@@ -1168,7 +1185,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-10-11 -->
 # V1.5.6 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Repair management API-user group custom authorization asynchronously causes continuous authorization failure
 
 ---
@@ -1176,7 +1193,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-10-08 -->
 # V1.5.5 ChangeLog
 
-### Bug Fixes
+### Fixes
 * User group update template authorization error
 
 ---
@@ -1189,7 +1206,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * The jump application does not merge the user's existing permissions
 * The number of instances of the authorization api return strategy
 
-### Bug Fixes
+### Fixes
 * Fixed the display problem of the renewal email link in the corporate WeChat email
 * My permission user group permission check status prompt delete bug
 * The business jump permission center applies for permission, the application period cannot be modified
@@ -1200,7 +1217,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-09-24 -->
 # V1.5.3 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the front-end ESB address of the v3 Smart package
 * Fix ignoring the path bug causing authorization information error
 * Fix the display problem of the renewal email enterprise WeChat email link
@@ -1217,7 +1234,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Update paas v3 smart settings
 * The sharing link is automatically filtered by conditions
 
-### Bug Fixes
+### Fixes
 * Fixed the issue of error reporting due to partial deletion of policy
 * Fixed the issue of authorization error caused by spaces in resource instance name
 * Fixed the issue of error in cleaning expired policy
@@ -1234,7 +1251,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-09-09 -->
 # V1.5.1 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fixed the issue that the newly created association authorization API failed due to the resource type hierarchy in the registered configuration
 
 ---
@@ -1255,7 +1272,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Adjust the list of hierarchical administrator members that ordinary users can manage to join
 * Update the whitelist of JOB/BCS new association API
 
-### Bug Fixes
+### Fixes
 * Access page instance view id, resource type ID uniqueness verification, button position adjustment
 * Access page form validation rule repair
 * Access page delete operation type value modification
@@ -1273,7 +1290,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Changed the permission expiration reminder email to be sent at 11 o'clock
 
-### Bug Fixes
+### Fixes
 * User group authorization verification rating manager authorization scope error problem
 * Ignoring the path on the authorization page causes the authorization data error problem
 
@@ -1285,7 +1302,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Optimized "Ignore Path" to display the full path on the front end
 
-### Bug Fixes
+### Fixes
 * Fix the error of specific host instances authorized by the operating platform
 
 ---
@@ -1298,7 +1315,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Optimize operation ID verification
 * Optimize the saving of resource types
 
-### Bug Fixes
+### Fixes
 * Fix the bug that depends on resource check
 * Fix the problem of switching identity
 * Fix the icon problem when the model is created
@@ -1313,7 +1330,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * System registration verification rules
 * Check the validity of the callback address
 
-### Bug Fixes
+### Fixes
 * Fix the issue of adding gsekit permission error
 * Fix the difference contrast exception
 
@@ -1322,7 +1339,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-08-02 -->
 # V1.4.25 ChangeLog
 
-### Bug Fixes
+### Fixes
 * The application form details are rejected for non-applicants to view
 * The operation list refuses to be viewed by non-login users
 
@@ -1334,7 +1351,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Renewal page interaction optimization
 
-### Bug Fixes
+### Fixes
 * Fix V2migrate api permission template adds authorization object error bug
 * Fix the problem of ignoring the failure of path authorization instance
 * Fix the problem that the custom permission application clicks to renew and does not respond
@@ -1348,7 +1365,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Remove the "permanent" time from the validity period on the application side
 * Some known issues have been optimized
 
-### Bug Fixes
+### Fixes
 * Fix the problem that the expiration time of the automatic filling of dependent operations is empty
 * Fixed the problem that the hierarchical administrator failed to save the range of personnel selected
 * Fix the issue that the dependent operation instance becomes read-only
@@ -1359,7 +1376,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-07-20 -->
 # V1.4.22 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the issue that the expiration time of the related action is empty
 
 ---
@@ -1367,7 +1384,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-07-20 -->
 # V1.4.21 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the security issue of any Origin request in CORS
 * Fixed an error on the edit level administrator page
 * Fix the problem of editing user group permissions, adding custom permissions is not saved, editing custom permissions again, and adding custom permissions after saving is not displayed on the permissions page
@@ -1378,7 +1395,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-07-19 -->
 # V1.4.20 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem that the custom permission application cannot be edited after selecting the resource instance when there is a dependency
 * Fix the issue that the validity period of custom permissions is empty
 
@@ -1387,14 +1404,14 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-07-15 -->
 # V1.4.19 ChangeLog
 
-### New Features
+### Features
 * Hierarchical administrator related operation links support role id parameters; support automatic switching of hierarchical administrator status
 
 ### Optimization Updates
 * My permission, when there is only one system custom permission, expand by default
 * Update the whitelist of ITSM new association API
 
-### Bug Fixes
+### Fixes
 * Fix the operation problem of deleting hierarchical administrators
 * Fix the problem of adding custom permissions and template permissions to the group at the same time
 * Fix the display problem of recommended permissions for hierarchical administrators
@@ -1408,7 +1425,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Hierarchical administrator edit mode optimization
 
-### Bug Fixes
+### Fixes
 * Fix the processing of valid period time when there is no permission to jump
 * Fix the issue of permission template update
 * Fix the user group add permission dependent operation problem
@@ -1422,7 +1439,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-07-08 -->
 # V1.4.17 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem that the user group add template permission selection instance style is disorderly
 * Fix the problem that the select box of some instances is not clickable when adding user group permissions
 * Fix the optimization of the edit mode of the hierarchical administrator, and the maximum permission range is collapsed by default
@@ -1433,7 +1450,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-07-05 -->
 # V1.4.16 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the user group adding custom permissions to report the validity period error
 * Fix the problem of merge selection/batch editing errors
 * Fix the problem that user group custom permissions depend on operation
@@ -1449,7 +1466,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-07-01 -->
 # V1.4.15 ChangeLog
 
-### New Features
+### Features
 * Supports asynchronous delete action and delete action strategy
 * User group custom permissions support deleting a certain operation permission function
 * Support the function of enabling system access through environment variables
@@ -1459,7 +1476,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Optimized editing of user group permissions
 * The authorized user group OpenAPI supports skipping the verification of the authority scope of the hierarchical administrator
 
-### Bug Fixes
+### Fixes
 * Fix the copywriting problem
 * Fix the problem of automatic expansion of selected instances in batch editing (merge selection)
 
@@ -1468,13 +1485,13 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-06-17 -->
 # V1.4.12 ChangeLog
 
-### New Features
+### Features
 * The SaaS side does not have permission to jump to automatically match the user group
 
 ### Optimization Updates
 * Hierarchical administrator switch identity optimization
 
-### Bug Fixes
+### Fixes
 * Fix the ID search bug on the application user group page
 * Fix the caching problem of search conditions on the application page
 * Fix the problem of failure to exit the hierarchical administrator
@@ -1484,11 +1501,11 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-06-15 -->
 # V1.4.11 ChangeLog
 
-### New Features
+### Features
 * New administrator API-get a user group list under a certain hierarchical administrator
 * Support user group authorization API
 
-### Bug Fixes
+### Fixes
 * Fix the problem that IAM-Engine is not configured to request Endpoint
 * Fixed an abnormal problem caused by an error that the user group has been deleted before the application is passed but not ignored
 
@@ -1505,7 +1522,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-05-28 -->
 # V1.4.9 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem that the SaaS introduced in 1.4.5 deletes the user group, but it is not deleted in the background, which causes the permission error
 
 ---
@@ -1513,7 +1530,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-05-19 -->
 # V1.4.8 ChangeLog
 
-### New Features
+### Features
 * Authorize Open API to support validity period setting
 * Batch authorization Open API supports granting unlimited permissions
 * Support delete policy subscription event push
@@ -1522,7 +1539,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Open API supports error code 1902409 to indicate conflicts of duplicate names, etc.
 * My permission page sort adjustment
 
-### Bug Fixes
+### Fixes
 * Fix the problem of lack of full range judgment when filtering user groups
 * Fix the problem that the member of the hierarchical administrator cannot be deleted
 * Fix the duplicate display problem of Tips for permission resource instances
@@ -1532,7 +1549,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-05-13 -->
 # V1.4.7 ChangeLog
 
-### New Features
+### Features
 * Automatically generate aggregation action configuration
 * Dependent action
 * User groups support filtering by role
@@ -1543,7 +1560,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-04-28 -->
 # V1.4.6 ChangeLog
 
-### New Features
+### Features
 * Management API-Creating hierarchical administrator and user group authorization support granting unlimited access to some resources
 * Management APIs support configuration of the scope of systems that can be controlled and authorized by the system
 
@@ -1555,7 +1572,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * My Permissions page optimization
 
-### Bug Fixes
+### Fixes
 * Fix the problem that the number of members of its associated authority template is not updated when the user group is deleted
 * Fix the problem that the name can be empty when updating the permission template
 * Fix the user group authorization when the new permission template 404
@@ -1566,14 +1583,14 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-04-19 -->
 # V1.4.4 ChangeLog
 
-### New Features
+### Features
 * New version of permission template
 * User Group Custom Permissions
 
 ### Optimization Updates
 * Optimization of some known issues
 
-### Bug Fixes
+### Fixes
 * Some known issues fixed
 
 ---
@@ -1581,10 +1598,10 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-04-01 -->
 # V1.3.6 ChangeLog
 
-### New Features
+### Features
 * New permission template full synchronization script
 
-### Bug Fixes
+### Fixes
 * Fix the issue of unverified instance selections created by grade manager
 
 ---
@@ -1592,7 +1609,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-03-25 -->
 # V1.3.5 ChangeLog
 
-### New Features
+### Features
 * Added GSEKIT action aggregation configuration
 
 ---
@@ -1600,7 +1617,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-03-23 -->
 # V1.3.4 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the issue that the hierarchical administrator limit does not take effect
 * Fix the issue of invalid instance emptying when applying for permission
 
@@ -1613,7 +1630,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Advance de-duplication when adding users to user groups
 * Select Action Panel to de-expand for more interactions
 
-### Bug Fixes
+### Fixes
 * Fix the problem of overstepping the authority when updating the basic information of graded administrators
 * Fix the copy-paste error problem when selecting unlimited instances
 * Fix the audit error problem caused by v2migrate api authentication
@@ -1624,7 +1641,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-03-09 -->
 # V1.3.2 ChangeLog
 
-### New Features
+### Features
 * Grading administrator adds cloning function
 
 ### Code Optimization
@@ -1633,7 +1650,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Add a quick selection of operation groups when the grading administrator selects the operation
 
-### Bug Fixes
+### Fixes
 * Fix the selection period is not effective when batch renewal authority
 * Fix the period not effective when applying for custom permission and needing to renew permission
 
@@ -1650,7 +1667,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-02-20 -->
 # V1.3.0 ChangeLog
 
-### New Features
+### Features
 * Support Debug Trace based on Request ID or task ID
 
 ### Optimization Updates
@@ -1661,7 +1678,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-02-19 -->
 # V1.2.15 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix BK_PAAS_HOST with port can not verify through CSRF_TRUSTED_ORIGINS
 * Fix the problem of over-limiting the user group of renewal reminder email for graded administrators
 
@@ -1670,7 +1687,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-02-02 -->
 # V1.2.14 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem that the operation name is not displayed in the ITSM approval document when the custom authority is renewed
 
 ---
@@ -1678,7 +1695,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-01-28 -->
 # V1.2.13 ChangeLog
 
-### New Features
+### Features
 * Operation audit
 * Periodically delete expired permission policies
 
@@ -1694,7 +1711,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Update the approval callback address to an intranet address
 * Rating Manager name uniqueness check
 
-### Bug Fixes
+### Fixes
 * Fix the problem of hierarchy selection during permission configuration
 * Fix the problem of incorrect display of the validity period of application documents
 
@@ -1703,7 +1720,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-01-20 -->
 # V1.2.11 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the application of updating rating manager exception
 * Fix common operation selection grouping exception
 
@@ -1712,7 +1729,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-01-15 -->
 # V1.2.10 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the update rating manager exception
 
 ---
@@ -1720,7 +1737,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-01-14 -->
 # V1.2.9 ChangeLog
 
-### New Features
+### Features
 * Instance authorization-related APIs add whitelist restrictions
 * Internationalized time zone support
 
@@ -1731,7 +1748,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Enum class code refactoring optimization
 * Celery Healthz Optimization
 
-### Bug Fixes
+### Fixes
 * Fixed the problem that users do not have abnormalities when the authentication-related interface judges super privileges
 * Fixed the problem of wrong display of table data when merging operations when creating a new permission template
 
@@ -1740,7 +1757,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2021-01-14 -->
 # V1.2.8 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem of migration failure caused by user group not binding hierarchical administrator when migrating V2 data to V3
 
 ---
@@ -1748,7 +1765,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-12-31 -->
 # V1.2.7 ChangeLog
 
-### New Features
+### Features
 * Customized application to add operation grouping function
 
 ### Optimization Updates
@@ -1757,7 +1774,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * No permission to jump to locate the selected operation
 * Topology instances support batch selection by pressing and holding shift
 
-### Bug Fixes
+### Fixes
 * Fix the problem of no authentication of some APIs when setting the approval process
 * Fix the problem of incorrect submission of application documents for users without organizational affiliation
 * Fix the problem of not taking effect when actively renewing user group members
@@ -1773,7 +1790,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-12-24 -->
 # V1.2.6 ChangeLog
 
-### New Features
+### Features
 * Add newbie guide
 * Add policy expiration email reminder
 
@@ -1781,7 +1798,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Optimize authorization without updating if the existing policy contains a new policy
 * Add default group non-deletion logic for operation groups
 
-### Bug Fixes
+### Fixes
 * Fix the DB contention lock issue that may occur when deleting policy instances
 * Fix the error when choosing a specific instance for permission template aggregation instance
 * Fix the sidebar that triggers the opening of the selected instance when you click Batch Paste for the selected instance
@@ -1791,7 +1808,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-12-17 -->
 # V1.2.5 ChangeLog
 
-### New Features
+### Features
 * Application support revocation
 * Support users' user groups with custom permission renewal
 * Support for renewal of user group membership for administrators
@@ -1808,7 +1825,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * All permission submissions verify that the resource instance ID and Name match
 * Default unattributed user groups and templates migrated to Super Admin
 
-### Bug Fixes
+### Fixes
 * Repair the error in displaying the switch status of aggregation operation when editing the hierarchical administrator
 * Repair the setting of default approval process data does not take effect in time
 
@@ -1820,7 +1837,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-12-03 -->
 # V1.2.4 ChangeLog
 
-### New Features
+### Features
 * My Approval Menu, user clicks to jump to ITSM Personal Approval Center
 * Super Administrators can transfer user groups out to a designated hierarchical administrator
 * Batch Authentication API
@@ -1833,7 +1850,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Optimize caching of subject action
 * Optimize the role of super powers during authentication
 
-### Bug Fixes
+### Fixes
 * Fix search topology instance cache error
 * Hierarchical Administrator Details Member List Edit Button Style Fixes
 * Fix the problem of instance data mismatch when switching between unused views when there is a range limitation in multiple instance views in the new permission template
@@ -1845,13 +1862,13 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-11-26 -->
 # V1.2.3 ChangeLog
 
-### New Features
+### Features
 * Hierarchical administrator applies for modification
 
 ### Optimization Updates
 * Create hierarchical administrators to support generating dependent operations
 
-### Bug Fixes
+### Fixes
 * Permission template modified some resources but not deleted bug
 * Several front-end bug fixes
 
@@ -1860,7 +1877,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-11-20 -->
 # V1.2.2 ChangeLog
 
-### New Features
+### Features
 * Support the addition of new users in real time within 1 minute
 
 ### Optimization Updates
@@ -1870,7 +1887,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * New permission template Search should be adjusted to front-end search when restricted data exists for the instance
 * Login window resizing
 
-### Bug Fixes
+### Fixes
 * Fix problem with occasional permission requests where a specific instance is selected but a null value is passed
 
 ---
@@ -1885,7 +1902,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 * Automatically refreshes the page when the currently logged in user is deleted by Super Admin
 * Show specific instances of a single instance directly when applying for permission to select it.
 
-### Bug Fixes
+### Fixes
 * Fix open api role auth error where super manager not exists
 * Fixed the bug that the copy instance paste button is displayed when requesting permissions.
 
@@ -1894,7 +1911,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-11-17 -->
 # V1.2.0 ChangeLog
 
-### New Features
+### Features
 * Support for Rating Manager functions
 * Approval process interface with itsm (support for approval notification)
 * Support for super administrator and system administrator settings
@@ -1911,7 +1928,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-12-07 -->
 # V1.1.46 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix search topology instance cache error
 
 ---
@@ -1919,13 +1936,13 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-11-12 -->
 # V1.1.45 ChangeLog
 
-### New Features
+### Features
 * User logout support
 
 ### Optimization Updates
 * Update product documentation links
 
-### Bug Fixes
+### Fixes
 * Repair the problem of empty description when switching system with new permission template.
 * Repair the problem of saving exception when editing basic information of user group.
 
@@ -1934,7 +1951,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-11-09 -->
 # V1.1.44 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the error of adding unlimited front-end processing instance selection.
 
 ---
@@ -1942,7 +1959,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-11-04 -->
 # V1.1.43 ChangeLog
 
-### New Features
+### Features
 * New product documentation link entry
 
 ### Optimization Updates
@@ -1954,7 +1971,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-10-22 -->
 # V1.1.42 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the add tag problem of data migration interface
 
 ---
@@ -1962,7 +1979,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-10-20 -->
 # V1.1.41 ChangeLog
 
-### Bug Fixes
+### Fixes
 * Fix the problem of entering the iam saas exception when new users are not synced.
 * Fix the problem of authorization API error when new users are not synced.
 
@@ -1989,13 +2006,13 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-09-28 -->
 # V1.1.38 ChangeLog
 
-### New Features
+### Features
 * Support for search of topological instances
 
 ### Optimization Updates
 * Synchronized Organizational Architecture Distributed Lock Failure Prompt Failure and Logging
 
-### Bug Fixes
+### Fixes
 * Fix the problem of incomplete pull due to sorting problem when synchronizing organizational structure pagination to get departments and users.
 
 ---
@@ -2006,7 +2023,7 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 ### Optimization Updates
 * Exceptional error messages and log optimizations for interfaces related to resource queries for access to the system
 
-### Bug Fixes
+### Fixes
 * Repair the problem that the authorization of new related properties does not take effect.
 
 ---
@@ -2014,14 +2031,14 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-09-23 -->
 # V1.1.36 ChangeLog
 
-### New Features
+### Features
 * Support the ability to paste resource instances
 
 ### Optimization Updates
 * Topology instance selection panel supports dragging
 * No drop-down list is needed when there is only one instance view.
 
-### Bug Fixes
+### Fixes
 * Fix the problem of topology instance selection without sub-level resource limit.
 
 ---

@@ -25,6 +25,7 @@
 */
 
 import { language, il8n } from '@/language';
+import { uniqWith, isEqual, isArray } from 'lodash';
 import Condition from './condition';
 
 const isCn = language === 'zh-cn';
@@ -120,7 +121,8 @@ export default class RelateResourceTypes {
       }
       if (item.instance) {
         item.instance.forEach(ins => {
-          const pathLen = ins.path.length;
+          const curPath = isArray(ins.path) ? uniqWith(ins.path, isEqual) : [];
+          const pathLen = curPath.length;
           if (pathLen > 0) {
             if (!instanceStrMap[ins.name]) {
               instanceStrMap[ins.name] = pathLen;

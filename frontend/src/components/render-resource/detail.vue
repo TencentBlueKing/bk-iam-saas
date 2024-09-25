@@ -17,7 +17,7 @@
             <instance-item
               v-for="(instanceItem, instanceIndex) in condition.instance"
               :key="instanceIndex"
-              :title="`${instanceItem.name}(${instanceItem.path.length})`"
+              :title="`${instanceItem.name}(${instanceItem.displayPath.length})`"
               :has-gap="instanceIndex > 0"
               :data="instanceItem.displayPath" />
           </render-resource-instance>

@@ -13,6 +13,8 @@ import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
+from django.conf import settings
+
 from backend.common.error_codes import error_codes
 from backend.common.local import local
 
@@ -124,3 +126,14 @@ def do_blueking_http_request(
         f"Request=[{http_func.__name__} {urlparse(url).path} request_id={local.request_id}] "
         f"Response[code={code}, message={message}]"
     )
+
+
+def remove_notification_exemption_user(usernames: List[str]) -> List[str]:
+    """
+    从给定的用户列表里移除豁免通知的人员
+    :param usernames: 待处理的用户名列表
+    :return: 处理后的用户名列表
+    """
+    exemption_user_set = {u.strip().lower() for u in settings.BK_NOTIFICATION_EXEMPTION_USERS if u.strip()}
+
+    return [u for u in usernames if u.strip().lower() not in exemption_user_set]
