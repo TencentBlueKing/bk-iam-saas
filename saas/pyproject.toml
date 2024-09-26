@@ -78,7 +78,7 @@ license = "MIT License"
 python = "3.6.6"
 # blueapps requirement
 Django = "3.2.25"
-PyMySQL==1.0.2
+PyMySQL== "1.0.2"
 MarkupSafe = "2.0.1"
 requests = "2.27.1"
 celery = "5.1.2"
