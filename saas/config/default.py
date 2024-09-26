@@ -13,7 +13,10 @@ import os
 
 import environ
 from celery.schedules import crontab
+import pymysql
 
+# connect mysql
+pymysql.install_as_MySQLdb()
 # environ
 env = environ.Env()
 
