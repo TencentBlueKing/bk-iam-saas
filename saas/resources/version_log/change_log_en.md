@@ -1,3 +1,11 @@
+<!-- 2024-09-27 -->
+# V1.10.35 Version Update Log
+
+### Fixes
+* Use pymysql to replace mysql-client
+
+---
+
 <!-- 2024-09-25 -->
 # V1.10.34 Version Update Log
 
