@@ -1304,10 +1304,9 @@
         let scopeInstanceList = [];
         let scopeAttributeList = [];
         payload.forEach(item => {
-          const curIndex = this.tableList.findIndex(sub => sub.id === item.id
-            && item.resource_groups[this.curGroupIndex]
-            && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
-              .related_resource_types[0].system_id);
+          const curIndex = this.tableList.findIndex(sub =>
+            sub.id === item.id && item.resource_groups[this.curGroupIndex]
+          );
           if (curIndex > -1) {
             const { isTemplate, detail } = this.tableList[curIndex];
             const systemId = this.isCreateMode && detail ? detail.system.id : this.systemId;
