@@ -120,7 +120,7 @@
 </template>
 <script>
   import { buildURLParams } from '@/common/url';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, formatI18nKey } from '@/common/util';
 
   export default {
     name: 'system-access-index',
@@ -220,7 +220,8 @@
       },
 
       handleOpenMoreLink () {
-        window.open(`${window.BK_DOCS_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`);
+        const curLang = formatI18nKey().toLowerCase().indexOf('en') > -1 ? 'EN' : 'ZH';
+        window.open(`${window.BK_DOCS_URL_PREFIX}/${curLang}/IAM/1.16/UserGuide/Feature/GradingManager.md`);
       },
 
       refreshCurrentQuery () {

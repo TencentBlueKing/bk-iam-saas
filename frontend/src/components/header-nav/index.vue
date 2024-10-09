@@ -173,7 +173,8 @@
     };
   };
 
-  const NORMAL_DOCU_LINK = '/IAM/UserGuide/Introduce/README.md';
+  const curLang = formatI18nKey().toLowerCase().indexOf('en') > -1 ? 'EN' : 'ZH';
+  const NORMAL_DOCU_LINK = `/${curLang}/IAM/1.16/UserGuide/Introduce/README.md`;
   // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
   const docuLinkMap = new Map([

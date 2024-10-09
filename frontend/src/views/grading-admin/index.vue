@@ -273,7 +273,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
-  import { getWindowHeight, formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData, formatI18nKey } from '@/common/util';
   import ConfirmDialog from '@/components/iam-confirm-dialog/index';
   import ApplyDialog from './components/apply-join-dialog';
   import IamEditInput from '@/views/my-manage-space/components/iam-edit/input';
@@ -864,8 +864,8 @@
       },
 
       handleOpenDocu () {
-        const GRADE_DOCU_LINK = '/IAM/UserGuide/Feature/ManagerCreate.md';
-        window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
+        const curLang = formatI18nKey().toLowerCase().indexOf('en') > -1 ? 'EN' : 'ZH';
+        window.open(`${window.BK_DOCS_URL_PREFIX}/${curLang}/IAM/1.16/UserGuide/Feature/ManagerCreate.md`);
       }
 
     }

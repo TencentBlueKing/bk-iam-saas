@@ -319,7 +319,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import { getWindowHeight, formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData, formatI18nKey } from '@/common/util';
   import IamEditInput from './components/iam-edit/input';
   import IamEditMemberSelector from './components/iam-edit/member-selector';
   import IamEditTextarea from './components/iam-edit/textarea';
@@ -968,9 +968,10 @@
           }
         );
       },
+
       handleOpenDocu () {
-        const GRADE_DOCU_LINK = '/IAM/UserGuide/Feature/UserApply.md';
-        window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
+        const curLang = formatI18nKey().toLowerCase().indexOf('en') > -1 ? 'EN' : 'ZH';
+        window.open(`${window.BK_DOCS_URL_PREFIX}/${curLang}/IAM/1.16/UserGuide/Feature/UserApply.md`);
       }
     }
   };
