@@ -126,7 +126,7 @@
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
   import { buildURLParams } from '@/common/url';
-  import { formatI18nKey, jsonpRequest, getManagerMenuPerm } from '@/common/util';
+  import { formatI18nKey, jsonpRequest, getManagerMenuPerm, navDocCenterPath } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
   import SystemLog from '../system-log';
@@ -172,41 +172,6 @@
       rating_manager: `grade-admin-new${str}`
     };
   };
-
-  const curLang = formatI18nKey().toLowerCase().indexOf('en') > -1 ? 'EN' : 'ZH';
-  const NORMAL_DOCU_LINK = `/${curLang}/IAM/1.16/UserGuide/Introduce/README.md`;
-  // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
-
-  const docuLinkMap = new Map([
-    // 权限模板
-    [['permTemplate', 'permTemplateDetail', 'permTemplateCreate'], NORMAL_DOCU_LINK],
-    // 首页
-    [['', 'index'], NORMAL_DOCU_LINK],
-    // 用户组
-    [
-      ['userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'],
-      NORMAL_DOCU_LINK
-    ],
-    // 系统接入
-    [['systemAccess'], NORMAL_DOCU_LINK],
-    // 我的申请
-    [['apply'], NORMAL_DOCU_LINK],
-    // 权限申请 'permApply'
-    [['applyCustomPerm', 'applyJoinUserGroup'], NORMAL_DOCU_LINK],
-    // 我的权限
-    [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal'], NORMAL_DOCU_LINK],
-    // 管理空间
-    [
-      ['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
-      NORMAL_DOCU_LINK
-    ],
-    // 管理员
-    [['administrator'], NORMAL_DOCU_LINK],
-    // 审批流程
-    [['approvalProcess'], NORMAL_DOCU_LINK],
-    // 用户
-    [['user'], NORMAL_DOCU_LINK]
-  ]);
 
   export default {
     inject: ['reloadCurPage'],
@@ -254,8 +219,6 @@
         getTabData: getTabData,
         curRoleList: [],
         searchValue: '',
-        docuLinkMap: docuLinkMap,
-        curDocuLink: `${window.BK_DOCS_URL_PREFIX}${NORMAL_DOCU_LINK}`,
         showGuide: false,
         isShowHeader: false,
         placeholderValue: '',
@@ -295,7 +258,8 @@
         'roleList',
         'index',
         'navCurRoleId',
-        'externalSystemId'
+        'externalSystemId',
+        'versionLogs'
       ]),
       ...mapGetters('userGlobalConfig', ['globalConfig']),
       style () {
@@ -334,12 +298,6 @@
             active = 'GroupPerm';
           }
           this.active = active;
-        }
-        for (const [key, value] of this.docuLinkMap.entries()) {
-          if (key.includes(to.name)) {
-            this.curDocuLink = `${window.BK_DOCS_URL_PREFIX}${value}`;
-            break;
-          }
         }
       },
       user: {
@@ -467,7 +425,7 @@
       },
 
       handleOpenDocu () {
-        window.open(this.curDocuLink);
+        navDocCenterPath(this.versionLogs, '/UserGuide/Introduce/README.md', true);
       },
 
       handleOpenQuestion () {

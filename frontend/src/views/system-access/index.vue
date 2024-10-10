@@ -120,7 +120,8 @@
 </template>
 <script>
   import { buildURLParams } from '@/common/url';
-  import { formatCodeData, formatI18nKey } from '@/common/util';
+  import { formatCodeData, navDocCenterPath } from '@/common/util';
+  import { mapGetters } from 'vuex';
 
   export default {
     name: 'system-access-index',
@@ -200,6 +201,9 @@
         }
       };
     },
+    computed: {
+      ...mapGetters(['versionLogs'])
+    },
     watch: {
       'pagination.current' (value) {
         this.currentBackup = value;
@@ -220,8 +224,7 @@
       },
 
       handleOpenMoreLink () {
-        const curLang = formatI18nKey().toLowerCase().indexOf('en') > -1 ? 'EN' : 'ZH';
-        window.open(`${window.BK_DOCS_URL_PREFIX}/${curLang}/IAM/1.16/UserGuide/Feature/GradingManager.md`);
+        navDocCenterPath(this.versionLogs, `/UserGuide/Feature/GradingManager.md`, true);
       },
 
       refreshCurrentQuery () {
