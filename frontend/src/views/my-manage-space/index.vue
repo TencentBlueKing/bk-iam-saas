@@ -196,9 +196,9 @@
                 iconColor[1] : iconColor[0] }" />
             <iam-edit-input
               field="name"
+              mode="edit"
               :placeholder="$t(`m.verify['请输入']`)"
               :value="row.name"
-              :mode="formatMode(row)"
               style="width: 100%; margin-left: 5px"
               :index="$index"
               :remote-hander="handleUpdateManageSpace"
@@ -211,9 +211,9 @@
           <iam-edit-member-selector
             field="members"
             width="200"
+            mode="edit"
             :placeholder="$t(`m.verify['请输入']`)"
             :value="row.members"
-            :mode="formatMode(row)"
             :index="$index"
             @on-change="handleUpdateMembers"
           />
@@ -224,9 +224,9 @@
           <iam-edit-textarea
             field="description"
             width="300"
+            mode="edit"
             :placeholder="$t(`m.verify['请输入']`)"
             :value="row.description"
-            :mode="formatMode(row)"
             :index="$index"
             :remote-hander="handleUpdateManageSpace"
           />
@@ -319,7 +319,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import { getWindowHeight, formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData, navDocCenterPath } from '@/common/util';
   import IamEditInput from './components/iam-edit/input';
   import IamEditMemberSelector from './components/iam-edit/member-selector';
   import IamEditTextarea from './components/iam-edit/textarea';
@@ -393,30 +393,24 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'roleList', 'externalSystemId']),
-            tableHeight () {
-                return getWindowHeight() - 185;
-            },
-            disabledPerm () {
-              return (payload, roleType) => {
-                const { type, members } = payload;
-                if (['subset_manager'].includes(type) || roleType) {
-                  return false;
-                } else {
-                  const result = members.map((item) => item.username).includes(this.user.username);
-                  return !result;
-                }
-              };
-          },
-            isStaff () {
-                return this.user.role.type === 'staff';
-            },
-            formatMode () {
-                return (payload) => {
-                    // return payload.is_member || this.isFilter ? 'edit' : 'detail';
-                    return 'edit';
-                };
-            }
+      ...mapGetters(['user', 'roleList', 'externalSystemId', 'versionLogs']),
+      tableHeight () {
+          return getWindowHeight() - 185;
+      },
+      disabledPerm () {
+        return (payload, roleType) => {
+          const { type, members } = payload;
+          if (['subset_manager'].includes(type) || roleType) {
+            return false;
+          } else {
+            const result = members.map((item) => item.username).includes(this.user.username);
+            return !result;
+          }
+        };
+    },
+      isStaff () {
+          return this.user.role.type === 'staff';
+      }
     },
     watch: {
       searchValue (newVal, oldVal) {
@@ -968,9 +962,9 @@
           }
         );
       },
+
       handleOpenDocu () {
-        const GRADE_DOCU_LINK = '/IAM/UserGuide/Feature/UserApply.md';
-        window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
+        navDocCenterPath(this.versionLogs, `/UserGuide/Feature/UserApply.md`, true);
       }
     }
   };
