@@ -207,6 +207,57 @@
     watch: {
       'pagination.current' (value) {
         this.currentBackup = value;
+      },
+      versionLogs: {
+        handler (value) {
+          if (value.length) {
+            this.helpList = [
+              {
+                name: this.$t(`m.access['接入前准备']`),
+                urlInfo: [
+                  {
+                    'text': '什么是蓝鲸权限中心', url: `${window.BK_DOCS_URL_PREFIX}${navDocCenterPath(value, `/UserGuide/Introduce/README.md`, false)}`
+                  },
+                  {
+                    'text': '工作原理', url: `${window.BK_DOCS_URL_PREFIX}${navDocCenterPath(value, `/UserGuide/Introduce/Principle.md`, false)}`
+                  },
+                  {
+                    'text': '了解概念', url: `${window.BK_DOCS_URL_PREFIX}${navDocCenterPath(value, `/UserGuide/Term/Term.md`, false)}`
+                  }
+                ]
+              },
+              {
+                name: this.$t(`m.access['接入教程']`),
+                urlInfo: [
+                  {
+                    'text': '开发接入文档', url: `${window.BK_DOCS_URL_PREFIX}${navDocCenterPath(value, `/IntegrateGuide/QuickStart/01-Begin.md`, false)}`
+                  },
+                  {
+                    'text': '开发接入实战视频', url: 'https://bkvideos-1252002024.cos.ap-guangzhou.myqcloud.com/bkiam/quanxianzhognxinkaifajierushizhan.MP4'
+                  }
+                ]
+              },
+              {
+                name: this.$t(`m.access['鉴权SDK']`),
+                urlInfo: [
+                  {
+                    'text': 'Python', url: 'https://github.com/TencentBlueKing/iam-python-sdk'
+                  },
+                  {
+                    'text': 'Go', url: 'https://github.com/TencentBlueKing/iam-go-sdk'
+                  },
+                  {
+                    'text': 'PHP', url: 'https://github.com/TencentBlueKing/iam-php-sdk'
+                  },
+                  {
+                    'text': this.$t(`m.common['更多']`), url: `${window.BK_DOCS_URL_PREFIX}${navDocCenterPath(value, `/IntegrateGuide/Reference/SDK/01-PythonSDK.md`, false)}`
+                  }
+                ]
+              }
+            ];
+          }
+        },
+        immediate: true
       }
     },
     created () {
