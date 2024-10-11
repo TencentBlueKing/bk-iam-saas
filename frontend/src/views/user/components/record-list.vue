@@ -111,7 +111,7 @@
       <div slot="content" v-bkloading="{ isLoading: logDetailLoading, opacity: 1 }">
         <section v-show="!logDetailLoading">
           <div class="link-btn">
-            <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">{{$t(`m.user['同步失败排查指引']`)}}</bk-link>
+            <bk-link class="link" theme="primary" :href="linkUrl" target="_blank">{{$t(`m.user['同步失败排查指引']`)}}</bk-link>
           </div>
           <div v-if="exceptionMsg || traceBackMsg"
             class="msg-content">
@@ -131,8 +131,9 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
+  import { navDocCenterPath, formatCodeData, timestampToTime, getWindowHeight } from '@/common/util';
   import { bus } from '@/common/bus';
-  import { formatCodeData, timestampToTime, getWindowHeight } from '@/common/util';
   import RenderStatus from './render-status';
   import moment from 'moment';
 
@@ -209,8 +210,12 @@
           tip: '',
           tipType: ''
         },
-        tableHeight: getWindowHeight() - 185
+        tableHeight: getWindowHeight() - 185,
+        linkUrl: 'https://bk.tencent.com/docs/document/6.0/160/8402'
       };
+    },
+    computed: {
+      ...mapGetters(['versionLogs'])
     },
     watch: {
       'pagination.current' (value) {
@@ -234,6 +239,9 @@
         bus.$off('updatePoll');
         bus.$off('sync-success');
       });
+      if (this.versionLogs.length) {
+        this.linkUrl = `${window.BK_DOCS_URL_PREFIX}${navDocCenterPath(this.versionLogs, `/IntegrateGuide/HowTo/FAQ/Debug/SaaS-DeptSync.md`, false)}`;
+      }
     },
     methods: {
       async fetchPageData () {

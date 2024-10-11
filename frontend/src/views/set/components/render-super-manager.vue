@@ -185,6 +185,9 @@
 
       async fetchSuperManager () {
         this.$emit('data-ready', false);
+        if (!['super_manager'].includes(this.user.role.type)) {
+          return;
+        }
         try {
           const { code, data } = await this.$store.dispatch('role/getSuperManager');
           const tempArr = [];

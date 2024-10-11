@@ -40,7 +40,9 @@
                 <div class="block-content">
                   <div class="language"></div>
                   <div class="time"></div>
-                  <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8456" target="_blank">{{ $t(`m.access['查看API鉴权接口']`) }}</bk-link>
+                  <bk-link class="link" theme="primary" :href="AuthLinkUrl" target="_blank">
+                    {{ $t(`m.access['查看API鉴权接口']`) }}
+                  </bk-link>
                 </div>
               </div>
             </div>
@@ -59,7 +61,10 @@
     </div>
   </div>
 </template>
+
 <script>
+  import { mapGetters } from 'vuex';
+  import { navDocCenterPath } from '@/common/util';
   import { saveAs } from '@/common/file-saver';
   import beforeStepChangedMixin from '../common/before-stepchange';
 
@@ -69,7 +74,7 @@
       return {
         modelingId: '',
         downloadLoading: false,
-
+        AuthLinkUrl: 'https://bk.tencent.com/docs/document/6.0/160/8456',
         controllableSteps: {
           controllable: true,
           steps: [
@@ -82,6 +87,9 @@
         }
       };
     },
+    computed: {
+      ...mapGetters(['versionLogs'])
+    },
     mounted () {
       const stepNode = this.$refs.systemAccessStep.$el;
       if (stepNode) {
@@ -90,6 +98,9 @@
           child.classList.remove('current');
         });
         children[3].classList.add('current');
+      }
+      if (this.versionLogs.length) {
+        this.AuthLinkUrl = `${window.BK_DOCS_URL_PREFIX}${navDocCenterPath(this.versionLogs, `/IntegrateGuide/Reference/API/04-Auth/02-DirectAPI.md`, false)}`;
       }
     },
     methods: {

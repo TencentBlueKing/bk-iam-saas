@@ -2,22 +2,23 @@
   <div class="iam-edit-selector" :style="styles">
     <template v-if="!isEditable">
       <div class="edit-wrapper">
-        <div class="edit-content" :title="displayValue.map(item => item.username) || ''">
-          <slot>
-            <span
-              v-for="(item, i) in displayValue"
-              :key="i"
-              class="member-item"
-              :class="item.readonly ? 'member-readonly' : ''"
-            >
-              {{ item.username }}
-              <!-- <Icon v-if="!isShowRole" type="close-small"
-                                @click.stop="handleDelete(index)" />
-                            <Icon v-else type="close-small"
-                                @click.stop="handleDelete(index)" /> -->
-            </span>
-          </slot>
-        </div>
+        <template v-if="displayValue.length">
+          <div class="edit-content" v-bk-tooltips="{ content: displayValue.map(item => item.username) }">
+            <slot>
+              <span
+                v-for="(item, i) in displayValue"
+                :key="i"
+                class="member-item"
+                :class="item.readonly ? 'member-readonly' : ''"
+              >
+                {{ item.username }}
+              </span>
+            </slot>
+          </div>
+        </template>
+        <template v-else>
+          <span>--</span>
+        </template>
         <div class="edit-action-box" v-if="isEditMode">
           <Icon
             type="edit-fill"

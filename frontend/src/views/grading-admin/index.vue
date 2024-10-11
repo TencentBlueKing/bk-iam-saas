@@ -273,7 +273,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
-  import { getWindowHeight, formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData, navDocCenterPath } from '@/common/util';
   import ConfirmDialog from '@/components/iam-confirm-dialog/index';
   import ApplyDialog from './components/apply-join-dialog';
   import IamEditInput from '@/views/my-manage-space/components/iam-edit/input';
@@ -355,16 +355,16 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isStaff () {
-                return this.user.role.type === 'staff';
-            },
-            disabledPerm () {
-                return (payload) => {
-                    const result = payload.members.map(item => item.username).includes(this.user.username);
-                    return !result;
-                };
-            }
+      ...mapGetters(['user', 'versionLogs']),
+      isStaff () {
+        return this.user.role.type === 'staff';
+      },
+      disabledPerm () {
+        return (payload) => {
+          const result = payload.members.map(item => item.username).includes(this.user.username);
+          return !result;
+        };
+      }
     },
     watch: {
       searchValue (newVal, oldVal) {
@@ -864,10 +864,8 @@
       },
 
       handleOpenDocu () {
-        const GRADE_DOCU_LINK = '/IAM/UserGuide/Feature/ManagerCreate.md';
-        window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
+        navDocCenterPath(this.versionLogs, `/UserGuide/Feature/ManagerCreate.md`, true);
       }
-
     }
   };
 </script>
