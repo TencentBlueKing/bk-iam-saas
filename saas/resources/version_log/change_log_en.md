@@ -1,3 +1,14 @@
+<!-- 2024-10-11 -->
+# V1.10.36 Version Update Log
+
+### Features
+* User group authorization now supports associating permission instance scopes across different system resource types
+
+### Feature Enhancements
+* Updated all documentation center redirect links to the latest standards.
+
+---
+
 <!-- 2024-09-27 -->
 # V1.10.35 Version Update Log
 
