@@ -19,7 +19,7 @@ from backend.apps.group.serializers import GroupAuthorizationSLZ
 from backend.apps.role.models import Role, RoleUser
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.apps.subject_template.models import SubjectTemplate
-from backend.apps.template.serializers import TemplateCreateSLZ, TemplateListSLZ, TemplateListSchemaSLZ, TemplateIdSLZ
+from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.constants import GroupMemberType
@@ -437,4 +437,3 @@ class ManagementTemplateCreateSLZ(TemplateCreateSLZ):
 
 class ManagementTemplateIdSLZ(TemplateIdSLZ):
     pass
-

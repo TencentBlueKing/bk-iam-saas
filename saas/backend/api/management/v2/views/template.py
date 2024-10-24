@@ -7,7 +7,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -16,11 +16,17 @@ from rest_framework.viewsets import GenericViewSet
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v2.permissions import ManagementAPIPermission
-from backend.api.management.v2.serializers import ManagementTemplateListSchemaSLZ, ManagementTemplateListSLZ, \
-    ManagementTemplateCreateSLZ, ManagementTemplateIdSLZ
+from backend.api.management.v2.serializers import (
+    ManagementTemplateCreateSLZ,
+    ManagementTemplateIdSLZ,
+    ManagementTemplateListSchemaSLZ,
+    ManagementTemplateListSLZ,
+)
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.template.audit import TemplateCreateAuditProvider
+from backend.apps.template.filters import TemplateFilter
+from backend.apps.template.models import PermTemplate
 from backend.apps.template.views import TemplateQueryMixin
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery
@@ -36,12 +42,20 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.TEMPLATE_LIST.value),
-        "create": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.TEMPLATE_CREATE.value)
+        "list": (
+            VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
+            ManagementAPIEnum.V2_GRADE_MANAGER_TEMPLATE_LIST.value,
+        ),
+        "create": (
+            VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
+            ManagementAPIEnum.V2_GRADE_MANAGER_TEMPLATE_CREATE.value,
+        ),
     }
-
+    queryset = PermTemplate.objects.all()
+    lookup_field = "id"
     template_biz = TemplateBiz()
     template_check_biz = TemplateCheckBiz()
+    filterset_class = TemplateFilter
 
     @swagger_auto_schema(
         operation_description="模板列表",
@@ -49,11 +63,10 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         tags=["management.role.template"],
     )
     def list(self, request, *args, **kwargs):
-        role_id = request.query_params.get("role_id")
-        role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=role_id)
-        user = User.objects.get(username='admin')
-        queryset = RoleListQuery(role, user).query_template()
-
+        role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
+        # 用户校验，默认用admin
+        user = User.objects.get(username="admin")
+        queryset = self.filter_queryset(RoleListQuery(role, user).query_template())
         # 查询 role 的 system-actions set
         role_system_actions = RoleListQuery(role).get_scope_system_actions()
 
@@ -71,7 +84,7 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     @swagger_auto_schema(
-        operation_description="创建模板",
+        operation_description="分级管理员创建模板",
         request_body=ManagementTemplateCreateSLZ(label="模板"),
         responses={status.HTTP_201_CREATED: ManagementTemplateIdSLZ(label="模板ID")},
         tags=["management.role.template"],
@@ -79,16 +92,15 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
     @view_audit_decorator(TemplateCreateAuditProvider)
     def create(self, request, *args, **kwargs):
         """
-        创建模板
+        分管创建模板
         """
+        role_id = kwargs["id"]
         request.data["system_id"] = request.data.pop("system")
-        role_id = request.data.pop("role_id")
         serializer = ManagementTemplateCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         user_id = request.user.username
         data = serializer.validated_data
-        role = Role.objects.get(id=role_id, type=RoleType.GRADE_MANAGER.value)
+        role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=role_id)
 
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(role)

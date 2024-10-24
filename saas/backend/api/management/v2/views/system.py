@@ -24,8 +24,9 @@ from backend.service.resource import SystemProviderConfigService
 class ManagementSystemViewSet(SystemViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
-    management_api_permission = {"list": (VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value,
-                                          ManagementAPIEnum.SYSTEM_PROVIDER_CONFIG_LIST.value)}
+    management_api_permission = {
+        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value, ManagementAPIEnum.SYSTEM_PROVIDER_CONFIG_LIST.value)
+    }
 
     pagination_class = None  # 去掉swagger中的limit offset参数
 
@@ -42,8 +43,9 @@ class ManagementSystemViewSet(SystemViewSet):
 class ManagementSystemProviderConfigViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
-    management_api_permission = {"list": (VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value,
-                                          ManagementAPIEnum.SYSTEM_PROVIDER_CONFIG_LIST.value)}
+    management_api_permission = {
+        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value, ManagementAPIEnum.SYSTEM_PROVIDER_CONFIG_LIST.value)
+    }
 
     @swagger_auto_schema(
         operation_description="系统回调信息",

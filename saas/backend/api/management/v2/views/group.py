@@ -23,6 +23,7 @@ from backend.api.management.v2.filters import GroupFilter
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
     ManagementGradeManagerGroupCreateSLZ,
+    ManagementGroupAuthorizationSLZ,
     ManagementGroupBaseInfoUpdateSLZ,
     ManagementGroupGrantSLZ,
     ManagementGroupMemberDeleteSLZ,
@@ -32,8 +33,6 @@ from backend.api.management.v2.serializers import (
     ManagementGroupSLZ,
     ManagementGroupSubjectTemplateSLZ,
     ManagementQueryGroupSLZ,
-    ManagementGroupAuthorizationSLZ,
-
 )
 from backend.apps.group.audit import (
     GroupCreateAuditProvider,
@@ -71,6 +70,7 @@ from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import GroupSaaSAttributeEnum, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.trans.group import GroupTrans
 from backend.trans.open_management import ManagementCommonTrans
 
 
@@ -366,7 +366,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at", "created_time"}) for one in group_members]
         for result in results:
-            result['created_at'] = int(result.pop('created_time').timestamp())
+            result["created_at"] = int(result.pop("created_time").timestamp())
         return Response({"count": count, "results": results})
 
     @swagger_auto_schema(
@@ -735,13 +735,14 @@ class ManagementGroupPolicyTemplateViewSet(GenericViewSet):
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     management_api_permission = {
-        "create": ("ignore", "ignore"),
+        "create": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_GRANT.value),
     }
 
     lookup_field = "id"
     queryset = Group.objects.all()
 
     group_biz = GroupBiz()
+    group_trans = GroupTrans()
     role_biz = RoleBiz()
     policy_operation_biz = PolicyOperationBiz()
     policy_query_biz = PolicyQueryBiz()
@@ -763,6 +764,11 @@ class ManagementGroupPolicyTemplateViewSet(GenericViewSet):
 
         role = self.role_biz.get_role_by_group_id(group.id)
         templates = self.group_trans.from_group_grant_data(data["templates"])
+
+        # 校验授权范围
+        self.group_biz.check_before_grant(
+            group, templates, role, need_check_action_not_exists=False, need_check_resource_name=False
+        )
         self.group_biz.grant(role, group, templates)
 
         # 写入审计上下文

@@ -24,14 +24,16 @@ from backend.api.admin.serializers import (
     AdminGroupAuthorizationSLZ,
     AdminGroupBasicSLZ,
     AdminGroupCreateSLZ,
-    AdminGroupMemberSLZ, AdminGroupRemoveMemberSLZ,
+    AdminGroupMemberSLZ,
+    AdminGroupRemoveMemberSLZ,
 )
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.v2.views import ManagementGroupViewSet
 from backend.apps.group.audit import (
     GroupCreateAuditProvider,
     GroupMemberCreateAuditProvider,
-    GroupTemplateCreateAuditProvider, GroupMemberDeleteAuditProvider,
+    GroupMemberDeleteAuditProvider,
+    GroupTemplateCreateAuditProvider,
 )
 from backend.apps.group.constants import OperateEnum
 from backend.apps.group.models import Group
@@ -140,8 +142,7 @@ class AdminGroupMemberViewSet(GenericViewSet):
     admin_api_permission = {
         "list": AdminAPIEnum.GROUP_MEMBER_LIST.value,
         "create": AdminAPIEnum.GROUP_MEMBER_ADD.value,
-        "destroy": AdminAPIEnum.GROUP_MEMBER_REMOVE.value,
-
+        "destroy": AdminAPIEnum.GROUP_MEMBER_DELETE.value,
     }
 
     queryset = Group.objects.all()
@@ -201,9 +202,11 @@ class AdminGroupMemberViewSet(GenericViewSet):
 
         return Response({})
 
-    @swagger_auto_schema(operation_description="用户组删除成员",
-                         responses={status.HTTP_204_NO_CONTENT: "NoContent"},
-                         tags=["admin.group.member"], )
+    @swagger_auto_schema(
+        operation_description="用户组删除成员",
+        responses={status.HTTP_204_NO_CONTENT: "NoContent"},
+        tags=["admin.group.member"],
+    )
     @view_audit_decorator(GroupMemberDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         group = self.get_object()

@@ -54,7 +54,7 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-        user = User.objects.get(username='admin')
+        user = User.objects.get(username="admin")
         queryset = RoleListQuery(role, user).query_template()
 
         # 查询 role 的 system-actions set

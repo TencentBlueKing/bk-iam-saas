@@ -43,9 +43,6 @@ class ManagementAPIEnum(BaseAPIEnum):
     USER_ROLE_GROUP_LIST = auto()
     # 用户组申请单
     GROUP_APPLICATION_CREATE = auto()
-    # 模板
-    TEMPLATE_LIST = auto()
-    TEMPLATE_CREATE = auto()
 
     # V2 API
     # 用户组
@@ -89,9 +86,9 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_APPLICATION_CANCEL = auto()
     # 人员模版
     V2_SUBJECT_TEMPLATE_LIST = auto()
-
-    # 获取系统回调信息
-    SYSTEM_PROVIDER_CONFIG_LIST = auto()
+    # 权限模版
+    V2_GRADE_MANAGER_TEMPLATE_LIST = auto()
+    V2_GRADE_MANAGER_TEMPLATE_CREATE = auto()
 
     _choices_labels = skip(
         (
@@ -157,7 +154,9 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_APPLICATION_APPROVAL, "[V2]申请单审批通知"),
             # 申请单取消
             (V2_APPLICATION_CANCEL, "[V2]申请单取消"),
-            (SYSTEM_PROVIDER_CONFIG_LIST, "获取系统回调信息"),
+            # 权限模版
+            (V2_GRADE_MANAGER_TEMPLATE_LIST, "[V2]获取分级管理员权限模版列表"),
+            (V2_GRADE_MANAGER_TEMPLATE_CREATE, "[V2]创建分级管理员权限模版"),
         )
     )
 
