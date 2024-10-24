@@ -70,6 +70,12 @@ urlpatterns = [
         views.ManagementGroupPolicyViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.management.v2.group_policy",
     ),
+    # 用户组绑定权限模板的路由
+    path(
+        "groups/<int:id>/policies_template/",
+        views.ManagementGroupPolicyTemplateViewSet.as_view({"post": "create"}),
+        name="open.management.v2.group_policy_template",
+    ),
     # 用户组自定义权限 - 操作级别的变更，不涉及Resources
     path(
         "groups/<int:id>/actions/-/policies/",
@@ -161,5 +167,11 @@ urlpatterns = [
         "grade_managers/<int:id>/subject_templates/",
         views.ManagementGradeManagerSubjectTemplateViewSet.as_view({"get": "list"}),
         name="open.management.v2.grade_manager_subject_template",
+    ),
+    # 分级管理员创建权限模板
+    path(
+        "grade_managers/<int:id>/templates/",
+        views.ManagementTemplateViewSet.as_view({"get": "list", "post": "create"}),
+        name="open.management.v2.template",
     ),
 ]

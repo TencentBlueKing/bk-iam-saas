@@ -15,9 +15,11 @@ from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.group.models import Group
+from backend.apps.group.serializers import GroupAuthorizationSLZ
 from backend.apps.role.models import Role, RoleUser
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.apps.subject_template.models import SubjectTemplate
+from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.constants import GroupMemberType
@@ -414,3 +416,23 @@ class ManagementSubjectTemplateSLZ(serializers.ModelSerializer):
     class Meta:
         model = SubjectTemplate
         fields = ("id", "name", "description", "readonly", "source_group_id", "creator", "created_time")
+
+
+class ManagementGroupAuthorizationSLZ(GroupAuthorizationSLZ):
+    pass
+
+
+class ManagementTemplateListSchemaSLZ(TemplateListSchemaSLZ):
+    pass
+
+
+class ManagementTemplateListSLZ(TemplateListSLZ):
+    pass
+
+
+class ManagementTemplateCreateSLZ(TemplateCreateSLZ):
+    pass
+
+
+class ManagementTemplateIdSLZ(TemplateIdSLZ):
+    pass
