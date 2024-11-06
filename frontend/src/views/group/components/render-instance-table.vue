@@ -513,10 +513,12 @@
           return curData.selectionMode;
       },
       isShowPreview () {
-          if (this.curIndex === -1) {
+          if (this.curIndex === -1 || this.curGroupIndex === -1) {
               return false;
           }
-          return this.tableList[this.curIndex].policy_id !== '';
+          // 预览模板需要groupId和resourceGroupId
+          const { policy_id: policyId, resource_groups: resourceGroups } = this.tableList[this.curIndex];
+          return policyId !== '' && resourceGroups[this.curGroupIndex].id && this.groupId;
       },
       isShowView () {
           return (payload) => {
