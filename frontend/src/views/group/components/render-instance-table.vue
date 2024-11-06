@@ -516,7 +516,8 @@
           if (this.curIndex === -1) {
               return false;
           }
-          return this.tableList[this.curIndex].policy_id !== '';
+          // 预览模板需要groupId
+          return this.tableList[this.curIndex].policy_id !== '' && this.groupId;
       },
       isShowView () {
           return (payload) => {

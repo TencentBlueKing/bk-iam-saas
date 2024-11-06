@@ -207,7 +207,6 @@
           data-test-id="group_btn_resourceInstanceSubmit">
           {{ $t(`m.common['保存']`) }}
         </bk-button>
-        <bk-button style="margin-left: 10px;" :disabled="disabled" v-if="isShowPreview" @click="handleResourcePreview">{{ $t(`m.common['预览']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
@@ -456,12 +455,6 @@
             const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                 .related_resource_types[this.curResIndex];
             return curData.selectionMode;
-        },
-        isShowPreview () {
-            if (this.curIndex === -1) {
-                return false;
-            }
-            return this.tableList[this.curIndex].policy_id !== '';
         },
         isShowView () {
             return (payload) => {
@@ -1220,40 +1213,6 @@
         //     // 调用合并展开的方法 重组tableList的排序
         //     this.$emit('handleAggregateAction', false)
         // }
-      },
-      handleResourcePreview () {
-        // debugger
-        window.changeDialog = true;
-        // eslint-disable-next-line max-len
-        const { system_id, type, name } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex].related_resource_types[this.curResIndex];
-        const condition = [];
-        const conditionData = this.$refs.renderResourceRef.handleGetPreviewValue();
-        conditionData.forEach(item => {
-          const { id, attribute, instance } = item;
-          condition.push({
-            id,
-            attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
-            instances: instance ? instance.filter(item => item.path.length > 0) : []
-          });
-        });
-        this.previewResourceParams = {
-          id: this.templateId,
-          action_id: this.tableList[this.curIndex].id,
-          related_resource_type: {
-            system_id,
-            type,
-            name,
-            condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
-          },
-          reverse: true,
-          groupId: this.groupId,
-          policy_id: this.tableList[this.curIndex].policy_id,
-          resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
-          isTemplate: this.tableList[this.curIndex].isTemplate,
-          isNotLimit: conditionData.length === 0
-        };
-        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}` });
-        this.isShowPreviewDialog = true;
       },
       handlerConditionMouseover (payload) {
         if (Object.keys(this.curCopyParams).length < 1 && this.curCopyMode === 'normal') {
