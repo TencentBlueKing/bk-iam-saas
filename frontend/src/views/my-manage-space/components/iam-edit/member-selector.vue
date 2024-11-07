@@ -115,6 +115,9 @@
       },
       isEditMode () {
         return this.mode === 'edit';
+      },
+      isAllowTrigger () {
+        return JSON.stringify(this.displayValue) !== JSON.stringify(this.value) || this.isAbnormal;
       }
     },
     watch: {
@@ -174,10 +177,9 @@
       handleEnter (event) {
         if (!this.isEditable) return;
         const { key, keyCode } = event;
-        const isUpdate = JSON.stringify(this.displayValue) !== JSON.stringify(this.value);
         if (key === 'Enter' && keyCode === 13) {
           this.handleDefaultEmpty();
-          if (isUpdate) {
+          if (this.isAllowTrigger) {
             this.handleEmptyChange();
             this.isEditable = false;
           } else {
@@ -203,7 +205,8 @@
       },
             
       triggerChange () {
-        if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+        console.log(this.isAllowTrigger, this.displayValue, '显示内容');
+        if (this.isAllowTrigger) {
           this.isLoading = true;
           this.remoteHandler({
             [this.field]: this.displayValue
@@ -234,7 +237,7 @@
       handleRtxBlur () {
         this.isEditable = false;
         this.handleDefaultEmpty();
-        if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+        if (this.isAllowTrigger) {
           this.handleEmptyChange();
         }
       },
