@@ -513,10 +513,12 @@
           return curData.selectionMode;
       },
       isShowPreview () {
-          if (this.curIndex === -1) {
+          if (this.curIndex === -1 || this.curGroupIndex === -1) {
               return false;
           }
-          return this.tableList[this.curIndex].policy_id !== '';
+          // 预览模板需要groupId和resourceGroupId
+          const { policy_id: policyId, resource_groups: resourceGroups } = this.tableList[this.curIndex];
+          return policyId !== '' && resourceGroups[this.curGroupIndex].id && this.groupId;
       },
       isShowView () {
           return (payload) => {
@@ -1338,11 +1340,12 @@
                         ins.path.forEach((p, pathIndex) => {
                           if (p.length > 0) {
                             // 处理授权范围是父级，但是选择了子集数据，需要查找所选数据是不是属于授权范围内的子集数据
-                            let curParentChain = [];
-                            const tempPath = p.filter(v => v.id !== '*');
-                            if (tempPath.length) {
-                              curParentChain = tempPath.slice(0, tempPath.length - 1);
-                            }
+                            // let curParentChain = [];
+                            // const tempPath = p.filter(v => v.id !== '*');
+                            // if (tempPath.length) {
+                            //   curParentChain = tempPath.slice(0, tempPath.length - 1);
+                            // }
+                            const curParentChain = p.slice(0, p.length - 1);
                             // 判断授权范围是不是父级数据
                             const isExistParent = curParentChain.filter((subPath) => scopeInsList.includes(`${subPath.id}&${subPath.name}&${subPath.type}`));
                             // 只获取授权范围内的资源实例
