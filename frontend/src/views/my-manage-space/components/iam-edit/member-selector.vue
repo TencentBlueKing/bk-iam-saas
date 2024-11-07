@@ -205,6 +205,7 @@
       },
             
       triggerChange () {
+        console.log(this.isAllowTrigger, this.displayValue, '显示内容');
         if (this.isAllowTrigger) {
           this.isLoading = true;
           this.remoteHandler({
