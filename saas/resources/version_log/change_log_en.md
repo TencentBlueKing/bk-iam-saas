@@ -1,3 +1,14 @@
+<!-- 2024-11-07 -->
+# V1.10.37 Version Update Log
+
+### Fixes
+* Fixed an error when previewing difference comparisons if a user group has no resource instances and attribute conditions.
+* Resource instance difference comparisons can only be previewed if the user group module exists and the user group itself exists.
+* Fixed an issue where incorrect child_type values prevented the expansion of non-terminal node topologies.
+* Resolved an issue where, in the main operations of user groups and secondary management spaces, removing unrestricted resource instances from associated operations occasionally caused authorization boundary overflows.
+
+---
+
 <!-- 2024-10-11 -->
 # V1.10.36 Version Update Log
 
