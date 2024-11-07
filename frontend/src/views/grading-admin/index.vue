@@ -67,7 +67,9 @@
                   :placeholder="$t(`m.verify['请输入']`)"
                   :value="child.row.members"
                   :index="child.$index"
-                  @on-change="handleUpdateSubMembers" />
+                  :is-abnormal="child.row.members.length === 0"
+                  @on-change="handleUpdateSubMembers"
+                />
               </template>
             </bk-table-column>
             <bk-table-column prop="description" :min-width="200">
@@ -166,6 +168,7 @@
             :placeholder="$t(`m.verify['请输入']`)"
             :value="row.members"
             :index="$index"
+            :is-abnormal="row.members.length === 0"
             @on-change="handleUpdateMembers" />
         </template>
       </bk-table-column>

@@ -89,6 +89,11 @@
       allowEmpty: {
         type: Boolean,
         default: false
+      },
+      // 兼容必填但接口数据异常情况
+      isAbnormal: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -213,7 +218,7 @@
       },
 
       handleChange () {
-        if (this.displayValue.length < 1 && !this.allowEmpty) {
+        if (this.displayValue.length < 1 && !this.allowEmpty && !this.isAbnormal) {
           return;
         }
         const editValue = this.editValue.reduce((p, v) => {
@@ -236,7 +241,7 @@
 
       // 判空校验
       handleEmptyChange () {
-        if (this.displayValue.length < 1 && !this.allowEmpty) {
+        if (this.displayValue.length < 1 && !this.allowEmpty && !this.isAbnormal) {
           let editValue = [];
           if (this.editValue.length) {
             if (!this.editValue.some((v) => v.username)) {
