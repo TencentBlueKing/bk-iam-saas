@@ -92,6 +92,7 @@
                   :placeholder="$t(`m.verify['请输入']`)"
                   :value="child.row.members"
                   :index="child.$index"
+                  :is-abnormal="child.row.members.length === 0"
                   @on-change="handleUpdateSubMembers"
                 />
               </template>
@@ -215,6 +216,7 @@
             :placeholder="$t(`m.verify['请输入']`)"
             :value="row.members"
             :index="$index"
+            :is-abnormal="row.members.length === 0"
             @on-change="handleUpdateMembers"
           />
         </template>
