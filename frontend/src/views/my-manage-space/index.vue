@@ -92,6 +92,8 @@
                     width="200"
                     :ref="`subManagerRef${child.$index}`"
                     :placeholder="$t(`m.verify['请输入']`)"
+                    :allow-empty="true"
+                    :is-edit-allow-empty="false"
                     :value="child.row.members"
                     :index="child.$index"
                     @on-change="handleUpdateSubMembers"
@@ -229,6 +231,7 @@
               :ref="`managerRef${$index}`"
               :placeholder="$t(`m.verify['请输入']`)"
               :allow-empty="true"
+              :is-edit-allow-empty="false"
               :value="row.members"
               :index="$index"
               @on-change="handleUpdateMembers"
@@ -611,10 +614,6 @@
           members: members || this.formData.members,
           id: this.formData.id
         };
-        if (!params.members.length) {
-          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
-          return;
-        }
         try {
           await this.$store.dispatch(url, params);
           this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);

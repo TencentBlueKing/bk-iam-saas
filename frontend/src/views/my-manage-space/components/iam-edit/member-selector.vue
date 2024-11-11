@@ -86,9 +86,15 @@
           return ['detail', 'edit'].includes(value);
         }
       },
+      // 默认允许空
       allowEmpty: {
         type: Boolean,
         default: false
+      },
+      // 编辑不允许空
+      isEditAllowEmpty: {
+        type: Boolean,
+        default: true
       }
     },
     data () {
@@ -201,6 +207,12 @@
             
       triggerChange () {
         console.log(this.isAllowTrigger, this.displayValue, '显示内容');
+        // 单独处理初始化为空但编辑不能为空数据
+        if (!this.displayValue.length && !this.isEditAllowEmpty) {
+          this.displayValue = [...this.value];
+          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
+          return;
+        }
         if (this.isAllowTrigger) {
           this.isLoading = true;
           this.remoteHandler({
