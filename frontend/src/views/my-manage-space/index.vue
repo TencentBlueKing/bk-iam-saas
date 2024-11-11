@@ -86,15 +86,28 @@
             </bk-table-column>
             <bk-table-column prop="members" width="300">
               <template slot-scope="child">
-                <iam-edit-member-selector
-                  field="members"
-                  width="200"
-                  :placeholder="$t(`m.verify['请输入']`)"
-                  :value="child.row.members"
-                  :index="child.$index"
-                  :is-abnormal="child.row.members.length === 0"
-                  @on-change="handleUpdateSubMembers"
-                />
+                <template v-if="child.row.isEdit || child.row.members.length > 0">
+                  <IamEditMemberSelector
+                    field="members"
+                    width="200"
+                    :ref="`subManagerRef${child.$index}`"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :value="child.row.members"
+                    :index="child.$index"
+                    @on-change="handleUpdateSubMembers"
+                    @on-empty-change="handleEmptyMemberChange(...arguments, child.row)"
+                  />
+                </template>
+                <template v-else>
+                  <IamManagerEditInput
+                    field="members"
+                    style="width: 100%;"
+                    :is-show-other="true"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :value="getMemberFilter(child.row.members)"
+                    @handleShow="handleOpenSubManagerEdit(child.row, child.$index)"
+                  />
+                </template>
               </template>
             </bk-table-column>
             <bk-table-column prop="description" :min-width="200">
@@ -208,17 +221,30 @@
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
-        <template slot-scope="{ row, $index }">
-          <iam-edit-member-selector
-            field="members"
-            width="200"
-            mode="edit"
-            :placeholder="$t(`m.verify['请输入']`)"
-            :value="row.members"
-            :index="$index"
-            :is-abnormal="row.members.length === 0"
-            @on-change="handleUpdateMembers"
-          />
+        <template slot-scope="{ row , $index }">
+          <template v-if="row.isEdit || row.members.length > 0">
+            <IamEditMemberSelector
+              field="members"
+              width="200"
+              :ref="`managerRef${$index}`"
+              :placeholder="$t(`m.verify['请输入']`)"
+              :allow-empty="true"
+              :value="row.members"
+              :index="$index"
+              @on-change="handleUpdateMembers"
+              @on-empty-change="handleEmptyMemberChange(...arguments, row)"
+            />
+          </template>
+          <template v-else>
+            <IamManagerEditInput
+              field="members"
+              style="width: 100%;"
+              :is-show-other="true"
+              :placeholder="$t(`m.verify['请输入']`)"
+              :value="getMemberFilter(row.members)"
+              @handleShow="handleOpenManagerEdit(row, $index)"
+            />
+          </template>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['描述']`)" prop="description" :min-width="200">
@@ -326,6 +352,7 @@
   import IamEditMemberSelector from './components/iam-edit/member-selector';
   import IamEditTextarea from './components/iam-edit/textarea';
   import IamSearchSelect from '@/components/iam-search-select';
+  import IamManagerEditInput from '@/components/iam-edit/input';
   import { buildURLParams } from '@/common/url';
   import ManageInterviewDialog from '@/components/manage-interview-dialog';
   // import { bus } from '@/common/bus';
@@ -338,6 +365,7 @@
       IamEditMemberSelector,
       IamEditTextarea,
       IamSearchSelect,
+      IamManagerEditInput,
       ManageInterviewDialog
     },
     data () {
@@ -452,6 +480,13 @@
         return !['child-operate'].includes(column.property) ? 'iam-table-cell-1-cls' : '';
       },
 
+      getMemberFilter (value) {
+        if (value.length) {
+          return _.isArray(value) ? value.map(item => item.username).join(';') : value;
+        }
+        return '--';
+      },
+
       // 通过子集id找父级数据
       findParentNode (id, list = [], result = []) {
         for (let i = 0; i < list.length; i += 1) {
@@ -498,6 +533,40 @@
           this.fetchGradingAdmin(true);
         }
       },
+      
+      handleOpenManagerEdit (payload, index) {
+        this.$set(this.tableList[index], 'isEdit', true);
+        this.$nextTick(() => {
+          const managerRef = this.$refs[`managerRef${index}`];
+          if (managerRef) {
+            managerRef.isEditable = true;
+            if (!payload.members.length) {
+              setTimeout(() => {
+                this.$refs[`managerRef${index}`].$refs.selector.focus();
+              }, 10);
+            }
+          }
+        });
+      },
+
+      handleOpenSubManagerEdit (payload, index) {
+        this.$set(payload, 'isEdit', true);
+        this.$nextTick(() => {
+          const subManagerRef = this.$refs[`subManagerRef${index}`];
+          if (subManagerRef) {
+            subManagerRef.isEditable = true;
+            if (!payload.members.length) {
+              setTimeout(() => {
+                subManagerRef.$refs.selector.focus();
+              }, 10);
+            }
+          }
+        });
+      },
+
+      handleEmptyMemberChange (index, row) {
+        row.isEdit = false;
+      },
 
       handleUpdateMembers (payload, index) {
         this.handleUpdateManageSpace(payload, index);
@@ -542,6 +611,10 @@
           members: members || this.formData.members,
           id: this.formData.id
         };
+        if (!params.members.length) {
+          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
+          return;
+        }
         try {
           await this.$store.dispatch(url, params);
           this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
@@ -620,9 +693,12 @@
             name: this.searchValue
           });
           this.pagination.count = data.count;
-          data.results = data.results.map((e) => {
-            e.children = [];
-            return e;
+          data.results = data.results.map((item) => {
+            item = Object.assign(item, {
+              isEdit: false,
+              children: []
+            });
+            return item;
           });
           this.tableList.splice(0, this.tableList.length, ...(data.results || []));
           if (this.isStaff) {
