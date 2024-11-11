@@ -89,11 +89,6 @@
       allowEmpty: {
         type: Boolean,
         default: false
-      },
-      // 兼容必填但接口数据异常情况
-      isAbnormal: {
-        type: Boolean,
-        default: false
       }
     },
     data () {
@@ -117,7 +112,7 @@
         return this.mode === 'edit';
       },
       isAllowTrigger () {
-        return JSON.stringify(this.displayValue) !== JSON.stringify(this.value) || this.isAbnormal;
+        return JSON.stringify(this.displayValue) !== JSON.stringify(this.value);
       }
     },
     watch: {
@@ -221,7 +216,7 @@
       },
 
       handleChange () {
-        if (this.displayValue.length < 1 && !this.allowEmpty && !this.isAbnormal) {
+        if (this.displayValue.length < 1 && !this.allowEmpty) {
           return;
         }
         const editValue = this.editValue.reduce((p, v) => {
@@ -244,7 +239,7 @@
 
       // 判空校验
       handleEmptyChange () {
-        if (this.displayValue.length < 1 && !this.allowEmpty && !this.isAbnormal) {
+        if (this.displayValue.length < 1 && !this.allowEmpty) {
           let editValue = [];
           if (this.editValue.length) {
             if (!this.editValue.some((v) => v.username)) {
