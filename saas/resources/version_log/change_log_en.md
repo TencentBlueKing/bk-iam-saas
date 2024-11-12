@@ -1,3 +1,11 @@
+<!-- 2024-11-12 -->
+# V1.10.38 Version Update Log
+
+### Feature Enhancements
+* The management space personnel selector edit component supports re-editing the scenario after being set to empty by default (the administrator has left).
+
+---
+
 <!-- 2024-11-07 -->
 # V1.10.37 Version Update Log
 
