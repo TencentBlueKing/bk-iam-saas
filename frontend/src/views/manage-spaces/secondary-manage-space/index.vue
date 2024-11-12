@@ -29,13 +29,30 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
         <template slot-scope="{ row, $index }">
-          <iam-edit-member-selector
-            field="members"
-            width="200"
-            :placeholder="$t(`m.verify['请输入']`)"
-            :value="row.members"
-            :index="$index"
-            @on-change="handleUpdateMembers(...arguments, row)" />
+          <template v-if="row.isEdit || row.members.length > 0">
+            <IamEditMemberSelector
+              field="members"
+              width="200"
+              :ref="`managerRef${$index}`"
+              :placeholder="$t(`m.verify['请输入']`)"
+              :allow-empty="true"
+              :is-edit-allow-empty="false"
+              :value="row.members"
+              :index="$index"
+              @on-change="handleUpdateMembers"
+              @on-empty-change="handleEmptyMemberChange(...arguments, row)"
+            />
+          </template>
+          <template v-else>
+            <IamManagerEditInput
+              field="members"
+              style="width: 100%;"
+              :is-show-other="true"
+              :placeholder="$t(`m.verify['请输入']`)"
+              :value="getMemberFilter(row.members)"
+              @handleShow="handleOpenManagerEdit(row, $index)"
+            />
+          </template>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['描述']`)">
@@ -89,11 +106,13 @@
   import { buildURLParams } from '@/common/url';
   import { formatCodeData, getWindowHeight } from '@/common/util';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+  import IamManagerEditInput from '@/components/iam-edit/input';
 
   export default {
     name: 'secondaryManageSpace',
     components: {
-      IamEditMemberSelector
+      IamEditMemberSelector,
+      IamManagerEditInput
     },
     data () {
       return {
@@ -213,6 +232,32 @@
         this.resetPagination();
         this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
         await this.fetchGradingAdmin(true);
+      },
+
+      getMemberFilter (value) {
+        if (value.length) {
+          return Array.isArray(value) ? value.map(item => item.username).join(';') : value;
+        }
+        return '--';
+      },
+
+      handleOpenManagerEdit (payload, index) {
+        this.$set(this.tableList[index], 'isEdit', true);
+        this.$nextTick(() => {
+          const managerRef = this.$refs[`managerRef${index}`];
+          if (managerRef) {
+            managerRef.isEditable = true;
+            if (!payload.members.length) {
+              setTimeout(() => {
+                this.$refs[`managerRef${index}`].$refs.selector.focus();
+              }, 10);
+            }
+          }
+        });
+      },
+
+      handleEmptyMemberChange (index, row) {
+        row.isEdit = false;
       },
 
       handleNavAuthBoundary (payload) {
