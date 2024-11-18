@@ -1465,6 +1465,20 @@
           this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
           this.isShowRenewalDialog = false;
           this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
+          if (this.externalRoutes.includes(this.$route.name)) {
+            const externalParams = {
+              ...params,
+              count: params.members.length
+            };
+            window.parent.postMessage(
+              {
+                type: 'IAM',
+                data: externalParams,
+                code: ['memberTemplate'].includes(this.tabActive) ? 'renewal_template_confirm' : 'renewal_user_confirm'
+              },
+              '*'
+            );
+          }
           this.handleRefreshTab();
         } catch (e) {
           console.error(e);
@@ -1545,7 +1559,6 @@
 /deep/ .iam-table-cell-depart-cls {
   .cell {
     padding: 5px 0;
-    -webkit-line-clamp: 100;
     padding-left: 15px;
     .user_departs {
       margin-bottom: 10px;
