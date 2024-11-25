@@ -1119,18 +1119,19 @@
           delete item.instance;
           delete item.attribute;
         });
-        const curData = _.cloneDeep(this.tableList[this.curIndex]);
+        const tableList = _.cloneDeep(this.tableList);
+        const curData = _.cloneDeep(tableList[this.curIndex]);
         // eslint-disable-next-line max-len
         curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex]];
         curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload;
-        const relatedList = _.cloneDeep(this.tableList.filter(item => {
+        const relatedList = tableList.filter(item => {
           return !item.isAggregate
             && relatedActions.includes(item.id)
             && curData.detail.system.id === item.detail.system.id
             && item.resource_groups[this.curGroupIndex]
             && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty);
-        }));
+        });
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
             delete item.policy_id;

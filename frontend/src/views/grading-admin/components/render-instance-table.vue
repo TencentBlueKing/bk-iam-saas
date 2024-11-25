@@ -587,19 +587,21 @@
           delete item.instance;
           delete item.attribute;
         });
-        const curData = _.cloneDeep(this.tableList[this.curIndex]);
+        // 这里需要备份下表格上一次的数据，防止源数据被关联页面清空后页面出现空实例情况
+        const tableList = _.cloneDeep(this.tableList);
+        const curData = _.cloneDeep(tableList[this.curIndex]);
         // eslint-disable-next-line max-len
         curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex]];
         curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload;
-        const relatedList = _.cloneDeep(this.tableList.filter(item => {
+        const relatedList = tableList.filter(item => {
           return !item.isExpiredAtDisabled
             && !item.isAggregate
             && relatedActions.includes(item.id)
             && curData.system_id === item.system_id
             && item.resource_groups[this.curGroupIndex]
             && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty);
-        }));
+        });
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
             delete item.policy_id;
