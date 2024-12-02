@@ -129,6 +129,7 @@
             @on-add="handleAdd(condition, index, 'attribute')"
             @on-delete="handleDelete(condition, index, 'attribute')">
             <!-- :mode="attributeMode(condition)" -->
+            {{ condition.attribute }} {{ getLimitAttribute(conditionLimitData[index]) }}
             <attribute
               :value="condition.attribute"
               :list="attributes"
@@ -541,11 +542,14 @@
               }
             }
             this.conditionLimitData.forEach((item, index) => {
+              const isHasInstance = item.instance && item.instance.length > 0;
+              const isHasAttribute = item.attribute && item.attribute.length > 0;
               const tempList = this.selectList.filter(subItem => {
                 const chainLen = subItem.resource_type_chain.length;
                 const curChainId = subItem.resource_type_chain.map(item => item.id);
                 const lastChainId = subItem.resource_type_chain[chainLen - 1].id;
-                const curTypes = item.instance.map(v => v.path.map(vItem => vItem.map(_ => _.type)));
+                // 处理只有attribute无instance场景
+                const curTypes = isHasInstance ? item.instance.map(v => v.path.map(vItem => vItem.map(_ => _.type))) : [];
                 return curTypes.filter(typeItem => {
                   if (subItem.ignore_iam_path && typeItem.length === 1) {
                     return typeItem[0] === lastChainId;
@@ -557,8 +561,6 @@
                 this.$set(this.selectListMap, index, tempList);
                 this.$set(this.selectValueMap, index, tempList[0].id);
               }
-              const isHasInstance = item.instance && item.instance.length > 0;
-              const isHasAttribute = item.attribute && item.attribute.length > 0;
               let curSelectMode = '';
               if (['instance:paste'].includes(this.selectionMode)) {
                 curSelectMode = this.selectionMode;
