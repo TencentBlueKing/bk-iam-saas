@@ -129,7 +129,6 @@
             @on-add="handleAdd(condition, index, 'attribute')"
             @on-delete="handleDelete(condition, index, 'attribute')">
             <!-- :mode="attributeMode(condition)" -->
-            {{ condition.attribute }} {{ getLimitAttribute(conditionLimitData[index]) }}
             <attribute
               :value="condition.attribute"
               :list="attributes"
