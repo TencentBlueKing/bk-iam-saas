@@ -1468,8 +1468,10 @@
           if (this.externalRoutes.includes(this.$route.name)) {
             const externalParams = {
               ...params,
-              count: params.members.length
+              count: params.members.length,
+              id: this.id
             };
+            delete externalParams.groupId;
             window.parent.postMessage(
               {
                 type: 'IAM',
