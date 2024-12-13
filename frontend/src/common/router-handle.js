@@ -216,6 +216,7 @@ export const getRouterDiff = (payload) => {
       'secondaryManageSpace',
       'secondaryManageSpaceCreate',
       'secondaryManageSpaceDetail',
+      'authorBoundaryEditFirstLevel',
       'myManageSpace',
       'permTemplate',
       'userGroupSetting',
