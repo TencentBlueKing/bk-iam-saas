@@ -138,9 +138,13 @@ const SecondaryManageSpace = () =>
 const SecondaryManageSpaceCreate = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/create');
 
+// 二极管理空间克隆
+const SecondaryManageSpaceClone = () =>
+  import(/* webpackChunkName: 'secondaryManageSpaceClone' */ '../views/manage-spaces/secondary-manage-space/create');
+
 // 二极管理空间编辑
-// const SecondaryManageSpaceEdit = () =>
-//   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/edit');
+const SecondaryManageSpaceEdit = () =>
+  import(/* webpackChunkName: 'secondaryManageSpaceEdit' */ '../views/manage-spaces/secondary-manage-space/edit');
 
 // 二极管理空间详情
 const SecondaryManageSpaceDetail = () =>
@@ -411,7 +415,7 @@ export const routes = [
         component: SecondaryManageSpace
       },
       {
-        path: ':id/manage-spaces/secondary-manage-space/create',
+        path: 'manage-spaces/secondary-manage-space/create',
         name: 'secondaryManageSpaceCreate',
         meta: {
           headerTitle: '',
@@ -420,15 +424,25 @@ export const routes = [
         props: true,
         component: SecondaryManageSpaceCreate
       },
-      // {
-      //   path: ':id/manage-spaces/secondary-manage-space/edit',
-      //   name: 'secondaryManageSpaceEdit',
-      //   meta: {
-      //     backRouter: -1
-      //   },
-      //   props: true,
-      //   component: SecondaryManageSpaceEdit
-      // },
+      {
+        path: ':id/manage-spaces/secondary-manage-space/clone',
+        name: 'secondaryManageSpaceClone',
+        meta: {
+          headerTitle: '',
+          backRouter: -1
+        },
+        props: true,
+        component: SecondaryManageSpaceClone
+      },
+      {
+        path: ':id/manage-spaces/secondary-manage-space/edit',
+        name: 'secondaryManageSpaceEdit',
+        meta: {
+          backRouter: -1
+        },
+        props: true,
+        component: SecondaryManageSpaceEdit
+      },
       {
         path: ':id/manage-spaces/secondary-manage-space/detail',
         name: 'secondaryManageSpaceDetail',

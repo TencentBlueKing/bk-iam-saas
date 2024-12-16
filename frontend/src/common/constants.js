@@ -188,7 +188,16 @@ export const ALL_ROUTES_LIST = new Map([
   // 分级管理员
   [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
   // 二级管理空间
-  [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],
+  [
+    [
+      'secondaryManageSpace',
+      'secondaryManageSpaceCreate',
+      'secondaryManageSpaceClone',
+      'secondaryManageSpaceDetail',
+      'secondaryManageSpaceEdit'
+    ],
+    'secondaryManageSpaceNav'
+  ],
   // 授权边界
   [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
   // 最大可授权人员边界
