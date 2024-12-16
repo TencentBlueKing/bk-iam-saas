@@ -118,10 +118,6 @@ const GradingAdminDetail = () => import(/* webpackChunkName: 'grading-admin' */ 
 // 管理空间编辑
 const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/edit');
 
-// 管理空间更新权限模板
-const GradingAdminUpdateTemplate = () =>
-  import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
-
 // 授权边界
 const AuthorizationBoundary = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary');
@@ -639,15 +635,6 @@ export const routes = [
           backRouter: 'gradingAdminDetail'
         },
         component: GradingAdminEdit
-      },
-      {
-        path: ':id/rating-manager-update-template',
-        name: 'gradingAdminUpdateTemplate',
-        meta: {
-          headerTitle: il8n('nav', '编辑管理空间'),
-          backRouter: 'gradingAdminEdit'
-        },
-        component: GradingAdminUpdateTemplate
       },
       {
         path: 'resource-permiss',
