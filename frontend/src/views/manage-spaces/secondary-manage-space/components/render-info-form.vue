@@ -351,9 +351,6 @@
         this.$store.commit('setHeaderTitle', this.title);
         if (propsId) {
           await this.fetchDetail();
-          if (this.policyList.length > 1) {
-            this.fetchAggregationSystem(this.curSystemId);
-          }
         } else {
           const { username } = this.user;
           this.formData.members = [{ username, readonly: true }];
@@ -512,7 +509,8 @@
                 system: {
                   id: item.system_id,
                   name: item.system_name
-                }
+                },
+                id: CUSTOM_PERM_TEMPLATE_ID
               }
             );
             this.$set(result, '$id', `${item.system_id}&${item.id}`);
@@ -651,17 +649,14 @@
           });
           return arr;
         })();
-        const curAction = payload.actions.map((item) => `${payload.system_id}&${item.id}`);
         if (instances.length > 0) {
-          this.aggregationsTableData.forEach((item) => {
-            if (curAction.includes(`${item.system_id}&${item.id}`)) {
-              item.resource_groups.forEach((groupItem) => {
-                groupItem.related_resource_types
-                  && groupItem.related_resource_types.forEach((subItem) => {
-                    subItem.condition = [new Condition({ instances }, '', 'add')];
-                  });
+          const actions = this.curMap.get(payload.aggregationId);
+          actions.forEach(item => {
+            item.resource_groups.forEach(groupItem => {
+              groupItem.related_resource_types.forEach(subItem => {
+                subItem.condition = [new Condition({ instances }, '', 'add')];
               });
-            }
+            });
           });
         }
       },
@@ -671,16 +666,9 @@
           this.aggregationDataByCustom,
           this.aggregationData
         );
-        const keys = Object.keys(this.allAggregationData);
-        const data = {};
-        keys.forEach((item) => {
-          if (this.allAggregationData[item] && this.allAggregationData[item].length > 0) {
-            data[item] = this.allAggregationData[item];
-          }
-        });
-        this.allAggregationData = { ...data };
         this.policyList.forEach((item) => {
-          const aggregationData = this.allAggregationData[item.detail.system.id];
+          const curSystemId = item.detail.system.id;
+          const aggregationData = this.allAggregationData[curSystemId] || [];
           if (aggregationData && aggregationData.length) {
             aggregationData.forEach((aggItem) => {
               if (aggItem.actions.map((act) => act.id).includes(item.id)) {
@@ -722,11 +710,9 @@
         let tempData = [];
         let templateIds = [];
         let instancesDisplayData = {};
-        console.log(this.policyList, '类别');
         if (payload) {
           this.policyList.forEach(item => {
             if (!item.aggregationId) {
-              console.log(55555);
               tempData.push(item);
               templateIds.push(item.detail.id);
             }
@@ -766,7 +752,6 @@
                     curInstances.push(...instance);
                   });
                   instancesDisplayData = this.setInstancesDisplayData(curInstances);
-                  console.log('instancesDisplayData', instancesDisplayData);
                 } else {
                   curInstances = [];
                 }
@@ -797,7 +782,6 @@
         }
         // 为了合并单元格的计算，需将再次展开后的数据按照相同模板id重新排序组装一下
         const tempList = [];
-        console.log(tempList, templateIds, '聚合内容');
         templateIds = [...new Set(templateIds)];
         templateIds.forEach(item => {
           const list = tempData.filter(subItem => subItem.detail.id === item);
@@ -807,7 +791,6 @@
       },
 
       handleSelectSubmit (payload, aggregation, authorization) {
-        console.log(payload, aggregation, authorization, '内容');
         const actionList = [];
         payload.forEach((item) => {
           if (!item.resource_groups || !item.resource_groups.length) {
@@ -830,17 +813,42 @@
           this.$set(result, '$id', `${item.system_id}&${item.id}`);
           actionList.push(result);
         });
-        [this.policyList, this.originalList] = [cloneDeep(actionList), cloneDeep(actionList)];
+        if (this.originalList.length) {
+          let intersectionData = [];
+          const intersection = payload.filter(
+            item => !this.originalList.map(sub => sub.$id).includes(item.$id)
+          );
+          if (intersection.length) {
+            // 过滤掉上次已选内容再次实例化类
+            intersectionData = intersection.map((item) => {
+              const result = new GroupPolicy(
+                item,
+                'add',
+                'custom',
+                {
+                  system: {
+                    id: item.system_id,
+                    name: item.system_name
+                  },
+                  id: CUSTOM_PERM_TEMPLATE_ID
+                }
+              );
+              this.$set(result, '$id', `${item.system_id}&${item.id}`);
+              return result;
+            });
+          }
+          this.policyList = [...this.policyList, ...intersectionData];
+        }
         if (!payload.length) {
           this.curActionValue = [];
         }
+        this.originalList = cloneDeep(actionList);
         this.aggregationDataByCustom = cloneDeep(aggregation);
         this.authorizationDataByCustom = cloneDeep(authorization);
         // 处理当前是聚合形态再新增数据需要重新组装成非聚合形态，兼容新增的数据会存在可以聚合的数据业务场景
         if (this.isAllExpanded) {
           this.handleAggregateAction(false);
         }
-        this.isAllExpanded = false;
         // 处理聚合的数据，将表格数据按照相同的聚合id分配好
         this.handleAggregateData();
         this.isShowActionEmptyError = false;
