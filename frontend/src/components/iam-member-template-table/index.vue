@@ -282,14 +282,6 @@
       margin-top: 10px;
       margin-bottom: 10px;
     }
-    /deep/ .template-table-wrapper {
-        .template-table {
-            .template-name {
-               color: #3a84ff;
-            }
-        }
-    }
-
     /deep/ .bk-page.bk-page-align-right {
       .bk-page-selection-count-left {
         display: none;

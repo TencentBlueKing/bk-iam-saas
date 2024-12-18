@@ -217,9 +217,6 @@
       },
       selectedNode () {
         return (payload) => {
-          if (payload.disabled) {
-            return true;
-          }
           if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
             payload.is_selected = this.hasSelectedDepartments.map(
               item => item.id.toString()).includes(payload.id.toString())
@@ -227,6 +224,7 @@
               item => item.username).includes(payload.username);
               return payload.is_selected;
           }
+          return payload.is_selected || false;
         };
       }
     },

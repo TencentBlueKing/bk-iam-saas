@@ -218,7 +218,7 @@
                     </bk-button>
                   </div>
                 </div>
-                <div v class="manual-wrapper-right">
+                <div class="manual-wrapper-right">
                   <bk-input
                     v-model="tableKeyWord"
                     class="manual-input-wrapper"
@@ -443,7 +443,7 @@
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import IamMemberTemplateTable from '@/components/iam-member-template-table';
-  import { guid, formatCodeData } from '@/common/util';
+  import { guid, formatCodeData, existValue } from '@/common/util';
   import { mapGetters } from 'vuex';
   // import { bus } from '@/common/bus';
 
@@ -753,8 +753,11 @@
       isShowMemberTemplate () {
         return this.needMemberTempRoutes.includes(this.$route.name) && !this.isStaff && !this.isAdminGroup;
       },
+      isExternalApp () {
+        return existValue('externalApp') && this.externalSystemId;
+      },
       isExistMemberTemplate () {
-        return this.externalSystemId ? this.isShowExternalMemberTemplate : this.isShowMemberTemplate;
+        return this.isExternalApp ? this.isShowExternalMemberTemplate : this.isShowMemberTemplate;
       },
       // 蓝盾场景
       isShowExternalMemberTemplate () {
@@ -763,6 +766,23 @@
       isShowComma () {
         return this.hasSelectedDepartments.length > 0
          && (this.hasSelectedUsers.length > 0 || (this.hasSelectedTemplates.length > 0 && this.isExistMemberTemplate));
+      },
+      // 蓝盾侧需要限制勾选部门的页面
+      isDisabledOrgPage () {
+        return this.isExternalApp && ['createUserGroup', 'userGroupDetail'].includes(this.$route.name);
+      },
+      // 蓝盾侧通过环境变量注入限制勾选的组织架构
+      isDisabledOrgNode () {
+        return (payload) => {
+          const disabledMembers = window.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER;
+          if (this.isDisabledOrgPage && disabledMembers.length > 0) {
+            const { id, type, username } = payload;
+            const keys = type === 'user' ? username : String(id);
+            const result = disabledMembers.split(',').includes(keys);
+            return result;
+          }
+          return false;
+        };
       }
     },
     watch: {
@@ -1108,13 +1128,11 @@
             if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
               formatStr = '';
             }
-            console.log(formatStr);
             this.manualValue = _.cloneDeep(formatStr);
             if (this.isStaff) {
               // 兼容staff角色不处理部门类的数据
               this.manualInputError = !!this.manualValue;
-              this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
-              this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+              this.getDiffSystemOrgData();
               this.fetchManualTableData();
               return;
             }
@@ -1122,8 +1140,7 @@
           } else {
             if (this.isStaff) {
               this.manualInputError = !!this.manualValue;
-              this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
-              this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+              this.getDiffSystemOrgData();
               return;
             }
             this.formatOrgAndUser();
@@ -1145,8 +1162,7 @@
           if (departGroups.length) {
             if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
               this.messageWarn(this.$t(`m.common['管理员组不能添加部门']`), 3000);
-              this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
-              this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+              this.getDiffSystemOrgData();
               this.fetchManualTableData();
               this.manualInputError = true;
               return;
@@ -1209,8 +1225,7 @@
         if (this.manualValue && !this.isStaff) {
           await this.handleSearchOrgAndUser();
         }
-        this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
-        this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+        this.getDiffSystemOrgData();
         this.fetchManualTableData();
       },
 
@@ -1252,6 +1267,22 @@
             this.messageAdvancedError(e);
           }
         }
+      },
+
+      // 蓝盾侧限制手动输入添加限制的部门
+      getDiffSystemOrgData () {
+        if (this.isDisabledOrgPage) {
+          this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter((v) =>
+            !this.isDisabledOrgNode(v)
+          );
+          this.hasSelectedDepartments = this.hasSelectedDepartments.filter((v) =>
+            !this.isDisabledOrgNode(v)
+          );
+          this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter((v) => !this.isDisabledOrgNode(v));
+          this.hasSelectedUsers = this.hasSelectedUsers.filter((v) => !this.isDisabledOrgNode(v));
+        }
+        this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
+        this.manualTableList = _.cloneDeep(this.manualTableListStorage);
       },
 
       handleKeyup () {
@@ -1361,7 +1392,7 @@
             child.showRadio = true;
             child.selected = false;
             child.expanded = false;
-            child.disabled = false;
+            child.disabled = this.isDisabledOrgNode(child);
             child.type = child.type === 'user' ? 'user' : 'depart';
             // child.count = child.recursive_member_count
             child.count = child.member_count;
@@ -1371,6 +1402,7 @@
             child.parentNodeId = '';
             if (child.type === 'user') {
               child.username = child.id;
+              child.disabled = this.isDisabledOrgNode(child);
               if (this.hasSelectedUsers.length > 0) {
                 child.is_selected = this.hasSelectedUsers.map((item) => item.id).includes(child.id);
               } else {
@@ -1443,7 +1475,7 @@
                 child.showRadio = true;
                 child.selected = false;
                 child.expanded = false;
-                child.disabled = false;
+                child.disabled = this.isDisabledOrgNode(child);
                 child.type = 'depart';
                 child.count = child.recursive_member_count;
                 child.showCount = true;
@@ -1569,6 +1601,7 @@
             data.departments.forEach((depart) => {
               depart.showRadio = true;
               depart.type = 'depart';
+              depart.disabled = this.isDisabledOrgNode(depart);
               if (departIds.length && departIds.includes(depart.id)) {
                 this.$set(depart, 'is_selected', true);
               } else {
@@ -1588,6 +1621,7 @@
               user.id = guid();
               user.showRadio = true;
               user.type = 'user';
+              user.disabled = this.isDisabledOrgNode(user);
               this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
               if (userIds.length && userIds.includes(user.username)) {
                 this.$set(user, 'is_selected', true);
@@ -1665,7 +1699,7 @@
               child.showRadio = true;
               child.selected = false;
               child.expanded = false;
-              child.disabled = this.disabled;
+              child.disabled = this.disabled || this.isDisabledOrgNode(child);
               child.type = 'depart';
               child.count = child.recursive_member_count;
               child.showCount = true;
@@ -1695,7 +1729,7 @@
               child.showRadio = true;
               child.selected = false;
               child.expanded = false;
-              child.disabled = this.disabled;
+              child.disabled = this.disabled || this.isDisabledOrgNode(child);
               child.type = 'user';
               child.count = 0;
               child.showCount = false;
