@@ -228,7 +228,7 @@
           members: members || role.members,
           id: role.id
         };
-        await this.$store.dispatch('spaceManage/updateSecondManagerManager', params);
+        await this.$store.dispatch('spaceManage/updateSecondManager', params);
         this.resetPagination();
         this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
         await this.fetchGradingAdmin(true);

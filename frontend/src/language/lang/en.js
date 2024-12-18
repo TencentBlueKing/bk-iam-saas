@@ -655,6 +655,7 @@ export const m = {
         '新建二级管理空间': 'New Secondary Management Space',
         '克隆管理空间': 'Clone Management Space',
         '克隆二级管理空间': 'Clone Secondary management space',
+        '编辑二级管理空间': 'Edit Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
         '人员模板': 'Member Templates',

@@ -140,7 +140,7 @@ const SecondaryManageSpaceCreate = () =>
 
 // 二极管理空间克隆
 const SecondaryManageSpaceClone = () =>
-  import(/* webpackChunkName: 'secondaryManageSpaceClone' */ '../views/manage-spaces/secondary-manage-space/create');
+  import(/* webpackChunkName: 'secondaryManageSpaceClone' */ '../views/manage-spaces/secondary-manage-space/clone');
 
 // 二极管理空间编辑
 const SecondaryManageSpaceEdit = () =>

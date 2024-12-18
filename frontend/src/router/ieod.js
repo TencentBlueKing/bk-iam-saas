@@ -140,7 +140,7 @@ const SecondaryManageSpaceCreate = () =>
 
 // 二极管理空间克隆
 const SecondaryManageSpaceClone = () =>
-  import(/* webpackChunkName: 'secondaryManageSpaceClone' */ '../views/manage-spaces/secondary-manage-space/create');
+  import(/* webpackChunkName: 'secondaryManageSpaceClone' */ '../views/manage-spaces/secondary-manage-space/clone');
 
 // 二极管理空间编辑
 const SecondaryManageSpaceEdit = () =>
@@ -440,6 +440,7 @@ export const routes = [
         path: ':id/manage-spaces/secondary-manage-space/edit',
         name: 'secondaryManageSpaceEdit',
         meta: {
+          headerTitle: '',
           backRouter: -1
         },
         props: true,

@@ -700,14 +700,14 @@
         // eslint-disable-next-line max-len
         const actions = (scopeAction && scopeAction.filter(item => payload.map(_ => _.id).includes(item.id))) || [];
         const conditions = actions.map(
-          item => item.resource_groups[0].related_resource_types[0].condition
+          item => item.resource_groups && item.resource_groups[0].related_resource_types[0].condition
         ).filter(_ => _.length > 0);
         if (conditions.length < 1) {
           return [];
         }
         const instances = actions.map(item => {
-          const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
-            && item.resource_groups[0].related_resource_types[0].condition[0].instances;
+          const instancesItem = item.resource_groups && item.resource_groups[0].related_resource_types[0].condition[0]
+            && item.resource_groups && item.resource_groups[0].related_resource_types[0].condition[0].instances;
           return (instancesItem && instancesItem.filter(e => e.type === id)) || [];
         });
         const tempData = [];
@@ -716,11 +716,13 @@
         let resourceList = instances
           .map(item => item[0] && item[0].path)
           .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
-          .flat(2);
+          .flat(Infinity);
         resourceList = resourceList.filter(item => item !== undefined);
         resources.forEach(item => {
           item && item.forEach(subItem => {
-            const hasIntersectionResource = resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            const hasIntersectionResource = resources.every((v) =>
+              v && v.some(vItem => vItem[0] === subItem[0])
+            );
             const hasResource = resources.find(v => v && v.some(vItem => vItem[0] === subItem[0]));
             if (hasIntersectionResource) {
               tempData.push(subItem[0]);

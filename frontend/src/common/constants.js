@@ -184,7 +184,7 @@ export const ALL_ROUTES_LIST = new Map([
     'myPermNav'
   ],
   // 我的管理空间
-  [['myManageSpace', 'myManageSpaceCreate', 'myManageSpaceClone', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
+  [['myManageSpace', 'myManageSpaceCreate', 'myManageSpaceClone', 'myManageSpaceSubDetail'], 'myManageSpaceNav'],
   // 分级管理员
   [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
   // 二级管理空间
