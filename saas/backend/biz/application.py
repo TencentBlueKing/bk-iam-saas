@@ -166,6 +166,7 @@ class ApprovalProcessorBiz:
         """获取分级管理员，如果为空，获取父级管理员"""
         return self.svc.get_role_parent_member_by_group_id(group_id)
 
+
 class ApprovedPassApplicationBiz:
     """审批通过处理"""
 
