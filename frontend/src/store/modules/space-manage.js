@@ -50,6 +50,24 @@ export default {
     },
 
     /**
+         * 编辑二级管理空间
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+    updateSecondManageSpace ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const id = requestParams.id;
+      delete requestParams.id;
+      return http.put(`${AJAX_URL_PREFIX}/roles/subset_managers/${id}/`, requestParams, config);
+    },
+
+    /**
          * 获取二级管理员
          *
          * @param {Function} commit store commit mutation handler
@@ -90,7 +108,7 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-    updateSecondManagerManager ({ commit, state, dispatch }, params, config) {
+    updateSecondManager ({ commit, state, dispatch }, params, config) {
       const requestParams = Object.assign({}, params);
       const id = requestParams.id;
       delete requestParams.id;

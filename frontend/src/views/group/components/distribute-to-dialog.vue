@@ -22,7 +22,7 @@
         searchable
         :allow-enter="false"
         :remote-method="handleRemoteValue"
-        @toggle="handleToggle(...arguments, $index, row)"
+        @toggle="handleToggle(...arguments)"
       >
         <bk-option v-for="option in gradeManagerList" :key="option.id" :id="option.id" :name="option.name">
           <div class="manage-space" v-if="option.id !== ''">
@@ -146,7 +146,7 @@
         this.curGradeManager = this.gradeManagerList.length ? this.gradeManagerList[0].id : '';
       },
 
-      handleToggle (val, index, payload) {
+      handleToggle (val) {
         const curOptionDom = this.$refs.gradeManagerSelectRef.$refs.optionList;
         curOptionDom.addEventListener('scroll', this.handleScroll);
         if (!val) {

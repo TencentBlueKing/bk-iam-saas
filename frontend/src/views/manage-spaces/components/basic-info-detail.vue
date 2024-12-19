@@ -126,7 +126,7 @@
                     ...payload,
           id: this.id
         };
-        const url = ['subset_manager'].includes(type) ? 'spaceManage/updateSecondManagerManager' : 'role/updateRatingManager';
+        const url = ['subset_manager'].includes(type) ? 'spaceManage/updateSecondManager' : 'role/updateRatingManager';
         return this.$store.dispatch(url, params)
           .then(async () => {
             this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);

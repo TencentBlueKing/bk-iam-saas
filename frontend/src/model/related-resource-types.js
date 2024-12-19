@@ -43,8 +43,7 @@ export default class RelateResourceTypes {
     this.isChange = false;
     this.isNew = isNew;
     this.selectionMode = payload.selection_mode || 'all';
-    const curFlag = flag === 'detail' ? 'add' : '';
-    this.initCondition(payload, curFlag, instanceNotDisabled, isNew);
+    this.initCondition(payload, this.flag, instanceNotDisabled, isNew);
   }
 
   initCondition (payload, flag, instanceNotDisabled, isNew) {

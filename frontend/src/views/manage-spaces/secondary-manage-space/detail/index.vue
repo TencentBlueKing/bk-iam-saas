@@ -1,15 +1,17 @@
 <template>
   <div class="iam-grading-admin-detail-wrapper">
-    <!-- <p class="edit-action">
-            {{ $t(`m.grading['如需编辑管理空间的内容请点击']`) }}
-            <bk-button
-                theme="primary"
-                text
-                size="small"
-                @click="handleEdit">
-                {{ $t(`m.common['编辑']`) }}
-            </bk-button>
-        </p> -->
+    <p class="edit-action">
+      <span>{{ $t(`m.grading['如需编辑管理空间的内容请点击']`) }}</span>
+      <bk-button
+        theme="primary"
+        text
+        size="small"
+        style="padding: 0;"
+        @click="handleEdit"
+      >
+        {{ $t(`m.common['编辑']`) }}
+      </bk-button>
+    </p>
     <div class="detail-content-wrapper">
       <render-horizontal-block :label="$t(`m.common['基本信息']`)">
         <basic-info
@@ -226,7 +228,7 @@
 
       handleEdit () {
         this.$router.push({
-          name: 'gradingAdminEdit',
+          name: 'secondaryManageSpaceEdit',
           params: {
             id: this.$route.params.id
           }

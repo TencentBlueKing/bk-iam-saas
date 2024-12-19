@@ -588,7 +588,7 @@
               await this.fetchManageTable(payload, 'role/updateRatingManager', 'rating_manager');
             },
             subset_manager: async () => {
-              await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
+              await this.fetchManageTable(payload, 'spaceManage/updateSecondManager', 'subset_manager');
             }
           };
           return typeMap[this.formData.type] ? typeMap[this.formData.type]() : '';
@@ -601,7 +601,7 @@
         this.formData = this.subTableList.find((e, i) => i === index);
         await this.fetchManageTable(
           payload,
-          'spaceManage/updateSecondManagerManager',
+          'spaceManage/updateSecondManager',
           'subset_manager'
         );
       },

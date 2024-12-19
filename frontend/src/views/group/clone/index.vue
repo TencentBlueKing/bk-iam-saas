@@ -270,7 +270,7 @@
               return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
           }, []);
           const temps = [];
-          // console.log('aggregationIds', this.tableList, aggregationIds);
+          console.log('aggregationIds', this.tableList, aggregationIds);
           aggregationIds.forEach(item => {
               if (!temps.some(sub => sub.includes(item))) {
                   temps.push([item]);

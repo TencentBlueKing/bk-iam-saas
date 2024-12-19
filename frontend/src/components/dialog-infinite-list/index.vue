@@ -7,7 +7,7 @@
         <div
           v-for="(item, index) in renderOrganizationList"
           :key="item.id"
-          :class="['organization-item', { focus: index === organizationIndex || item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
+          :class="['organization-item', { focus: index === organizationIndex || item.selected }, { 'is-disabled': disabledNode(item) }]"
           :title="item.disabled ? $t(`m.common['该成员已添加']`) : item.full_name"
           @click.stop="nodeClick(item)">
           <div class="organization-checkbox" v-if="item.showRadio">
@@ -22,9 +22,9 @@
           </div>
           <Icon type="file-close" class="folder-icon" />
           <span
-            class="organization-name"
-            :class="item.disabled ? 'is-disabled' : ''"
-            :title="nameType(item)">
+            :class="['organization-name', { 'is-disabled': disabledNode(item) }]"
+            :title="nameType(item)"
+          >
             {{ item.name }}
           </span>
           <span
@@ -39,7 +39,7 @@
         <div
           v-for="(item, index) in renderUserList"
           :key="item.id"
-          :class="['user-item', { focus: index === userIndex || item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
+          :class="['user-item', { focus: index === userIndex || item.selected }, { 'is-disabled': disabledNode(item) }]"
           :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
           @click.stop="nodeClick(item)">
           <div class="user-checkbox" v-if="item.showRadio">
@@ -54,9 +54,9 @@
           </div>
           <Icon type="personal-user" class="user-icon" />
           <span
-            class="user-name"
-            :class="item.disabled ? 'is-disabled' : ''"
-            :title="nameType(item)">
+            :class="['user-name', { 'is-disabled': disabledNode(item) }]"
+            :title="nameType(item)"
+          >
             {{ item.username }}
             <template v-if="item.name !== ''">
               ({{ item.name }})
@@ -166,9 +166,6 @@
       },
       selectedNode () {
         return (payload) => {
-          if (payload.disabled) {
-            return true;
-          }
           if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
             payload.is_selected = this.hasSelectedDepartments.map(
               item => item.id.toString()).includes(payload.id.toString())
@@ -176,6 +173,7 @@
               item => item.username).includes(payload.username);
               return payload.is_selected;
           }
+          return payload.is_selected || false;
         };
       }
     },
