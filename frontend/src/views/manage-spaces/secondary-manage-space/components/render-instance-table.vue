@@ -76,15 +76,6 @@
               <template v-else>
                 {{ $t(`m.common['无需关联实例']`) }}
               </template>
-              <Icon
-                type="detail-new"
-                class="view-icon"
-                :title="$t(`m.common['详情']`)"
-                v-if="isShowView(row)"
-                @click.stop="handleViewResource(row)" />
-              <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
-                <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
-              </template>
             </template>
             <template v-else>
               <div class="relation-content-wrapper" v-if="!!row.isAggregate">
@@ -463,9 +454,6 @@
         },
         isCreateMode () {
             return this.mode === 'create';
-        },
-        isUserGroupDetail () {
-            return this.$route.name === 'userGroupDetail';
         },
         curSelectionCondition () {
             if (this.curIndex === -1) {

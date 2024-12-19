@@ -66,7 +66,7 @@
           <span :title="row.updated_time">{{ row.updated_time }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)" width="150">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="120">
         <template slot-scope="{ row }">
           <section>
             <bk-button

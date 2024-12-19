@@ -36,13 +36,6 @@
               class="aggregate-action-group"
               style="min-width: 108px; position: relative"
             >
-              <IamGuide
-                type="rating_manager_authorization_scope"
-                direction="right"
-                :loading="isLoading"
-                :cur-style="renderLabelWidth('rating_manager_merge_action_guide')"
-                :content="$t(`m.guide['聚合操作']`)"
-              />
               <div
                 v-for="item in AGGREGATION_EDIT_ENUM"
                 :key="item.value"
@@ -73,11 +66,10 @@
                 mode="create"
                 ref="resourceInstanceRef"
                 :list="policyList"
-                :authorization="curAuthorizationData"
+                :authorization="curAllSystemAuthData"
                 :original-list="originalList"
                 :total-count="originalList.length"
                 :is-all-expanded="isAllExpanded"
-                :backup-list="aggregationsTableData"
                 :group-id="$route.params.id"
                 @on-delete="handleDelete"
                 @on-aggregate-delete="handleAggregateDelete"
@@ -144,11 +136,6 @@
       :authorization="authorizationDataByCustom"
       @on-submit="handleSelectSubmit"
     />
-
-    <RenderTemplateSideSlider
-      :is-show.sync="templateDetailSideSlider.isShow"
-      :id="templateDetailSideSlider.id"
-    />
   </smart-action>
 </template>
 
@@ -160,22 +147,18 @@
   import Condition from '@/model/condition';
   import GroupPolicy from '@/model/group-policy';
   import GroupAggregationPolicy from '@/model/group-aggregation-policy';
-  import IamGuide from '@/components/iam-guide/index.vue';
   import AddMemberDialog from '@/views/group/components/iam-add-member';
   import BasicInfo from '@/views/manage-spaces/components/basic-info';
   import RenderMember from '@/views/manage-spaces/components/render-member';
   import AddActionSideSlider from '../components/add-action-sideslider';
   import RenderInstanceTable from '../components/render-instance-table';
-  import RenderTemplateSideSlider from '../components/render-template-detail-sideslider';
 
   export default {
     components: {
       AddMemberDialog,
       BasicInfo,
       RenderMember,
-      IamGuide,
       AddActionSideSlider,
-      RenderTemplateSideSlider,
       RenderInstanceTable
     },
     props: {
@@ -211,19 +194,14 @@
         originalList: [],
         curSystemId: [],
         policyList: [],
-        templateDetailList: [],
         aggregationsBackup: [],
         aggregations: [],
-        aggregationsTableData: [],
-        hasDeleteCustomList: [],
         aggregationData: {},
         aggregationDataByCustom: {},
         authorizationDataByCustom: {},
+        authorizationData: {},
         allAggregationData: {},
-        templateDetailSideSlider: {
-          isShow: false,
-          id: ''
-        },
+        curAllSystemAuthData: {},
         formData: {
           name: '',
           description: '',
@@ -308,10 +286,6 @@
       },
       isEdit () {
         return ['secondaryManageSpaceEdit'].includes(this.$route.name);
-      },
-      curAuthorizationData () {
-        const data = Object.assign({}, this.authorizationDataByCustom);
-        return data;
       }
     },
     watch: {
@@ -383,11 +357,26 @@
           const result = this.getFilterAggregation(aggregations);
           this.aggregationsBackup = cloneDeep(aggregations);
           this.aggregations = cloneDeep(result);
-          this.aggregationData[payload] = [...aggregations];
+          const systemList = payload.split(',');
+          systemList.forEach((item) => {
+            this.aggregationData[item] = [...aggregations].filter((v) => v.system_id === item);
+          });
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
+        }
+      },
+ 
+      async fetchAuthorizationScopeActions (systemId) {
+        try {
+          const { data } = await this.$store.dispatch(
+            'permTemplate/getAuthorizationScopeActions',
+            { systemId }
+          );
+          this.authorizationData[systemId] = (data || []).filter(item => item.id !== '*');
+        } catch (e) {
+          this.messageAdvancedError(e);
         }
       },
 
@@ -395,6 +384,10 @@
       async fetchAggregationSystem (payload) {
         if (!payload.length) return;
         await this.fetchAggregationAction(payload.join());
+        for (let i = 0; i < payload.length; i++) {
+          await this.fetchAuthorizationScopeActions(payload[i]);
+        }
+        this.curAllSystemAuthData = Object.assign(this.authorizationDataByCustom, this.authorizationData);
         this.handleAggregateData();
       },
 
@@ -413,7 +406,7 @@
         this.formData = Object.assign(
           {},
           {
-            name: `${name}_${this.$t(`m.grading['克隆']`)}`,
+            name: this.isEdit ? name : `${name}_${this.$t(`m.grading['克隆']`)}`,
             members,
             description,
             sync_perm: sync_perm
@@ -717,60 +710,68 @@
               templateIds.push(item.detail.id);
             }
           });
-          for (const [key, value] of this.curMap.entries()) {
-            if (value.length === 1) {
-              tempData.push(...value);
-              tempData = uniqWith(tempData, isEqual);
-            } else {
-              let curInstances = [];
-              // 这里避免从模板选择的权限和自定义权限下的操作是一致的，所以需要去重
-              tempData = uniqWith(tempData, isEqual);
-              const conditions = value.map((subItem) => subItem.resource_groups
-                && subItem.resource_groups[0].related_resource_types[0].condition);
-              // 是否都选择了实例
-              const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
-              if (isAllHasInstance) {
-                const instances = conditions.map(subItem => subItem.map(v => v.instance));
-                let isAllEqual = true;
-                for (let i = 0; i < instances.length - 1; i++) {
-                  if (!isEqual(instances[i], instances[i + 1])) {
-                    isAllEqual = false;
-                    break;
+          const cacheMap = cloneDeep(this.curMap);
+          for (const [key, cacheValue] of cacheMap.entries()) {
+            const isExistKey = this.policyList.some((v) => v.aggregationId === key);
+            if (isExistKey) {
+              const value = cacheValue.filter(item => this.policyList.map((v) => v.$id).includes(item.$id));
+              this.curMap.set(key, value);
+              if (value.length === 1) {
+                tempData.push(...value);
+                tempData = uniqWith(tempData, isEqual);
+              } else {
+                let curInstances = [];
+                // 这里避免从模板选择的权限和自定义权限下的操作是一致的，所以需要去重
+                tempData = uniqWith(tempData, isEqual);
+                const conditions = value.map((subItem) => subItem.resource_groups
+                  && subItem.resource_groups[0].related_resource_types[0].condition);
+                // 是否都选择了实例
+                const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
+                if (isAllHasInstance) {
+                  const instances = conditions.map(subItem => subItem.map(v => v.instance));
+                  let isAllEqual = true;
+                  for (let i = 0; i < instances.length - 1; i++) {
+                    if (!isEqual(instances[i], instances[i + 1])) {
+                      isAllEqual = false;
+                      break;
+                    }
                   }
-                }
-                if (isAllEqual) {
-                  const instanceData = instances[0][0];
-                  curInstances = [];
-                  instanceData.forEach(pathItem => {
-                    const instance = pathItem.path.map(e => {
-                      return {
-                        id: e[0].id,
-                        name: e[0].name,
-                        type: e[0].type
-                      };
+                  if (isAllEqual) {
+                    const instanceData = instances[0][0];
+                    curInstances = [];
+                    instanceData.forEach(pathItem => {
+                      const instance = pathItem.path.map(e => {
+                        return {
+                          id: e[0].id,
+                          name: e[0].name,
+                          type: e[0].type
+                        };
+                      });
+                      curInstances.push(...instance);
                     });
-                    curInstances.push(...instance);
-                  });
-                  instancesDisplayData = this.setInstancesDisplayData(curInstances);
+                    instancesDisplayData = this.setInstancesDisplayData(curInstances);
+                  } else {
+                    curInstances = [];
+                  }
                 } else {
                   curInstances = [];
                 }
-              } else {
-                curInstances = [];
+                tempData.push(new GroupAggregationPolicy({
+                  aggregationId: key,
+                  aggregate_resource_types: value[0].aggregateResourceType,
+                  actions: value,
+                  instances: curInstances,
+                  instancesDisplayData
+                }));
               }
-              tempData.push(new GroupAggregationPolicy({
-                aggregationId: key,
-                aggregate_resource_types: value[0].aggregateResourceType,
-                actions: value,
-                instances: curInstances,
-                instancesDisplayData
-              }));
+              templateIds.push(value[0].detail.id);
+            } else {
+              this.curMap.delete(key);
             }
-            templateIds.push(value[0].detail.id);
           }
         } else {
           this.policyList.forEach(item => {
-            if (item.hasOwnProperty('isAggregate') && item.isAggregate) {
+            if (item.isAggregate) {
               const actions = this.curMap.get(item.aggregationId);
               tempData.push(...actions);
               templateIds.push(actions[0].detail.id);
@@ -791,8 +792,9 @@
       },
 
       handleSelectSubmit (payload, aggregation, authorization) {
-        const actionList = [];
-        payload.forEach((item) => {
+        let addCustomList = [];
+        let deleteCustomList = [];
+        const actionList = payload.map((item) => {
           if (!item.resource_groups || !item.resource_groups.length) {
             item.resource_groups = item.related_resource_types.length
               ? [{ id: '', related_resource_types: item.related_resource_types }]
@@ -811,35 +813,24 @@
             }
           );
           this.$set(result, '$id', `${item.system_id}&${item.id}`);
-          actionList.push(result);
+          return result;
         });
+        // 获取上一次已选数据
         if (this.originalList.length) {
-          let intersectionData = [];
-          const intersection = payload.filter(
-            item => !this.originalList.map(sub => sub.$id).includes(item.$id)
-          );
-          if (intersection.length) {
-            // 过滤掉上次已选内容再次实例化类
-            intersectionData = intersection.map((item) => {
-              const result = new GroupPolicy(
-                item,
-                'add',
-                'custom',
-                {
-                  system: {
-                    id: item.system_id,
-                    name: item.system_name
-                  },
-                  id: CUSTOM_PERM_TEMPLATE_ID
-                }
-              );
-              this.$set(result, '$id', `${item.system_id}&${item.id}`);
-              return result;
-            });
-          }
-          this.policyList = [...this.policyList, ...intersectionData];
+          const originalIds = this.originalList.map(v => v.$id);
+          const intersection = actionList.filter(v => originalIds.includes(v.$id));
+          addCustomList = actionList.filter(v => !originalIds.includes(v.$id));
+          deleteCustomList = this.originalList.filter(v => !intersection.map(sub => sub.$id).includes(v.$id));
+          this.policyList = [...this.policyList, ...addCustomList];
+        } else {
+          this.policyList = [...actionList];
         }
-        if (!payload.length) {
+        // 处理既有新增操作又存在删除已有操作场景
+        if (deleteCustomList.length) {
+          const deleteIds = deleteCustomList.map(v => v.$id);
+          this.policyList = this.policyList.filter(item => !deleteIds.includes(`${item.$id}`));
+        }
+        if (!actionList.length) {
           this.curActionValue = [];
         }
         this.originalList = cloneDeep(actionList);
@@ -967,6 +958,7 @@
         this.originalList = [];
         this.policyList = [];
         this.isAllExpanded = false;
+        this.curMap && this.curMap.clear();
       },
 
       handleAggregateDelete (systemId, actions, index) {
