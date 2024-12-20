@@ -712,7 +712,7 @@
             this.$store.commit('setHeaderTitle', '');
             window.localStorage.removeItem('iam-header-title-cache');
             window.localStorage.removeItem('iam-header-name-cache');
-            if (roleType === 'staff' || roleType === '') {
+            if (['', 'staff'].includes(roleType)) {
               this.$router.push({
                 name: 'myPerm'
               });
