@@ -496,3 +496,6 @@ BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.c
 
 # 全局配置地址
 BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")
+
+# 不允许作为用户组成员的部门 ID,用英文逗号分割
+DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER", default="")
