@@ -3,6 +3,7 @@
     <!-- 新建、克隆、编辑容器组件下的公共展示组件 -->
     <RenderInfoForm
       :title="title"
+      :id="$route.params.id"
       :loading="submitLoading"
       @on-submit="handleSubmit"
     />
@@ -18,16 +19,22 @@
     data () {
       return {
         submitLoading: false,
-        title: this.$t(`m.nav['新建二级管理空间']`)
+        title: this.$t(`m.nav['编辑二级管理空间']`)
       };
     },
     methods: {
       async handleSubmit (payload) {
         this.submitLoading = true;
         try {
-          await this.$store.dispatch('spaceManage/addSecondManager', payload);
+          const params = {
+            ...payload,
+            ...{
+              id: this.$route.params.id
+            }
+          };
+          await this.$store.dispatch('spaceManage/updateSecondManageSpace', params);
           await this.$store.dispatch('roleList');
-          this.messageSuccess(this.$t(`m.info['新建二级管理空间成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['编辑二级管理空间成功']`), 1000);
           this.$router.go(-1);
         } catch (e) {
           this.messageAdvancedError(e);

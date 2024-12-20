@@ -76,15 +76,6 @@
               <template v-else>
                 {{ $t(`m.common['无需关联实例']`) }}
               </template>
-              <Icon
-                type="detail-new"
-                class="view-icon"
-                :title="$t(`m.common['详情']`)"
-                v-if="isShowView(row)"
-                @click.stop="handleViewResource(row)" />
-              <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
-                <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
-              </template>
             </template>
             <template v-else>
               <div class="relation-content-wrapper" v-if="!!row.isAggregate">
@@ -381,6 +372,8 @@
         selectedIndex: 0,
         instanceKey: '',
         curCopyDataId: '',
+        curSystemActions: [],
+        relatedActionsList: [],
         emptyResourceGroupsList: [],
         isExpandTable: false,
         isAggregateEmptyMessage: false,
@@ -463,9 +456,6 @@
         },
         isCreateMode () {
             return this.mode === 'create';
-        },
-        isUserGroupDetail () {
-            return this.$route.name === 'userGroupDetail';
         },
         curSelectionCondition () {
             if (this.curIndex === -1) {
@@ -700,14 +690,14 @@
         // eslint-disable-next-line max-len
         const actions = (scopeAction && scopeAction.filter(item => payload.map(_ => _.id).includes(item.id))) || [];
         const conditions = actions.map(
-          item => item.resource_groups[0].related_resource_types[0].condition
+          item => item.resource_groups && item.resource_groups[0].related_resource_types[0].condition
         ).filter(_ => _.length > 0);
         if (conditions.length < 1) {
           return [];
         }
         const instances = actions.map(item => {
-          const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
-            && item.resource_groups[0].related_resource_types[0].condition[0].instances;
+          const instancesItem = item.resource_groups && item.resource_groups[0].related_resource_types[0].condition[0]
+            && item.resource_groups && item.resource_groups[0].related_resource_types[0].condition[0].instances;
           return (instancesItem && instancesItem.filter(e => e.type === id)) || [];
         });
         const tempData = [];
@@ -716,11 +706,13 @@
         let resourceList = instances
           .map(item => item[0] && item[0].path)
           .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
-          .flat(2);
+          .flat(Infinity);
         resourceList = resourceList.filter(item => item !== undefined);
         resources.forEach(item => {
           item && item.forEach(subItem => {
-            const hasIntersectionResource = resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            const hasIntersectionResource = resources.every((v) =>
+              v && v.some(vItem => vItem[0] === subItem[0])
+            );
             const hasResource = resources.find(v => v && v.some(vItem => vItem[0] === subItem[0]));
             if (hasIntersectionResource) {
               tempData.push(subItem[0]);
@@ -731,7 +723,9 @@
             }
           });
         });
-        if (instances.length !== actions.length) {
+        // 如果instances数量与actions数量不一致，则代表聚合的操作有存在空的资源实例
+        const hasActionInstance = instances.filter((v) => v.length > 0);
+        if (hasActionInstance.length !== actions.length) {
           return [];
         }
         const curResource = [...new Set(tempData)];
@@ -983,7 +977,6 @@
             const systemId = this.isCreateMode && detail ? detail.system.id : this.systemId;
             const scopeAction = this.authorization[systemId] || [];
             const curScopeAction = _.cloneDeep(scopeAction.find((scopeItem) => scopeItem.id === item.id));
-            console.log(curScopeAction, '授权实例');
             // 如果有授权边界判断授权范围是否包含有关联实例
             if (curScopeAction && curScopeAction.resource_groups) {
               curScopeAction.resource_groups.forEach((curScopeActionItem) => {
@@ -1176,6 +1169,19 @@
           this.messageAdvancedError(e);
         }
       },
+      async fetchActions (systemId) {
+        const params = {
+          system_id: systemId,
+          user_id: this.user.username
+        };
+        try {
+          const { data } = await this.$store.dispatch('permApply/getActions', params);
+          this.curSystemActions = _.cloneDeep(data || []);
+          this.handleActionLinearData();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
       // 保存
       async handleResourceSumit () {
         window.changeDialog = true;
@@ -1193,13 +1199,28 @@
         if (isConditionEmpty) {
           resItem.condition = ['none'];
         } else {
-          const { isMainAction, related_actions } = this.tableList[this.curIndex];
+          const { isMainAction, related_actions, id, system_id: curSystemId } = this.tableList[this.curIndex];
+          resItem.condition = data;
+          resItem.isError = false;
           // 如果为主操作
           if (isMainAction) {
             await this.handleMainActionSubmit(data, related_actions);
           }
-          resItem.condition = data;
-          resItem.isError = false;
+          // 如果没有变更实例，则从actions接口重新拉取最新的关联实例
+          if (!isMainAction && curSystemId) {
+            await this.fetchActions(curSystemId);
+            if (this.relatedActionsList.length) {
+              const policyIdList = this.tableList.map(v => v.id);
+              const linearActionList = this.relatedActionsList.filter(item => policyIdList.includes(item.id));
+              const curActions = linearActionList.filter(item => item.id === id);
+              if (curActions.length) {
+                const relatedList = curActions.map((v) => v.related_actions);
+                if (relatedList.length) {
+                  await this.handleMainActionSubmit(data, relatedList);
+                }
+              }
+            }
+          }
         }
         window.changeAlert = false;
         this.resourceInstanceSidesliderTitle = '';
@@ -1214,6 +1235,20 @@
         //     // 调用合并展开的方法 重组tableList的排序
         //     this.$emit('handleAggregateAction', false)
         // }
+      },
+      handleActionLinearData () {
+        const linearActions = [];
+        this.curSystemActions.forEach((item) => {
+          item.actions.forEach(act => {
+            linearActions.push(act);
+          });
+          (item.sub_groups || []).forEach(sub => {
+            sub.actions.forEach(act => {
+              linearActions.push(act);
+            });
+          });
+        });
+        this.relatedActionsList = _.cloneDeep(linearActions);
       },
       handlerConditionMouseover (payload) {
         if (Object.keys(this.curCopyParams).length < 1 && this.curCopyMode === 'normal') {
