@@ -372,6 +372,8 @@
         selectedIndex: 0,
         instanceKey: '',
         curCopyDataId: '',
+        curSystemActions: [],
+        relatedActionsList: [],
         emptyResourceGroupsList: [],
         isExpandTable: false,
         isAggregateEmptyMessage: false,
@@ -973,7 +975,6 @@
             const systemId = this.isCreateMode && detail ? detail.system.id : this.systemId;
             const scopeAction = this.authorization[systemId] || [];
             const curScopeAction = _.cloneDeep(scopeAction.find((scopeItem) => scopeItem.id === item.id));
-            console.log(curScopeAction, '授权实例');
             // 如果有授权边界判断授权范围是否包含有关联实例
             if (curScopeAction && curScopeAction.resource_groups) {
               curScopeAction.resource_groups.forEach((curScopeActionItem) => {
@@ -1166,6 +1167,19 @@
           this.messageAdvancedError(e);
         }
       },
+      async fetchActions (systemId) {
+        const params = {
+          system_id: systemId,
+          user_id: this.user.username
+        };
+        try {
+          const { data } = await this.$store.dispatch('permApply/getActions', params);
+          this.curSystemActions = _.cloneDeep(data || []);
+          this.handleActionLinearData();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
       // 保存
       async handleResourceSumit () {
         window.changeDialog = true;
@@ -1183,13 +1197,28 @@
         if (isConditionEmpty) {
           resItem.condition = ['none'];
         } else {
-          const { isMainAction, related_actions } = this.tableList[this.curIndex];
+          const { isMainAction, related_actions, id, system_id: curSystemId } = this.tableList[this.curIndex];
+          resItem.condition = data;
+          resItem.isError = false;
           // 如果为主操作
           if (isMainAction) {
             await this.handleMainActionSubmit(data, related_actions);
           }
-          resItem.condition = data;
-          resItem.isError = false;
+          // 如果没有变更实例，则从actions接口重新拉取最新的关联实例
+          if (!isMainAction && curSystemId) {
+            await this.fetchActions(curSystemId);
+            if (this.relatedActionsList.length) {
+              const policyIdList = this.tableList.map(v => v.id);
+              const linearActionList = this.relatedActionsList.filter(item => policyIdList.includes(item.id));
+              const curActions = linearActionList.filter(item => item.id === id);
+              if (curActions.length) {
+                const relatedList = curActions.map((v) => v.related_actions);
+                if (relatedList.length) {
+                  await this.handleMainActionSubmit(data, relatedList);
+                }
+              }
+            }
+          }
         }
         window.changeAlert = false;
         this.resourceInstanceSidesliderTitle = '';
@@ -1204,6 +1233,20 @@
         //     // 调用合并展开的方法 重组tableList的排序
         //     this.$emit('handleAggregateAction', false)
         // }
+      },
+      handleActionLinearData () {
+        const linearActions = [];
+        this.curSystemActions.forEach((item) => {
+          item.actions.forEach(act => {
+            linearActions.push(act);
+          });
+          (item.sub_groups || []).forEach(sub => {
+            sub.actions.forEach(act => {
+              linearActions.push(act);
+            });
+          });
+        });
+        this.relatedActionsList = _.cloneDeep(linearActions);
       },
       handlerConditionMouseover (payload) {
         if (Object.keys(this.curCopyParams).length < 1 && this.curCopyMode === 'normal') {
