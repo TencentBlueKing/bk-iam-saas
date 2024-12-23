@@ -241,10 +241,16 @@ export const MANAGE_SPACE_REDIRECT_ROUTES = new Map([
   // 管理空间
   [
     ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
-    'ratingManager'],
+    'ratingManager'
+  ],
+  // 授权边界
+  [
+    ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'],
+    'authorBoundary'
+  ],
   // 二级管理员
   [
-    ['secondaryManageSpaceCreate', 'secondaryManageSpaceDetail', 'secondaryManageSpaceEdit'],
+    ['secondaryManageSpaceCreate', 'secondaryManageSpaceClone', 'secondaryManageSpaceDetail', 'secondaryManageSpaceEdit'],
     'secondaryManageSpace'
   ]
 ]);
