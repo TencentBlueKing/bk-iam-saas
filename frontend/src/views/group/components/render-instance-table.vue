@@ -1,5 +1,5 @@
 <template>
-  <div class="template-resource-instance-table-wrapper"
+  <div class="iam-resource-instance-table-wrapper"
     v-bkloading="{ isLoading, opacity: 1 }">
     <bk-table
       v-if="!isLoading"
@@ -178,10 +178,10 @@
       :width="resourceSliderWidth"
       quick-close
       transfer
-      :ext-cls="'relate-instance-sideslider'"
+      :ext-cls="'relate-instance-slider'"
       @update:isShow="handleResourceCancel('mask')"
     >
-      <div slot="content" class="sideslider-content">
+      <div slot="content" class="slider-content">
         <render-resource
           ref="renderResourceRef"
           :data="condition"
@@ -2220,136 +2220,8 @@
   };
 </script>
 
-<style lang="postcss">
-    .template-resource-instance-table-wrapper {
-        min-height: 101px;
-        .bk-table {
-            width: 100%;
-            border-right: none;
-            border-bottom: none;
-            font-size: 12px;
-            &.is-detail-view {
-                .bk-table-body-wrapper {
-                    .cell {
-                        padding: 20px !important;
-                    }
-                }
-            }
-            .bk-table-header-wrapper {
-                th:first-child .cell {
-                    padding-left: 20px;
-                }
-            }
-            .bk-table-body-wrapper {
-                .cell {
-                    .view-icon {
-                        display: none;
-                        position: absolute;
-                        top: 50%;
-                        right: 30px;
-                        transform: translate(0, -50%);
-                        font-size: 18px;
-                        cursor: pointer;
-                    }
-                    &:hover {
-                        .view-icon {
-                            display: inline-block;
-                            color: #3a84ff;
-                        }
-                    }
-                }
-            }
-            .bk-table-body {
-                tr {
-                    &:hover {
-                        background-color: transparent;
-                        & > td {
-                            background-color: transparent;
-                        }
-                    }
-                }
-                td:first-child .cell,
-                th:first-child .cell {
-                    padding-left: 15px;
-                    /* padding-left: 10px; */
-                }
-                .iam-new-action {
-                    display: inline-block;
-                    position: relative;
-                    top: 3px;
-                    width: 24px;
-                    vertical-align: top;
-                }
-            }
-            .relation-content-wrapper,
-            .conditions-wrapper {
-                height: 100%;
-                padding: 17px 0;
-                color: #63656e;
-                .resource-type-name {
-                    display: block;
-                    margin-bottom: 9px;
-                }
-            }
-            .remove-icon {
-                position: absolute;
-                right: 2px;
-                top: 2px;
-                font-size: 20px;
-                cursor: pointer;
-                &:hover {
-                    color: #3a84ff;
-                }
-            }
-            .relation-content-item {
-                margin-top: 17px;
-                &:first-child {
-                    margin-top: 0;
-                }
-                &.reset-margin-top {
-                    margin-top: 10px;
-                }
-                .content-name {
-                    margin-bottom: 9px;
-                }
-            }
-            .action-name {
-                /* margin-left: 6px; */
-                display: inline-block;
-                vertical-align: bottom;
-                word-wrap: break-word;
-                word-break: break-all;
-            }
-            .conditions-item {
-                margin-top: 7px;
-                &:first-child {
-                    margin-top: 0;
-                }
-            }
-        }
-    }
-    .relate-instance-sideslider {
-        .sideslider-content {
-            height: calc(100vh - 114px);
-        }
-        .bk-sideslider-footer {
-            background-color: #ffffff !important;
-            border-color: #dcdee5!important;
-        }
-    }
-    .error-tips {
-        position: absolute;
-        line-height: 16px;
-        font-size: 10px;
-        color: #ea3636;
-    }
-
-    .tab-button{
-        margin: 10px 0;
-    }
-</style>
-
 <style lang="postcss" scoped>
+@import '@/css/mixins/space-resource-instance-table.css';
 /deep/ .confirmDialog {
   .bk-dialog-footer {
     background-color: #ffffff;
