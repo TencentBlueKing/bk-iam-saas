@@ -157,14 +157,15 @@ class ApprovalProcessorBiz:
         return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=system_id).members
 
     @cachedmethod(timeout=60)  # 缓存1分钟
-    def get_grade_manager_members_by_group_id(self, group_id: int) -> str:
-        """获取分级管理员"""
-        return self.svc.get_role_by_group_id(group_id).members
-
-    @cachedmethod(timeout=60)  # 缓存1分钟
-    def get_grade_or_parent_manager_members_by_group_id(self, group_id: int) -> List[str]:
+    def get_grade_manager_members_by_group_id(self, group_id: int, fallback_to_parent_if_empty = True) -> str:
         """获取分级管理员，如果为空，获取父级管理员"""
-        return self.svc.get_role_parent_member_by_group_id(group_id)
+        current_role = self.svc.get_role_by_group_id(group_id)
+
+        if fallback_to_parent_if_empty and not current_role.members:
+            parent_id = self.svc.get_parent_id(current_role.id)
+            return self.svc.list_members_by_role_id(parent_id)
+
+        return current_role.members
 
 
 class ApprovedPassApplicationBiz:
@@ -450,7 +451,7 @@ class ApplicationBiz:
             elif node.processor_type == RoleType.GRADE_MANAGER.value:
                 # 如果是自定义权限, 需要后续流程中填充审批人
                 if "group_id" in kwargs:
-                    processors = self.approval_processor_biz.get_grade_or_parent_manager_members_by_group_id(
+                    processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
                         group_id=kwargs["group_id"]
                     )
             # NOTE: 由于资源实例审批人节点的逻辑涉及到复杂的拆分, 合并逻辑, 不在这里处理

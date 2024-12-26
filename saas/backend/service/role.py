@@ -656,21 +656,3 @@ class RoleService:
                 RoleRelatedObject.objects.filter(
                     object_type=RoleRelatedObjectType.TEMPLATE.value, object_id__in=template_ids
                 ).update(role_id=role_id)
-
-    def get_role_parent_member_by_group_id(self, group_id: int):
-        """通过用户组ID查询其对应角色的用户,为空则查询上一级角色对应的用户"""
-        # 查询用户组的来源角色
-        role_related_object = RoleRelatedObject.objects.get(
-            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
-        )
-        # 查询角色
-        role = Role.objects.get(id=role_related_object.role_id)
-
-        relation = RoleRelation.objects.filter(role_id=role.id).first()
-
-        # 当前角色管理员不存在并存在上级角色
-        if not role.members and relation:
-            parent_role = Role.objects.get(id=relation.parent_id)
-            return parent_role.members
-
-        return role.members
