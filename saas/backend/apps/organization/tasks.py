@@ -33,6 +33,8 @@ from backend.common.lock import gen_organization_sync_lock
 from backend.component import iam, usermgr
 from backend.service.constants import SubjectType
 from backend.util.json import json_dumps
+from backend.apps.policy.models import Policy
+from backend.apps.temporary_policy.models import TemporaryPolicy
 
 from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 
@@ -139,6 +141,17 @@ def clean_subject_to_delete():
     max_create_time = timezone.now() - timezone.timedelta(days=settings.SUBJECT_DELETE_DAYS)
     subjects = list(SubjectToDelete.objects.filter(created_time__lt=max_create_time))
 
+    # 将历史遗留数据加入待处理表中
+    if not subjects:
+        usermgr_users = usermgr.list_profile()
+        username_set = {user["username"] for user in usermgr_users}
+        policies = (Policy.objects.filter(subject_type=SubjectType.USER.value).
+                    exclude(subject_id__in=username_set).all())
+        subject_ids = {policy.subject_id for policy in policies}
+        SubjectToDelete.objects.bulk_create(
+            [SubjectToDelete(subject_id=subject_id,
+                             subject_type=SubjectType.USER.value) for subject_id in subject_ids])
+
     # 分割对应的subject
     usernames = [one.subject_id for one in subjects if one.subject_type == SubjectType.USER.value]
     department_ids = [one.subject_id for one in subjects if one.subject_type == SubjectType.DEPARTMENT.value]
@@ -162,6 +175,9 @@ def clean_subject_to_delete():
 
             # 批量删除用户关系数据
             batch_delete_subject_relations(SubjectType.USER.value, usernames)
+
+            # 批量删除用户权限
+            batch_delete_subject_policy(SubjectType.USER.value, usernames)
 
         # 清理部门相关数据
         if department_ids:
@@ -222,3 +238,11 @@ def update_role_subject_scope(usernames: List[str], department_ids: List[str]):
 
         ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=usernames).delete()
         ScopeSubject.objects.filter(subject_type=SubjectType.DEPARTMENT.value, subject_id__in=department_ids).delete()
+
+
+def batch_delete_subject_policy(subject_type: str, subject_ids: List[str]):
+    # 删除权限
+    Policy.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).delete()
+
+    # 清理临时权限
+    TemporaryPolicy.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).delete()
