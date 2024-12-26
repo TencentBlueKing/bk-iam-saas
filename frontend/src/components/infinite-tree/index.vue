@@ -228,15 +228,15 @@
       },
       selectedNode () {
         return (payload) => {
-          if (payload.is_selected) {
+          const { id, name, username, disabled } = payload;
+          // 如果之前已选且禁用直接返回
+          if (disabled && payload.is_selected) {
             return true;
           }
           const isExistSelected = this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
           if (isExistSelected) {
-            const hasDeparts = this.hasSelectedDepartments.map(item =>
-              String(item.id)).includes(String(payload.id)
-            );
-            const hasUsers = this.hasSelectedUsers.map(item => item.username).includes(payload.username);
+            const hasDeparts = this.hasSelectedDepartments.map(item => `${item.name}&${String(item.id)}`).includes(`${name}&${String(id)}`);
+            const hasUsers = this.hasSelectedUsers.map(item => item.username).includes(username);
             payload.is_selected = hasDeparts || hasUsers;
             return payload.is_selected;
           }
