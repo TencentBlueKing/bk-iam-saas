@@ -157,7 +157,9 @@ class ApprovalProcessorBiz:
         return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=system_id).members
 
     @cachedmethod(timeout=60)  # 缓存1分钟
-    def get_grade_manager_members_by_group_id(self, group_id: int, fallback_to_parent_if_empty: bool=True) -> List[str]:
+    def get_grade_manager_members_by_group_id(
+        self, group_id: int, fallback_to_parent_if_empty: bool = True
+    ) -> List[str]:
         """获取分级管理员，如果为空，获取父级管理员"""
         current_role = self.svc.get_role_by_group_id(group_id)
 
