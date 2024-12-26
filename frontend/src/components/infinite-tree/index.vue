@@ -3,11 +3,15 @@
     <div class="ghost-wrapper" :style="ghostStyle"></div>
     <div class="render-wrapper" ref="content">
       <div
+        v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
         v-for="item in renderData"
         :key="item.id"
         :style="getNodeStyle(item)"
-        :class="['node-item', { 'active': item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
-        :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
+        :class="[
+          'node-item',
+          { 'active': item.is_selected && !item.disabled },
+          { 'is-disabled': item.disabled || isDisabled }
+        ]"
         @click.stop="nodeClick(item)">
         <Icon
           bk
@@ -29,18 +33,24 @@
           <Icon
             v-if="item.level || isRatingManager"
             type="file-close"
-            :class="['node-icon file-icon', { 'active': item.selected }]" />
+            :class="['node-icon file-icon', { 'active': item.is_selected && !item.disabled }]"
+          />
           <Icon
             v-else
             type="user-directory"
-            class="node-icon" />
+            class="node-icon"
+          />
         </template>
-        <Icon v-else type="personal-user" class="node-svg" />
+        <Icon
+          v-else
+          type="personal-user"
+          :class="['node-icon', { 'active': item.is_selected && !item.disabled }]"
+        />
         <!-- eslint-disable max-len -->
         <span
           :style="nameStyle(item)"
-          :class="['node-title', { 'node-selected': item.selected }]"
-          :title="nameType(item)">
+          :class="['node-title', { 'node-selected': item.is_selected && !item.disabled }]"
+        >
           {{ item.type === 'user' ? item.username : item.name }}
           <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
         </span>
@@ -51,7 +61,7 @@
         >
           {{ '(' + item.count + `)` }}
         </span>
-        <spin-loading ext-cls="loading" v-if="item.loading" />
+        <spin-loading ext-cls="node-tree-loading" v-if="item.loading" />
       </div>
       <template v-if="!renderData.length && emptyData.type">
         <ExceptionEmpty
@@ -191,20 +201,21 @@
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName } = payload;
+          const { name, type, username, full_name: fullName, disabled, disabledTip } = payload;
+          if (disabled) {
+            return disabledTip || this.$t(`m.common['该成员已添加']`);
+          }
           const typeMap = {
-              user: () => {
-                  // eslint-disable-next-line camelcase
-                  if (fullName) {
-                  return fullName;
-                  } else {
-                  return name ? `${username}(${name})` : username;
-                  }
-              },
-              depart: () => {
-                  // eslint-disable-next-line camelcase
-                  return fullName || name;
+            user: () => {
+              if (fullName) {
+                return fullName;
+              } else {
+                return name ? `${username}(${name})` : username;
               }
+            },
+            depart: () => {
+              return fullName || name;
+            }
           };
           return typeMap[type]();
         };
@@ -217,14 +228,19 @@
       },
       selectedNode () {
         return (payload) => {
-          if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
-            payload.is_selected = this.hasSelectedDepartments.map(
-              item => item.id.toString()).includes(payload.id.toString())
-              || this.hasSelectedUsers.map(
-              item => item.username).includes(payload.username);
-              return payload.is_selected;
+          if (payload.is_selected) {
+            return true;
           }
-          return payload.is_selected || false;
+          const isExistSelected = this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
+          if (isExistSelected) {
+            const hasDeparts = this.hasSelectedDepartments.map(item =>
+              String(item.id)).includes(String(payload.id)
+            );
+            const hasUsers = this.hasSelectedUsers.map(item => item.username).includes(payload.username);
+            payload.is_selected = hasDeparts || hasUsers;
+            return payload.is_selected;
+          }
+          return false;
         };
       }
     },
@@ -378,7 +394,7 @@
         });
       },
 
-      async handleNodeClick (node) {
+      handleNodeClick (node) {
         const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
         if (!isDisabled) {
           node.is_selected = !node.is_selected;
@@ -428,174 +444,155 @@
     }
   };
 </script>
+
 <style lang="postcss">
-    .infinite-tree {
-        height: 862px;
-        font-size: 14px;
-        overflow: auto;
-        position: relative;
-        /* overflow: scroll; */
-        will-change: transform;
-
-        &::-webkit-scrollbar {
-            width: 4px;
-            background-color: lighten(transparent, 80%);
-        }
-        &::-webkit-scrollbar-thumb {
-            height: 5px;
-            border-radius: 2px;
-            background-color: #e6e9ea;
-        }
-
-        .ghost-wrapper {
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            z-index: -1;
-        }
-
-        .render-wrapper {
-            left: 0;
-            right: 0;
-            top: 0;
-            position: absolute;
-        }
-
-        .node-item {
-            display: flex;
-            align-items: center;
-            position: relative;
-            margin: 0;
-            text-align: left;
-            line-height: 32px;
-            cursor: pointer;
-            &.active {
-                color: #3a84ff;
-                background: #eef4ff;
-            }
-            &.is-disabled {
-                color: #c4c6cc;
-                /* cursor: not-allowed; */
-            }
-            &:hover {
-                color: #3a84ff;
-                background: #eef4ff;
-            }
-            &.is-disabled:hover {
-                color: #c4c6cc;
-                background: #eee;
-            }
-            &.is-selected {
-                background: #eef4ff;
-            }
-        }
-
-        .node-svg {
-            font-size: 16px;
-            color: #a3c5fd;
-        }
-
-        .node-icon {
-            position: relative;
-            font-size: 16px;
-            color: #a3c5fd;
-            margin: 0 5px;
-            &.active {
-                color: #3a84ff;
-            }
-            &.file-icon {
-                font-size: 17px;
-            }
-        }
-
-        .arrow-icon {
-            color: #c0c4cc;
-            margin-right: 4px;
-        }
-
-        .node-title {
-            position: relative;
-            display: inline-block;
-            min-width: 14px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            vertical-align: top;
-            user-select: none;
-        }
-
-        .red-dot {
-            display: inline-block;
-            position: relative;
-            top: -10px;
-            left: -3px;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ff0000;
-        }
-
-        .node-user-count {
-            color: #c4c6cc;
-        }
-
-        .node-radio {
-            /* margin-right: 5px;
-            float: left;
-            margin-left: 5px; */
-            .node-checkbox {
-                display: inline-block;
-                position: relative;
-                top: 3px;
-                width: 16px;
-                height: 16px;
-                margin: 0 6px 0 0;
-                border: 1px solid #979ba5;
-                border-radius: 2px;
-                &.is-checked {
-                    border-color: #3a84ff;
-                    background-color: #3a84ff;
-                    background-clip: border-box;
-                    &:after {
-                        content: "";
-                        position: absolute;
-                        top: 1px;
-                        left: 4px;
-                        width: 4px;
-                        height: 8px;
-                        border: 2px solid #fff;
-                        border-left: 0;
-                        border-top: 0;
-                        transform-origin: center;
-                        transform: rotate(45deg) scaleY(1);
-                    }
-                    &.is-disabled {
-                        background-color: #dcdee5;
-                    }
-                }
-                &.is-disabled {
-                    border-color: #dcdee5;
-                    cursor: not-allowed;
-                }
-                &.is-indeterminate {
-                    border-width: 7px 4px;
-                    border-color: #3a84ff;
-                    background-color: #fff;
-                    background-clip: content-box;
-                    &:after {
-                        visibility: hidden;
-                    }
-                }
-            }
-        }
-
-        .loading {
-            display: inline-block;
-            position: relative;
-            top: -1px;
-            width: 14px;
-            height: 14px;
-        }
+.infinite-tree {
+  height: 862px;
+  font-size: 14px;
+  overflow: auto;
+  position: relative;
+  will-change: transform;
+  &::-webkit-scrollbar {
+    width: 4px;
+    background-color: lighten(transparent, 80%);
+  }
+  &::-webkit-scrollbar-thumb {
+    height: 5px;
+    border-radius: 2px;
+    background-color: #e6e9ea;
+  }
+  .ghost-wrapper,
+  .render-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    z-index: -1;
+  }
+  .ghost-wrapper {
+    z-index: -1;
+  }
+  .node-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin: 0;
+    text-align: left;
+    line-height: 32px;
+    cursor: pointer;
+    .node-icon {
+      position: relative;
+      font-size: 16px;
+      color: #a3c5fd;
+      margin: 0 5px;
+      &.active {
+        color: #3a84ff;
+      }
+      &.file-icon {
+        font-size: 17px;
+      }
     }
+    .node-title {
+      position: relative;
+      display: inline-block;
+      min-width: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: top;
+      user-select: none;
+    }
+    .node-user-count {
+      color: #c4c6cc;
+    }
+    .node-radio {
+      .node-checkbox {
+        display: inline-block;
+        position: relative;
+        top: 3px;
+        width: 16px;
+        height: 16px;
+        margin: 0 6px 0 0;
+        border: 1px solid #979ba5;
+        border-radius: 2px;
+        &.is-checked {
+          border-color: #3a84ff;
+          background-color: #3a84ff;
+          background-clip: border-box;
+          &:after {
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 4px;
+            width: 4px;
+            height: 8px;
+            border: 2px solid #fff;
+            border-left: 0;
+            border-top: 0;
+            transform-origin: center;
+            transform: rotate(45deg) scaleY(1);
+          }
+          &.is-disabled {
+            background-color: #dcdee5;
+          }
+        }
+        &.is-disabled {
+          border-color: #dcdee5;
+          cursor: not-allowed;
+        }
+        &.is-indeterminate {
+          border-width: 7px 4px;
+          border-color: #3a84ff;
+          background-color: #fff;
+          background-clip: content-box;
+          &:after {
+            visibility: hidden;
+          }
+        }
+      }
+    }
+    .arrow-icon {
+      color: #c0c4cc;
+      margin-right: 4px;
+    }
+    .red-dot {
+      display: inline-block;
+      position: relative;
+      top: -10px;
+      left: -3px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #ff0000;
+    }
+    &.active,
+    &:hover {
+      color: #3a84ff;
+      background-color: #eef4ff;
+      .node-icon,
+      .node-user-count {
+        color: #3a84ff;
+      }
+    }
+    &.is-disabled {
+      color: #c4c6cc;
+      background-color: transparent;
+      cursor: not-allowed;
+      .node-icon,
+      .node-user-count {
+        color: #c4c6cc;
+      }
+      &:hover {
+        background-color: #eee;
+      }
+    }
+  }
+  .node-tree-loading {
+    display: inline-block;
+    position: relative;
+    top: -1px;
+    width: 14px;
+    height: 14px;
+  }
+}
 </style>

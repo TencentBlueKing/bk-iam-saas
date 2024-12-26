@@ -119,15 +119,14 @@
                 <div class="tree">
                   <infinite-tree
                     ref="memberTreeRef"
-                    data-test-id="group_addGroupMemberDialog_tree_member"
                     :all-data="treeList"
                     style="height: 400px"
                     :is-rating-manager="curIsRatingManager"
                     :key="infiniteTreeKey"
                     :is-disabled="isAll"
                     :empty-data="emptyData"
-                    :has-selected-users="hasSelectedUsers"
-                    :has-selected-departments="hasSelectedDepartments"
+                    :has-selected-users="formatAllSelectedUsers"
+                    :has-selected-departments="formatAllSelectedDeparts"
                     @async-load-nodes="handleRemoteLoadNode"
                     @expand-node="handleExpanded"
                     @on-select="handleOnSelected"
@@ -141,12 +140,11 @@
                   <template v-if="isHasSearchResult">
                     <dialog-infinite-list
                       ref="searchedResultsRef"
-                      data-test-id="group_addGroupMemberDialog_list_searchResult"
                       :all-data="searchedResult"
                       :focus-index.sync="focusItemIndex"
                       :is-disabled="isAll"
-                      :has-selected-users="hasSelectedUsers"
-                      :has-selected-departments="hasSelectedDepartments"
+                      :has-selected-users="formatAllSelectedUsers"
+                      :has-selected-departments="formatAllSelectedDeparts"
                       style="height: 400px"
                       @on-checked="handleSearchResultSelected"
                     >
@@ -402,9 +400,9 @@
       </div>
       <template v-if="showExpiredAt">
         <template v-if="isPrev">
-          <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">{{
-            $t(`m.common['下一步']`)
-          }}</bk-button>
+          <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">
+            {{ $t(`m.common['下一步']`) }}
+          </bk-button>
         </template>
         <template v-else>
           <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
@@ -743,6 +741,12 @@
         return (payload) => {
           return ['depart', 'department'].includes(payload.type) ? payload.name : `${payload.username}(${payload.name})`;
         };
+      },
+      formatAllSelectedUsers () {
+       return [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+      },
+      formatAllSelectedDeparts () {
+       return [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
       },
       isStaff () {
         return this.user.role.type === 'staff';
@@ -1272,6 +1276,14 @@
       // 蓝盾侧限制手动输入添加限制的部门
       getDiffSystemOrgData () {
         if (this.isDisabledOrgPage) {
+          // 获取蓝盾侧限制选中的组织架构
+          const disabledDeparts = this.hasSelectedManualDepartments.filter((v) => this.isDisabledOrgNode(v));
+          const disabledUsers = this.hasSelectedManualUsers.filter((v) => this.isDisabledOrgNode(v));
+          const disabledList = [...disabledDeparts, ...disabledUsers];
+          if (disabledList.length) {
+            const names = disabledList.map(v => v.name).join();
+            this.messageWarn(this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`, { value: names }), 3000);
+          }
           this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter((v) =>
             !this.isDisabledOrgNode(v)
           );
@@ -1400,6 +1412,9 @@
             child.async = child.child_count > 0 || child.member_count > 0;
             child.isNewMember = false;
             child.parentNodeId = '';
+            if (this.isDisabledOrgNode(child)) {
+              child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+            }
             if (child.type === 'user') {
               child.username = child.id;
               child.disabled = this.isDisabledOrgNode(child);
@@ -1414,7 +1429,6 @@
                 child.disabled = true;
               }
             }
-
             if (child.type === 'depart') {
               if (this.hasSelectedDepartments.length > 0) {
                 child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
@@ -1482,7 +1496,10 @@
                 child.async = child.child_count > 0 || child.member_count > 0;
                 child.isNewMember = false;
                 child.parentNodeId = item.id;
-                child.full_name = `${item.name}：${child.name}`;
+                child.full_name = `${item.name}${this.$t(`m.common['：']`)}${child.name}`;
+                if (this.isDisabledOrgNode(child)) {
+                  child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+                }
                 if (this.hasSelectedDepartments.length) {
                   child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
                 } else {
@@ -1602,6 +1619,9 @@
               depart.showRadio = true;
               depart.type = 'depart';
               depart.disabled = this.isDisabledOrgNode(depart);
+              if (this.isDisabledOrgNode(depart)) {
+                depart.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+              }
               if (departIds.length && departIds.includes(depart.id)) {
                 this.$set(depart, 'is_selected', true);
               } else {
@@ -1622,6 +1642,9 @@
               user.showRadio = true;
               user.type = 'user';
               user.disabled = this.isDisabledOrgNode(user);
+              if (this.isDisabledOrgNode(user)) {
+                user.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+              }
               this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
               if (userIds.length && userIds.includes(user.username)) {
                 this.$set(user, 'is_selected', true);
@@ -1707,6 +1730,9 @@
               child.isNewMember = false;
               child.parentNodeId = payload.id;
               child.full_name = `${payload.full_name}/${child.name}`;
+              if (this.isDisabledOrgNode(child)) {
+                child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+              }
               if (this.hasSelectedDepartments.length > 0) {
                 child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               } else {
@@ -1740,6 +1766,9 @@
               child.full_name = payload.full_name;
               // parentNodeId + username 组合成id
               child.id = `${child.parentNodeId}${child.username}`;
+              if (this.isDisabledOrgNode(child)) {
+                child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+              }
               if (this.hasSelectedUsers.length > 0) {
                 child.is_selected
                   = this.hasSelectedUsers.map((item) => item.id).includes(child.id)
@@ -1747,15 +1776,12 @@
               } else {
                 child.is_selected = false;
               }
-              const existSelectedNode = this.treeList.find(
-                (item) => item.is_selected && item.username === child.username
+              const existSelectedNode = this.treeList.find((item) =>
+                item.is_selected && item.username === child.username
               );
-              if (existSelectedNode) {
-                child.is_selected = true;
-                child.disabled = true;
-              }
-
-              if (this.defaultUsers.length && this.defaultUsers.map((item) => item.id).includes(child.username)) {
+              const defaultSelectedUser = this.defaultUsers.map((item) => item.id).includes(child.username);
+              const isExistSelectedUser = existSelectedNode || defaultSelectedUser;
+              if (isExistSelectedUser) {
                 child.is_selected = true;
                 child.disabled = true;
               }
@@ -2305,7 +2331,7 @@
       }
       .content {
         position: relative;
-        padding: 15px 24px 15px 0;
+        margin: 15px 24px 15px 0;
         /* height: 345px; */
         height: 414px;
         overflow: auto;

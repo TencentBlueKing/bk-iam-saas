@@ -3,14 +3,18 @@
     <div class="ghost-wrapper" :style="ghostStyle"></div>
     <div class="render-wrapper" ref="content">
       <div class="organization-content">
-        <!-- eslint-disable max-len -->
         <div
+          v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
           v-for="(item, index) in renderOrganizationList"
           :key="item.id"
-          :class="['organization-item', { focus: index === organizationIndex || item.selected }, { 'is-disabled': disabledNode(item) }]"
-          :title="item.disabled ? $t(`m.common['该成员已添加']`) : item.full_name"
+          :class="[
+            'node-item',
+            'organization-item',
+            { 'focus': index === organizationIndex || selectedNode(item) },
+            { 'is-disabled': disabledNode(item) }
+          ]"
           @click.stop="nodeClick(item)">
-          <div class="organization-checkbox" v-if="item.showRadio">
+          <div class="node-item-checkbox" v-if="item.showRadio">
             <span class="node-checkbox"
               :class="{
                 'is-disabled': disabledNode(item),
@@ -20,16 +24,20 @@
               @click.stop="handleNodeClick(item)">
             </span>
           </div>
-          <Icon type="file-close" class="folder-icon" />
-          <span
-            :class="['organization-name', { 'is-disabled': disabledNode(item) }]"
-            :title="nameType(item)"
-          >
+          <Icon
+            type="file-close"
+            :class="[
+              'node-icon',
+              'folder-icon',
+              { 'active': selectedNode(item) && !item.disabled }
+            ]"
+          />
+          <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
             {{ item.name }}
           </span>
           <span
             v-if="item.showCount && enableOrganizationCount"
-            class="user-count"
+            class="node-user-count"
           >
             {{ '(' + item.count + ')' }}
           </span>
@@ -37,12 +45,17 @@
       </div>
       <div class="user-content">
         <div
+          v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
           v-for="(item, index) in renderUserList"
           :key="item.id"
-          :class="['user-item', { focus: index === userIndex || item.selected }, { 'is-disabled': disabledNode(item) }]"
-          :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
+          :class="[
+            'node-item',
+            'user-item',
+            { 'focus': index === userIndex || selectedNode(item) },
+            { 'is-disabled': disabledNode(item) }
+          ]"
           @click.stop="nodeClick(item)">
-          <div class="user-checkbox" v-if="item.showRadio">
+          <div class="node-item-checkbox" v-if="item.showRadio">
             <span class="node-checkbox"
               :class="{
                 'is-disabled': disabledNode(item),
@@ -52,10 +65,15 @@
               @click.stop="handleNodeClick(item)">
             </span>
           </div>
-          <Icon type="personal-user" class="user-icon" />
+          <Icon
+            type="personal-user"
+            :class="[
+              'node-icon',
+              { 'active': selectedNode(item) && !item.disabled }
+            ]"
+          />
           <span
-            :class="['user-name', { 'is-disabled': disabledNode(item) }]"
-            :title="nameType(item)"
+            :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]"
           >
             {{ item.username }}
             <template v-if="item.name !== ''">
@@ -115,8 +133,7 @@
         currentFocusIndex: this.focusIndex,
         organizationIndex: -1,
         userIndex: -1,
-        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true',
-        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit']
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
       };
     },
     computed: {
@@ -146,34 +163,53 @@
       isStaff () {
         return this.user.role.type === 'staff';
       },
+      // 不需要校验组织架构授权范围的页面模块
+      isUnLimitedScope () {
+         const noVerifyRoutes = [
+          'authorBoundaryEditFirstLevel',
+          'authorBoundaryEditSecondLevel',
+          'applyJoinUserGroup',
+          'addMemberBoundary',
+          'gradingAdminCreate',
+          'gradingAdminEdit'
+        ];
+        return getParamsValue('search_scene') === 'add' || noVerifyRoutes.includes(this.$route.name);
+      },
       nameType () {
         return (payload) => {
-            const { name, type, username, full_name: fullName } = payload;
-            const typeMap = {
-                user: () => {
-                    if (fullName) {
-                        return fullName;
-                    } else {
-                        return name ? `${username}(${name})` : username;
-                    }
-                },
-                depart: () => {
-                    return fullName || name;
-                }
-            };
-            return typeMap[type] ? typeMap[type]() : typeMap['user']();
+          const { name, type, username, full_name: fullName, disabled, disabledTip } = payload;
+          if (disabled) {
+            return disabledTip || this.$t(`m.common['该成员已添加']`);
+          }
+          const typeMap = {
+            user: () => {
+              if (fullName) {
+                return fullName;
+              }
+              return name ? `${username}(${name})` : username;
+            },
+            depart: () => {
+              return fullName || name;
+            }
+          };
+          return typeMap[type] ? typeMap[type]() : typeMap['user']();
         };
       },
       selectedNode () {
         return (payload) => {
-          if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
-            payload.is_selected = this.hasSelectedDepartments.map(
-              item => item.id.toString()).includes(payload.id.toString())
-              || this.hasSelectedUsers.map(
-              item => item.username).includes(payload.username);
-              return payload.is_selected;
+          if (payload.is_selected) {
+            return true;
           }
-          return payload.is_selected || false;
+          const isExistSelected = this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
+          if (isExistSelected) {
+            const hasDeparts = this.hasSelectedDepartments.map(item =>
+              String(item.id)).includes(String(payload.id)
+            );
+            const hasUsers = this.hasSelectedUsers.map(item => item.username).includes(payload.username);
+            payload.is_selected = hasDeparts || hasUsers;
+            return payload.is_selected;
+          }
+          return false;
         };
       }
     },
@@ -275,24 +311,16 @@
         }
         this.$emit('on-click', node);
         if (!node.disabled) {
-          if (this.isStaff) {
+          if (this.isStaff || this.isUnLimitedScope) {
             node.is_selected = !node.is_selected;
             this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
           } else {
-            if (
-              (getParamsValue('search_scene') && getParamsValue('search_scene') === 'add')
-              || this.noVerifyRoutes.includes(this.$route.name)
-            ) {
+            const result = await this.fetchSubjectScopeCheck(node);
+            if (result) {
               node.is_selected = !node.is_selected;
               this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
             } else {
-              const result = await this.fetchSubjectScopeCheck(node);
-              if (result) {
-                node.is_selected = !node.is_selected;
-                this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
-              } else {
-                this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
-              }
+              this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
             }
           }
         }
@@ -354,181 +382,141 @@
     }
   };
 </script>
+
 <style lang="postcss">
-    .dialog-infinite-list {
-        height: 862px;
-        font-size: 14px;
-        overflow: auto;
+.dialog-infinite-list {
+  height: 862px;
+  font-size: 14px;
+  overflow: auto;
+  position: relative;
+  will-change: transform;
+  &::-webkit-scrollbar {
+    width: 4px;
+    background-color: lighten(transparent, 80%);
+  }
+  &::-webkit-scrollbar-thumb {
+    height: 5px;
+    border-radius: 2px;
+    background-color: #e6e9ea;
+  }
+  .ghost-wrapper,
+  .render-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    z-index: -1;
+  }
+  .ghost-wrapper {
+    z-index: -1;
+  }
+  .organization-content,
+  .user-content {
+    .node-item {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 2px;
+      cursor: pointer;
+      .node-checkbox {
+        display: inline-block;
         position: relative;
-        overflow: scroll;
-        will-change: transform;
-        &::-webkit-scrollbar {
+        top: 3px;
+        width: 16px;
+        height: 16px;
+        margin: 0 6px 0 0;
+        border: 1px solid #979ba5;
+        border-radius: 2px;
+        &.is-checked {
+          border-color: #3a84ff;
+          background-color: #3a84ff;
+          background-clip: border-box;
+          &:after {
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 4px;
             width: 4px;
-            background-color: lighten(transparent, 80%);
+            height: 8px;
+            border: 2px solid #fff;
+            border-left: 0;
+            border-top: 0;
+            transform-origin: center;
+            transform: rotate(45deg) scaleY(1);
+          }
+          &.is-disabled {
+            background-color: #dcdee5;
+          }
         }
-        &::-webkit-scrollbar-thumb {
-            height: 5px;
-            border-radius: 2px;
-            background-color: #e6e9ea;
+        &.is-disabled {
+          border-color: #dcdee5;
+          cursor: not-allowed;
         }
-
-        .ghost-wrapper {
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            z-index: -1;
+        &.is-indeterminate {
+          border-width: 7px 4px;
+          border-color: #3a84ff;
+          background-color: #fff;
+          background-clip: content-box;
+          &:after {
+            visibility: hidden;
+          }
         }
-
-        .render-wrapper {
-            left: 0;
-            right: 0;
-            top: 0;
-            position: absolute;
+      }
+      .node-icon {
+        font-size: 16px;
+        color: #a3c5fd;
+        margin-right: 5px;
+        &.file-icon {
+          font-size: 17px;
         }
-
-        .organization-content {
-            .organization-item {
-                display: flex;
-                align-items: center;
-                padding: 5px 0;
-                border-radius: 2px;
-                cursor: pointer;
-                &:hover {
-                    color: #3a84ff;
-                    background: #eef4ff;
-                }
-                &.is-disabled {
-                    color: #c4c6cc;
-                    cursor: not-allowed;
-                }
-                &.is-disabled:hover {
-                    background: #eee;
-                }
-                &.focus {
-                    color: #3a84ff;
-                    background: #eef4ff;
-                }
-                .organization-name {
-                    display: inline-block;
-                    max-width: calc(100% - 72px);
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    vertical-align: top;
-                    &:hover {
-                        color: #3a84ff;
-                    }
-                    &.is-disabled:hover {
-                        color: #c4c6cc;
-                    }
-                }
-                .organization-checkbox {
-                    margin-right: 5px;
-                    /* float: right; */
-                }
-                .user-count {
-                    color: #c4c6cc;
-                }
-            }
-            .folder-icon {
-                font-size: 17px;
-                color: #a3c5fd;
-                margin-right: 5px;
-            }
+        &.active {
+          color: #3a84ff;
         }
-
-        .user-content {
-            .user-item {
-                display: flex;
-                align-items: center;
-                padding: 5px 0;
-                border-radius: 2px;
-                cursor: pointer;
-                &:hover {
-                    color: #3a84ff;
-                    background: #eef4ff;
-                }
-                &.is-disabled {
-                    color: #c4c6cc;
-                    cursor: not-allowed;
-                }
-                &.is-disabled:hover {
-                    background: #eee;
-                }
-                &.focus {
-                    color: #3a84ff;
-                    background: #eef4ff;
-                }
-                .user-name {
-                    display: inline-block;
-                    max-width: calc(100% - 74px);
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    vertical-align: top;
-                    &:hover {
-                        color: #3a84ff;
-                    }
-                    &.is-disabled:hover {
-                        color: #c4c6cc;
-                    }
-                }
-                .user-checkbox {
-                    margin-right: 5px;
-                    /* float: right; */
-                }
-            }
-            .user-icon {
-                font-size: 16px;
-                color: #a3c5fd;
-                margin-right: 5px;
-            }
+      }
+      .node-user-count {
+        color: #c4c6cc;
+      }
+      &:hover,
+      &.focus {
+        color: #3a84ff;
+        background: #eef4ff;
+        .node-icon,
+        .node-user-count {
+          color: #3a84ff;
         }
-
-        .node-checkbox {
-            display: inline-block;
-            position: relative;
-            top: 3px;
-            width: 16px;
-            height: 16px;
-            margin: 0 6px 0 0;
-            border: 1px solid #979ba5;
-            border-radius: 2px;
-            &.is-checked {
-                border-color: #3a84ff;
-                background-color: #3a84ff;
-                background-clip: border-box;
-                &:after {
-                    content: "";
-                    position: absolute;
-                    top: 1px;
-                    left: 4px;
-                    width: 4px;
-                    height: 8px;
-                    border: 2px solid #fff;
-                    border-left: 0;
-                    border-top: 0;
-                    transform-origin: center;
-                    transform: rotate(45deg) scaleY(1);
-                }
-                &.is-disabled {
-                    background-color: #dcdee5;
-                }
-            }
-            &.is-disabled {
-                border-color: #dcdee5;
-                cursor: not-allowed;
-            }
-            &.is-indeterminate {
-                border-width: 7px 4px;
-                border-color: #3a84ff;
-                background-color: #fff;
-                background-clip: content-box;
-                &:after {
-                    visibility: hidden;
-                }
-            }
+      }
+      &.is-disabled {
+        color: #c4c6cc;
+        background-color: transparent;
+        cursor: not-allowed;
+        .node-icon,
+        .node-user-count {
+          color: #c4c6cc;
         }
+        &:hover {
+          background-color: #eee;
+        }
+      }
+      &-name {
+        display: inline-block;
+        max-width: calc(100% - 72px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: top;
+        &:hover {
+          color: #3a84ff;
+        }
+        &.is-disabled {
+          &:hover {
+            color: #c4c6cc;
+          }
+        }
+      }
+      &-checkbox {
+        margin-right: 5px;
+      }
     }
+  }
+}
 </style>
