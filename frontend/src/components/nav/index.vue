@@ -44,7 +44,6 @@
               :title="data.name">
               <template v-if="!['loadMore'].includes(data.nodeType)">
                 <Icon
-                
                   :type="node.level > 0 ? 'level-two-manage-space' : 'level-one-manage-space'"
                   :style="{
                     color: formatColor(data)
