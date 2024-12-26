@@ -56,3 +56,11 @@ def format_localtime(fmt="%Y%m%d%H%M%S"):
     """
     t = time.strftime(fmt, time.localtime())
     return t
+
+
+def utc_string_to_local_timestamp(str_time: str) -> int:
+    """
+    utc字符时间转换未本地时间戳
+    """
+    t = utc_string_to_local(str_time)
+    return int(t.timestamp())
