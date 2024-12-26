@@ -1402,7 +1402,7 @@
             child.level = 0;
             child.loading = false;
             child.showRadio = true;
-            child.selected = false;
+            child.is_selected = false;
             child.expanded = false;
             child.disabled = this.isDisabledOrgNode(child);
             child.type = child.type === 'user' ? 'user' : 'depart';
@@ -1469,7 +1469,7 @@
             item.visiable = true;
             item.level = 0;
             item.showRadio = false;
-            item.selected = false;
+            item.is_selected = false;
             item.expanded = false;
             item.count = 0;
             item.disabled = !item.departments || item.departments.length < 1;
@@ -1487,7 +1487,7 @@
                 child.level = 1;
                 child.loading = false;
                 child.showRadio = true;
-                child.selected = false;
+                child.is_selected = false;
                 child.expanded = false;
                 child.disabled = this.isDisabledOrgNode(child);
                 child.type = 'depart';
@@ -1720,7 +1720,7 @@
               child.level = payload.level + 1;
               child.loading = false;
               child.showRadio = true;
-              child.selected = false;
+              child.is_selected = false;
               child.expanded = false;
               child.disabled = this.disabled || this.isDisabledOrgNode(child);
               child.type = 'depart';
@@ -1753,7 +1753,7 @@
               child.level = payload.level + 1;
               child.loading = false;
               child.showRadio = true;
-              child.selected = false;
+              child.is_selected = false;
               child.expanded = false;
               child.disabled = this.disabled || this.isDisabledOrgNode(child);
               child.type = 'user';
