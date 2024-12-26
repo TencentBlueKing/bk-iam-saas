@@ -792,12 +792,6 @@
 <style lang="postcss">
 @import './index.css';
 
-.iam-select-collection {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
   .iam-nav-select-dropdown-content .bk-big-tree {
     &-node {
         padding: 0 16px;
