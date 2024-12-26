@@ -984,7 +984,7 @@ export const m = {
         '添加系统和操作': 'Add Systems and Actions',
         '修改管理空间授权范围': 'Modify the authorization scope of management space',
         '刷新列表': 'Refresh',
-        '如需编辑管理空间的内容请点击': 'Click to edit',
+        '如需编辑管理空间的内容请点击': 'Please click if you need to edit the manage space',
         '操作和资源范围': 'Actions and resources scope',
         '资源实例范围': 'Resource instance scope',
         '选择提示': 'The following actions needs to select resource instances, we have combined the same selection path automatically, you can expand all to select',
