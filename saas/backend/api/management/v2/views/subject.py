@@ -31,7 +31,7 @@ from backend.common.error_codes import error_codes
 from backend.component.iam import list_subject_groups_detail
 from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
-from backend.util.time import utc_string_to_timestamp
+from backend.util.time import utc_string_to_local_timestamp
 
 
 class ManagementUserGroupBelongViewSet(GenericViewSet):
@@ -139,7 +139,7 @@ class ManagementMemberGroupDetailViewSet(GenericViewSet):
         return {
             int(one["id"]): {
                 "expired_at": one["expired_at"],
-                "created_at": utc_string_to_timestamp(one["created_at"]),
+                "created_at": utc_string_to_local_timestamp(one["created_at"]),
             }
             for one in groups
         }
@@ -174,7 +174,7 @@ class ManagementMemberGroupDetailViewSet(GenericViewSet):
             subject_group_map = {
                 i.group_id: {
                     "expired_at": i.expired_at,
-                    "created_at": int(i.created_time.timestamp()),
+                    "created_at": utc_string_to_local_timestamp(i.created_time),
                 }
                 for i in template_groups
             }
