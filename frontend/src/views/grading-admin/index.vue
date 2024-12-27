@@ -484,7 +484,7 @@
 
       handleCopy (payload) {
         this.$router.push({
-          name: 'gradingAdminCreate',
+          name: 'gradingAdminClone',
           params: {
             id: payload.id
           }
@@ -718,10 +718,7 @@
 
       handleCreate () {
         this.$router.push({
-          name: 'gradingAdminCreate',
-          params: {
-            id: 0
-          }
+          name: 'gradingAdminCreate'
         });
       },
 
