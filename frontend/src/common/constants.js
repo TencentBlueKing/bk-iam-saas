@@ -393,6 +393,16 @@ export const SEND_DAYS_LIST = [
   }
 ];
 
+// 不需要校验组织架构授权范围的页面
+export const NO_VERIFY_ORG_ROUTES = [
+  'authorBoundaryEditFirstLevel',
+  'authorBoundaryEditSecondLevel',
+  'applyJoinUserGroup',
+  'addMemberBoundary',
+  'gradingAdminCreate',
+  'gradingAdminEdit'
+];
+
 // 只显示角色名称的审计类型
 export const ONLY_ROLE_TYPE = [
   'template.create',

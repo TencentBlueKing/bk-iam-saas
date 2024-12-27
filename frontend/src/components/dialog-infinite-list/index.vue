@@ -84,12 +84,13 @@
       </div>
     </div>
   </div>
-
 </template>
+
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { getParamsValue } from '@/common/util';
+  import { NO_VERIFY_ORG_ROUTES } from '@/common/constants';
 
   export default {
     name: 'dialog-infinite-list',
@@ -165,15 +166,7 @@
       },
       // 不需要校验组织架构授权范围的页面模块
       isUnLimitedScope () {
-         const noVerifyRoutes = [
-          'authorBoundaryEditFirstLevel',
-          'authorBoundaryEditSecondLevel',
-          'applyJoinUserGroup',
-          'addMemberBoundary',
-          'gradingAdminCreate',
-          'gradingAdminEdit'
-        ];
-        return getParamsValue('search_scene') === 'add' || noVerifyRoutes.includes(this.$route.name);
+        return getParamsValue('search_scene') === 'add' || NO_VERIFY_ORG_ROUTES.includes(this.$route.name);
       },
       nameType () {
         return (payload) => {

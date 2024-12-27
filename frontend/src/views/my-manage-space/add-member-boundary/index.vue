@@ -384,6 +384,7 @@
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import { il8n } from '@/language';
   import { formatCodeData, guid, getWindowHeight, sleep, getParamsValue } from '@/common/util';
+  import { NO_VERIFY_ORG_ROUTES } from '@/common/constants';
   import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
 
@@ -484,7 +485,6 @@
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
         hasSelectedManualUsers: [],
-        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit'],
         regValue: /，|,|；|;|、|\\|\n|\s/
       };
     },
@@ -603,7 +603,7 @@
       },
       // 不需要校验组织架构授权范围的页面模块
       isUnLimitedScope () {
-        return getParamsValue('search_scene') === 'add' || this.noVerifyRoutes.includes(this.$route.name);
+        return getParamsValue('search_scene') === 'add' || NO_VERIFY_ORG_ROUTES.includes(this.$route.name);
       }
     },
     watch: {

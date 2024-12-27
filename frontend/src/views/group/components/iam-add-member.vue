@@ -442,6 +442,7 @@
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import IamMemberTemplateTable from '@/components/iam-member-template-table';
   import { guid, formatCodeData, existValue, getParamsValue } from '@/common/util';
+  import { NO_VERIFY_ORG_ROUTES } from '@/common/constants';
   import { mapGetters } from 'vuex';
 
   // 去除()以及之间的字符
@@ -602,7 +603,6 @@
         defaultTempIdList: [],
         curId: 0,
         needMemberTempRoutes: ['userGroup', 'userGroupDetail', 'createUserGroup', 'cloneUserGroup'],
-        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit'],
         regValue: /，|,|；|;|、|\\|\n|\s/
       };
     },
@@ -772,7 +772,7 @@
       },
       // 不需要校验组织架构授权范围的页面模块
       isUnLimitedScope () {
-        return getParamsValue('search_scene') === 'add' || this.noVerifyRoutes.includes(this.$route.name);
+        return getParamsValue('search_scene') === 'add' || NO_VERIFY_ORG_ROUTES.includes(this.$route.name);
       },
       // 蓝盾侧需要限制勾选部门的页面
       isDisabledOrgPage () {
