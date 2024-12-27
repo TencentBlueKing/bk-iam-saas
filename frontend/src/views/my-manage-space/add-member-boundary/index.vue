@@ -102,11 +102,10 @@
                   <div class="tree">
                     <infinite-tree
                       ref="memberTreeRef"
-                      data-test-id="group_addGroupMemberDialog_tree_member"
                       :all-data="treeList"
                       :empty-data="emptyData"
-                      :has-selected-users="hasSelectedUsers"
-                      :has-selected-departments="hasSelectedDepartments"
+                      :has-selected-users="formatAllSelectedUsers"
+                      :has-selected-departments="formatAllSelectedDeparts"
                       :style="{ height: `${contentHeight - 52}px` }"
                       :is-rating-manager="curIsRatingManager"
                       :key="infiniteTreeKey"
@@ -128,8 +127,8 @@
                         :all-data="searchedResult"
                         :focus-index.sync="focusItemIndex"
                         :is-disabled="isAll"
-                        :has-selected-users="hasSelectedUsers"
-                        :has-selected-departments="hasSelectedDepartments"
+                        :has-selected-users="formatAllSelectedUsers"
+                        :has-selected-departments="formatAllSelectedDeparts"
                         @on-checked="handleSearchResultSelected"
                       >
                       </dialog-infinite-list>
@@ -384,7 +383,7 @@
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import { il8n } from '@/language';
-  import { formatCodeData, guid, getWindowHeight, sleep } from '@/common/util';
+  import { formatCodeData, guid, getWindowHeight, sleep, getParamsValue } from '@/common/util';
   import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
 
@@ -404,48 +403,6 @@
       InfiniteTree,
       dialogInfiniteList,
       IamDeadline
-    },
-    props: {
-    // disabled: {
-    //     type: Boolean,
-    //     default: false
-    // },
-    // loading: {
-    //     type: Boolean,
-    //     default: false
-    // },
-    // showExpiredAt: {
-    //     type: Boolean,
-    //     default: false
-    // },
-    // name: {
-    //     type: String,
-    //     default: ''
-    // },
-    // id: {
-    //     type: [String, Number],
-    //     default: ''
-    // },
-    // title: {
-    //     type: String,
-    //     default: ''
-    // },
-    // isRatingManager: {
-    //     type: Boolean,
-    //     default: false
-    // },
-    // showLimit: {
-    //     type: Boolean,
-    //     default: false
-    // },
-    // allChecked: {
-    //     type: Boolean,
-    //     default: false
-    // },
-    // isBatch: {
-    //     type: Boolean,
-    //     default: false
-    // }
     },
     data () {
       return {
@@ -632,11 +589,21 @@
           return ['depart', 'department'].includes(payload.type) ? payload.name : `${payload.username}(${payload.name})`;
         };
       },
+      formatAllSelectedUsers () {
+       return [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+      },
+      formatAllSelectedDeparts () {
+       return [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+      },
       isStaff () {
         return this.user.role.type === 'staff';
       },
       isShowComma () {
         return this.hasSelectedDepartments.length > 0 && this.hasSelectedUsers.length > 0;
+      },
+      // 不需要校验组织架构授权范围的页面模块
+      isUnLimitedScope () {
+        return getParamsValue('search_scene') === 'add' || this.noVerifyRoutes.includes(this.$route.name);
       }
     },
     watch: {
@@ -672,9 +639,6 @@
       bus.$on('edit-member-boundary', (payload) => {
         this.fetchResetData(payload);
       });
-      if (this.$route.name === 'gradingAdminCreate') {
-        this.handleSave();
-      }
       window.addEventListener('message', this.fetchReceiveData);
       window.parent.postMessage({ type: 'IAM', code: 'load' }, '*');
     },
@@ -939,6 +903,7 @@
           try {
             if (manualInputValue.length < 10) {
               const { data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+              //
               await this.formatSearchData(data, manualInputValue[i]);
             } else {
               this.$store.dispatch('organization/getSearchOrganizations', params).then(async ({ data }) => {
@@ -1107,41 +1072,43 @@
 
       // 校验部门/用户范围是否满足条件
       async fetchSubjectScopeCheck (payload, mode) {
-        if (!this.noVerifyRoutes.includes(this.$route.name)) {
-          const subjects = payload.map((item) => {
-            const { id, type, username } = item;
-            const typeMap = {
-              depart: () => {
-                return {
-                  type: 'department',
-                  id
-                };
-              },
-              user: () => {
-                return {
-                  type: 'user',
-                  id: username
-                };
-              }
-            };
-            return typeMap[type || mode]();
-          });
-          try {
-            const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
-            if (code === 0 && data) {
-              const idList = data.map((v) => v.id);
-              const result = payload.filter((item) => {
-                if (item.type === 'depart') {
-                  item.type = 'department';
-                }
-                return data.map((v) => v.type).includes(item.type)
-                  && (idList.includes(String(item.id)) || idList.includes(item.username));
-              });
-              return result;
+        // 如果业务场景是扩大授权人员边界范围则不需要调用接口校验授权范围
+        if (this.isUnLimitedScope) {
+          return payload;
+        }
+        const subjects = payload.map((item) => {
+          const { id, type, username } = item;
+          const typeMap = {
+            depart: () => {
+              return {
+                type: 'department',
+                id
+              };
+            },
+            user: () => {
+              return {
+                type: 'user',
+                id: username
+              };
             }
-          } catch (e) {
-            this.messageAdvancedError(e);
+          };
+          return typeMap[type || mode]();
+        });
+        try {
+          const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
+          if (code === 0 && data) {
+            const idList = data.map((v) => v.id);
+            const result = payload.filter((item) => {
+              if (item.type === 'depart') {
+                item.type = 'department';
+              }
+              return data.map((v) => v.type).includes(item.type)
+                && (idList.includes(String(item.id)) || idList.includes(item.username));
+            });
+            return result;
           }
+        } catch (e) {
+          this.messageAdvancedError(e);
         }
       },
 
@@ -1230,7 +1197,7 @@
             child.level = 0;
             child.loading = false;
             child.showRadio = true;
-            child.selected = false;
+            child.isSelected = false;
             child.expanded = false;
             child.disabled = false;
             child.type = child.type === 'user' ? 'user' : 'depart';
@@ -1243,28 +1210,24 @@
             if (child.type === 'user') {
               child.username = child.id;
               if (this.hasSelectedUsers.length > 0) {
-                child.is_selected = this.hasSelectedUsers.map((item) => item.id).includes(child.id);
-              } else {
-                child.is_selected = false;
+                child.isSelected = this.hasSelectedUsers.map((item) => item.id).includes(child.id);
               }
 
               if (this.defaultUsers.length && this.defaultUsers.map((item) => item.id).includes(child.id)) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             }
             if (child.type === 'depart') {
               if (this.hasSelectedDepartments.length > 0) {
-                child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
-              } else {
-                child.is_selected = false;
+                child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               }
 
               if (
                 this.defaultDepartments.length > 0
                 && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
               ) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             }
@@ -1292,7 +1255,7 @@
             item.visiable = true;
             item.level = 0;
             item.showRadio = false;
-            item.selected = false;
+            item.isSelected = false;
             item.expanded = false;
             item.count = 0;
             item.disabled = !item.departments || item.departments.length < 1;
@@ -1301,7 +1264,7 @@
             item.async = item.departments && item.departments.length > 0;
             item.isNewMember = false;
             item.loading = false;
-            item.is_selected = false;
+            item.isSelected = false;
             item.parentNodeId = '';
             item.id = `${item.id}&${item.level}`;
             if (item.departments && item.departments.length > 0) {
@@ -1310,7 +1273,7 @@
                 child.level = 1;
                 child.loading = false;
                 child.showRadio = true;
-                child.selected = false;
+                child.isSelected = false;
                 child.expanded = false;
                 child.disabled = false;
                 child.type = 'depart';
@@ -1319,19 +1282,17 @@
                 child.async = child.child_count > 0 || child.member_count > 0;
                 child.isNewMember = false;
                 child.parentNodeId = item.id;
-                child.full_name = `${item.name}：${child.name}`;
+                child.full_name = `${item.name}${this.$t(`m.common['：']`)}${child.name}`;
 
                 if (this.hasSelectedDepartments.length > 0) {
-                  child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
-                } else {
-                  child.is_selected = false;
+                  child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
                 }
 
                 if (
                   this.defaultDepartments.length > 0
                   && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
                 ) {
-                  child.is_selected = true;
+                  child.isSelected = true;
                   child.disabled = true;
                 }
               });
@@ -1372,12 +1333,12 @@
       handleDeleteAll () {
         if (this.searchedUsers.length) {
           this.searchedUsers.forEach((search) => {
-            search.is_selected = false;
+            search.isSelected = false;
           });
         }
         if (this.searchedDepartment.length) {
           this.searchedDepartment.forEach((organ) => {
-            organ.is_selected = false;
+            organ.isSelected = false;
           });
         }
         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
@@ -1433,12 +1394,12 @@
               depart.showRadio = true;
               depart.type = 'depart';
               if ((departIds.length && departIds.includes(depart.id)) || departIds.includes(String(depart.id))) {
-                this.$set(depart, 'is_selected', true);
+                this.$set(depart, 'isSelected', true);
               } else {
-                this.$set(depart, 'is_selected', false);
+                this.$set(depart, 'isSelected', false);
               }
               if (defaultDepartIds.length && defaultDepartIds.includes(depart.id.toString())) {
-                this.$set(depart, 'is_selected', true);
+                this.$set(depart, 'isSelected', true);
                 this.$set(depart, 'disabled', true);
               }
               depart.count = depart.recursive_member_count;
@@ -1453,12 +1414,12 @@
               user.type = 'user';
               this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
               if (userIds.length && userIds.includes(user.username)) {
-                this.$set(user, 'is_selected', true);
+                this.$set(user, 'isSelected', true);
               } else {
-                this.$set(user, 'is_selected', false);
+                this.$set(user, 'isSelected', false);
               }
               if (defaultUserIds.length && defaultUserIds.includes(user.username)) {
-                this.$set(user, 'is_selected', true);
+                this.$set(user, 'isSelected', true);
                 this.$set(user, 'disabled', true);
               }
             });
@@ -1540,7 +1501,7 @@
               child.level = payload.level + 1;
               child.loading = false;
               child.showRadio = true;
-              child.selected = false;
+              child.isSelected = false;
               child.expanded = false;
               child.disabled = this.disabled;
               child.type = 'depart';
@@ -1553,16 +1514,14 @@
               child.full_name = payload.full_name;
 
               if (this.hasSelectedDepartments.length > 0) {
-                child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
-              } else {
-                child.is_selected = false;
+                child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               }
 
               if (
                 this.defaultDepartments.length > 0
                 && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
               ) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             });
@@ -1574,7 +1533,7 @@
               child.level = payload.level + 1;
               child.loading = false;
               child.showRadio = true;
-              child.selected = false;
+              child.isSelected = false;
               child.expanded = false;
               child.disabled = this.disabled;
               child.type = 'user';
@@ -1593,20 +1552,18 @@
                 && (this.hasSelectedUsers.map((item) => item.id).includes(child.id)
                   || this.hasSelectedUsers.map((item) => item.username).includes(child.username))
               ) {
-                child.is_selected = true;
-              } else {
-                child.is_selected = false;
+                child.isSelected = true;
               }
               const existSelectedNode = this.treeList.find(
-                (item) => item.is_selected && item.username === child.username
+                (item) => item.isSelected && item.username === child.username
               );
               if (existSelectedNode) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
 
               if (this.defaultUsers.length && this.defaultUsers.map((item) => item.id).includes(child.username)) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             });
@@ -1640,14 +1597,14 @@
           if (this.searchedUsers.length) {
             this.searchedUsers.forEach((search) => {
               if (search.username === item.username) {
-                search.is_selected = false;
+                search.isSelected = false;
               }
             });
           }
           if (this.searchedDepartment.length) {
             this.searchedDepartment.forEach((organ) => {
               if (organ.id === item.id) {
-                organ.is_selected = false;
+                organ.isSelected = false;
               }
             });
           }

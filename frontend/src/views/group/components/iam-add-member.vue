@@ -441,9 +441,8 @@
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import IamMemberTemplateTable from '@/components/iam-member-template-table';
-  import { guid, formatCodeData, existValue } from '@/common/util';
+  import { guid, formatCodeData, existValue, getParamsValue } from '@/common/util';
   import { mapGetters } from 'vuex';
-  // import { bus } from '@/common/bus';
 
   // 去除()以及之间的字符
   const getUsername = (str) => {
@@ -770,6 +769,10 @@
       isShowComma () {
         return this.hasSelectedDepartments.length > 0
          && (this.hasSelectedUsers.length > 0 || (this.hasSelectedTemplates.length > 0 && this.isExistMemberTemplate));
+      },
+      // 不需要校验组织架构授权范围的页面模块
+      isUnLimitedScope () {
+        return getParamsValue('search_scene') === 'add' || this.noVerifyRoutes.includes(this.$route.name);
       },
       // 蓝盾侧需要限制勾选部门的页面
       isDisabledOrgPage () {
@@ -1235,41 +1238,43 @@
 
       // 校验部门/用户范围是否满足条件
       async fetchSubjectScopeCheck (payload, mode) {
-        if (!this.noVerifyRoutes.includes(this.$route.name)) {
-          const subjects = payload.map((item) => {
-            const { id, type, username } = item;
-            const typeMap = {
-              depart: () => {
-                return {
-                  type: 'department',
-                  id
-                };
-              },
-              user: () => {
-                return {
-                  type: 'user',
-                  id: username
-                };
-              }
-            };
-            return typeMap[type || mode]();
-          });
-          try {
-            const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
-            if (code === 0 && data) {
-              const idList = data.map((v) => v.id);
-              const result = payload.filter((item) => {
-                if (item.type === 'depart') {
-                  item.type = 'department';
-                }
-                return data.map((v) => v.type).includes(item.type)
-                  && (idList.includes(String(item.id)) || idList.includes(item.username));
-              });
-              return result;
+        // 如果业务场景是扩大授权人员边界范围则不需要调用接口校验授权范围
+        if (this.isUnLimitedScope) {
+          return payload;
+        }
+        const subjects = payload.map((item) => {
+          const { id, type, username } = item;
+          const typeMap = {
+            depart: () => {
+              return {
+                type: 'department',
+                id
+              };
+            },
+            user: () => {
+              return {
+                type: 'user',
+                id: username
+              };
             }
-          } catch (e) {
-            this.messageAdvancedError(e);
+          };
+          return typeMap[type || mode]();
+        });
+        try {
+          const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
+          if (code === 0 && data) {
+            const idList = data.map((v) => v.id);
+            const result = payload.filter((item) => {
+              if (item.type === 'depart') {
+                item.type = 'department';
+              }
+              return data.map((v) => v.type).includes(item.type)
+                && (idList.includes(String(item.id)) || idList.includes(item.username));
+            });
+            return result;
           }
+        } catch (e) {
+          this.messageAdvancedError(e);
         }
       },
 
@@ -1402,7 +1407,7 @@
             child.level = 0;
             child.loading = false;
             child.showRadio = true;
-            child.is_selected = false;
+            child.isSelected = false;
             child.expanded = false;
             child.disabled = this.isDisabledOrgNode(child);
             child.type = child.type === 'user' ? 'user' : 'depart';
@@ -1419,28 +1424,24 @@
               child.username = child.id;
               child.disabled = this.isDisabledOrgNode(child);
               if (this.hasSelectedUsers.length > 0) {
-                child.is_selected = this.hasSelectedUsers.map((item) => item.id).includes(child.id);
-              } else {
-                child.is_selected = false;
+                child.isSelected = this.hasSelectedUsers.map((item) => item.id).includes(child.id);
               }
 
               if (this.defaultUsers.length && this.defaultUsers.map((item) => item.id).includes(child.id)) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             }
             if (child.type === 'depart') {
               if (this.hasSelectedDepartments.length > 0) {
-                child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
-              } else {
-                child.is_selected = false;
+                child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               }
 
               if (
                 this.defaultDepartments.length > 0
                 && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
               ) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             }
@@ -1469,7 +1470,7 @@
             item.visiable = true;
             item.level = 0;
             item.showRadio = false;
-            item.is_selected = false;
+            item.isSelected = false;
             item.expanded = false;
             item.count = 0;
             item.disabled = !item.departments || item.departments.length < 1;
@@ -1478,7 +1479,7 @@
             item.async = item.departments && item.departments.length > 0;
             item.isNewMember = false;
             item.loading = false;
-            item.is_selected = false;
+            item.isSelected = false;
             item.parentNodeId = '';
             item.id = `${item.id}&${item.level}`;
             if (item.departments && item.departments.length > 0) {
@@ -1487,7 +1488,7 @@
                 child.level = 1;
                 child.loading = false;
                 child.showRadio = true;
-                child.is_selected = false;
+                child.isSelected = false;
                 child.expanded = false;
                 child.disabled = this.isDisabledOrgNode(child);
                 child.type = 'depart';
@@ -1501,16 +1502,16 @@
                   child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
                 }
                 if (this.hasSelectedDepartments.length) {
-                  child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
+                  child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
                 } else {
-                  child.is_selected = false;
+                  child.isSelected = false;
                 }
 
                 if (
                   this.defaultDepartments.length > 0
                   && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
                 ) {
-                  child.is_selected = true;
+                  child.isSelected = true;
                   child.disabled = true;
                 }
               });
@@ -1558,12 +1559,12 @@
       handleDeleteAll () {
         if (this.searchedUsers.length) {
           this.searchedUsers.forEach((search) => {
-            search.is_selected = false;
+            search.isSelected = false;
           });
         }
         if (this.searchedDepartment.length) {
           this.searchedDepartment.forEach((organ) => {
-            organ.is_selected = false;
+            organ.isSelected = false;
           });
         }
         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
@@ -1623,12 +1624,12 @@
                 depart.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
               }
               if (departIds.length && departIds.includes(depart.id)) {
-                this.$set(depart, 'is_selected', true);
+                this.$set(depart, 'isSelected', true);
               } else {
-                this.$set(depart, 'is_selected', false);
+                this.$set(depart, 'isSelected', false);
               }
               if (defaultDepartIds.length && defaultDepartIds.includes(depart.id.toString())) {
-                this.$set(depart, 'is_selected', true);
+                this.$set(depart, 'isSelected', true);
                 this.$set(depart, 'disabled', true);
               }
               depart.count = depart.recursive_member_count;
@@ -1647,12 +1648,12 @@
               }
               this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
               if (userIds.length && userIds.includes(user.username)) {
-                this.$set(user, 'is_selected', true);
+                this.$set(user, 'isSelected', true);
               } else {
-                this.$set(user, 'is_selected', false);
+                this.$set(user, 'isSelected', false);
               }
               if (defaultUserIds.length && defaultUserIds.includes(user.username)) {
-                this.$set(user, 'is_selected', true);
+                this.$set(user, 'isSelected', true);
                 this.$set(user, 'disabled', true);
               }
             });
@@ -1720,7 +1721,7 @@
               child.level = payload.level + 1;
               child.loading = false;
               child.showRadio = true;
-              child.is_selected = false;
+              child.isSelected = false;
               child.expanded = false;
               child.disabled = this.disabled || this.isDisabledOrgNode(child);
               child.type = 'depart';
@@ -1734,15 +1735,13 @@
                 child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
               }
               if (this.hasSelectedDepartments.length > 0) {
-                child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
-              } else {
-                child.is_selected = false;
+                child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               }
               if (
                 this.defaultDepartments.length > 0
                 && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
               ) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             });
@@ -1753,7 +1752,7 @@
               child.level = payload.level + 1;
               child.loading = false;
               child.showRadio = true;
-              child.is_selected = false;
+              child.isSelected = false;
               child.expanded = false;
               child.disabled = this.disabled || this.isDisabledOrgNode(child);
               child.type = 'user';
@@ -1770,19 +1769,17 @@
                 child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
               }
               if (this.hasSelectedUsers.length > 0) {
-                child.is_selected
+                child.isSelected
                   = this.hasSelectedUsers.map((item) => item.id).includes(child.id)
                     || this.hasSelectedUsers.map((item) => `${child.parentNodeId}${item.username}`).includes(child.id);
-              } else {
-                child.is_selected = false;
               }
               const existSelectedNode = this.treeList.find((item) =>
-                item.is_selected && item.username === child.username
+                item.isSelected && item.username === child.username
               );
               const defaultSelectedUser = this.defaultUsers.map((item) => item.id).includes(child.username);
               const isExistSelectedUser = existSelectedNode || defaultSelectedUser;
               if (isExistSelectedUser) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             });
@@ -1812,14 +1809,14 @@
           if (this.searchedUsers.length) {
             this.searchedUsers.forEach((search) => {
               if (search.username === item.username) {
-                search.is_selected = false;
+                search.isSelected = false;
               }
             });
           }
           if (this.searchedDepartment.length) {
             this.searchedDepartment.forEach((organ) => {
               if (organ.id === item.id) {
-                organ.is_selected = false;
+                organ.isSelected = false;
               }
             });
           }

@@ -199,15 +199,15 @@
         return (payload) => {
           const { id, name, username, disabled } = payload;
           // 如果之前已选且禁用直接返回
-          if (disabled && payload.is_selected) {
+          if (disabled && payload.isSelected) {
             return true;
           }
           const isExistSelected = this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
           if (isExistSelected) {
             const hasDeparts = this.hasSelectedDepartments.map(item => `${item.name}&${String(item.id)}`).includes(`${name}&${String(id)}`);
             const hasUsers = this.hasSelectedUsers.map(item => item.username).includes(username);
-            payload.is_selected = hasDeparts || hasUsers;
-            return payload.is_selected;
+            payload.isSelected = hasDeparts || hasUsers;
+            return payload.isSelected;
           }
           return false;
         };
@@ -286,16 +286,16 @@
             (item, index) => index === this.organizationIndex
           );
           if (!currentOrganizationItem.disabled) {
-            currentOrganizationItem.is_selected = !currentOrganizationItem.is_selected;
-            this.$emit('on-checked', currentOrganizationItem.is_selected, !currentOrganizationItem.is_selected, currentOrganizationItem.is_selected, currentOrganizationItem);
+            currentOrganizationItem.isSelected = !currentOrganizationItem.isSelected;
+            this.$emit('on-checked', currentOrganizationItem.isSelected, !currentOrganizationItem.isSelected, currentOrganizationItem.isSelected, currentOrganizationItem);
           }
         }
 
         if (this.userIndex !== -1) {
           const currentUserItem = this.renderUserList.find((item, index) => index === this.userIndex);
           if (!currentUserItem.disabled) {
-            currentUserItem.is_selected = !currentUserItem.is_selected;
-            this.$emit('on-checked', currentUserItem.is_selected, !currentUserItem.is_selected, currentUserItem.is_selected, currentUserItem);
+            currentUserItem.isSelected = !currentUserItem.isSelected;
+            this.$emit('on-checked', currentUserItem.isSelected, !currentUserItem.isSelected, currentUserItem.isSelected, currentUserItem);
           }
         }
       },
@@ -312,13 +312,13 @@
         this.$emit('on-click', node);
         if (!node.disabled) {
           if (this.isStaff || this.isUnLimitedScope) {
-            node.is_selected = !node.is_selected;
-            this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+            node.isSelected = !node.isSelected;
+            this.$emit('on-checked', node.isSelected, !node.isSelected, node.isSelected, node);
           } else {
             const result = await this.fetchSubjectScopeCheck(node);
             if (result) {
-              node.is_selected = !node.is_selected;
-              this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+              node.isSelected = !node.isSelected;
+              this.$emit('on-checked', node.isSelected, !node.isSelected, node.isSelected, node);
             } else {
               this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
             }
@@ -330,17 +330,17 @@
         const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
         if (!isDisabled) {
           if (this.isStaff) {
-            node.is_selected = !node.is_selected;
-            this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+            node.isSelected = !node.isSelected;
+            this.$emit('on-checked', node.isSelected, !node.isSelected, true, node);
           } else {
             if (getParamsValue('search_scene') && getParamsValue('search_scene') === 'add') {
-              node.is_selected = !node.is_selected;
-              this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+              node.isSelected = !node.isSelected;
+              this.$emit('on-checked', node.isSelected, !node.isSelected, node.isSelected, node);
             } else {
               const result = await this.fetchSubjectScopeCheck(node);
               if (result) {
-                node.is_selected = !node.is_selected;
-                this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+                node.isSelected = !node.isSelected;
+                this.$emit('on-checked', node.isSelected, !node.isSelected, node.isSelected, node);
               } else {
                 this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
               }

@@ -9,7 +9,7 @@
         :style="getNodeStyle(item)"
         :class="[
           'node-item',
-          { 'active': item.is_selected && !item.disabled },
+          { 'active': item.isSelected && !item.disabled },
           { 'is-disabled': item.disabled || isDisabled }
         ]"
         @click.stop="nodeClick(item)">
@@ -33,7 +33,7 @@
           <Icon
             v-if="item.level || isRatingManager"
             type="file-close"
-            :class="['node-icon file-icon', { 'active': item.is_selected && !item.disabled }]"
+            :class="['node-icon file-icon', { 'active': item.isSelected && !item.disabled }]"
           />
           <Icon
             v-else
@@ -44,12 +44,12 @@
         <Icon
           v-else
           type="personal-user"
-          :class="['node-icon', { 'active': item.is_selected && !item.disabled }]"
+          :class="['node-icon', { 'active': item.isSelected && !item.disabled }]"
         />
         <!-- eslint-disable max-len -->
         <span
           :style="nameStyle(item)"
-          :class="['node-title', { 'node-selected': item.is_selected && !item.disabled }]"
+          :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
         >
           {{ item.type === 'user' ? item.username : item.name }}
           <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
@@ -222,23 +222,24 @@
       },
       disabledNode () {
         return (payload) => {
-          const isDisabled = payload.disabled || this.isDisabled;
-          return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+          const { disabled, type } = payload;
+          const isDisabled = disabled || this.isDisabled;
+          return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && type === 'depart') : isDisabled;
         };
       },
       selectedNode () {
         return (payload) => {
-          const { id, name, username, disabled } = payload;
+          const { id, name, username, disabled, isSelected } = payload;
           // 如果之前已选且禁用直接返回
-          if (disabled && payload.is_selected) {
+          if (disabled && isSelected) {
             return true;
           }
           const isExistSelected = this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
           if (isExistSelected) {
             const hasDeparts = this.hasSelectedDepartments.map(item => `${item.name}&${String(item.id)}`).includes(`${name}&${String(id)}`);
             const hasUsers = this.hasSelectedUsers.map(item => item.username).includes(username);
-            payload.is_selected = hasDeparts || hasUsers;
-            return payload.is_selected;
+            payload.isSelected = hasDeparts || hasUsers;
+            return payload.isSelected;
           }
           return false;
         };
@@ -312,12 +313,12 @@
         }
         if (!node.disabled) {
           if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
-            node.is_selected = !node.is_selected;
+            node.isSelected = !node.isSelected;
             // type为user时需校验不用组织下的相同用户让其禁选
             if (node.type === 'user') {
-              this.handleBanUser(node, node.is_selected);
+              this.handleBanUser(node, node.isSelected);
             }
-            this.$emit('on-select', node.is_selected, node);
+            this.$emit('on-select', node.isSelected, node);
           }
         }
         if (['all', 'only-click'].includes(this.clickTriggerTypeBat)) {
@@ -332,7 +333,7 @@
         this.allData.forEach(item => {
           if (item.username === node.username && item.id !== node.id) {
             item.disabled = flag;
-            item.is_selected = flag;
+            item.isSelected = flag;
           }
         });
       },
@@ -397,11 +398,11 @@
       handleNodeClick (node) {
         const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
         if (!isDisabled) {
-          node.is_selected = !node.is_selected;
+          node.isSelected = !node.isSelected;
           if (node.type === 'user') {
-            this.handleBanUser(node, node.is_selected);
+            this.handleBanUser(node, node.isSelected);
           }
-          this.$emit('on-select', node.is_selected, node);
+          this.$emit('on-select', node.isSelected, node);
         }
       },
 
@@ -413,18 +414,18 @@
       },
 
       /**
-       * 清除节点 is_selected 状态(不含禁选节点)
+       * 清除节点 isSelected 状态(不含禁选节点)
        */
       clearAllIsSelectedStatus () {
         this.allData.forEach(item => {
           if (!item.disabled) {
-            item.is_selected = false;
+            item.isSelected = false;
           }
         });
       },
 
       /**
-       * 设置单个节点 is_selected 状态
+       * 设置单个节点 isSelected 状态
        *
        * @param {String} nodeKey 当前节点唯一key值
        * @param {String} username 用户节点username
@@ -433,7 +434,7 @@
       setSingleSelectedStatus (nodeKey, username, isSelected) {
         this.allData.forEach(item => {
           if (username === item.username || nodeKey === item.id) {
-            item.is_selected = isSelected;
+            item.isSelected = isSelected;
           }
         });
       },
