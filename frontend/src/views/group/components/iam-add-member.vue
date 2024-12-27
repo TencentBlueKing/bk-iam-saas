@@ -1101,17 +1101,6 @@
           this.hasSelectedManualUsers.push(...temps);
           if (res.data.length) {
             this.usernameList = res.data.map((item) => item.username);
-            // 分号拼接
-            // const templateArr = [];
-            // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
-            // this.manualValueBackup.forEach(item => {
-            //     const name = getUsername(item);
-            //     if (!usernameList.includes(name)) {
-            //         templateArr.push(item);
-            //     }
-            // });
-            // this.manualValue = templateArr.join(';');
-
             // 保存原有格式
             let formatStr = _.cloneDeep(getUsername(this.manualValue));
             this.usernameList.forEach((item) => {
