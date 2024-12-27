@@ -1,438 +1,433 @@
 <template>
-  <bk-dialog
-    v-model="isShowDialog"
-    width="960"
-    title=""
-    :mask-close="false"
-    :close-icon="false"
-    draggable
-    header-position="left"
-    ext-cls="iam-add-member-dialog"
-    @after-leave="handleAfterLeave"
-  >
-    <!-- eslint-disable max-len -->
-    <div slot="header" class="title">
-      <template v-if="showExpiredAt">
-        <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
-        <div v-else>
-          <div v-if="isPrev">
-            {{ $t(`m.common['添加成员至']`) }}
-            {{ $t(`m.common['【']`) }}<span class="member-title" :title="name">{{ name }}</span
-            >{{ $t(`m.common['】']`) }}
+  <div>
+    <bk-dialog
+      v-model="isShowDialog"
+      width="960"
+      title=""
+      :mask-close="false"
+      :close-icon="false"
+      draggable
+      header-position="left"
+      ext-cls="iam-add-member-dialog"
+      @after-leave="handleAfterLeave"
+    >
+      <!-- eslint-disable max-len -->
+      <div slot="header" class="title">
+        <template v-if="showExpiredAt">
+          <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
+          <div v-else>
+            <div v-if="isPrev">
+              {{ $t(`m.common['添加成员至']`) }}
+              {{ $t(`m.common['【']`) }}<span class="member-title" :title="name">{{ name }}</span
+              >{{ $t(`m.common['】']`) }}
+            </div>
+            <div
+              v-else
+              :title="
+                $t(`m.common['设置新用户加入用户组的有效期']`, {
+                  value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}`
+                })
+              "
+            >
+              <!-- {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }} -->
+              {{
+                $t(`m.common['设置新用户加入用户组的有效期']`, {
+                  value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}`
+                })
+              }}
+            </div>
           </div>
-          <div
-            v-else
-            :title="
-              $t(`m.common['设置新用户加入用户组的有效期']`, {
-                value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}`
-              })
-            "
-          >
-            <!-- {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }} -->
-            {{
-              $t(`m.common['设置新用户加入用户组的有效期']`, {
-                value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}`
-              })
-            }}
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <template v-if="title !== ''">
-          {{ title }}
         </template>
         <template v-else>
-          {{ $t(`m.common['选择用户或组织']`) }}
+          <template v-if="title !== ''">
+            {{ title }}
+          </template>
+          <template v-else>
+            {{ $t(`m.common['选择用户或组织']`) }}
+          </template>
         </template>
-      </template>
-    </div>
-    <div class="add-member-content-wrapper" v-bkloading="{ isLoading, opacity: 1 }" :style="style">
-      <div v-show="!isLoading">
-        <template v-if="isPrev">
-          <div class="left">
-            <div class="tab-wrapper">
-              <section
-                v-for="(item, index) in panels"
-                :key="item.name"
-                :class="[
-                  'tab-item',
-                  { 'has-margin-left': index !== 0 },
-                  { 'tab-item-active': tabActive === item.name }
-                ]"
-                data-test-id="group_addGroupMemberDialog_tab_switch"
-                @click.stop="handleTabChange(item)"
+      </div>
+      <div class="add-member-content-wrapper" v-bkloading="{ isLoading, opacity: 1 }" :style="style">
+        <div v-show="!isLoading">
+          <template v-if="isPrev">
+            <div class="left">
+              <div class="tab-wrapper">
+                <section
+                  v-for="(item, index) in panels"
+                  :key="item.name"
+                  :class="[
+                    'tab-item',
+                    { 'has-margin-left': index !== 0 },
+                    { 'tab-item-active': tabActive === item.name }
+                  ]"
+                  @click.stop="handleTabChange(item)"
+                >
+                  {{ item.label }}
+                </section>
+              </div>
+              <!-- 所有平台都开放搜索，通过选中做校验 -->
+              <div
+                :class="['search-input', { active: isSearchFocus }, { disabled: isAll && !isAllFlag }]"
+                v-if="isOrganization"
               >
-                {{ item.label }}
-                <!-- <span class="active-line" v-if="tabActive === item.name"></span> -->
-              </section>
-            </div>
-            <!-- <div
-                          :class="[
-                              'search-input',
-                              { 'active': isSearchFocus },
-                              { 'disabled': externalSource ? false : (isRatingManager || isAll) && !isAllFlag }
-                          ]"
-                          v-if="isOrganization"
-                      > -->
-            <!-- 所有平台都开放搜索，通过选中做校验 -->
-            <div
-              :class="['search-input', { active: isSearchFocus }, { disabled: isAll && !isAllFlag }]"
-              v-if="isOrganization"
-            >
-              <bk-dropdown-menu align="left" ref="dropdown" trigger="click">
-                <template slot="dropdown-trigger">
-                  <Icon
-                    class="search-icon"
-                    :type="searchConditionValue === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'"
-                  />
-                </template>
-                <ul class="bk-dropdown-list" slot="dropdown-content">
-                  <li v-for="item in searchConditionList" :key="item.id" @click.stop="handleConditionSelcted(item)">
-                    <a href="javascript:;" :class="{ active: item.id === searchConditionValue }">
-                      <Icon
-                        class="search-config-icon"
-                        style="font-size: 16px"
-                        :type="item.id === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'"
-                      />
-                      {{ item.name }}
-                    </a>
-                  </li>
-                </ul>
-              </bk-dropdown-menu>
-              <bk-input
-                v-model="keyword"
-                :placeholder="$t(`m.common['搜索提示1']`)"
-                maxlength="64"
-                clearable
-                :disabled="isAll && !isAllFlag"
-                ext-cls="iam-add-member-search-input-cls"
-                @focus="handleSearchInput"
-                @blur="handleSearchBlur"
-                @keyup.enter.native="handleSearch"
-                @keyup.up.native="handleKeyup"
-                @keyup.down.native="handleKeydown"
-              >
-              </bk-input>
-            </div>
-            <div class="member-tree-wrapper" v-bkloading="{ isLoading: treeLoading, opacity: 1 }" v-if="isOrganization">
-              <template v-if="isShowMemberTree">
-                <div class="tree">
-                  <infinite-tree
-                    ref="memberTreeRef"
-                    :all-data="treeList"
-                    style="height: 400px"
-                    :is-rating-manager="curIsRatingManager"
-                    :key="infiniteTreeKey"
-                    :is-disabled="isAll"
-                    :empty-data="emptyData"
-                    :has-selected-users="formatAllSelectedUsers"
-                    :has-selected-departments="formatAllSelectedDeparts"
-                    @async-load-nodes="handleRemoteLoadNode"
-                    @expand-node="handleExpanded"
-                    @on-select="handleOnSelected"
-                    @on-clear="handleEmptyClear"
-                    @on-refresh="handleEmptyRefresh"
-                  />
-                </div>
-              </template>
-              <template v-if="isShowSearchResult">
-                <div class="search-content">
-                  <template v-if="isHasSearchResult">
-                    <dialog-infinite-list
-                      ref="searchedResultsRef"
-                      :all-data="searchedResult"
-                      :focus-index.sync="focusItemIndex"
-                      :is-disabled="isAll"
-                      :has-selected-users="formatAllSelectedUsers"
-                      :has-selected-departments="formatAllSelectedDeparts"
-                      style="height: 400px"
-                      @on-checked="handleSearchResultSelected"
-                    >
-                    </dialog-infinite-list>
+                <bk-dropdown-menu align="left" ref="dropdown" trigger="click">
+                  <template slot="dropdown-trigger">
+                    <Icon
+                      class="search-icon"
+                      :type="searchConditionValue === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'"
+                    />
                   </template>
-                  <template v-if="isSearchResultTooMuch">
-                    <div class="too-much-wrapper">
-                      <Icon type="warning" class="much-tips-icon" />
-                      <p class="text">{{ $t(`m.info['搜索结果']`) }}</p>
-                    </div>
-                  </template>
-                  <template v-if="isSearchResultEmpty">
-                    <div class="search-empty-wrapper">
-                      <ExceptionEmpty
-                        :type="emptyData.type"
-                        :empty-text="emptyData.text"
-                        :tip-text="emptyData.tip"
-                        :tip-type="emptyData.tipType"
-                        @on-clear="handleEmptyClear"
-                        @on-refresh="handleEmptyRefresh"
-                      />
-                    </div>
-                  </template>
-                </div>
-              </template>
-            </div>
-            <div v-if="isManual">
-              <div class="manual-input-alert">
-                <bk-alert
-                  type="info"
-                  :title="$t(`m.userGroupDetail['单次最多添加100个成员/组织，批量复制的内容不可随意编辑，如超过上限100个，可通过再次批量粘贴添加人员']`)"
+                  <ul class="bk-dropdown-list" slot="dropdown-content">
+                    <li v-for="item in searchConditionList" :key="item.id" @click.stop="handleConditionSelcted(item)">
+                      <a href="javascript:;" :class="{ active: item.id === searchConditionValue }">
+                        <Icon
+                          class="search-config-icon"
+                          style="font-size: 16px"
+                          :type="item.id === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'"
+                        />
+                        {{ item.name }}
+                      </a>
+                    </li>
+                  </ul>
+                </bk-dropdown-menu>
+                <bk-input
+                  v-model="keyword"
+                  :placeholder="$t(`m.common['搜索提示1']`)"
+                  maxlength="64"
+                  clearable
+                  :disabled="isAll && !isAllFlag"
+                  ext-cls="iam-add-member-search-input-cls"
+                  @focus="handleSearchInput"
+                  @blur="handleSearchBlur"
+                  @keyup.enter.native="handleSearch"
+                  @keyup.up.native="handleKeyup"
+                  @keyup.down.native="handleKeydown"
                 />
               </div>
-              <div class="manual-wrapper">
-                <div class="manual-wrapper-left">
-                  <bk-input
-                    ref="manualInputRef"
-                    type="textarea"
-                    class="manual-textarea"
-                    v-model="manualValue"
-                    data-test-id="group_addGroupMemberDialog_input_manualUser"
-                    :placeholder="$t(`m.common['手动输入提示']`)"
-                    :rows="14"
-                    :disabled="isAll"
-                    @input="handleManualInput"
-                  />
-                  <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
-                  <p class="manual-error-text pr10" v-if="manualInputError">
-                    {{ $t(`m.common['手动输入提示2']`) }}
-                    <template v-if="isShowScopeEntry">
-                      {{ $t(`m.common['，']`) }}{{ $t(`m.common['请尝试']`)
-                      }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
-                    </template>
-                  </p>
-                  <div class="manual-bottom-btn">
-                    <bk-button
-                      theme="primary"
-                      :outline="true"
-                      style="width: 168px"
-                      :loading="manualAddLoading"
-                      :disabled="isManualDisabled || isAll"
-                      data-test-id="group_addGroupMemberDialog_btn_addManualUser"
-                      @click="handleAddManualUser"
-                    >
-                      {{ $t(`m.common['解析并添加']`) }}
-                    </bk-button>
-                    <bk-button style="margin-left: 10px" @click="handleClearManualUser">
-                      {{ $t(`m.common['清空']`) }}
-                    </bk-button>
+              <div class="member-tree-wrapper" v-bkloading="{ isLoading: treeLoading, opacity: 1 }" v-if="isOrganization">
+                <template v-if="isShowMemberTree">
+                  <div class="tree">
+                    <infinite-tree
+                      ref="memberTreeRef"
+                      :all-data="treeList"
+                      style="height: 400px"
+                      :is-rating-manager="curIsRatingManager"
+                      :key="infiniteTreeKey"
+                      :is-disabled="isAll"
+                      :empty-data="emptyData"
+                      :has-selected-users="formatAllSelectedUsers"
+                      :has-selected-departments="formatAllSelectedDeparts"
+                      @async-load-nodes="handleRemoteLoadNode"
+                      @expand-node="handleExpanded"
+                      @on-select="handleOnSelected"
+                      @on-show-limit="handleShowLimitDialog"
+                      @on-clear="handleEmptyClear"
+                      @on-refresh="handleEmptyRefresh"
+                    />
                   </div>
-                </div>
-                <div class="manual-wrapper-right">
-                  <bk-input
-                    v-model="tableKeyWord"
-                    class="manual-input-wrapper"
-                    :placeholder="$t(`m.common['搜索解析结果']`)"
-                    :right-icon="'bk-icon icon-search'"
-                    :clearable="true"
-                    @clear="handleClearSearch"
-                    @enter="handleTableSearch"
-                    @right-icon-click="handleTableSearch"
-                  />
-                  <div>
-                    <bk-table
-                      ref="manualTableRef"
-                      size="small"
-                      :data="manualTableList"
-                      :max-height="340"
-                      :ext-cls="'manual-table-wrapper'"
-                      :outer-border="false"
-                      :header-border="false"
-                      @select="handleSelectChange"
-                      @select-all="handleSelectAllChange"
-                    >
-                      <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
-                      <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
-                        <template slot-scope="{ row }">
-                          <span :title="formatUserName(row)">
-                            {{ formatUserName(row) }}
-                          </span>
-                        </template>
-                      </bk-table-column>
-                      <template slot="empty">
+                </template>
+                <template v-if="isShowSearchResult">
+                  <div class="search-content">
+                    <template v-if="isHasSearchResult">
+                      <dialog-infinite-list
+                        ref="searchedResultsRef"
+                        style="height: 400px"
+                        :all-data="searchedResult"
+                        :focus-index.sync="focusItemIndex"
+                        :is-disabled="isAll"
+                        :has-selected-users="formatAllSelectedUsers"
+                        :has-selected-departments="formatAllSelectedDeparts"
+                        @on-checked="handleSearchResultSelected"
+                        @on-show-limit="handleShowLimitDialog"
+                      >
+                      </dialog-infinite-list>
+                    </template>
+                    <template v-if="isSearchResultTooMuch">
+                      <div class="too-much-wrapper">
+                        <Icon type="warning" class="much-tips-icon" />
+                        <p class="text">{{ $t(`m.info['搜索结果']`) }}</p>
+                      </div>
+                    </template>
+                    <template v-if="isSearchResultEmpty">
+                      <div class="search-empty-wrapper">
                         <ExceptionEmpty
-                          :type="emptyTableData.type"
-                          :empty-text="emptyTableData.text"
-                          :tip-text="emptyTableData.tip"
-                          :tip-type="emptyTableData.tipType"
-                          @on-clear="handleClearSearch"
+                          :type="emptyData.type"
+                          :empty-text="emptyData.text"
+                          :tip-text="emptyData.tip"
+                          :tip-type="emptyData.tipType"
+                          @on-clear="handleEmptyClear"
+                          @on-refresh="handleEmptyRefresh"
                         />
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+              <div v-if="isManual">
+                <div class="manual-input-alert">
+                  <bk-alert
+                    type="info"
+                    :title="$t(`m.userGroupDetail['单次最多添加100个成员/组织，批量复制的内容不可随意编辑，如超过上限100个，可通过再次批量粘贴添加人员']`)"
+                  />
+                </div>
+                <div class="manual-wrapper">
+                  <div class="manual-wrapper-left">
+                    <bk-input
+                      ref="manualInputRef"
+                      type="textarea"
+                      class="manual-textarea"
+                      v-model="manualValue"
+                      :placeholder="$t(`m.common['手动输入提示']`)"
+                      :rows="14"
+                      :disabled="isAll"
+                      @input="handleManualInput"
+                    />
+                    <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
+                    <p class="manual-error-text pr10" v-if="manualInputError">
+                      {{ $t(`m.common['手动输入提示2']`) }}
+                      <template v-if="isShowScopeEntry">
+                        {{ $t(`m.common['，']`) }}{{ $t(`m.common['请尝试']`)
+                        }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
                       </template>
-                    </bk-table>
+                    </p>
+                    <div class="manual-bottom-btn">
+                      <bk-button
+                        theme="primary"
+                        :outline="true"
+                        style="width: 168px"
+                        :loading="manualAddLoading"
+                        :disabled="isManualDisabled || isAll"
+                        @click="handleAddManualUser"
+                      >
+                        {{ $t(`m.common['解析并添加']`) }}
+                      </bk-button>
+                      <bk-button style="margin-left: 10px" @click="handleClearManualUser">
+                        {{ $t(`m.common['清空']`) }}
+                      </bk-button>
+                    </div>
+                  </div>
+                  <div class="manual-wrapper-right">
+                    <bk-input
+                      v-model="tableKeyWord"
+                      class="manual-input-wrapper"
+                      :placeholder="$t(`m.common['搜索解析结果']`)"
+                      :right-icon="'bk-icon icon-search'"
+                      :clearable="true"
+                      @clear="handleClearSearch"
+                      @enter="handleTableSearch"
+                      @right-icon-click="handleTableSearch"
+                    />
+                    <div>
+                      <bk-table
+                        ref="manualTableRef"
+                        size="small"
+                        :data="manualTableList"
+                        :max-height="340"
+                        :ext-cls="'manual-table-wrapper'"
+                        :outer-border="false"
+                        :header-border="false"
+                        @select="handleSelectChange"
+                        @select-all="handleSelectAllChange"
+                      >
+                        <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
+                        <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
+                          <template slot-scope="{ row }">
+                            <span :title="formatUserName(row)">
+                              {{ formatUserName(row) }}
+                            </span>
+                          </template>
+                        </bk-table-column>
+                        <template slot="empty">
+                          <ExceptionEmpty
+                            :type="emptyTableData.type"
+                            :empty-text="emptyTableData.text"
+                            :tip-text="emptyTableData.tip"
+                            :tip-type="emptyTableData.tipType"
+                            @on-clear="handleClearSearch"
+                          />
+                        </template>
+                      </bk-table>
+                    </div>
                   </div>
                 </div>
               </div>
+              <div v-if="isMemberTemplate" class="template-wrapper">
+                <IamMemberTemplateTable
+                  ref="memberTableRef"
+                  :group-id="curId"
+                  :default-temp-id-list="defaultTempIdList"
+                  :has-selected-templates="hasSelectedTemplates"
+                  @on-selected-templates="handleSelectedTemplates"
+                />
+              </div>
             </div>
-            <div v-if="isMemberTemplate" class="template-wrapper">
-              <IamMemberTemplateTable
-                ref="memberTableRef"
-                :group-id="curId"
-                :default-temp-id-list="defaultTempIdList"
-                :has-selected-templates="hasSelectedTemplates"
-                @on-selected-templates="handleSelectedTemplates"
-              />
-            </div>
-          </div>
-          <div class="right">
-            <div class="result-preview">
-              <div>{{ $t(`m.common['结果预览']`) }}</div>
-              <bk-button
-                size="small"
-                theme="primary"
-                text
-                :disabled="!isShowSelectedText || isAll"
-                @click="handleDeleteAll"
-              >
-                {{ $t(`m.common['清空']`) }}
-              </bk-button>
-            </div>
-            <div class="header">
-              <div class="has-selected">
-                <template v-if="curLanguageIsCn">
-                  <template v-if="isShowSelectedText">
-                    {{ $t(`m.common['已选择']`) }}
-                    <template v-if="hasSelectedDepartments.length">
-                      <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
-                      {{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
+            <div class="right">
+              <div class="result-preview">
+                <div>{{ $t(`m.common['结果预览']`) }}</div>
+                <bk-button
+                  size="small"
+                  theme="primary"
+                  text
+                  :disabled="!isShowSelectedText || isAll"
+                  @click="handleDeleteAll"
+                >
+                  {{ $t(`m.common['清空']`) }}
+                </bk-button>
+              </div>
+              <div class="header">
+                <div class="has-selected">
+                  <template v-if="curLanguageIsCn">
+                    <template v-if="isShowSelectedText">
+                      {{ $t(`m.common['已选择']`) }}
+                      <template v-if="hasSelectedDepartments.length">
+                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                        {{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
+                      </template>
+                      <span v-if="isShowComma">{{ $t(`m.common['，']`) }}</span>
+                      <template v-if="hasSelectedUsers.length > 0">
+                        <span class="user-count">{{ hasSelectedUsers.length }}</span>
+                        {{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
+                      </template>
+                      <template v-if="isExistMemberTemplate && hasSelectedTemplates.length > 0">
+                        <span v-if="hasSelectedUsers.length > 0">{{ $t(`m.common['，']`) }}</span>
+                        <span class="template-count">{{ hasSelectedTemplates.length }}</span>
+                        {{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
+                      </template>
                     </template>
-                    <span v-if="isShowComma">{{ $t(`m.common['，']`) }}</span>
-                    <template v-if="hasSelectedUsers.length > 0">
-                      <span class="user-count">{{ hasSelectedUsers.length }}</span>
-                      {{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
-                    </template>
-                    <template v-if="isExistMemberTemplate && hasSelectedTemplates.length > 0">
-                      <span v-if="hasSelectedUsers.length > 0">{{ $t(`m.common['，']`) }}</span>
-                      <span class="template-count">{{ hasSelectedTemplates.length }}</span>
-                      {{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
-                    </template>
-                  </template>
                   <!-- <template v-else>
                     <span class="user-count">0</span>
                   </template> -->
-                </template>
-                <template v-else>
-                  <template v-if="isShowSelectedText">
-                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
-                    <span>Org</span>
-                    <span v-if="isShowComma">{{ $t(`m.common['，']`) }}</span>
-                    <template v-if="hasSelectedUsers.length > 0">
-                      <span class="user-count">{{ hasSelectedUsers.length }}</span>
-                      <span>User</span>
-                    </template>
-                    <template v-if="isExistMemberTemplate && hasSelectedTemplates.length > 0">
-                      <span v-if="hasSelectedUsers.length > 0">{{ $t(`m.common['，']`) }}</span>
-                      <span class="template-count">{{ hasSelectedTemplates.length }}</span>
-                      <span>Member template</span>
-                    </template>
                   </template>
-                  {{ $t(`m.common['已选择']`) }}
-                </template>
+                  <template v-else>
+                    <template v-if="isShowSelectedText">
+                      <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                      <span>Org</span>
+                      <span v-if="isShowComma">{{ $t(`m.common['，']`) }}</span>
+                      <template v-if="hasSelectedUsers.length > 0">
+                        <span class="user-count">{{ hasSelectedUsers.length }}</span>
+                        <span>User</span>
+                      </template>
+                      <template v-if="isExistMemberTemplate && hasSelectedTemplates.length > 0">
+                        <span v-if="hasSelectedUsers.length > 0">{{ $t(`m.common['，']`) }}</span>
+                        <span class="template-count">{{ hasSelectedTemplates.length }}</span>
+                        <span>Member template</span>
+                      </template>
+                    </template>
+                    {{ $t(`m.common['已选择']`) }}
+                  </template>
+                </div>
+              </div>
+              <div class="content">
+                <div class="organization-content" v-if="isDepartSelectedEmpty">
+                  <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
+                    <div class="organization-item-left">
+                      <Icon type="file-close" class="folder-icon" />
+                      <span
+                        :class="[
+                          'organization-name'
+                        ]"
+                        :title="nameType(item)"
+                      >
+                        {{ item.name }}
+                      </span>
+                      <span
+                        v-if="item.showCount && enableOrganizationCount"
+                        class="user-count"
+                      >
+                        {{ `(${item.count})` }}
+                      </span>
+                    </div>
+                    <Icon bk type="close" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
+                  </div>
+                </div>
+                <div class="user-content" v-if="isUserSelectedEmpty">
+                  <div
+                    :class="[
+                      'user-item',
+                      { 'user-item-bottom': isTempSelectedEmpty }
+                    ]"
+                    v-for="item in hasSelectedUsers"
+                    :key="item.id"
+                  >
+                    <div class="user-item-left">
+                      <Icon type="personal-user" class="user-icon" />
+                      <span class="user-name" :title="nameType(item)"
+                      >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
+                      </span>
+                    </div>
+                    <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />
+                  </div>
+                </div>
+                <div class="template-content" v-if="isTempSelectedEmpty">
+                  <div
+                    class="template-item"
+                    v-for="item in hasSelectedTemplates"
+                    :key="item.id">
+                    <div class="template-item-left">
+                      <Icon type="renyuanmuban" class="user-icon" />
+                      <span class="template-name" :title="nameType(item)">
+                        {{ item.name }}
+                      </span>
+                    </div>
+                    <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'template')" />
+                  </div>
+                </div>
+                <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
+                  <ExceptionEmpty />
+                </div>
               </div>
             </div>
-            <div class="content">
-              <div class="organization-content" v-if="isDepartSelectedEmpty">
-                <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
-                  <div class="organization-item-left">
-                    <Icon type="file-close" class="folder-icon" />
-                    <span
-                      :class="[
-                        'organization-name'
-                      ]"
-                      :title="nameType(item)"
-                    >
-                      {{ item.name }}
-                    </span>
-                    <span class="user-count" v-if="item.showCount && enableOrganizationCount">{{
-                      '(' + item.count + `)`
-                    }}</span>
-                  </div>
-                  <Icon bk type="close" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
-                </div>
-              </div>
-              <div class="user-content" v-if="isUserSelectedEmpty">
-                <div
-                  :class="[
-                    'user-item',
-                    { 'user-item-bottom': isTempSelectedEmpty }
-                  ]"
-                  v-for="item in hasSelectedUsers"
-                  :key="item.id"
-                >
-                  <div class="user-item-left">
-                    <Icon type="personal-user" class="user-icon" />
-                    <span class="user-name" :title="nameType(item)"
-                    >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
-                    </span>
-                  </div>
-                  <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />
-                </div>
-              </div>
-              <div class="template-content" v-if="isTempSelectedEmpty">
-                <div
-                  class="template-item"
-                  v-for="item in hasSelectedTemplates"
-                  :key="item.id">
-                  <div class="template-item-left">
-                    <Icon type="renyuanmuban" class="user-icon" />
-                    <span class="template-name" :title="nameType(item)">
-                      {{ item.name }}
-                    </span>
-                  </div>
-                  <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'template')" />
-                </div>
-              </div>
-              <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
-                <ExceptionEmpty />
-              </div>
+          </template>
+          <template v-else>
+            <div class="set-user-deadline">
+              <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
             </div>
-          </div>
+          </template>
+        </div>
+      </div>
+      <div slot="footer">
+        <div v-if="showLimit" class="limit-wrapper">
+          <bk-checkbox :true-value="true" :false-value="false" v-model="isAll">
+            {{ $t(`m.common['全员']`) }}
+          </bk-checkbox>
+        </div>
+        <template v-if="showExpiredAt">
+          <template v-if="isPrev">
+            <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">
+              {{ $t(`m.common['下一步']`) }}
+            </bk-button>
+          </template>
+          <template v-else>
+            <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
+            <bk-button
+              style="margin-left: 10px"
+              theme="primary"
+              :disabled="isNextSureDisabled"
+              :loading="loading"
+              @click="handleSave"
+            >
+              {{ $t(`m.common['确定']`) }}
+            </bk-button>
+          </template>
         </template>
         <template v-else>
-          <div class="set-user-deadline">
-            <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
-          </div>
-        </template>
-      </div>
-    </div>
-    <div slot="footer">
-      <div v-if="showLimit" class="limit-wrapper">
-        <bk-checkbox :true-value="true" :false-value="false" v-model="isAll">
-          {{ $t(`m.common['全员']`) }}
-        </bk-checkbox>
-      </div>
-      <template v-if="showExpiredAt">
-        <template v-if="isPrev">
-          <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">
-            {{ $t(`m.common['下一步']`) }}
-          </bk-button>
-        </template>
-        <template v-else>
-          <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
           <bk-button
-            style="margin-left: 10px"
             theme="primary"
-            :disabled="isNextSureDisabled"
-            :loading="loading"
+            :disabled="isDisabled && !isAll"
             @click="handleSave"
-            data-test-id="group_btn_addMemberConfirm"
           >
             {{ $t(`m.common['确定']`) }}
           </bk-button>
         </template>
-      </template>
-      <template v-else>
-        <bk-button
-          theme="primary"
-          :disabled="isDisabled && !isAll"
-          @click="handleSave"
-          data-test-id="group_btn_addMemberConfirm"
-        >
-          {{ $t(`m.common['确定']`) }}
+        <bk-button style="margin-left: 10px" :disabled="loading" @click="handleCancel">
+          {{ $t(`m.common['取消']`) }}
         </bk-button>
-      </template>
-      <bk-button style="margin-left: 10px" :disabled="loading" @click="handleCancel">
-        {{ $t(`m.common['取消']`) }}
-      </bk-button>
-    </div>
-  </bk-dialog>
+      </div>
+    </bk-dialog>
+    
+    <!-- 蓝盾侧限制组织架构人员提示框 -->
+    <IamLimitOrgDialog :show.sync="isShowLimitDialog" :title="limitOrgNodeTip" />
+  </div>
 </template>
 
 <script>
@@ -441,6 +436,7 @@
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import IamMemberTemplateTable from '@/components/iam-member-template-table';
+  import IamLimitOrgDialog from '@/components/iam-limit-org-dialog';
   import { guid, formatCodeData, existValue, getParamsValue } from '@/common/util';
   import { NO_VERIFY_ORG_ROUTES } from '@/common/constants';
   import { mapGetters } from 'vuex';
@@ -464,7 +460,8 @@
       InfiniteTree,
       dialogInfiniteList,
       IamDeadline,
-      IamMemberTemplateTable
+      IamMemberTemplateTable,
+      IamLimitOrgDialog
     },
     props: {
       show: {
@@ -532,6 +529,8 @@
     data () {
       return {
         isShowDialog: false,
+        isShowLimitDialog: false,
+        limitOrgNodeTip: '',
         keyword: '',
         treeLoading: false,
         isBeingSearch: false,
@@ -779,7 +778,7 @@
         return this.isExternalApp && ['createUserGroup', 'userGroupDetail'].includes(this.$route.name);
       },
       // 蓝盾侧通过环境变量注入限制勾选的组织架构
-      isDisabledOrgNode () {
+      isLimitSelectNode () {
         return (payload) => {
           const disabledMembers = window.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER;
           if (this.isDisabledOrgPage && disabledMembers.length > 0) {
@@ -1033,6 +1032,10 @@
           if (departments && departments.length) {
             departments.forEach((item) => {
               item.type = 'depart';
+              item.showCount = true;
+              if (!item.hasOwnProperty('count')) {
+                item.count = item.recursive_member_count;
+              }
             });
             const result = await this.fetchSubjectScopeCheck(departments, 'depart');
             if (result && result.length) {
@@ -1271,21 +1274,22 @@
       getDiffSystemOrgData () {
         if (this.isDisabledOrgPage) {
           // 获取蓝盾侧限制选中的组织架构
-          const disabledDeparts = this.hasSelectedManualDepartments.filter((v) => this.isDisabledOrgNode(v));
-          const disabledUsers = this.hasSelectedManualUsers.filter((v) => this.isDisabledOrgNode(v));
+          const disabledDeparts = this.hasSelectedManualDepartments.filter((v) => this.isLimitSelectNode(v));
+          const disabledUsers = this.hasSelectedManualUsers.filter((v) => this.isLimitSelectNode(v));
           const disabledList = [...disabledDeparts, ...disabledUsers];
           if (disabledList.length) {
             const names = disabledList.map(v => v.name).join();
-            this.messageWarn(this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`, { value: names }), 3000);
+            this.isShowLimitDialog = true;
+            this.limitOrgNodeTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`, { value: names });
           }
           this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter((v) =>
-            !this.isDisabledOrgNode(v)
+            !this.isLimitSelectNode(v)
           );
           this.hasSelectedDepartments = this.hasSelectedDepartments.filter((v) =>
-            !this.isDisabledOrgNode(v)
+            !this.isLimitSelectNode(v)
           );
-          this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter((v) => !this.isDisabledOrgNode(v));
-          this.hasSelectedUsers = this.hasSelectedUsers.filter((v) => !this.isDisabledOrgNode(v));
+          this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter((v) => !this.isLimitSelectNode(v));
+          this.hasSelectedUsers = this.hasSelectedUsers.filter((v) => !this.isLimitSelectNode(v));
         }
         this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
         this.manualTableList = _.cloneDeep(this.manualTableListStorage);
@@ -1315,6 +1319,11 @@
         if (this.focusItemIndex === len) {
           this.focusItemIndex = 0;
         }
+      },
+
+      handleShowLimitDialog ({ title }) {
+        this.limitOrgNodeTip = title;
+        this.isShowLimitDialog = true;
       },
 
       handleDeadlineChange (payload) {
@@ -1398,7 +1407,7 @@
             child.showRadio = true;
             child.isSelected = false;
             child.expanded = false;
-            child.disabled = this.isDisabledOrgNode(child);
+            child.disabled = false;
             child.type = child.type === 'user' ? 'user' : 'depart';
             // child.count = child.recursive_member_count
             child.count = child.member_count;
@@ -1406,16 +1415,14 @@
             child.async = child.child_count > 0 || child.member_count > 0;
             child.isNewMember = false;
             child.parentNodeId = '';
-            if (this.isDisabledOrgNode(child)) {
-              child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+            if (this.isLimitSelectNode(child)) {
+              child.limitOrgNodeTip = this.$t(`m.dialog['用户范围过大，请重新选择']`);
             }
             if (child.type === 'user') {
               child.username = child.id;
-              child.disabled = this.isDisabledOrgNode(child);
               if (this.hasSelectedUsers.length > 0) {
                 child.isSelected = this.hasSelectedUsers.map((item) => item.id).includes(child.id);
               }
-
               if (this.defaultUsers.length && this.defaultUsers.map((item) => item.id).includes(child.id)) {
                 child.isSelected = true;
                 child.disabled = true;
@@ -1425,7 +1432,6 @@
               if (this.hasSelectedDepartments.length > 0) {
                 child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               }
-
               if (
                 this.defaultDepartments.length > 0
                 && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
@@ -1479,7 +1485,7 @@
                 child.showRadio = true;
                 child.isSelected = false;
                 child.expanded = false;
-                child.disabled = this.isDisabledOrgNode(child);
+                child.disabled = false;
                 child.type = 'depart';
                 child.count = child.recursive_member_count;
                 child.showCount = true;
@@ -1487,8 +1493,8 @@
                 child.isNewMember = false;
                 child.parentNodeId = item.id;
                 child.full_name = `${item.name}${this.$t(`m.common['：']`)}${child.name}`;
-                if (this.isDisabledOrgNode(child)) {
-                  child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+                if (this.isLimitSelectNode(child)) {
+                  child.limitOrgNodeTip = this.$t(`m.dialog['用户范围过大，请重新选择']`);
                 }
                 if (this.hasSelectedDepartments.length) {
                   child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
@@ -1606,23 +1612,22 @@
           this.isShowTooMuch = false;
           if (departments.length > 0) {
             data.departments.forEach((depart) => {
-              depart.showRadio = true;
               depart.type = 'depart';
-              depart.disabled = this.isDisabledOrgNode(depart);
-              if (this.isDisabledOrgNode(depart)) {
-                depart.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+              depart.showRadio = true;
+              depart.showCount = true;
+              depart.disabled = false;
+              depart.isSelected = false;
+              depart.count = depart.recursive_member_count;
+              if (this.isLimitSelectNode(depart)) {
+                depart.limitOrgNodeTip = this.$t(`m.dialog['用户范围过大，请重新选择']`);
               }
               if (departIds.length && departIds.includes(depart.id)) {
-                this.$set(depart, 'isSelected', true);
-              } else {
-                this.$set(depart, 'isSelected', false);
+                depart.isSelected = true;
               }
               if (defaultDepartIds.length && defaultDepartIds.includes(depart.id.toString())) {
-                this.$set(depart, 'isSelected', true);
-                this.$set(depart, 'disabled', true);
+                depart.isSelected = true;
+                depart.disabled = true;
               }
-              depart.count = depart.recursive_member_count;
-              depart.showCount = true;
             });
             this.searchedDepartment.splice(0, this.searchedDepartment.length, ...data.departments);
           }
@@ -1630,20 +1635,22 @@
             data.users.forEach((user) => {
               user.id = guid();
               user.showRadio = true;
+              user.disabled = false;
+              user.isSelected = false;
               user.type = 'user';
-              user.disabled = this.isDisabledOrgNode(user);
-              if (this.isDisabledOrgNode(user)) {
-                user.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+              user.full_name = '';
+              if (this.isLimitSelectNode(user)) {
+                user.limitOrgNodeTip = this.$t(`m.dialog['用户范围过大，请重新选择']`);
               }
-              this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
+              if (user.departments && user.departments.length > 0) {
+                user.full_name = user.departments.join(';');
+              }
               if (userIds.length && userIds.includes(user.username)) {
-                this.$set(user, 'isSelected', true);
-              } else {
-                this.$set(user, 'isSelected', false);
+                user.isSelected = true;
               }
               if (defaultUserIds.length && defaultUserIds.includes(user.username)) {
-                this.$set(user, 'isSelected', true);
-                this.$set(user, 'disabled', true);
+                user.disabled = true;
+                user.isSelected = true;
               }
             });
             this.searchedUsers.splice(0, this.searchedUsers.length, ...data.users);
@@ -1712,7 +1719,7 @@
               child.showRadio = true;
               child.isSelected = false;
               child.expanded = false;
-              child.disabled = this.disabled || this.isDisabledOrgNode(child);
+              child.disabled = this.disabled;
               child.type = 'depart';
               child.count = child.recursive_member_count;
               child.showCount = true;
@@ -1720,8 +1727,8 @@
               child.isNewMember = false;
               child.parentNodeId = payload.id;
               child.full_name = `${payload.full_name}/${child.name}`;
-              if (this.isDisabledOrgNode(child)) {
-                child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+              if (this.isLimitSelectNode(child)) {
+                child.limitOrgNodeTip = this.$t(`m.dialog['用户范围过大，请重新选择']`);
               }
               if (this.hasSelectedDepartments.length > 0) {
                 child.isSelected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
@@ -1743,7 +1750,7 @@
               child.showRadio = true;
               child.isSelected = false;
               child.expanded = false;
-              child.disabled = this.disabled || this.isDisabledOrgNode(child);
+              child.disabled = this.disabled;
               child.type = 'user';
               child.count = 0;
               child.showCount = false;
@@ -1754,8 +1761,8 @@
               child.full_name = payload.full_name;
               // parentNodeId + username 组合成id
               child.id = `${child.parentNodeId}${child.username}`;
-              if (this.isDisabledOrgNode(child)) {
-                child.disabledTip = this.$t(`m.info['手动输入蓝盾侧限制勾选组织架构提示']`);
+              if (this.isLimitSelectNode(child)) {
+                child.limitOrgNodeTip = this.$t(`m.dialog['用户范围过大，请重新选择']`);
               }
               if (this.hasSelectedUsers.length > 0) {
                 child.isSelected

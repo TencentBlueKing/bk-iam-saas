@@ -48,7 +48,6 @@
                     { 'has-margin-left': index !== 0 },
                     { 'tab-item-active': tabActive === item.name }
                   ]"
-                  data-test-id="group_addGroupMemberDialog_tab_switch"
                   @click.stop="handleTabChange(item)"
                 >
                   {{ item.label }}
@@ -122,7 +121,6 @@
                     <template v-if="isHasSearchResult">
                       <dialog-infinite-list
                         ref="searchedResultsRef"
-                        data-test-id="group_addGroupMemberDialog_list_searchResult"
                         style="height: 309px"
                         :all-data="searchedResult"
                         :focus-index.sync="focusItemIndex"
@@ -167,7 +165,6 @@
                     <bk-input
                       ref="manualInputRef"
                       :placeholder="$t(`m.common['手动输入提示']`)"
-                      data-test-id="group_addGroupMemberDialog_input_manualUser"
                       type="textarea"
                       class="manual-textarea"
                       :rows="14"
@@ -196,7 +193,6 @@
                         style="width: 168px"
                         :loading="manualAddLoading"
                         :disabled="isManualDisabled || isAll"
-                        data-test-id="group_addGroupMemberDialog_btn_addManualUser"
                         @click="handleAddManualUser"
                       >
                         {{ $t(`m.common['解析并添加']`) }}
@@ -355,7 +351,6 @@
               :disabled="isNextSureDisabled"
               :loading="loading"
               @click="handleSave"
-              data-test-id="group_btn_addMemberConfirm"
             >{{ $t(`m.common['确定']`) }}</bk-button
             >
           </template>
@@ -365,7 +360,6 @@
             theme="primary"
             :disabled="isDisabled && !isAll"
             @click="handleSave"
-            data-test-id="group_btn_addMemberConfirm"
           >{{ $t(`m.common['确定']`) }}</bk-button
           >
         </template>
@@ -869,6 +863,10 @@
           if (departments && departments.length) {
             departments.forEach((item) => {
               item.type = 'depart';
+              item.showCount = true;
+              if (!item.hasOwnProperty('count')) {
+                item.count = item.recursive_member_count;
+              }
             });
             const result = await this.fetchSubjectScopeCheck(departments, 'depart');
             if (result && result.length) {

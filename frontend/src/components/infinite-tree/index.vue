@@ -201,9 +201,9 @@
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName, disabled, disabledTip } = payload;
+          const { name, type, username, full_name: fullName, disabled } = payload;
           if (disabled) {
-            return disabledTip || this.$t(`m.common['该成员已添加']`);
+            return this.$t(`m.common['该成员已添加']`);
           }
           const typeMap = {
             user: () => {
@@ -307,6 +307,11 @@
         if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
           return;
         }
+        // 增加蓝盾侧限制勾选组织架构业务
+        if (node.limitOrgNodeTip) {
+          this.$emit('on-show-limit', { title: node.limitOrgNodeTip });
+          return;
+        }
         if ((node.level === 0 || (node.async && node.disabled)) && !this.isRatingManager) {
           this.expandNode(node);
           return;
@@ -396,9 +401,15 @@
       },
 
       handleNodeClick (node) {
-        const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
+        const { type, disabled, isSelected, limitOrgNodeTip } = node;
+        const isDisabled = disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && type === 'depart');
         if (!isDisabled) {
-          node.isSelected = !node.isSelected;
+          // 增加蓝盾侧限制勾选组织架构业务
+          if (limitOrgNodeTip) {
+            this.$emit('on-show-limit', { title: limitOrgNodeTip });
+            return;
+          }
+          node.isSelected = !isSelected;
           if (node.type === 'user') {
             this.handleBanUser(node, node.isSelected);
           }

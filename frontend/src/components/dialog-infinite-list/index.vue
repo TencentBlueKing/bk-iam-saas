@@ -170,9 +170,9 @@
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName, disabled, disabledTip } = payload;
+          const { name, type, username, full_name: fullName, disabled } = payload;
           if (disabled) {
-            return disabledTip || this.$t(`m.common['该成员已添加']`);
+            return this.$t(`m.common['该成员已添加']`);
           }
           const typeMap = {
             user: () => {
@@ -302,6 +302,11 @@
         if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
           return;
         }
+        // 增加蓝盾侧限制勾选组织架构业务
+        if (node.limitOrgNodeTip) {
+          this.$emit('on-show-limit', { title: node.limitOrgNodeTip });
+          return;
+        }
         this.$emit('on-click', node);
         if (!node.disabled) {
           if (this.isStaff || this.isUnLimitedScope) {
@@ -322,6 +327,11 @@
       async handleNodeClick (node) {
         const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
         if (!isDisabled) {
+          // 增加蓝盾侧限制勾选组织架构业务
+          if (node.limitOrgNodeTip) {
+            this.$emit('on-show-limit', { title: node.limitOrgNodeTip });
+            return;
+          }
           if (this.isStaff) {
             node.isSelected = !node.isSelected;
             this.$emit('on-checked', node.isSelected, !node.isSelected, true, node);
