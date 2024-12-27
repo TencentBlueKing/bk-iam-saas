@@ -148,9 +148,16 @@ def clean_subject_to_delete():
         policies = (Policy.objects.filter(subject_type=SubjectType.USER.value).
                     exclude(subject_id__in=username_set).all())
         subject_ids = {policy.subject_id for policy in policies}
+
+        # 避免重复添加
+        new_subject_ids = set()
+        for subject_id in subject_ids:
+            if not SubjectToDelete.objects.filter(subject_id=subject_id, subject_type=SubjectType.USER.value):
+                new_subject_ids.add(subject_id)
+
         SubjectToDelete.objects.bulk_create(
             [SubjectToDelete(subject_id=subject_id,
-                             subject_type=SubjectType.USER.value) for subject_id in subject_ids])
+                             subject_type=SubjectType.USER.value) for subject_id in new_subject_ids])
 
     # 分割对应的subject
     usernames = [one.subject_id for one in subjects if one.subject_type == SubjectType.USER.value]
