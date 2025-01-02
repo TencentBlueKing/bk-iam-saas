@@ -114,6 +114,9 @@ const GradingAdmin = () => import(/* webpackChunkName: 'grading-admin' */ '../vi
 // 管理空间新建
 const GradingAdminCreate = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/create');
 
+// 管理空间克隆
+const GradingAdminClone = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/create');
+
 // 管理空间详情
 const GradingAdminDetail = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/detail');
 
@@ -627,7 +630,7 @@ export const routes = [
         component: GradingAdmin
       },
       {
-        path: ':id/rating-manager-create',
+        path: 'rating-manager-create',
         name: 'gradingAdminCreate',
         meta: {
           headerTitle: il8n('nav', '新建管理空间'),
@@ -635,6 +638,16 @@ export const routes = [
         },
         props: true,
         component: GradingAdminCreate
+      },
+      {
+        path: ':id/rating-manager-clone',
+        name: 'gradingAdminClone',
+        meta: {
+          headerTitle: il8n('nav', '克隆管理空间'),
+          backRouter: -1
+        },
+        props: true,
+        component: GradingAdminClone
       },
       {
         path: ':id/rating-manager-detail',

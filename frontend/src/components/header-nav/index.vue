@@ -503,6 +503,7 @@
             const OtherRoute = [
               'gradingAdminDetail',
               'gradingAdminCreate',
+              'gradingAdminClone',
               'gradingAdminEdit',
               'myManageSpaceCreate',
               'secondaryManageSpaceCreate',

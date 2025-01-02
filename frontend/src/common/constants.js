@@ -130,6 +130,7 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
   'permTemplateDiff',
   'createUserGroup',
   'gradingAdminCreate',
+  'gradingAdminClone',
   'gradingAdminEdit',
   'myManageSpaceCreate',
   'myManageSpaceClone',
@@ -186,7 +187,7 @@ export const ALL_ROUTES_LIST = new Map([
   // 我的管理空间
   [['myManageSpace', 'myManageSpaceCreate', 'myManageSpaceClone', 'myManageSpaceSubDetail'], 'myManageSpaceNav'],
   // 分级管理员
-  [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
+  [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminClone', 'gradingAdminEdit'], 'gradingAdminNav'],
   // 二级管理空间
   [
     [
@@ -240,7 +241,7 @@ export const MANAGE_SPACE_REDIRECT_ROUTES = new Map([
   ],
   // 管理空间
   [
-    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
+    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminClone', 'gradingAdminEdit'],
     'ratingManager'
   ],
   // 授权边界
@@ -391,6 +392,17 @@ export const SEND_DAYS_LIST = [
     label: '周日',
     value: 'sunday'
   }
+];
+
+// 不需要校验组织架构授权范围的页面
+export const NO_VERIFY_ORG_ROUTES = [
+  'authorBoundaryEditFirstLevel',
+  'authorBoundaryEditSecondLevel',
+  'applyJoinUserGroup',
+  'addMemberBoundary',
+  'gradingAdminCreate',
+  'gradingAdminClone',
+  'gradingAdminEdit'
 ];
 
 // 只显示角色名称的审计类型

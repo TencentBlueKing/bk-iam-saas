@@ -135,6 +135,7 @@
         extClsRouteList: [
           'myManageSpaceCreate',
           'gradingAdminCreate',
+          'gradingAdminClone',
           'gradingAdminEdit',
           'secondaryManageSpaceCreate',
           'authorBoundary',
