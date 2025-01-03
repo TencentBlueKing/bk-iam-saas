@@ -209,18 +209,6 @@
               :render-header="renderHeader"
             />
           </template>
-          <template v-else-if="item.prop === 'description'">
-            <bk-table-column
-              :key="item.prop"
-              :label="item.label"
-              :prop="item.prop">
-              <template slot-scope="{ row }">
-                <span :title="row.description">
-                  {{ row.description || '--' }}
-                </span>
-              </template>
-            </bk-table-column>
-          </template>
           <template v-else-if="item.prop === 'created_time'">
             <bk-table-column
               :key="item.prop"
@@ -271,6 +259,19 @@
                     {{ $t(`m.renewal['续期']`) }}
                   </bk-button>
                 </template>
+              </template>
+            </bk-table-column>
+          </template>
+          <template v-else>
+            <bk-table-column
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop"
+            >
+              <template slot-scope="{ row }">
+                <span :title="row">
+                  {{ row[item.prop] || '--' }}
+                </span>
               </template>
             </bk-table-column>
           </template>
@@ -692,6 +693,7 @@
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['加入方式']`), prop: 'join_method' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           },
@@ -701,6 +703,7 @@
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['加入方式']`), prop: 'join_method' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           }
