@@ -17,6 +17,7 @@ from celery import shared_task
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+from blue_krill.web.std_error import APIError
 
 from backend.apps.organization.models import SubjectToDelete, SyncErrorLog, SyncRecord
 from backend.apps.role.models import RoleGroupMember, RoleScope, RoleUser, ScopeSubject
@@ -35,6 +36,11 @@ from backend.service.constants import SubjectType
 from backend.util.json import json_dumps
 from backend.apps.policy.models import Policy
 from backend.apps.temporary_policy.models import TemporaryPolicy
+from backend.apps.policy.models import Policy
+from backend.service.models import Subject
+from backend.service.policy.query import PolicyQueryService
+from backend.common.error_codes import error_codes
+from backend.service.constants import SubjectType
 
 from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 
@@ -265,3 +271,25 @@ def clean_history_policy():
 
         # 批量删除用户权限
         batch_delete_subject_policy(SubjectType.USER.value, usernames)
+
+
+@shared_task(ignore_result=True)
+def clean_history_policy_by_subject_id(subject_id: str):
+    """
+    通过subject_id删除历史遗留数据
+    :return:
+    """
+
+    srv = PolicyQueryService()
+    policies = Policy.objects.filter(subject_type=SubjectType.USER.value,
+                                     subject_id=subject_id).all()
+    policy_set = set()
+    for policy in policies:
+        subject = Subject.from_username(policy.subject_id)
+        try:
+            srv.get_policy_by_id(policy.id, subject)
+        except APIError as e:
+            if e.code == error_codes.NOT_FOUND_ERROR.code:
+                policy_set.add(policy)
+    for policy in policy_set:
+        policy.delete()
