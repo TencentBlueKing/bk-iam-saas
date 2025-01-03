@@ -141,24 +141,6 @@ def clean_subject_to_delete():
     max_create_time = timezone.now() - timezone.timedelta(days=settings.SUBJECT_DELETE_DAYS)
     subjects = list(SubjectToDelete.objects.filter(created_time__lt=max_create_time))
 
-    # 将历史遗留数据加入待处理表中
-    if not subjects:
-        usermgr_users = usermgr.list_profile()
-        username_set = {user["username"] for user in usermgr_users}
-        policies = (Policy.objects.filter(subject_type=SubjectType.USER.value).
-                    exclude(subject_id__in=username_set).all())
-        subject_ids = {policy.subject_id for policy in policies}
-
-        # 避免重复添加
-        new_subject_ids = set()
-        for subject_id in subject_ids:
-            if not SubjectToDelete.objects.filter(subject_id=subject_id, subject_type=SubjectType.USER.value):
-                new_subject_ids.add(subject_id)
-
-        SubjectToDelete.objects.bulk_create(
-            [SubjectToDelete(subject_id=subject_id,
-                             subject_type=SubjectType.USER.value) for subject_id in new_subject_ids])
-
     # 分割对应的subject
     usernames = [one.subject_id for one in subjects if one.subject_type == SubjectType.USER.value]
     department_ids = [one.subject_id for one in subjects if one.subject_type == SubjectType.DEPARTMENT.value]
@@ -253,3 +235,33 @@ def batch_delete_subject_policy(subject_type: str, subject_ids: List[str]):
 
     # 清理临时权限
     TemporaryPolicy.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).delete()
+
+
+@shared_task(ignore_result=True)
+def clean_history_policy():
+    """
+    清理历史遗留权限
+    :return:
+    """
+    # 获取离职但权限还在的用户
+    usermgr_users = usermgr.list_profile()
+    username_set = {user["username"] for user in usermgr_users}
+    policies = (Policy.objects.filter(subject_type=SubjectType.USER.value).
+                exclude(subject_id__in=username_set).all())
+    subject_ids = {policy.subject_id for policy in policies}
+
+    # 获取已离职但不在待删除的用户
+    new_subject_ids = set()
+    for subject_id in subject_ids:
+        if not SubjectToDelete.objects.filter(subject_id=subject_id, subject_type=SubjectType.USER.value):
+            new_subject_ids.add(subject_id)
+    usernames = list(new_subject_ids)
+    with transaction.atomic():
+        # 删除用户所属角色的成员
+        RoleUser.objects.filter(username__in=usernames).delete()
+
+        # 批量删除用户关系数据
+        batch_delete_subject_relations(SubjectType.USER.value, usernames)
+
+        # 批量删除用户权限
+        batch_delete_subject_policy(SubjectType.USER.value, usernames)
