@@ -36,11 +36,9 @@ from backend.service.constants import SubjectType
 from backend.util.json import json_dumps
 from backend.apps.policy.models import Policy
 from backend.apps.temporary_policy.models import TemporaryPolicy
-from backend.apps.policy.models import Policy
 from backend.service.models import Subject
 from backend.service.policy.query import PolicyQueryService
 from backend.common.error_codes import error_codes
-from backend.service.constants import SubjectType
 
 from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 
