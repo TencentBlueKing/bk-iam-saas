@@ -2,10 +2,12 @@
   .user-group-member-table {
     margin-top: 16px;
     border: none;
-    tr:hover {
-      .user,
-      .depart {
-        background: #fff;
+    tr {
+      &:hover {
+        .user,
+        .depart {
+          background: #ffffff;
+        }
       }
     }
     .user,
@@ -14,10 +16,10 @@
       padding: 4px 6px;
       background: #f0f1f5;
       border-radius: 2px;
-      max-width: 350px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      max-width: max-content;
       i {
         font-size: 14px;
         color: #c4c6cc;
@@ -29,7 +31,6 @@
     .member-template {
       background-color: #f0f5ff;
       color: #3a84ff;
-      max-width: max-content;
       i {
         color: #699df4;
       }
