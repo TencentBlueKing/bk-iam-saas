@@ -2,14 +2,6 @@
   .user-group-member-table {
     margin-top: 16px;
     border: none;
-    tr {
-      &:hover {
-        .user,
-        .depart {
-          background: #ffffff;
-        }
-      }
-    }
     .user,
     .depart,
     .member-template {
@@ -38,6 +30,10 @@
         color: #699df4;
         cursor: pointer;
       }
+    }
+    /deep/ .bk-table-fixed,
+    /deep/ .bk-table-fixed-right {
+      border-bottom: 0;
     }
   }
 }

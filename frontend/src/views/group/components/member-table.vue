@@ -126,7 +126,7 @@
         v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
       >
         <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
-        <template v-for="item in tableProps">
+        <template v-for="item in renderTableColumn">
           <template v-if="item.prop === 'name'">
             <bk-table-column
               :key="item.prop"
@@ -226,7 +226,9 @@
               :key="item.prop"
               :label="item.label"
               :prop="item.prop"
-              :width="['memberTemplate'].includes(tabActive) ? 180 : 'auto'">
+              :width="curLanguageIsCn ? 100 : 150"
+              :fixed="'right'"
+            >
               <template slot-scope="{ row }">
                 <template v-if="['memberTemplate'].includes(routeMode)">
                   <bk-button
@@ -516,112 +518,116 @@
       };
     },
     computed: {
-    ...mapGetters(['user', 'externalSystemId']),
-    isNoBatchDelete () {
-      return () => {
-        const hasData = this.currentSelectList.length > 0;
-        if (
-          hasData
-          && ['userOrgPerm'].includes(this.tabActive)
-          && this.getGroupAttributes
-          && this.getGroupAttributes().source_from_role
-        ) {
-          const isAll = hasData && this.currentSelectList.length === this.userOrOrgCount;
-          this.adminGroupTitle = isAll
-            ? this.$t(`m.userGroup['管理员组至少保留一条数据']`)
-            : '';
-          return isAll;
-        }
-        return !hasData;
-      };
-    },
-    isNoBatchRenewal () {
-      return () => {
-        const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
-        if (emptyField) {
-          const hasData = emptyField.tableList.length > 0 && this.currentSelectList.length > 0;
-          if (hasData) {
-            this.selectNoRenewalList = this.currentSelectList.filter(
-              (item) => item.expired_at === PERMANENT_TIMESTAMP
-            );
-            if (this.currentSelectList.length === this.selectNoRenewalList.length) {
-              this.renewalGroupTitle = this.$t(
-                `m.userGroup['已选择的用户组成员不需要续期']`
-              );
-              return true;
-            }
+      ...mapGetters(['user', 'externalSystemId']),
+      isNoBatchDelete () {
+        return () => {
+          const hasData = this.currentSelectList.length > 0;
+          if (
+            hasData
+            && ['userOrgPerm'].includes(this.tabActive)
+            && this.getGroupAttributes
+            && this.getGroupAttributes().source_from_role
+          ) {
+            const isAll = hasData && this.currentSelectList.length === this.userOrOrgCount;
+            this.adminGroupTitle = isAll
+              ? this.$t(`m.userGroup['管理员组至少保留一条数据']`)
+              : '';
+            return isAll;
           }
           return !hasData;
-        }
-      };
-    },
-    isRatingManager () {
-      return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
-    },
-    curType () {
-      return this.curData.type || 'department';
-    },
-    disabledGroup () {
-      return () => {
-        return (
-          this.getGroupAttributes
-          && this.getGroupAttributes().source_from_role
-          && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
-          && (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
-        );
-      };
-    },
-    disabledTempGroup () {
-      return () => {
-        return this.readOnly;
-      };
-    },
-    isBatchDisabled () {
-      return ['memberTemplate'].includes(this.routeMode) ? this.readOnly : !this.currentSelectList.length;
-    },
-    isCopyDisabled () {
-      return this.readOnly || (!this.groupTabList[0].tableList.length);
-    },
-    formatPagination () {
-      return () => {
-        const typeMap = {
-          userOrgPerm: () => {
-            return this.userOrOrgPagination;
-          },
-          memberTemplate: () => {
-            return this.memberPagination;
+        };
+      },
+      isNoBatchRenewal () {
+        return () => {
+          const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
+          if (emptyField) {
+            const hasData = emptyField.tableList.length > 0 && this.currentSelectList.length > 0;
+            if (hasData) {
+              this.selectNoRenewalList = this.currentSelectList.filter(
+                (item) => item.expired_at === PERMANENT_TIMESTAMP
+              );
+              if (this.currentSelectList.length === this.selectNoRenewalList.length) {
+                this.renewalGroupTitle = this.$t(
+                  `m.userGroup['已选择的用户组成员不需要续期']`
+                );
+                return true;
+              }
+            }
+            return !hasData;
           }
         };
-        return typeMap[this.tabActive]();
-      };
-    },
-    getTableList () {
-      return () => {
-        const typeMap = {
-          userOrgPerm: () => {
-            return this.groupTabList[0].tableList;
-          },
-          memberTemplate: () => {
-            return this.groupTabList[1].tableList;
-          }
+      },
+      isRatingManager () {
+        return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
+      },
+      curType () {
+        return this.curData.type || 'department';
+      },
+      disabledGroup () {
+        return () => {
+          return (
+            this.getGroupAttributes
+            && this.getGroupAttributes().source_from_role
+            && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
+            && (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
+          );
         };
-        return typeMap[this.tabActive]();
-      };
-    },
-    isAdminGroup () {
-        return this.getGroupAttributes && this.getGroupAttributes().source_from_role;
-    },
-    isShowMemberTemplate () {
-        return !['staff'].includes(this.user.role.type) && !this.isAdminGroup;
-    },
-    // 蓝盾场景
-    isShowExternalMemberTemplate () {
-      return !['staff', 'rating_manager'].includes(this.user.role.type) && !this.isAdminGroup;
-    },
-    isExistMemberTemplate () {
-      return this.externalSystemId
-      ? this.isShowTab && this.isShowExternalMemberTemplate : this.isShowTab && this.isShowMemberTemplate;
-    }
+      },
+      disabledTempGroup () {
+        return () => {
+          return this.readOnly;
+        };
+      },
+      isBatchDisabled () {
+        return ['memberTemplate'].includes(this.routeMode) ? this.readOnly : !this.currentSelectList.length;
+      },
+      isCopyDisabled () {
+        return this.readOnly || (!this.groupTabList[0].tableList.length);
+      },
+      formatPagination () {
+        return () => {
+          const typeMap = {
+            userOrgPerm: () => {
+              return this.userOrOrgPagination;
+            },
+            memberTemplate: () => {
+              return this.memberPagination;
+            }
+          };
+          return typeMap[this.tabActive]();
+        };
+      },
+      getTableList () {
+        return () => {
+          const [userOrgPerm, memberTemplate] = this.groupTabList;
+          const typeMap = {
+            userOrgPerm: () => {
+              return userOrgPerm.tableList;
+            },
+            memberTemplate: () => {
+              return memberTemplate.tableList;
+            }
+          };
+          return typeMap[this.tabActive]();
+        };
+      },
+      renderTableColumn () {
+        return this.tableProps.filter((v) => v.visible);
+      },
+      isAdminGroup () {
+          return this.getGroupAttributes && this.getGroupAttributes().source_from_role;
+      },
+      isShowMemberTemplate () {
+          return !['staff'].includes(this.user.role.type) && !this.isAdminGroup;
+      },
+      // 蓝盾场景
+      isShowExternalMemberTemplate () {
+        return !['staff', 'rating_manager'].includes(this.user.role.type) && !this.isAdminGroup;
+      },
+      isExistMemberTemplate () {
+        return this.externalSystemId
+        ? this.isShowTab && this.isShowExternalMemberTemplate : this.isShowTab && this.isShowMemberTemplate;
+      }
     },
     watch: {
       'userOrOrgPagination.current' (value) {
@@ -651,7 +657,7 @@
           if (this.routeMode) {
             this.curRouteMode = _.cloneDeep(this.routeMode);
           }
-          this.tableProps = this.getTableProps(newValue);
+          this.tableProps = Object.freeze(this.getTableProps(newValue));
           if (oldValue && oldValue !== newValue) {
             this.resetPagination();
           }
@@ -695,7 +701,18 @@
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
               { label: this.$t(`m.perm['加入方式']`), prop: 'join_method' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
-            ];
+            ].map((v) => {
+              let result = true;
+              if (['join_method'].includes(v.prop) && !['userGroupDetail'].includes(this.$route.name)) {
+                result = false;
+              }
+              return {
+                ...v,
+                ...{
+                  visible: result
+                }
+              };
+            });
           },
           memberTemplate: () => {
             return [
@@ -703,21 +720,28 @@
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
-              { label: this.$t(`m.perm['加入方式']`), prop: 'join_method' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
-            ];
+            ].map((v) => {
+              return {
+                ...v,
+                ...{
+                  visible: true
+                }
+              };
+            });
           }
         };
         return tabMap[payload]();
       },
 
       getDefaultSelect () {
+        const [userOrgPerm, memberTemplate] = this.groupTabList;
         const typeMap = {
           userOrgPerm: () => {
-            return this.groupTabList[0].tableList.length > 0;
+            return userOrgPerm.tableList.length > 0;
           },
           memberTemplate: () => {
-            return this.groupTabList[1].tableList.length > 0;
+            return memberTemplate.tableList.length > 0;
           }
         };
         return typeMap[this.tabActive];
