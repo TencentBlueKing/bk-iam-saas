@@ -457,6 +457,7 @@
         isDropdownShow: false,
         copyValue: [],
         curCopyCascade: {},
+        PERMANENT_TIMESTAMP,
         COPY_KEYS_ENUM,
         externalRoutes: ['userGroupDetail', 'memberTemplate'],
         classNameList: [
@@ -674,9 +675,7 @@
       });
     },
     created () {
-      this.PERMANENT_TIMESTAMP = PERMANENT_TIMESTAMP;
       this.fetchInitData();
-    // window.addEventListener('message', this.fetchReceiveData);
     },
     methods: {
       renderHeader (h, data) {
@@ -752,13 +751,6 @@
           return 'iam-table-cell-depart-cls';
         }
         return '';
-      },
-
-      // 接收iframe父页面传递的message
-      fetchReceiveData (payload) {
-        const { data } = payload;
-        console.log(data, '接受传递过来的数据');
-      // this.fetchResetData(data);
       },
 
       fetchInitData () {
