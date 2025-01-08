@@ -46,7 +46,7 @@ from backend.service.role import AuthScopeSystem, RoleService, UserRole
 from backend.service.subject_template import SubjectTemplateService
 from backend.service.system import SystemService
 from backend.service.template import TemplateService
-from backend.util.time import utc_string_to_local, utc_string_to_local_timestamp
+from backend.util.time import utc_string_to_local
 from backend.util.uuid import gen_uuid
 
 from .action import ActionCheckBiz, ActionResourceGroupForCheck
@@ -93,7 +93,6 @@ class GroupMemberBean(BaseModel):
     expired_at: int
     expired_at_display: str
     created_time: datetime
-    created_at: int
 
     # 从部门继承的信息
     department_id: int = 0
@@ -615,7 +614,6 @@ class GroupBiz:
                 expired_at=relation.expired_at,
                 expired_at_display=expired_at_display(relation.expired_at),
                 created_time=utc_string_to_local(relation.created_at),
-                created_at=utc_string_to_local_timestamp(relation.created_at),
                 **subject_info.dict(),
             )
             group_member_beans.append(group_member_bean)
