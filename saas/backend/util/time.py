@@ -12,7 +12,7 @@ import datetime
 import time
 
 from django.utils import timezone
-from dateutil import parser
+from dateutil import parser  # type: ignore
 
 
 def string_to_datetime(str_time, fmt="%Y-%m-%d %H:%M:%S"):
