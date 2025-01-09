@@ -12,7 +12,6 @@ import datetime
 import time
 
 from django.utils import timezone
-from dateutil import parser  # type: ignore
 
 
 def string_to_datetime(str_time, fmt="%Y-%m-%d %H:%M:%S"):
@@ -34,8 +33,9 @@ def utc_string_to_timestamp(str_time: str) -> int:
     """
     后端UTC时间转换为时间戳
     """
-    t = parser.isoparse(str_time)
-    return int(t.timestamp())
+    naive_t = string_to_datetime(str_time, fmt="%Y-%m-%dT%H:%M:%SZ")
+    aware_t = naive_t.replace(tzinfo=datetime.timezone.utc)
+    return int(aware_t.timestamp())
 
 
 def utc_to_local(utc_time):

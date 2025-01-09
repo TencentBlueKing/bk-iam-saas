@@ -167,7 +167,7 @@ class ManagementGroupMemberSLZ(serializers.Serializer):
     id = serializers.CharField(label="成员id")
     name = serializers.CharField(label="名称")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
-    created_time = serializers.IntegerField(label="创建时间戳(单位秒)")
+    created_at = serializers.IntegerField(label="创建时间戳(单位秒)")
 
 
 class ManagementGroupMemberDeleteSLZ(serializers.Serializer):
