@@ -40,11 +40,10 @@
             </ul>
           </bk-dropdown-menu>
         </div>
-        <div class="group-member-button-item" data-test="no-leave">
+        <div class="group-member-button-item" @mouseenter="handleCascadeEnter">
           <bk-cascade
             ref="copyCascade"
             v-model="copyValue"
-            data-test="no-leave"
             :list="COPY_KEYS_ENUM"
             :clearable="false"
             :ext-popover-cls="
@@ -57,22 +56,11 @@
             :trigger="'hover'"
             :style="{ width: curLanguageIsCn ? '100px' : '140px' }"
           >
-            <div slot="option" slot-scope="{ node }" data-test="no-leave">
+            <div slot="option" slot-scope="{ node }">
               <div
-                data-test="no-leave"
-                @mouseleave="handleCascadeLeave"
-                @click="handleTriggerCopy(...arguments, node)"
-              >
-                <span
-                  v-if="node.children"
-                  data-test="no-leave"
-                  class="cascade-custom-content"
-                >
-                  {{ node.name }}
-                </span>
-                <span v-else data-test="no-leave" class="cascade-custom-content">
-                  {{ node.name }}
-                </span>
+                class="cascade-custom-content"
+                @click="handleTriggerCopy(...arguments, node)">
+                {{ node.name }}
               </div>
             </div>
           </bk-cascade>
@@ -400,6 +388,7 @@
       return {
         tableList: [],
         tableLoading: false,
+        isMouseCascadeEnter: false,
         currentSelectList: [],
         pagination: {
           current: 1,
@@ -460,16 +449,6 @@
         PERMANENT_TIMESTAMP,
         COPY_KEYS_ENUM,
         externalRoutes: ['userGroupDetail', 'memberTemplate'],
-        classNameList: [
-          'iam-user-group-member ',
-          'bk-cascade-name',
-          'bk-option-content',
-          'bk-cascade is-focus is-unselected is-default-trigger',
-          'bk-cascade-dropdown-content copy-user-group-cls',
-          'cascade-custom-content',
-          'bk-cascade-panel',
-          'bk-cascade-right bk-icon icon-angle-right'
-        ],
         groupTabList: [
           {
             name: 'userOrgPerm',
@@ -665,14 +644,6 @@
         },
         immediate: true
       }
-    },
-    mounted () {
-      document.addEventListener('mouseover', this.handleCascadeEnter);
-      document.addEventListener('mouseout', this.handleCascadeLeave);
-      this.$once('hook:beforeDestroy', () => {
-        document.removeEventListener('mouseover', this.handleCascadeEnter);
-        document.removeEventListener('mouseout', this.handleCascadeLeave);
-      });
     },
     created () {
       this.fetchInitData();
@@ -986,32 +957,11 @@
         this.isDropdownShow = false;
       },
 
-      handleCascadeEnter (event) {
+      handleCascadeEnter () {
         this.$nextTick(() => {
-          if (
-            ['bk-cascade-name'].includes(event.target.className)
-            && this.$refs.copyCascade
-            && this.$refs.copyCascade.$refs.cascadeDropdown
-          ) {
-            this.$refs.copyCascade.$refs.cascadeDropdown.showHandler();
-          }
-        });
-      },
-
-      async handleCascadeLeave (event) {
-        const { className, dataset } = event.target;
-        if (dataset.test && dataset.test === 'no-leave') {
-          return;
-        }
-        this.$nextTick(() => {
-          if (
-            className
-            && !this.classNameList.includes(className)
-            && this.$refs.copyCascade
-            && this.$refs.copyCascade.$refs.cascadeDropdown
-          ) {
-          // this.$refs.copyCascade.$refs.cascadeDropdown.hideHandler();
-          }
+          this.isMouseCascadeEnter = true;
+          const copyCascade = this.$refs.copyCascade;
+          copyCascade && copyCascade.$refs.cascadeDropdown.showHandler();
         });
       },
 
@@ -1593,7 +1543,9 @@
 
 .group-member-button {
   &-item {
-    margin-right: 10px;
+    &:not(&:last-child) {
+      margin-right: 10px;
+    }
     .group-dropdown-trigger-btn {
       display: flex;
       align-items: center;
