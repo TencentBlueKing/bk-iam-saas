@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Any, List
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from pydantic.tools import parse_obj_as
 
 from backend.biz.action import ActionCheckBiz, ActionForCheck
@@ -26,9 +26,7 @@ class OpenResourcePathNode(BaseModel):
     type: str
     id: str
     name: str = ""
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段传 system 或 system_id
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class OpenRelatedResource(BaseModel):
@@ -36,9 +34,7 @@ class OpenRelatedResource(BaseModel):
     type: str
     paths: List[List[OpenResourcePathNode]] = []
     attributes: List[Any] = []  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段传 system 或 system_id
+    model_config = ConfigDict(populate_by_name=True)
 
     def _raise_match_selection_fail_exception(self, path: List[OpenResourcePathNode]):
         raise error_codes.VALIDATE_ERROR.format(f"resource({path}) not satisfy instance selection")
@@ -98,9 +94,7 @@ class OpenPolicy(BaseModel):
     system_id: str = Field(alias="system")
     action_id: str = Field(alias="id")
     related_resource_types: List[OpenRelatedResource]
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段传 system或system_id 和action_id或id
+    model_config = ConfigDict(populate_by_name=True)
 
     def fill_instance_system(self):
         """填充system，由于申请数据里的资源实例可能只有type和id，不知道该资源是哪个系统的，所以需要根据权限模型的进行填充"""

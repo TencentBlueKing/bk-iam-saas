@@ -14,7 +14,7 @@ import time
 from collections import defaultdict
 from copy import deepcopy
 from itertools import chain, groupby
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Generic
 
 from django.conf import settings
 from django.utils.decorators import method_decorator
@@ -50,7 +50,7 @@ from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
 from backend.service.system import SystemService
 from backend.service.utils.translate import translate_path
-from backend.util.model import ExcludeModel
+from backend.util.model import ExcludeModel, ListModel
 from backend.util.uuid import gen_uuid
 
 from .resource import ResourceBiz, ResourceNodeBean
@@ -71,14 +71,14 @@ class PathNodeBean(PathNode):
         self.type_name, self.type_name_en = resource_type_dict.get_name(self.system_id, self.type)
 
 
-class PathNodeBeanList(PathNodeList):
-    __root__: List[PathNodeBean]
-
+class PathNodeBeanList(ListModel[PathNodeBean]):
     def to_path_string(self):
-        return translate_path(self.dict())
+        # 建议使用 model_dump() 获取字典形式的数据
+        return translate_path(self.model_dump())
 
     def display(self) -> str:
-        return "/".join(["{}:{}".format(node.type, node.name) for node in self])
+        # 遍历 self.root，而不是直接遍历 self（虽然 ListModel 定义了 __iter__，但明确使用 self.root 更直观）
+        return "/".join(["{}:{}".format(node.type, node.name) for node in self.root])
 
 
 class InstanceBean(Instance):
@@ -636,12 +636,15 @@ class ResourceGroupBean(ResourceGroup):
         return is_changed
 
 
-class ResourceGroupBeanList(ResourceGroupList):
-    __root__: List[ResourceGroupBean]
+T = TypeVar('T', bound=ResourceGroupBean)
 
-    def __init__(__pydantic_self__, **data: Any) -> None:
+
+class ResourceGroupBeanList(ResourceGroupList, Generic[T]):
+    # 这里不再声明 __root__ 字段，数据存储在父类的 self.root 中
+
+    def __init__(self, **data: Any) -> None:
         super().__init__(**data)
-        __pydantic_self__._drop_duplicates()
+        self._drop_duplicates()
 
     def _drop_duplicates(self):
         """
@@ -653,10 +656,10 @@ class ResourceGroupBeanList(ResourceGroupList):
         # 关联单资源类型的操作, 环境属性相同的情况下, 需要合并资源实例
         if len(self.get_thin_resource_types()) == 1:
             env_hash_rg = {}
-            self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, self)
+            self.root = self._merge_resource_groups_with_same_env(env_hash_rg, self)
             return self
 
-        # 如果resource_group存在包含关系, 移除被包含的resource_group
+        # 如果 resource_group 存在包含关系, 移除被包含的 resource_group
         for __ in range(len(self)):
             rg = self.pop(0)
             if rg not in self:
@@ -664,33 +667,31 @@ class ResourceGroupBeanList(ResourceGroupList):
 
         return self
 
-    def get_by_id(self, id: str) -> Optional[ResourceGroupBean]:
+    def get_by_id(self, id: str) -> Optional[T]:
         index = self._index_by_id(id)
         return self[index] if index != -1 else None
 
-    def is_super_set(self, resource_groups: "ResourceGroupBeanList") -> bool:
+    def is_super_set(self, resource_groups: "ResourceGroupBeanList[T]") -> bool:
         """
         是否完全包含
         """
         for rg in resource_groups:
             if rg not in self:
                 return False
-
         return True
 
     def is_unrelated(self) -> bool:
         return len(self) == 0
 
-    def __contains__(self, resource_group: ResourceGroupBean) -> bool:
+    def __contains__(self, resource_group: T) -> bool:
         for rg in self:
             if resource_group.hash_environments() == rg.hash_environments() and rg.has_related_resource_types(
                 resource_group.related_resource_types
             ):
                 return True
-
         return False
 
-    def __add__(self, resource_groups: "ResourceGroupBeanList") -> "ResourceGroupBeanList":
+    def __add__(self, resource_groups: "ResourceGroupBeanList[T]") -> "ResourceGroupBeanList[T]":
         """
         合并到新的对象
         """
@@ -699,31 +700,30 @@ class ResourceGroupBeanList(ResourceGroupList):
         return rg
 
     def _merge_resource_groups_with_same_env(
-        self, env_hash_rg: Dict[int, ResourceGroupBean], resource_groups: "ResourceGroupBeanList"
-    ) -> List[ResourceGroupBean]:
+        self, env_hash_rg: Dict[int, T], resource_groups: "ResourceGroupBeanList[T]"
+    ) -> List[T]:
         """
-        合并相同env的resource_group
+        合并相同 env 的 resource_group
         """
         for rg in resource_groups:
             env_hash = rg.hash_environments()
             if env_hash in env_hash_rg:
                 env_hash_rg[env_hash].add_related_resource_types(rg.related_resource_types)
                 continue
-
             env_hash_rg[env_hash] = rg
         return list(env_hash_rg.values())
 
-    def __iadd__(self, resource_groups: "ResourceGroupBeanList") -> "ResourceGroupBeanList":
+    def __iadd__(self, resource_groups: "ResourceGroupBeanList[T]") -> "ResourceGroupBeanList[T]":
         """
         合并到本身
 
-        如果已有id相同的, 则直接合并id相同的
-        如果不存在id相同的, 判断范围是否已包含, 没有包含的合并
+        如果已有 id 相同的，则直接合并 id 相同的；
+        如果不存在 id 相同的，则判断范围是否已包含，没有包含的合并
         """
         # 处理单个资源类型的合并
         if len(self.get_thin_resource_types()) == 1:
             env_hash_rg = {rg.hash_environments(): rg for rg in self}
-            self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, resource_groups)
+            self.root = self._merge_resource_groups_with_same_env(env_hash_rg, resource_groups)
             return self
 
         for rg in resource_groups:
@@ -731,10 +731,10 @@ class ResourceGroupBeanList(ResourceGroupList):
             if original_rg is not None and original_rg.hash_environments() == rg.hash_environments():
                 original_rg.add_related_resource_types(rg.related_resource_types)
             elif rg not in self:
-                self.__root__.append(rg)
+                self.root.append(rg)
         return self
 
-    def __sub__(self, resource_groups: "ResourceGroupBeanList"):
+    def __sub__(self, resource_groups: "ResourceGroupBeanList[T]"):
         """
         移除返回新的对象
         """
@@ -742,17 +742,17 @@ class ResourceGroupBeanList(ResourceGroupList):
         rg -= resource_groups
         return rg
 
-    def __isub__(self, resource_groups: "ResourceGroupBeanList"):
+    def __isub__(self, resource_groups: "ResourceGroupBeanList[T]") -> "ResourceGroupBeanList[T]":
         """
         移除部分条件
 
-        1. 如果是只关联1个资源类型的操作, 直接移除
-        2. 如果关联多个资源类型的操作
+        1. 如果是只关联 1 个资源类型的操作，直接移除；
+        2. 如果关联多个资源类型的操作，
            - 完整包含的一组才能移除
         """
-        # 只关联1个资源类型的操作
+        # 只关联 1 个资源类型的操作
         if len(self.get_thin_resource_types()) == 1:
-            new_resource_groups: List[ResourceGroupBean] = []
+            new_resource_groups: List[T] = []
             for original_rg in self:
                 try:
                     for rg in resource_groups:
@@ -765,7 +765,7 @@ class ResourceGroupBeanList(ResourceGroupList):
             if not new_resource_groups:
                 raise PolicyEmptyException
 
-            self.__root__ = new_resource_groups
+            self.root = new_resource_groups
             return self
 
         # 关联多个资源类型的操作
@@ -775,8 +775,8 @@ class ResourceGroupBeanList(ResourceGroupList):
                 del_resource_group_ids.add(original_rg.id)
                 continue
 
-        self.__root__ = [rg for rg in self if rg.id not in del_resource_group_ids]
-        if not self.__root__:
+        self.root = [rg for rg in self if rg.id not in del_resource_group_ids]
+        if not self.root:
             raise PolicyEmptyException
 
         return self
@@ -787,9 +787,9 @@ class ResourceGroupBeanList(ResourceGroupList):
 
     def get_system_id_set(self) -> Set[str]:
         """
-        获取所有node相关的system_id集合
+        获取所有 node 相关的 system_id 集合
         """
-        return set.union(*[one.get_system_id_set() for one in self]) if self.__root__ else set()
+        return set.union(*[one.get_system_id_set() for one in self]) if self.root else set()
 
     def list_path_node(self) -> List[PathNodeBean]:
         """查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点"""
@@ -800,22 +800,20 @@ class ResourceGroupBeanList(ResourceGroupList):
 
     def count_all_type_instance(self) -> int:
         """
-        这里是统计所有实例总数，Action关联多种资源类型是一起计算的
+        统计所有实例总数，Action 关联多种资源类型时一起计算
         """
         return sum([rg.count_all_type_instance() for rg in self])
 
-    def pop_by_id(self, id: str) -> Optional[ResourceGroupBean]:
+    def pop_by_id(self, id: str) -> Optional[T]:
         index = self._index_by_id(id)
         if index == -1:
             return None
-
         return self.pop(index)
 
     def _index_by_id(self, id: str) -> int:
         for i, rg in enumerate(self):
             if rg.id == id:
                 return i
-
         return -1
 
     def check_instance_selection(self, action: Action):
@@ -831,10 +829,8 @@ class ResourceGroupBeanList(ResourceGroupList):
         """
         is_changed = False
         for rg in self:
-            # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
             if rg.update_resource_name(renamed_resources):
                 is_changed = True
-
         return is_changed
 
 
@@ -1496,8 +1492,8 @@ class PolicyQueryBiz:
                 continue
 
             action = (
-                action_list_dict[p.system].get(p.action_id) if p.system in action_list_dict else None
-            ) or ThinAction(id="", name="", name_en="")
+                         action_list_dict[p.system].get(p.action_id) if p.system in action_list_dict else None
+                     ) or ThinAction(id="", name="", name_en="")
             system = system_list.get(p.system) or ThinSystem(id="", name="", name_en="")
 
             id = action_id_dict.get((p.system, p.action_id), 0)
@@ -1617,7 +1613,8 @@ class PolicyOperationBiz:
         policy = self.query_biz.get_policy_by_id(subject, policy_id)
         resource_type = policy.get_related_resource_type(resource_group_id, resource_system_id, resource_type_id)
         if not resource_type:
-            raise error_codes.VALIDATE_ERROR.format(_("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
+            raise error_codes.VALIDATE_ERROR.format(
+                _("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
 
         condition_list = ConditionBeanList(resource_type.condition)
         # 删除condition id对应的condition

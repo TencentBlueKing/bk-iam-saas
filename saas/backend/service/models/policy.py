@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from collections import namedtuple
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.temporary_policy.models import TemporaryPolicy
@@ -48,21 +48,17 @@ class PathNode(BaseModel):
         return self.system_id == resource_system_id and self.type == resource_type_id
 
 
-class PathNodeList(ListModel):
-    __root__: List[PathNode]
-
+class PathNodeList(ListModel[PathNode]):  # ✅ 添加泛型支持
     def match_selection(self, resource_system_id: str, resource_type_id: str, selection: InstanceSelection) -> bool:
         """
         检查是否匹配实例视图
         """
-        # 链路只有一层, 并且与资源类型匹配
-        if len(self.__root__) == 1 and self.__root__[0].match_resource_type(resource_system_id, resource_type_id):
+        if len(self.root) == 1 and self.root[0].match_resource_type(resource_system_id, resource_type_id):
             return True
-
         return selection.match_path(self._to_path_resource_types())
 
     def _to_path_resource_types(self) -> List[PathResourceType]:
-        return [one.to_path_resource_type() for one in self.__root__]
+        return [one.to_path_resource_type() for one in self.root]
 
     def ignore_path(self, selection: InstanceSelection) -> "PathNodeList":
         """
@@ -70,32 +66,29 @@ class PathNodeList(ListModel):
         """
         if (
             selection.ignore_iam_path
-            and len(self.__root__) == len(selection.resource_type_chain)
-            and self.__root__[-1].id != ANY_ID
+            and len(self.root) == len(selection.resource_type_chain)
+            and self.root[-1].id != ANY_ID
         ):
-            return PathNodeList(__root__=[self.__root__[-1]])
+            return PathNodeList(root=[self.root[-1]])  # ✅ Pydantic 2 需要传 `root`
 
         return self
 
     def get_last_node_without_any(self):
         """获取路径里最后一个非任意的节点"""
-        if len(self.__root__) >= 2 and self.__root__[-1].id == ANY_ID:
-            return self.__root__[-2]
+        if len(self.root) >= 2 and self.root[-1].id == ANY_ID:
+            return self.root[-2]
 
-        assert len(self.__root__) >= 1
-        assert self.__root__[-1].id != ANY_ID
+        assert len(self.root) >= 1
+        assert self.root[-1].id != ANY_ID
 
-        return self.__root__[-1]
+        return self.root[-1]
 
     def is_all_ignore_path_of_matched_selection(self) -> bool:
         """所有匹配到的实例视图是否都为忽略路径"""
-        # FIXME: 对每条路径都进行实例视图匹配，只有所有匹配到的实例视图都是忽略路径的，则可转换为ABAC策略
-        # NOTE: 第一期由于限制了当Action的AuthType为rbac时，其所有实例视图只能是ignore_path=True，
-        # 所以这里可以直接认为只能是RBAC策略，暂时不进行实例视图匹配的分析
         return True
 
     def __hash__(self):
-        return hash((hash(one) for one in self.__root__))
+        return hash(tuple(hash(one) for one in self.root))  # ✅ 修复 `hash`
 
 
 class Instance(BaseModel):
@@ -121,7 +114,7 @@ class Instance(BaseModel):
 
 
 class Value(BaseModel):
-    id: Any
+    id: Any = None
     name: str
 
 
@@ -182,7 +175,7 @@ class RelatedResource(BaseModel):
 
 class EnvValue(BaseModel):
     name: str = ""
-    value: Any
+    value: Any = None
 
 
 class EnvCondition(BaseModel):
@@ -223,9 +216,8 @@ class ResourceGroup(BaseModel):
 ThinResourceType = namedtuple("ThinResourceType", ["system_id", "type"])
 
 
-class ResourceGroupList(ListModel):
-    __root__: List[ResourceGroup]
-
+class ResourceGroupList(ListModel[ResourceGroup]):
+    # 使用泛型 ListModel[ResourceGroup] 来代替 __root__ 和 __root__ 字段
     def get_thin_resource_types(self) -> List[ThinResourceType]:
         """
         获取资源类型列表
@@ -254,9 +246,7 @@ class Policy(BaseModel):
     resource_groups: ResourceGroupList
 
     auth_type: str = AuthType.ABAC.value
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
+    model_config = ConfigDict(populate_by_name=True)
 
     def __init__(self, **data: Any):
         # NOTE 兼容 role, group授权信息的旧版结构
@@ -368,7 +358,7 @@ class AbacPolicyChangeContent(BaseModel):
     id: int = 0
     resource_expression: str = ""
     environment: str = ""
-    expired_at = PERMANENT_SECONDS
+    expired_at: int = PERMANENT_SECONDS  # 添加 int 类型注解
 
 
 class RbacPolicyChangeContent(BaseModel):
@@ -381,9 +371,9 @@ class UniversalPolicyChangedContent(BaseModel):
     # 策略变更后的策略类型
     auth_type: str = AuthType.ABAC.value
     # ABAC策略变更
-    abac: Optional[AbacPolicyChangeContent]
+    abac: Optional[AbacPolicyChangeContent] = None
     # RBAC策略变更
-    rbac: Optional[RbacPolicyChangeContent]
+    rbac: Optional[RbacPolicyChangeContent] = None
 
 
 class UniversalPolicy(Policy):
@@ -391,7 +381,7 @@ class UniversalPolicy(Policy):
     通用Policy，支持处理RBAC和ABAC策略，原Policy只支持处理ABAC
     """
 
-    expression_resource_groups: ResourceGroupList = ResourceGroupList(__root__=[])
+    expression_resource_groups: ResourceGroupList = ResourceGroupList([])  # 直接传递列表，而不是__root__
     instances: List[PathNode] = []
 
     @classmethod

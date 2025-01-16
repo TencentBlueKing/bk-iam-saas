@@ -54,13 +54,11 @@ class PathNodeTagBean(TagNoneMixin, PathNodeBean, AbstractTagBean):
 
 
 class PathNodeTagBeanList(PathNodeBeanList):
-    __root__: List[PathNodeTagBean]
-
     def __init__(__pydantic_self__, **data: Any) -> None:
         super().__init__(**deepcopy(data))
 
     def set_tag(self, tag: str):
-        for node in self.__root__:
+        for node in self.root:
             node.set_tag(tag)
 
 
@@ -232,8 +230,8 @@ class ResourceGroupTagBean(TagNoneMixin, ResourceGroupBean):
             rt.set_tag(tag)
 
 
-class ResourceGroupListTagBean(TagNoneMixin, ResourceGroupBeanList):
-    __root__: List[ResourceGroupTagBean]
+class ResourceGroupListTagBean(TagNoneMixin, ResourceGroupBeanList[ResourceGroupTagBean]):
+    pass
 
 
 class PolicyTagBean(TagNoneMixin, PolicyBean):

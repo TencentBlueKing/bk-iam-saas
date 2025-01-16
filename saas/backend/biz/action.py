@@ -25,6 +25,7 @@ from backend.util.model import ExcludeModel
 
 from .constants import ActionTag
 from .role import RoleListQuery
+from pydantic import ConfigDict
 
 
 class RelatedResourceTypeBean(RelatedResourceType, ExcludeModel):
@@ -242,9 +243,7 @@ class ActionBiz:
 class RelatedResourceTypeForCheck(BaseModel):
     system_id: str = Field(alias="system")
     id: str = Field(alias="type")
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 type 与 id
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class Environment(BaseModel):
@@ -260,9 +259,7 @@ class ActionForCheck(BaseModel):
     id: str = Field(alias="action_id")
     related_resource_types: List[RelatedResourceTypeForCheck]
     environments: List[Environment] = []
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
+    model_config = ConfigDict(populate_by_name=True)
 
     def get_env_types(self) -> List[str]:
         return [e.type for e in self.environments]
@@ -271,9 +268,7 @@ class ActionForCheck(BaseModel):
 class ActionResourceGroupForCheck(BaseModel):
     id: str = Field(alias="action_id")
     resource_groups: List[ResourceGroupForCheck]
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
+    model_config = ConfigDict(populate_by_name=True)
 
     def to_action_for_check(self) -> List["ActionForCheck"]:
         return [

@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 from django.db import transaction
 from django.http import Http404
 from django.utils.translation import gettext as _
-from pydantic import BaseModel, parse_obj_as
+from pydantic import ConfigDict, BaseModel, parse_obj_as
 from pydantic.fields import Field
 
 from backend.apps.group.models import GroupAuthorizeLock
@@ -67,9 +67,7 @@ class TemplateGroupPreCommitBean(BaseModel):
         super().__init__(**data)
         for policy in self.policies:
             policy.set_expired_at(PERMANENT_SECONDS)  # 用户组默认过期时间为 永久
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传
+    model_config = ConfigDict(populate_by_name=True)
 
     @property
     def action_ids(self):
@@ -321,9 +319,7 @@ class TemplateCheckBiz:
 class ActionCloneConfig(BaseModel):
     action_id: str
     from_actions: List[ThinAction] = Field(alias="copy_from_actions")
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GroupClonePolicy(BaseModel):

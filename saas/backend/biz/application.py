@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.db import transaction
 from django.utils.translation import gettext as _
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic.tools import parse_obj_as
 from rest_framework.request import Request
 
@@ -96,10 +96,7 @@ class ActionApplicationDataBean(BaseApplicationDataBean):
 
     policy_list: PolicyBeanList
     applicants: List[Applicant]
-
-    class Config:
-        # 由于PolicyBeanList并非继承于BaseModel，而是普通的类，所以需要声明允许"随意"类型
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class ApplicationRenewPolicyInfoBean(BaseModel):

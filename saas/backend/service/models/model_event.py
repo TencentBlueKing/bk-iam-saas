@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 
 class ModelEvent(BaseModel):
@@ -19,6 +19,5 @@ class ModelEvent(BaseModel):
     # 变更影响的模型，可能是action、policy、resource_type
     model_type: str
     model_id: str
+    model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
 
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 id 与 pk

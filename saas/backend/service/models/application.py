@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from collections import Counter
 from typing import Any, Dict, List, Union
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 from backend.service.models.subject import Applicant
 from backend.util.model import ListModel
@@ -73,8 +73,8 @@ class ApplicationResourceInstancePathNode(BaseModel):
     type_name_en: str = ""
 
 
-class ApplicationResourceInstancePathList(ListModel):
-    __root__: List[ApplicationResourceInstancePathNode]
+class ApplicationResourceInstancePathList(ListModel[ApplicationResourceInstancePathNode]):
+    pass
 
 
 class ApplicationResourceInstance(BaseModel):
@@ -88,7 +88,7 @@ class ApplicationResourceInstance(BaseModel):
 
 
 class ApplicationResourceAttributeValue(BaseModel):
-    id: Any
+    id: Any = None
     name: str
 
 
@@ -144,8 +144,8 @@ class ApplicationResourceGroup(BaseModel):
     environments: List[ApplicationEnvironment]
 
 
-class ApplicationResourceGroupList(ListModel):
-    __root__: List[ApplicationResourceGroup]
+class ApplicationResourceGroupList(ListModel[ApplicationResourceGroup]):
+    pass
 
 
 class ApplicationPolicyInfo(BaseModel):
@@ -159,10 +159,7 @@ class ApplicationPolicyInfo(BaseModel):
     name: str
     name_en: str = ""
     sensitivity_level: str = ""
-
-    class Config:
-        # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GrantActionApplicationContent(BaseModel):
@@ -171,10 +168,7 @@ class GrantActionApplicationContent(BaseModel):
     system: ApplicationSystem
     policies: List[ApplicationPolicyInfo] = Field(alias="actions")
     applicants: List[Applicant]
-
-    class Config:
-        # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GrantActionApplicationData(ApplicationDataBaseInfo):
@@ -275,7 +269,8 @@ class GroupApplicationData(ApplicationDataBaseInfo):
 
         level_count = Counter(obj.highest_sensitivity_level for obj in self.content.groups)
         for level in sorted(level_count.keys(), reverse=True):
-            comments.append("最高敏感等级 {} 的用户组{}个".format(SensitivityLevel.get_choice_label(level), level_count[level]))
+            comments.append(
+                "最高敏感等级 {} 的用户组{}个".format(SensitivityLevel.get_choice_label(level), level_count[level]))
 
         return "包含" + ", ".join(comments)
 
@@ -304,10 +299,7 @@ class ApplicationAuthorizationScope(BaseModel):
 
     system: ApplicationSystem
     policies: List[ApplicationPolicyInfo] = Field(alias="actions")
-
-    class Config:
-        # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GradeManagerApplicationContent(BaseModel):

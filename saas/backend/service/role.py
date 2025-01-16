@@ -14,7 +14,7 @@ from typing import Any, List, Optional, Tuple
 
 from django.db import transaction
 from django.utils.translation import gettext as _
-from pydantic import BaseModel, Field, parse_obj_as
+from pydantic import ConfigDict, BaseModel, Field, parse_obj_as
 
 from backend.apps.group.models import Group
 from backend.apps.role.models import (
@@ -63,9 +63,7 @@ class AuthScopeAction(BaseModel):
                 ]
 
         super().__init__(**data)
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AuthScopeSystem(BaseModel):

@@ -8,10 +8,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, TypeVar, Generic
 
-from pydantic import BaseModel, PrivateAttr
-from pydantic.main import ModelMetaclass
+from pydantic import BaseModel, PrivateAttr, RootModel
+from pydantic._internal._model_construction import ModelMetaclass
+
+T = TypeVar("T")
 
 
 class ExcludeModelMetaclass(ModelMetaclass):
@@ -33,60 +35,56 @@ class ExcludeModel(BaseModel, metaclass=ExcludeModelMetaclass):
     pass
 
 
-class ListModel(BaseModel):
+class ListModel(RootModel[List[T]], Generic[T]):  # 这里显式继承 Generic[T]
     """
-    用于包装typing List, 不需要额外的结构来支持ModelList
+    用于包装 List，不需要额外的结构来支持 ModelList
     """
 
-    __root__: List[Any]
-
-    def __init__(__pydantic_self__, **data: Any) -> None:
+    def __init__(self, root: List[T] = None) -> None:
         """
-        兼容parse_obj的逻辑
-
-        pydantic 中使用parse_obj函数时自定义__root__的类会自动增加 __root__ = Object 的构建参数
-        为了兼容ListModel之间的转换，这里在init时结构 __root__ 参数指向 Object 的 __root__
+        兼容 Pydantic 1 旧逻辑：
+        - Pydantic 2 中不再支持 `__root__`，需要使用 `RootModel`
+        - 兼容 `ListModel` 之间的转换
         """
-        if "__root__" in data and isinstance(data["__root__"], ListModel):
-            data["__root__"] = data["__root__"].__root__
-        super().__init__(**data)
+        if isinstance(root, ListModel):
+            root = root.root
+        super().__init__(root=root or [])
 
     def __iter__(self):
-        return iter(self.__root__)
+        return iter(self.root)
 
     def __getitem__(self, index):
-        return self.__root__[index]
+        return self.root[index]
 
     def __len__(self) -> int:
-        return len(self.__root__)
+        return len(self.root)
 
     def __delitem__(self, index: int):
-        self.__root__.pop(index)
+        self.root.pop(index)
 
     def __setitem__(self, index: int, val: Any):
-        self.__root__[index] = val
+        self.root[index] = val
 
-    def __add__(self, other: "ListModel"):
-        return ListModel.parse_obj(self.__root__ + other.__root__)
+    def __add__(self, other: "ListModel[T]"):
+        return ListModel(self.root + other.root)
 
     def __contains__(self, item: Any):
-        return item in self.__root__
+        return item in self.root
 
-    def dict(self, *args, **kwargs):
-        return super().dict(*args, **kwargs)["__root__"]
+    def model_dump(self, *args, **kwargs):  # Pydantic 2: dict() → model_dump()
+        return super().model_dump(*args, **kwargs)["root"]
 
     def pop(self, index: int):
-        return self.__root__.pop(index)
+        return self.root.pop(index)
 
     def append(self, item):
-        self.__root__.append(item)
+        self.root.append(item)
 
-    def extend(self, other: "ListModel"):
-        self.__root__.extend(other.__root__)
+    def extend(self, other: "ListModel[T]"):
+        self.root.extend(other.root)
 
 
 class PartialModel(BaseModel):
-
     # 某些情况下，只需要用到数据类的部分字段，_partial_fields用于记录数据类对象的哪些字段是可用，配合from_partial_data一起使用
     _partial_fields: List[str] = PrivateAttr()
 

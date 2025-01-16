@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import Any, Dict, List, Optional, Set
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic.fields import Field
 
 from ..constants import SelectionMode
@@ -27,9 +27,7 @@ class RelatedResourceType(BaseModel):
     name: str = Field(alias="name_alias")
     name_en: str = Field(alias="name_alias_en")
     instance_selections: List[InstanceSelection] = []
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
     def __init__(self, **data: Any):
         if "instance_selections" in data and not isinstance(data["instance_selections"], list):
