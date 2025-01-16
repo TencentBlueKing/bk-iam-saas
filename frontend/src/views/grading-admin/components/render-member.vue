@@ -134,10 +134,12 @@
       return {
         extClsRouteList: [
           'myManageSpaceCreate',
+          'myManageSpaceClone',
           'gradingAdminCreate',
           'gradingAdminClone',
           'gradingAdminEdit',
           'secondaryManageSpaceCreate',
+          'secondaryManageSpaceEdit',
           'authorBoundary',
           'authorBoundaryEditFirstLevel',
           'authorBoundaryEditSecondLevel',
