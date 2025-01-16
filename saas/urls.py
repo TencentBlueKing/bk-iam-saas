@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from bk_notice_sdk import config
 from django.conf import settings
-from django.conf.urls import include, url
+from django.urls import include, re_path
 from django.views.decorators.cache import never_cache
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -35,61 +35,61 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    # backend apps url
-    url(
+    # backend apps re_path
+    re_path(
         r"^api/v1/",
         include(
             [
-                url(r"^version_log/", include("backend.version_log.urls")),
-                url(r"^accounts/", include("backend.account.urls")),
-                url(r"^systems/", include("backend.apps.system.urls")),
-                url(r"^actions/", include("backend.apps.action.urls")),
-                url(r"^policies/", include("backend.apps.policy.urls")),
-                url(r"^applications/", include("backend.apps.application.urls")),  # 申请
-                url(r"^resources/", include("backend.apps.resource.urls")),
-                url(r"^approvals/", include("backend.apps.approval.urls")),
-                url(r"^groups/", include("backend.apps.group.urls")),
-                url(r"^subjects/", include("backend.apps.subject.urls")),
-                url(r"^subject_templates/", include("backend.apps.subject_template.urls")),
-                url(r"^templates/", include("backend.apps.template.urls")),
-                url(r"^organizations/", include("backend.apps.organization.urls")),
-                url(r"^open/", include("backend.api.urls_v1")),
-                url(r"^roles/", include("backend.apps.role.urls")),
-                url(r"^users/", include("backend.apps.user.urls")),
-                url(r"^modeling/", include("backend.apps.model_builder.urls")),
-                url(r"^audits/", include("backend.audit.urls")),
-                url(r"^debug/", include("backend.debug.urls")),
-                url(r"^handover/", include("backend.apps.handover.urls")),
-                url(r"^mgmt/", include("backend.apps.mgmt.urls")),
-                url(r"^temporary_policies/", include("backend.apps.temporary_policy.urls")),
-                url(r"^iam/", include("backend.iam.urls")),
+                re_path(r"^version_log/", include("backend.version_log.urls")),
+                re_path(r"^accounts/", include("backend.account.urls")),
+                re_path(r"^systems/", include("backend.apps.system.urls")),
+                re_path(r"^actions/", include("backend.apps.action.urls")),
+                re_path(r"^policies/", include("backend.apps.policy.urls")),
+                re_path(r"^applications/", include("backend.apps.application.urls")),  # 申请
+                re_path(r"^resources/", include("backend.apps.resource.urls")),
+                re_path(r"^approvals/", include("backend.apps.approval.urls")),
+                re_path(r"^groups/", include("backend.apps.group.urls")),
+                re_path(r"^subjects/", include("backend.apps.subject.urls")),
+                re_path(r"^subject_templates/", include("backend.apps.subject_template.urls")),
+                re_path(r"^templates/", include("backend.apps.template.urls")),
+                re_path(r"^organizations/", include("backend.apps.organization.urls")),
+                re_path(r"^open/", include("backend.api.urls_v1")),
+                re_path(r"^roles/", include("backend.apps.role.urls")),
+                re_path(r"^users/", include("backend.apps.user.urls")),
+                re_path(r"^modeling/", include("backend.apps.model_builder.urls")),
+                re_path(r"^audits/", include("backend.audit.urls")),
+                re_path(r"^debug/", include("backend.debug.urls")),
+                re_path(r"^handover/", include("backend.apps.handover.urls")),
+                re_path(r"^mgmt/", include("backend.apps.mgmt.urls")),
+                re_path(r"^temporary_policies/", include("backend.apps.temporary_policy.urls")),
+                re_path(r"^iam/", include("backend.iam.urls")),
                 # notice
-                url(r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")),
+                re_path(r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")),
             ]
         ),
     ),
-    url(
+    re_path(
         r"^api/v2/",
         include(
             [
-                url(r"^open/", include("backend.api.urls_v2")),
+                re_path(r"^open/", include("backend.api.urls_v2")),
             ]
         ),
     ),
     # healthz
-    url("", include("backend.healthz.urls")),
+    re_path("", include("backend.healthz.urls")),
     # prometheus
-    url("", include("backend.metrics.urls")),
+    re_path("", include("backend.metrics.urls")),
 ]
 
 # add swagger api document
 if settings.IS_LOCAL or settings.ENABLE_SWAGGER:
     urlpatterns += [
-        url(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
+        re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     ]
 
 # static file
 urlpatterns += [
-    url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-    url(r"^.*$", never_cache(login_exempt(VueTemplateView.as_view()))),
+    re_path(r"^login_success/", never_cache(LoginSuccessView.as_view())),
+    re_path(r"^.*$", never_cache(login_exempt(VueTemplateView.as_view()))),
 ]
