@@ -255,7 +255,7 @@ class BKCIMigrateTask(Task):
                 migrate_data.save(force_insert=True)
 
 
-current_app.tasks.register(BKCIMigrateTask())
+current_app.register_task(BKCIMigrateTask())
 
 
 class BKCILegacyMigrateTask(Task):
@@ -619,4 +619,4 @@ class BKCILegacyMigrateTask(Task):
             migrate_data.save(force_insert=True)
 
 
-current_app.tasks.register(BKCILegacyMigrateTask())
+current_app.register_task(BKCILegacyMigrateTask())

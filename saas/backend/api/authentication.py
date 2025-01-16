@@ -71,7 +71,15 @@ class ESBAuthentication(BaseAuthentication):
 
     def _decode_jwt(self, content, public_key):
         try:
-            return jwt.decode(content, public_key, options={"verify_iss": False})
+            # 获取 JWT 头部信息
+            header = jwt.get_unverified_header(content)
+            algorithm = header.get("alg")
+
+            if not algorithm:
+                logger.error("JWT header does not contain 'alg' field, jwt: %s", content)
+                return None
+
+            return jwt.decode(content, public_key, algorithms=[algorithm], options={"verify_iss": False})
         except Exception:  # pylint: disable=broad-except
             logger.exception("decode jwt fail, jwt: %s", content)
             return None
