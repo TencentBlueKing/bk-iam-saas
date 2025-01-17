@@ -669,17 +669,12 @@
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
-              { label: this.$t(`m.perm['加入方式']`), prop: 'join_method' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ].map((v) => {
-              let result = true;
-              if (['join_method'].includes(v.prop) && !['userGroupDetail'].includes(this.$route.name)) {
-                result = false;
-              }
               return {
                 ...v,
                 ...{
-                  visible: result
+                  visible: true
                 }
               };
             });
