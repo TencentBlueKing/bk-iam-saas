@@ -7,7 +7,7 @@ async-timeout==4.0.2; python_version >= "3.6"
 backoff==1.10.0; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6"
 billiard==3.6.4.0; python_version >= "3.6"
 bk-audit==1.0.1rc0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.6.0" and python_version < "4")
-bk-crypto-python-sdk==1.1.1; python_full_version >= "3.6.2" and python_version < "3.11"
+bk-crypto-python-sdk==2.0.0; python_full_version >= "3.8" and python_version < "3.12"
 bk-iam==1.2.2; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.6.0" and python_version < "4")
 bk-notice-sdk==1.2.0
 bkapi-bk-apigateway==1.0.11; python_full_version >= "3.6.1" and python_version < "4.0" and python_full_version < "4.0.0"
