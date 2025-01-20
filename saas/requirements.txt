@@ -12,13 +12,13 @@ bk-iam==1.2.2; (python_version >= "2.7" and python_full_version < "3.0.0") or (p
 bk-notice-sdk==1.2.0
 bkapi-bk-apigateway==1.0.11; python_full_version >= "3.6.1" and python_version < "4.0" and python_full_version < "4.0.0"
 bkapi-client-core==1.2.0; python_full_version >= "3.6.1" and python_full_version < "4.0.0" and (python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0") and python_version < "4.0"
-blue-krill==1.2.6; python_full_version >= "3.6.2" and python_version < "3.11"
-cached-property==1.5.2; python_version < "3.8" and python_version >= "3.6"
-cachetools==3.1.1; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version < "4"
+blue-krill==2.0.7; python_full_version >= "3.8" and python_version < "3.12"
+cached-property==2.0.1; python_version > "3.8"
+cachetools==5.3.3
 celery==5.2.7; python_version >= "3.7"
 certifi==2024.2.2
-cffi==1.14.6; platform_python_implementation == "CPython" and sys_platform == "win32" and (python_version >= "2.7" and python_full_version < "3.0.0" or python_version > "3.5") and python_version >= "3.6" and python_full_version >= "3.6.2" and python_version < "3.11"
-charset-normalizer==2.0.4; python_full_version >= "3.6.2" and python_version >= "3" and python_version < "3.11" and (python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version < "4") and (python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version >= "3.6") and python_full_version < "4.0.0" and (python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0")
+cffi==1.16.0; platform_python_implementation == "CPython" and sys_platform == "win32" and (python_version >= "2.7" and python_full_version < "3.0.0" or python_version > "3.5") and python_version >= "3.6" and python_full_version >= "3.8"
+charset-normalizer==3.4.0
 click-didyoumean==0.3.0; python_full_version >= "3.6.2" and python_full_version < "4.0.0" and python_version >= "3.6"
 click-plugins==1.1.1; python_version >= "3.6"
 click-repl==0.2.0; python_version >= "3.6"
