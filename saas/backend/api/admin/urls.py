@@ -24,7 +24,7 @@ urlpatterns = [
     # 用户组成员
     path(
         "groups/<int:id>/members/",
-        views.AdminGroupMemberViewSet.as_view({"get": "list", "post": "create"}),
+        views.AdminGroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.admin.group_member",
     ),
     # 用户组授权

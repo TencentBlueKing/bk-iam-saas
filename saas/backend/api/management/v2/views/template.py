@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -8,20 +7,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.api.admin.constants import AdminAPIEnum
-from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import (
-    AdminTemplateCreateSLZ,
-    AdminTemplateIdSLZ,
-    AdminTemplateListSchemaSLZ,
-    AdminTemplateListSLZ,
-)
 from backend.api.authentication import ESBAuthentication
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
+from backend.api.management.v2.permissions import ManagementAPIPermission
+from backend.api.management.v2.serializers import ManagementTemplateListSchemaSLZ, ManagementTemplateListSLZ, \
+    ManagementTemplateCreateSLZ, ManagementTemplateIdSLZ
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.template.audit import TemplateCreateAuditProvider
@@ -33,15 +29,15 @@ from backend.common.lock import gen_template_upsert_lock
 from backend.service.constants import RoleType
 
 
-class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
+class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
     """模板"""
 
     authentication_classes = [ESBAuthentication]
-    permission_classes = [AdminAPIPermission]
+    permission_classes = [ManagementAPIPermission]
 
-    admin_api_permission = {
-        "list": AdminAPIEnum.TEMPLATE_LIST.value,
-        "create": AdminAPIEnum.TEMPLATE_CREATE.value,
+    management_api_permission = {
+        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.TEMPLATE_LIST.value),
+        "create": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.TEMPLATE_CREATE.value)
     }
 
     template_biz = TemplateBiz()
@@ -49,11 +45,12 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="模板列表",
-        responses={status.HTTP_200_OK: AdminTemplateListSchemaSLZ(label="模板", many=True)},
-        tags=["admin.template"],
+        responses={status.HTTP_200_OK: ManagementTemplateListSchemaSLZ(label="模板", many=True)},
+        tags=["management.role.template"],
     )
     def list(self, request, *args, **kwargs):
-        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+        role_id = request.query_params.get("role_id")
+        role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=role_id)
         user = User.objects.get(username='admin')
         queryset = RoleListQuery(role, user).query_template()
 
@@ -66,32 +63,32 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
         if page is None:
             return Response(
-                {
-                    "detail": "Pagination is required, but no valid page parameters were provided."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Pagination is required, but no valid page parameters were provided."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serializer = AdminTemplateListSLZ(page, many=True,
-                                          role_system_actions=role_system_actions)
+        serializer = ManagementTemplateListSLZ(page, many=True, role_system_actions=role_system_actions)
         return paginator.get_paginated_response(serializer.data)
 
     @swagger_auto_schema(
         operation_description="创建模板",
-        request_body=AdminTemplateCreateSLZ(label="模板"),
-        responses={status.HTTP_201_CREATED: AdminTemplateIdSLZ(label="模板ID")},
-        tags=["admin.template"],
+        request_body=ManagementTemplateCreateSLZ(label="模板"),
+        responses={status.HTTP_201_CREATED: ManagementTemplateIdSLZ(label="模板ID")},
+        tags=["management.role.template"],
     )
     @view_audit_decorator(TemplateCreateAuditProvider)
     def create(self, request, *args, **kwargs):
         """
         创建模板
         """
-        serializer = AdminTemplateCreateSLZ(data=request.data)
+        request.data["system_id"] = request.data.pop("system")
+        role_id = request.data.pop("role_id")
+        serializer = ManagementTemplateCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
         data = serializer.validated_data
-        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+        role = Role.objects.get(id=role_id, type=RoleType.GRADE_MANAGER.value)
 
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(role)
@@ -105,4 +102,4 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
         audit_context_setter(template=template)
 
-        return Response({"id": template.id}, status=status.HTTP_201_CREATED)
+        return Response({})

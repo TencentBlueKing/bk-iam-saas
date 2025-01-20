@@ -26,6 +26,7 @@ class AdminAPIEnum(BaseAPIEnum):
     # 用户组成员
     GROUP_MEMBER_LIST = auto()
     GROUP_MEMBER_ADD = auto()
+    GROUP_MEMBER_REMOVE = auto()
 
     # 用户组权限
     GROUP_POLICY_GRANT = auto()
@@ -67,6 +68,8 @@ class AdminAPIEnum(BaseAPIEnum):
             (GROUP_UPDATE, "更新用户组"),
             (GROUP_DELETE, "删除用户组"),
             (GROUP_MEMBER_LIST, "获取用户组成员列表"),
+            (GROUP_MEMBER_ADD, "添加用户组成员"),
+            (GROUP_MEMBER_REMOVE, "移除用户组成员"),
             (GROUP_POLICY_GRANT, "授权用户组"),
             (TEMPLATE_CREATE, "新建模板"),
             (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
