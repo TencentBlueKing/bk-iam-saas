@@ -23,6 +23,7 @@ from backend.api.management.v2.filters import GroupFilter
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
     ManagementGradeManagerGroupCreateSLZ,
+    ManagementGroupAuthorizationSLZ,
     ManagementGroupBaseInfoUpdateSLZ,
     ManagementGroupGrantSLZ,
     ManagementGroupMemberDeleteSLZ,
@@ -69,6 +70,7 @@ from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import GroupSaaSAttributeEnum, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.trans.group import GroupTrans
 from backend.trans.open_management import ManagementCommonTrans
 
 
@@ -722,3 +724,57 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         return Response([{"id": p.action_id} for p in policies])
+
+
+class ManagementGroupPolicyTemplateViewSet(GenericViewSet):
+    """用户组授权"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    management_api_permission = {
+        "create": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_GRANT.value),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    group_biz = GroupBiz()
+    group_trans = GroupTrans()
+    role_biz = RoleBiz()
+    policy_operation_biz = PolicyOperationBiz()
+    policy_query_biz = PolicyQueryBiz()
+    trans = ManagementCommonTrans()
+
+    @swagger_auto_schema(
+        operation_description="用户组权限模版授权",
+        request_body=ManagementGroupAuthorizationSLZ(label="权限"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.policy"],
+    )
+    @view_audit_decorator(GroupPolicyCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = ManagementGroupAuthorizationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        group = self.get_object()
+        data = serializer.validated_data
+
+        role = self.role_biz.get_role_by_group_id(group.id)
+        templates = self.group_trans.from_group_grant_data(data["templates"])
+
+        # 校验授权范围
+        self.group_biz.check_before_grant(
+            group, templates, role, need_check_action_not_exists=False, need_check_resource_name=False
+        )
+        self.group_biz.grant(role, group, templates)
+
+        # 写入审计上下文
+        audit_context_setter(
+            group=group,
+            templates=[{"system_id": t["system_id"], "template_id": t["template_id"]} for t in data["templates"]],
+        )
+
+        return Response({})

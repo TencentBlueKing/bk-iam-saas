@@ -86,6 +86,9 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_APPLICATION_CANCEL = auto()
     # 人员模版
     V2_SUBJECT_TEMPLATE_LIST = auto()
+    # 权限模版
+    V2_GRADE_MANAGER_TEMPLATE_LIST = auto()
+    V2_GRADE_MANAGER_TEMPLATE_CREATE = auto()
 
     _choices_labels = skip(
         (
@@ -151,6 +154,9 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_APPLICATION_APPROVAL, "[V2]申请单审批通知"),
             # 申请单取消
             (V2_APPLICATION_CANCEL, "[V2]申请单取消"),
+            # 权限模版
+            (V2_GRADE_MANAGER_TEMPLATE_LIST, "[V2]获取分级管理员权限模版列表"),
+            (V2_GRADE_MANAGER_TEMPLATE_CREATE, "[V2]创建分级管理员权限模版"),
         )
     )
 
