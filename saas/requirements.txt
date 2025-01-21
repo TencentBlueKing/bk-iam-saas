@@ -5,7 +5,7 @@ apigw-manager==3.0.2; python_full_version >= "3.6.1" and python_full_version < "
 asgiref==3.4.1; python_version >= "3.6"
 async-timeout==4.0.2; python_version >= "3.6"
 backoff==1.10.0; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6"
-billiard==3.6.4.0; python_version >= "3.6"
+billiard==4.2.0; python_version >= "3.8"
 bk-audit==1.0.1rc0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.6.0" and python_version < "4")
 bk-crypto-python-sdk==2.0.0; python_full_version >= "3.8" and python_version < "3.12"
 bk-iam==1.2.2; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.6.0" and python_version < "4")
