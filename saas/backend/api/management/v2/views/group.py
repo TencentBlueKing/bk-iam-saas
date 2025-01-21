@@ -45,7 +45,10 @@ from backend.apps.group.audit import (
     GroupUpdateAuditProvider,
 )
 from backend.apps.group.models import Group
-from backend.apps.group.serializers import GroupAddMemberSLZ
+from backend.apps.group.serializers import (
+    GroupAddMemberSLZ,
+    GroupBatchUpdateMemberSLZ,
+)
 from backend.apps.group.views import split_members_to_subject_and_template
 from backend.apps.policy.models import Policy
 from backend.apps.policy.serializers import PolicySLZ
@@ -450,6 +453,10 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
             VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
             ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_UPDATE.value,
         ),
+        "batch": (
+            VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
+            ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_BATCH.value,
+        ),
     }
 
     lookup_field = "id"
@@ -473,6 +480,34 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
 
         members = [
             GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=data["expired_at"])
+            for m in data["members"]
+        ]
+
+        # 更新有效期
+        self.biz.update_members_expired_at(group.id, members)
+
+        # 写入审计上下文
+        audit_context_setter(group=group, members=data["members"])
+
+        return Response({})
+
+    @swagger_auto_schema(
+        operation_description="用户组成员有效期批量更新",
+        request_body=GroupBatchUpdateMemberSLZ(label="用户组成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.member"],
+    )
+    @view_audit_decorator(GroupMemberRenewAuditProvider)
+    def batch(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        serializer = GroupBatchUpdateMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        members = [
+            GroupMemberExpiredAtBean(type=m["type"], id=m["id"],
+                                     expired_at=m["expired_at"])
             for m in data["members"]
         ]
 

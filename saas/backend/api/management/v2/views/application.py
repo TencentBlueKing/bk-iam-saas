@@ -26,6 +26,7 @@ from backend.api.management.v2.serializers import (
     ManagementGradeManagerApplicationResultSLZ,
     ManagementGradeManagerCreateApplicationSLZ,
     ManagementGroupApplicationCreateSLZ,
+    ManagementGroupApplicationBatchSLZ,
 )
 from backend.apps.application.models import Application
 from backend.apps.organization.models import User as UserModel
@@ -279,6 +280,10 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
             VerifyApiParamLocationEnum.GROUP_IDS_IN_BODY.value,
             ManagementAPIEnum.V2_GROUP_APPLICATION_RENEW.value,
         ),
+        "batch": (
+            VerifyApiParamLocationEnum.GROUPS_IN_BODY.value,
+            ManagementAPIEnum.V2_GROUP_APPLICATION_RENEW_BATCH.value,
+        ),
     }
 
     biz = ApplicationBiz()
@@ -322,6 +327,55 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
                     [{"id": _id, "expired_at": data["expired_at"]} for _id in data["group_ids"]],
                 ),
                 applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
+            ),
+            source_system_id=source_system_id,
+        )
+
+        return Response({"ids": [a.id for a in applications]})
+
+    @swagger_auto_schema(
+        operation_description="用户组批量续期申请单",
+        request_body=ManagementGroupApplicationBatchSLZ(label="用户组批量续期申请单"),
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(
+            label="单据ID列表")},
+        tags=["management.group.application"],
+    )
+    def batch(self, request, *args, **kwargs):
+        """
+        用户组批量续期申请单，支持不同过期时间
+        """
+        serializer = ManagementGroupApplicationBatchSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        # 判断用户加入的用户组数与申请的数是否超过最大限制
+        user_id = data["applicant"]
+
+        # 转换为ApplicationBiz创建申请单所需数据结构
+        user = UserModel.objects.filter(username=user_id).first()
+        if not user:
+            raise (error_codes.INVALID_ARGS.
+                   format(f"user: {user_id} not exists"))
+
+        source_system_id = kwargs["system_id"]
+
+        # 检查用户组数量是否超限
+        self.group_biz.check_subject_groups_quota(
+            Subject.from_username(user_id), data["groups"])
+
+        # 创建申请
+        applications = self.biz.create_for_group(
+            ApplicationType.RENEW_GROUP.value,
+            GroupApplicationDataBean(
+                applicant=user.username,
+                reason=data["reason"],
+                groups=parse_obj_as(
+                    List[ApplicationGroupInfoBean],
+                    data["groups"],
+                ),
+                applicants=[Applicant(type=SubjectType.USER.value,
+                                      id=user.username,
+                                      display_name=user.display_name)],
             ),
             source_system_id=source_system_id,
         )
