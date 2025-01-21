@@ -2,7 +2,7 @@ aenum==2.2.6
 aiocontextvars==0.2.2; python_version < "3.7" and python_version >= "3.6"
 amqp==5.1.1; python_version >= "3.6"
 apigw-manager==3.0.2; python_full_version >= "3.6.1" and python_full_version < "4.0.0"
-asgiref==3.4.1; python_version >= "3.6"
+asgiref==3.8.0; python_version >= "3.8"
 async-timeout==4.0.2; python_version >= "3.6"
 backoff==1.10.0; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6"
 billiard==4.2.0; python_version >= "3.8"
