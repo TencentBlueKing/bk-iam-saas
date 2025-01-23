@@ -15,7 +15,8 @@ RUN rm /etc/apt/sources.list && \
 
 RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://bkrepo.cwoa.net/pypi/aiops/kingeye-pypi/simple' > ~/.pip/pip.conf
 
-RUN apt-get update && apt-get install -y gcc libssl-dev default-libmysqlclient-dev build-essential
+#RUN apt-get update && apt-get install -y gcc libssl-dev default-libmysqlclient-dev build-essential
+RUN apt-get update && apt-get -y install libssl1.0-dev gcc default-libmysqlclient-dev build-essential
 
 
 
