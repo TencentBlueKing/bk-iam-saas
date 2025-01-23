@@ -5,7 +5,7 @@ WORKDIR /app
 
 RUN bash build.sh
 
-FROM python:3.11.10-slim-buster
+FROM python:3.11.10-slim-bullseye
 
 RUN rm /etc/apt/sources.list && \
     echo "deb https://mirrors.cloud.tencent.com/debian buster main contrib non-free" >> /etc/apt/sources.list && \
