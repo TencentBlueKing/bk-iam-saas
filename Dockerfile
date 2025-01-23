@@ -17,7 +17,7 @@ RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://bkrepo.cwoa.net/pypi/
 
 RUN apt-get update && \
     apt-get install -y wget && \
-    apt-get install -y libssl1.1=1.1.1w-0+deb11u1 && \
+    apt-get install -y --allow-downgrades libssl1.1=1.1.1w-0+deb11u1 && \
     apt-get install -y libssl-dev
 
 ENV LC_ALL=C.UTF-8 \
