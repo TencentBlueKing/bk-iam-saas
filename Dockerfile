@@ -8,14 +8,15 @@ RUN bash build.sh
 FROM python:3.11.10-slim-bullseye
 
 RUN rm /etc/apt/sources.list && \
-    echo "deb https://mirrors.cloud.tencent.com/debian buster main contrib non-free" >> /etc/apt/sources.list && \
-    echo "deb https://mirrors.cloud.tencent.com/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
-    echo "deb-src https://mirrors.cloud.tencent.com/debian buster main contrib non-free" >> /etc/apt/sources.list && \
-    echo "deb-src https://mirrors.cloud.tencent.com/debian buster-updates main contrib non-free" >> /etc/apt/sources.list
+    echo "deb https://mirrors.cloud.tencent.com/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
+    echo "deb https://mirrors.cloud.tencent.com/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
+    echo "deb-src https://mirrors.cloud.tencent.com/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
+    echo "deb-src https://mirrors.cloud.tencent.com/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
 
 RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://bkrepo.cwoa.net/pypi/aiops/kingeye-pypi/simple' > ~/.pip/pip.conf
 
-RUN apt-get update && apt-get install -y gcc libssl-dev default-libmysqlclient-dev build-essential
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libssl-dev libmysqlclient-dev build-essential
 
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
