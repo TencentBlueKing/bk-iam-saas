@@ -18,7 +18,9 @@ RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://bkrepo.cwoa.net/pypi/
 RUN apt-get update && \
     apt-get install -y wget && \
     apt-get install -y --allow-downgrades libssl1.1=1.1.1w-0+deb11u1 && \
-    apt-get install -y libssl-dev
+    apt-get install -y libssl-dev && \
+    # 安装构建所需的工具和库
+    apt-get install -y build-essential python3-dev gcc g++ && \
 
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
