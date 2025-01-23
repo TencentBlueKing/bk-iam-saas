@@ -1,9 +1,9 @@
-FROM node:14.17.6 AS builder
-
-COPY ./ /app
-WORKDIR /app
-
-RUN bash build.sh
+#FROM node:14.17.6 AS builder
+#
+#COPY ./ /app
+#WORKDIR /app
+#
+#RUN bash build.sh
 
 FROM python:3.11.10-slim-bullseye
 
