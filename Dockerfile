@@ -15,12 +15,9 @@ RUN rm /etc/apt/sources.list && \
 
 RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://bkrepo.cwoa.net/pypi/aiops/kingeye-pypi/simple' > ~/.pip/pip.conf
 
-RUN apt-get update && \
-    apt-get install -y wget && \
-    apt-get install -y --allow-downgrades libssl1.1=1.1.1w-0+deb11u1 && \
-    apt-get install -y libssl-dev && \
-    apt-get install -y perl=5.32.1-4+deb11u3 perl-base=5.32.1-4+deb11u3 && \
-    apt-get install -y build-essential python3-dev gcc g++
+RUN apt-get update && apt-get install -y gcc libssl-dev default-libmysqlclient-dev build-essential
+
+
 
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
