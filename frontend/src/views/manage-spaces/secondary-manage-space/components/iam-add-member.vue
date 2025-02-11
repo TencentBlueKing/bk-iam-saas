@@ -170,8 +170,8 @@
               <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
               <p class="manual-error-text pr10" v-if="manualInputError">
                 {{ $t(`m.common['手动输入提示2']`) }}
-                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
-                  ，{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
+                <template v-if="isShowScopeEntry">
+                  {{ $t(`m.common['，']`) }}{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
                 </template>
               </p>
               <bk-button
@@ -404,7 +404,7 @@
       };
     },
     computed: {
-      ...mapGetters(['user']),
+      ...mapGetters(['user', 'externalSystemsLayout']),
       isLoading () {
         return this.requestQueue.length > 0;
       },
@@ -441,6 +441,9 @@
       },
       isSelectedEmpty () {
         return this.hasSelectedDepartments.length < 1 && this.hasSelectedUsers.length < 1;
+      },
+      isShowScopeEntry () {
+        return this.isHierarchicalAdmin.type === 'rating_manager' && !this.externalSystemsLayout.addMemberBoundary.hideScopeRangeEntry;
       },
       style () {
         if (this.showExpiredAt) {

@@ -98,7 +98,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, existValue } from '@/common/util';
   import GroupPolicy from '@/model/group-policy';
   import RenderPermItem from '../common/render-perm-item-new.vue';
   import RenderTemplateItem from '../common/render-template-item.vue';
@@ -187,7 +187,7 @@
       mode: {
         handler (value) {
           console.log('value', value);
-          window.parent.postMessage({ type: 'IAM', data: { tab: 'group_perm' }, code: 'change_group_detail_tab' }, '*');
+          this.handleIframeSend({ tab: 'group_perm' }, 'change_group_detail_tab');
         },
         immediate: true
       }
@@ -515,14 +515,16 @@
         }
         subItem.editLoading = true;
         try {
-          await this.$store.dispatch('userGroup/updateGroupPolicy', {
+          const params = {
             id: this.groupId,
             data: {
               system_id: item.id,
               template_id: subItem.id,
               actions
             }
-          });
+          };
+          await this.$store.dispatch('userGroup/updateGroupPolicy', params);
+          this.handleIframeSend(params, 'submit_edit_group_perm');
           if (subItem.count > 0) {
             this.getGroupCustomPolicy(subItem);
           } else {
@@ -597,6 +599,7 @@
             item.custom_policy_count = 0;
           }
           this.policyList = subItem;
+          this.handleIframeSend(params, 'submit_delete_group_perm');
           if (isExistTemplate) {
             this.getGroupTemplateList(item);
           }
@@ -620,6 +623,19 @@
             ids: data.ids ? data.ids.join(',') : data.policy_id
           }
         }, item, {}, false);
+      },
+
+      handleIframeSend (payload, code) {
+        if (existValue('externalApp') && this.externalSystemId) {
+          window.parent.postMessage(
+            {
+              type: 'IAM',
+              data: payload,
+              code
+            },
+            '*'
+          );
+        }
       },
       
       handleEmptyRefresh () {

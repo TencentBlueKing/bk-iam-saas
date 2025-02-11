@@ -557,22 +557,26 @@ export function formatCodeData (type, payload, isEmpty = true) {
 }
 
 /**
- * 递归查询匹配角色id
+ * 查找tree匹配条件的字段
  *
- * @param {number} id
- * @param {Array} list
+ * @param {string} key  匹配的字段key
+ * @param {string} value 匹配的字段value
+ * @param {string} childKey 动态子集children字段
+ * @param {Array} list 源数组
  */
-export function getTreeNode (id, list) {
-  for (let i = 0; i < list.length; i++) {
-    if (list[i].id === id) {
-      return list[i];
-    } else if (list[i].sub_roles && list[i].sub_roles.length) {
-      const result = getTreeNode(id, list[i].sub_roles);
-      if (result) {
-        return result;
-      }
+export function getTreeNode (list, key, value, childKey) {
+  const treeData = [...list];
+  let node = treeData.shift();
+  while (node) {
+    if (node[key] === value) {
+      return node;
     }
+    if (node[childKey] && Array.isArray(node[childKey])) {
+      treeData.push(...node[childKey]);
+    }
+    node = treeData.shift();
   }
+  return node;
 }
 
 /**
@@ -827,5 +831,27 @@ export function getCopyValue (value) {
  */
 export const getRoutePath = (subPath) => {
   const path = subPath.startsWith('/') ? subPath.slice(1) : subPath;
-  return rootPath ? `${rootPath}${path}` : path;
+  return rootPath ? `${rootPath}${path}` : subPath;
+};
+
+/**
+ * 跳转不同页面的文档中心
+ * @param {versionLog} versionLog 传入的版本列表
+ * @param {path} path 传入的文档路径
+ * @param {autoOpen} autoOpen 是否自动跳转到文档中心
+ */
+export const navDocCenterPath = (versionLog, path, autoOpen = true) => {
+  let curVersion = '1.16';
+  const curLang = formatI18nKey().toLowerCase().indexOf('en') > -1 ? 'EN' : 'ZH';
+  if (versionLog.length) {
+    const { version } = versionLog[0];
+    const lastIndex = version.lastIndexOf('.');
+    curVersion = version.substring(1, lastIndex !== -1 ? lastIndex : version.length);
+  }
+  const curPath = `/${curLang}/IAM/${curVersion}${path}`;
+  if (autoOpen) {
+    window.open(`${window.BK_DOCS_URL_PREFIX}${curPath}`);
+  } else {
+    return curPath;
+  }
 };

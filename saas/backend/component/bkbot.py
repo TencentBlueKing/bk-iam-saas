@@ -15,7 +15,7 @@ from backend.util.url import url_join
 
 from .constants import ComponentEnum
 from .http import http_post
-from .util import do_blueking_http_request
+from .util import do_blueking_http_request, remove_notification_exemption_user
 
 
 def _call_bk_bot_approval_api(http_func, url_path, data, timeout=30):
@@ -31,5 +31,10 @@ def _call_bk_bot_approval_api(http_func, url_path, data, timeout=30):
 
 
 def send_iam_ticket(data):
+    # 移除豁免的用户，如果为空，则直接返回
+    data["approvers"] = ",".join(remove_notification_exemption_user(data["approvers"].split(",")))
+    if not data["approvers"]:
+        return {}
+
     url_path = "/iam_app_ticket/"
     return _call_bk_bot_approval_api(http_post, url_path, data=data)

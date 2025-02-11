@@ -2,12 +2,12 @@
 
 #### Parameters
 
-| 字段 | 类型 | 位置 | 必须 | 描述 |
-|---|---|---|---|---|
-| group_id | int | path | 是 | 用户组ID |
-| system | string | body | 是 | 接入系统唯一标识 |
-| actions |  array[object]   | 是   | body | 操作 |
-| resources |  array[object]   | 是   | body | 资源拓扑, 资源类型的顺序必须操作注册时的顺序一致 |
+| 字段 | 类型                    | 位置   | 必须 | 描述 |
+|---|-----------------------|------|-|---|
+| group_id | int                   | path | 是 | 用户组ID |
+| system | string                | body | 是 | 接入系统唯一标识 |
+| actions | array[object]   | body | 是 | 操作 |
+| resources | array[object]        | body     | 是    | 资源拓扑, 资源类型的顺序必须操作注册时的顺序一致 |
 
 actions
 

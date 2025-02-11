@@ -60,7 +60,7 @@ export const m = {
         '搜索无结果': 'Search result is empty',
         '退出': 'Quit',
         '批量移除': 'Multi-remove',
-        '版本日志': 'Release note',
+        '版本日志': 'Release Notes',
         '帮助文档': 'Help',
         '申请加入用户组': 'Apply for join group',
         '申请模板权限': 'Apply for template permissions',
@@ -178,6 +178,7 @@ export const m = {
         '用户包含': 'User includes',
         '产品文档': 'Documentation',
         '问题反馈': 'Feedback',
+        '开源社区': 'Open Source',
         '正在同步中': 'Syncing',
         '新增': 'Add',
         '申请新建': 'Apply for new',
@@ -395,7 +396,7 @@ export const m = {
         '模板名称不能为空': 'Template name cannot be empty',
         '模板成员不能为空': 'Template member cannot be empty',
         '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered',
-         '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons'
+        '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -572,25 +573,18 @@ export const m = {
          '管理员不可重复添加': 'Administrators cannot be added repeatedly',
          '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted',
          '不可续期的用户组如下': 'The non renewable user groups are as follows: {value}',
-         '不可移出的用户组如下': 'The user groups that cannot be removed are as follows'
+         '不可移出的用户组如下': 'The user groups that cannot be removed are as follows',
+         '手动输入蓝盾侧限制勾选组织架构提示': 'The range of user [{value}] is too large, please select again'
     },
     // 二次确认弹窗相关
     dialog: {
         '确认删除': 'Confirm Delete?',
         '确认移除': 'Confirm Remove?',
-        '将删除': 'Will be deleted',
+        '确认退出': 'Confirm quit?',
         '确认解除关联': 'Confirm Disassociation?',
         '确认退出用户组': 'Confirm to quit the group?',
         '确认删除用户组': 'Confirm Delete?',
-        '将产生以下影响': 'will have the following impact',
-        '组内用户和组织将被全部移除': 'All users and organizations in the group will be removed',
-        '组权限将被全部移除': 'The group permissions will be removed',
-        '组内用户继承该组的权限将失效': 'The permissions of the users inherit from the group will be invalid',
-        '确认退出': 'Confirm quit?',
         '确认删除内容？': 'Are you sure to delete {value}?',
-        '删除操作权限': 'the operation permission',
-        '删除实例权限': 'instance permission',
-        '删除一组实例权限': 'a set of instance permissions',
         '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?',
         '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?',
         '确认删除该人员模板？': 'Are you sure to delete the member template?',
@@ -598,7 +592,16 @@ export const m = {
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
-        '确认恢复默认？': 'Are you sure to restore defaults?'
+        '确认恢复默认？': 'Are you sure to restore defaults?',
+        '将删除': 'Will be deleted',
+        '将产生以下影响': 'will have the following impact',
+        '组内用户和组织将被全部移除': 'All users and organizations in the group will be removed',
+        '组权限将被全部移除': 'The group permissions will be removed',
+        '组内用户继承该组的权限将失效': 'The permissions of the users inherit from the group will be invalid',
+        '删除操作权限': 'the operation permission',
+        '删除实例权限': 'instance permission',
+        '删除一组实例权限': 'a set of instance permissions',
+        '用户范围过大，请重新选择': 'The user range is too large, please select again'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -654,6 +657,7 @@ export const m = {
         '新建二级管理空间': 'New Secondary Management Space',
         '克隆管理空间': 'Clone Management Space',
         '克隆二级管理空间': 'Clone Secondary management space',
+        '编辑二级管理空间': 'Edit Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
         '人员模板': 'Member Templates',
@@ -809,7 +813,8 @@ export const m = {
         '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)',
         '直接加入人员模板的用户组权限': 'Directly add user group permissions to personnel templates',
         '通过组织加入人员模板的用户组权限': 'User group permissions for joining member templates through organization',
-        '通过人员模板加入': 'Through Member Template'
+        '通过人员模板加入': 'Through Member Template',
+        '输入用户组名、描述等按回车键进行搜索': 'Enter user group name and description, etc. Press Enter to search'
     },
     permTemplate: {
         '模板名': 'Template name',
@@ -981,7 +986,7 @@ export const m = {
         '添加系统和操作': 'Add Systems and Actions',
         '修改管理空间授权范围': 'Modify the authorization scope of management space',
         '刷新列表': 'Refresh',
-        '如需编辑管理空间的内容请点击': 'Click to edit',
+        '如需编辑管理空间的内容请点击': 'Please click if you need to edit the manage space',
         '操作和资源范围': 'Actions and resources scope',
         '资源实例范围': 'Resource instance scope',
         '选择提示': 'The following actions needs to select resource instances, we have combined the same selection path automatically, you can expand all to select',

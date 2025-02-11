@@ -10,6 +10,7 @@
         :active="active"
         :min-select-width="'165px'"
         :max-select-width="'200px'"
+        :search-select-place-holder="$t(`m.perm['输入用户组名、描述等按回车键进行搜索']`)"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
         @on-input-value="handleInputValue"

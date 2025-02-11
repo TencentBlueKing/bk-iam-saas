@@ -6,7 +6,6 @@
         <link rel="icon" href="{{ STATIC_URL }}/images/favicon.ico" type="image/x-icon" />
         <link rel="shortcut icon" type="image/x-icon" />
         <meta charset="utf-8">
-        <title>权限中心 | 腾讯蓝鲸智云</title>
     </head>
     <body>
         <div id="app"></div>
@@ -33,6 +32,7 @@
                 const BK_COMPONENT_API_URL = '{{ BK_COMPONENT_API_URL }}' || ''
                 const BK_SHARED_RES_URL = '{{ BK_SHARED_RES_URL }}' || ''
                 const BK_APP_CODE = '{{ BK_APP_CODE }}' || ''
+                const DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = '{{ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER }}' || ''
                 document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
                 window.LOGIN_SERVICE_URL = LOGIN_SERVICE_URL
                 window.AJAX_URL_PREFIX = AJAX_URL_PREFIX
@@ -56,6 +56,7 @@
                 window.BK_COMPONENT_API_URL = BK_COMPONENT_API_URL
                 window.BK_SHARED_RES_URL = BK_SHARED_RES_URL
                 window.BK_APP_CODE = BK_APP_CODE
+                window.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER;
             })()
 
             function getLanguage () {

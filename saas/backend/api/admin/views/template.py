@@ -66,13 +66,11 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
         if page is None:
             return Response(
-                {
-                    "detail": "Pagination is required, but no valid page parameters were provided."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Pagination is required, but no valid page parameters were provided."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serializer = AdminTemplateListSLZ(page, many=True,
-                                          role_system_actions=role_system_actions)
+        serializer = AdminTemplateListSLZ(page, many=True, role_system_actions=role_system_actions)
         return paginator.get_paginated_response(serializer.data)
 
     @swagger_auto_schema(

@@ -164,14 +164,14 @@
       ext-cls="reason-wrapper"
       :label="$t(`m.common['理由']`)"
       :required="true">
-      <section class="content-wrapper" ref="reasonRef">
+      <div ref="reasonRef" class="content-wrapper">
         <bk-input
           type="textarea"
           :rows="5"
           :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
           v-model="reason"
         />
-      </section>
+      </div>
       <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
     </render-horizontal-block>
     <div slot="action">
@@ -667,18 +667,26 @@
       },
 
       handleDetailData (payload) {
-        console.log('payload', payload);
-        const departments = [];
         const users = [];
-        const { name, description, members, sync_perm } = payload;
+        const departments = [];
+        const tempActions = [];
+        const {
+          name,
+          description,
+          members,
+          authorization_scopes,
+          subject_scopes,
+          sync_perm, reason
+        } = payload;
         this.$store.commit('setHeaderTitle', name);
+        this.reason = reason || '';
         this.formData = Object.assign({}, {
           name,
           description,
           members,
           sync_perm
         });
-        payload.subject_scopes.forEach(item => {
+        subject_scopes.forEach(item => {
           if (item.type === 'department') {
             departments.push({
               id: Number(item.id),
@@ -696,25 +704,20 @@
             });
           }
         });
-
-        this.isAll = payload.subject_scopes.some(item => item.type === '*' && item.id === '*');
-
+        this.isAll = subject_scopes.some(item => item.type === '*' && item.id === '*');
         this.users.splice(0, this.users.length, ...users);
         this.departments.splice(0, this.departments.length, ...departments);
         this.isShowMemberAdd = false;
-
-        const tempActions = [];
-        payload.authorization_scopes.forEach(item => {
+        authorization_scopes.forEach(item => {
           item.actions.forEach(act => {
             tempActions.push({
-                            ...act,
-                            system_id: item.system.id,
-                            system_name: item.system.name,
-                            $id: `${item.system.id}&${act.id}`
+              ...act,
+              system_id: item.system.id,
+              system_name: item.system.name,
+              $id: `${item.system.id}&${act.id}`
             });
           });
         });
-
         this.originalList = _.cloneDeep(tempActions);
       },
       /**
@@ -841,9 +844,7 @@
       },
 
       async handleSubmitWithReason () {
-        window.changeDialog = false;
         this.submitLoading = true;
-        const data = this.$refs.resourceInstanceRef.handleGetValue().actions;
         const subjects = [];
         if (this.isAll) {
           subjects.push({
@@ -865,6 +866,7 @@
           });
         }
         const { name, description, members, sync_perm } = this.formData;
+        const data = this.$refs.resourceInstanceRef.handleGetValue().actions;
         const params = {
           name,
           description,
@@ -875,9 +877,9 @@
           id: this.$route.params.id,
           sync_perm
         };
-        console.log('params', params);
+        const dispatchMethod = this.isRatingManager ? 'editRatingManagerWithGeneral' : 'editRatingManager';
         try {
-          await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
+          await this.$store.dispatch(`role/${dispatchMethod}`, params);
           await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
           await this.$store.dispatch('roleList');
           this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
@@ -885,96 +887,39 @@
             name: 'apply'
           });
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
+          window.changeDialog = false;
         }
       },
 
       async handleSubmit () {
-        const validatorFlag = this.$refs.basicInfoRef.handleValidator();
-        let data = [];
         let flag = false;
+        const validatorFlag = this.$refs.basicInfoRef.handleValidator();
         this.isShowActionEmptyError = this.originalList.length < 1;
         this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
+        this.isShowReasonError = !this.reason;
         if (!this.isShowActionEmptyError) {
-          data = this.$refs.resourceInstanceRef.handleGetValue().actions;
           flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
         }
-
-        if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError) {
-          if (validatorFlag) {
-            this.scrollToLocation(this.$refs.basicInfoContentRef);
-          } else if (flag) {
-            this.scrollToLocation(this.$refs.instanceTableContentRef);
-          } else if (this.isShowMemberEmptyError) {
-            this.scrollToLocation(this.$refs.memberRef);
-          }
+        if (validatorFlag) {
+          this.scrollToLocation(this.$refs.basicInfoContentRef);
           return;
         }
-        if (this.isRatingManager) {
-          if (!this.reason) {
-            this.isShowReasonError = true;
-            this.scrollToLocation(this.$refs.reasonRef);
-            return;
-          }
-          this.handleSubmitWithReason();
-          // this.isShowReasonDialog = true;
+        if (flag || this.isShowActionEmptyError) {
+          this.scrollToLocation(this.$refs.instanceTableContentRef);
           return;
         }
-        const subjects = [];
-        if (this.isAll) {
-          subjects.push({
-            id: '*',
-            type: '*'
-          });
-        } else {
-          this.users.forEach(item => {
-            subjects.push({
-              type: 'user',
-              id: item.username
-            });
-          });
-          this.departments.forEach(item => {
-            subjects.push({
-              type: 'department',
-              id: item.id
-            });
-          });
+        if (this.isShowMemberEmptyError) {
+          this.scrollToLocation(this.$refs.memberRef);
+          return;
         }
-        const { name, description, members, sync_perm } = this.formData;
-        const params = {
-          name,
-          description,
-          members,
-          sync_perm,
-          subject_scopes: subjects,
-          authorization_scopes: data,
-          id: this.$route.params.id
-        };
-        window.changeDialog = false;
-        console.log('params', params);
-                
-        const dispatchMethod = this.isRatingManager ? 'editRatingManagerWithGeneral' : 'editRatingManager';
-        try {
-          this.submitLoading = true;
-          await this.$store.dispatch(`role/${dispatchMethod}`, params);
-          await this.$store.dispatch('roleList');
-          this.messageSuccess(this.$t(`m.info['编辑管理空间成功']`), 3000);
-          this.$router.push({
-            name: 'gradingAdminDetail',
-            params: {
-              id: this.$route.params.id
-            }
-          });
-        } catch (e) {
-          console.error(e);
-          this.submitLoading = false;
-          this.messageAdvancedError(e);
-        } finally {
-          this.submitLoading = false;
+        if (this.isShowReasonError) {
+          this.scrollToLocation(this.$refs.reasonRef);
+          return;
         }
+        await this.handleSubmitWithReason();
       },
 
       handleCancel () {

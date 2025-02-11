@@ -88,7 +88,7 @@
   import '@blueking/functional-dependency/vue2/vue2.css';
   import '@blueking/notice-component-vue2/dist/style.css';
   // import IamGuide from '@/components/iam-guide/index.vue';
-  import { existValue, formatI18nKey } from '@/common/util';
+  import { existValue, formatI18nKey, navDocCenterPath } from '@/common/util';
   import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
   import { afterEach } from '@/router';
@@ -150,7 +150,7 @@
       };
     },
     computed: {
-      ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout']),
+      ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout', 'versionLogs']),
       isShowNoticeAlert () {
         return this.showNoticeAlert && this.isEnableNoticeAlert;
       },
@@ -382,14 +382,15 @@
         window.open(`${window.BK_DOCS_URL_PREFIX}${payload}`);
       },
 
-      getRouteInstanceSearch (payload = {}) {
+      async getRouteInstanceSearch (payload = {}) {
         const { show, routeName } = payload;
+        const curPath = await navDocCenterPath(this.versionLogs, `/UserGuide/Feature/PermissionsApply.md`, false);
         const routeMap = {
           applyCustomPerm: () => {
             this.noInstanceSearchData = Object.assign({}, {
               show: show || false,
               mode: 'dialog',
-              url: `/IAM//1.8/UserGuide/Feature/PermissionsApply.md`,
+              url: curPath,
               title: this.$t(`m.permApply['未启用用户组自动推荐功能']`),
               functionalDesc: this.t(`m.permApply['该功能可以根据用户当前的权限需求，自动匹配相关的用户组']`),
               guideTitle: this.$t(`m.permApply['如需启用该功能，请联系部署同学部署相关ES服务']`),
@@ -494,6 +495,11 @@
       height: calc(100% - 101px) !important;
       .main-scroller {
         height: calc(100% + 91px);
+      }
+      .my-perm-container {
+        .main-scroller {
+          height: calc(100% + 51px);
+        }
       }
       .user-org-perm-container {
         .main-scroller {

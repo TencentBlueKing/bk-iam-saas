@@ -292,7 +292,6 @@
   import Condition from '@/model/condition';
     
   export default {
-    name: '',
     components: {
       IamGuide,
       basicInfo,

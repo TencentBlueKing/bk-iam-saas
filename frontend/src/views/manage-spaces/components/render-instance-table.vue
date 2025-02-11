@@ -1,5 +1,5 @@
 <template>
-  <div class="iam-grade-split-wrapper">
+  <div class="iam-resource-instance-table-wrapper">
     <div :class="[
            'iam-resource-expand',
            extCls
@@ -153,9 +153,9 @@
       :width="resourceSliderWidth"
       quick-close
       transfer
-      ext-cls="relate-instance-sideslider"
+      ext-cls="related-instance-slider"
       @update:isShow="handleResourceCancel('mask')">
-      <div slot="content" class="sideslider-content">
+      <div slot="content" class="slider-content">
         <render-resource
           ref="renderResourceRef"
           :data="condition"
@@ -169,7 +169,6 @@
       </div>
       <div slot="footer" style="margin-left: 25px;">
         <bk-button theme="primary" :disabled="disabled" :loading="sliderLoading" @click="handlerResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handlerResourcePreview" v-if="isShowPreview">{{ $t(`m.common['预览']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
@@ -340,12 +339,6 @@
             const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                 .related_resource_types[this.curResIndex];
             return curData.selectionMode;
-        },
-        isShowPreview () {
-            if (this.curIndex === -1) {
-                return false;
-            }
-            return this.tableList[this.curIndex].policy_id !== '';
         },
         // 处理无限制和聚合后多个tab数据结构不兼容情况
         formatDisplayValue () {
@@ -602,19 +595,20 @@
           delete item.instance;
           delete item.attribute;
         });
-        const curData = _.cloneDeep(this.tableList[this.curIndex]);
+        const tableList = _.cloneDeep(this.tableList);
+        const curData = _.cloneDeep(tableList[this.curIndex]);
         // eslint-disable-next-line max-len
         curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex]];
         curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload;
-        const relatedList = _.cloneDeep(this.tableList.filter(item => {
+        const relatedList = tableList.filter(item => {
           return !item.isExpiredAtDisabled
             && !item.isAggregate
             && relatedActions.includes(item.id)
             && curData.system_id === item.system_id
             && item.resource_groups[this.curGroupIndex]
             && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty);
-        }));
+        });
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
             delete item.policy_id;
@@ -714,40 +708,6 @@
         this.curIndex = -1;
         this.curResIndex = -1;
         this.curGroupIndex = -1;
-      },
-
-      handlerResourcePreview () {
-        const { id } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex];
-        const { system_id, type, name } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-          .related_resource_types[this.curResIndex];
-        const condition = [];
-        const conditionData = this.$refs.renderResourceRef.handleGetPreviewValue();
-        conditionData.forEach(item => {
-          const { id, attribute, instance } = item;
-          condition.push({
-            id,
-            attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
-            instances: instance ? instance.filter(item => item.path.length > 0) : []
-          });
-        });
-        this.previewResourceParams = {
-          id: this.templateId,
-          policy_id: this.tableList[this.curIndex].policy_id,
-          resource_group_id: id,
-          related_resource_type: {
-            system_id,
-            type,
-            name,
-            condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
-          },
-          action_id: this.tableList[this.curIndex].id,
-          reverse: true,
-          groupId: this.groupId,
-          isTemplate: this.tableList[this.curIndex].isTemplate,
-          isNotLimit: conditionData.length === 0
-        };
-        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}` });
-        this.isShowPreviewDialog = true;
       },
 
       handlerConditionMouseover (payload) {
@@ -1474,117 +1434,6 @@
     }
   };
 </script>
-
-<style lang="postcss">
-    .iam-grade-split-wrapper {
-        min-height: 101px;
-        .bk-table {
-            width: 100%;
-            /* margin-top: 8px; */
-            border-right: none;
-            border-bottom: none;
-            font-size: 12px;
-            .bk-table-header-wrapper {
-                th:first-child .cell {
-                    padding-left: 20px;
-                }
-            }
-            .bk-table-body {
-                tr {
-                    &:hover {
-                        background-color: transparent;
-                        & > td {
-                            background-color: transparent;
-                            .remove-icon {
-                                display: inline-block;
-                            }
-                        }
-                    }
-                }
-                td:first-child .cell,
-                th:first-child .cell {
-                    padding-left: 15px;
-                    /* padding-left: 10px; */
-                }
-            }
-            .relation-content-wrapper,
-            .conditions-wrapper {
-                position: relative;
-                height: 100%;
-                padding: 17px 0;
-                color: #63656e;
-                .resource-type-name {
-                    display: block;
-                    margin-bottom: 9px;
-                }
-                .iam-condition-item {
-                    width: 90%;
-                }
-            }
-
-            .remove-icon {
-                /* display: none; */
-                position: absolute;
-                /* top: 5px; */
-                top: 5px;
-                right: 0;
-                cursor: pointer;
-                &:hover {
-                    color: #3a84ff;
-                }
-                i {
-                    font-size: 20px;
-                }
-            }
-
-            .relation-content-item {
-                margin-top: 17px;
-                &:first-child {
-                    margin-top: 0;
-                }
-                .content-name {
-                    margin-bottom: 9px;
-                }
-            }
-
-            .set-padding {
-                padding: 10px 0;
-            }
-
-            .action-name {
-                /* margin-left: 6px; */
-                display: inline-block;
-                max-width: 200px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                word-break: keep-all;
-                vertical-align: bottom;
-            }
-
-            .conditions-item {
-                margin-top: 7px;
-                &:first-child {
-                    margin-top: 0;
-                }
-            }
-        }
-
-    }
-    .relate-instance-sideslider {
-        .sideslider-content {
-            height: calc(100vh - 114px);
-        }
-        .bk-sideslider-footer {
-            /* background-color: #f5f6fa!important; */
-            background-color: #ffffff !important;
-            border-color: #dcdee5!important;
-        }
-    }
-
-    .tab-button{
-        margin: 10px 0;
-    }
-</style>
 
 <style lang="postcss" scoped>
 @import '@/css/mixins/space-resource-instance-table.css';

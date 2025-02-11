@@ -78,7 +78,7 @@ license = "MIT License"
 python = "3.6.6"
 # blueapps requirement
 Django = "3.2.25"
-mysqlclient = "2.0.1"
+pymysql = "1.0.2"
 MarkupSafe = "2.0.1"
 requests = "2.27.1"
 celery = "5.1.2"
@@ -142,6 +142,7 @@ opentelemetry-semantic-conventions = "0.27b0"
 sqlparse = "0.4.4"
 urllib3 = "1.26.18"
 future = "0.18.3"
+concurrent-log-handler = "0.9.25"
 
 [tool.poetry.dev-dependencies]
 # For flake8 support pyproject.toml

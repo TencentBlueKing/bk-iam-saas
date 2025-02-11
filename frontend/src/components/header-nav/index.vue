@@ -30,7 +30,7 @@
     </div>
     <div class="user fr">
       <div class="help-flag">
-        <Icon type="help-fill" style="color: #979ba5" />
+        <Icon type="help-fill" />
         <div :class="[
           'dropdown-panel',
           { 'lang-dropdown-panel': !curLanguageIsCn }
@@ -41,6 +41,9 @@
           </div>
           <div class="item" @click="handleOpenQuestion">
             {{ $t(`m.common['问题反馈']`) }}
+          </div>
+          <div class="item" @click="handleOpenSource">
+            {{ $t(`m.common['开源社区']`) }}
           </div>
         </div>
       </div>
@@ -123,7 +126,7 @@
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
   import { buildURLParams } from '@/common/url';
-  import { formatI18nKey, jsonpRequest, getManagerMenuPerm } from '@/common/util';
+  import { formatI18nKey, jsonpRequest, getManagerMenuPerm, navDocCenterPath } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
   import SystemLog from '../system-log';
@@ -169,40 +172,6 @@
       rating_manager: `grade-admin-new${str}`
     };
   };
-
-  const NORMAL_DOCU_LINK = '/IAM/UserGuide/Introduce/README.md';
-  // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
-
-  const docuLinkMap = new Map([
-    // 权限模板
-    [['permTemplate', 'permTemplateDetail', 'permTemplateCreate'], NORMAL_DOCU_LINK],
-    // 首页
-    [['', 'index'], NORMAL_DOCU_LINK],
-    // 用户组
-    [
-      ['userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'],
-      NORMAL_DOCU_LINK
-    ],
-    // 系统接入
-    [['systemAccess'], NORMAL_DOCU_LINK],
-    // 我的申请
-    [['apply'], NORMAL_DOCU_LINK],
-    // 权限申请 'permApply'
-    [['applyCustomPerm', 'applyJoinUserGroup'], NORMAL_DOCU_LINK],
-    // 我的权限
-    [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal'], NORMAL_DOCU_LINK],
-    // 管理空间
-    [
-      ['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
-      NORMAL_DOCU_LINK
-    ],
-    // 管理员
-    [['administrator'], NORMAL_DOCU_LINK],
-    // 审批流程
-    [['approvalProcess'], NORMAL_DOCU_LINK],
-    // 用户
-    [['user'], NORMAL_DOCU_LINK]
-  ]);
 
   export default {
     inject: ['reloadCurPage'],
@@ -250,8 +219,6 @@
         getTabData: getTabData,
         curRoleList: [],
         searchValue: '',
-        docuLinkMap: docuLinkMap,
-        curDocuLink: `${window.BK_DOCS_URL_PREFIX}${NORMAL_DOCU_LINK}`,
         showGuide: false,
         isShowHeader: false,
         placeholderValue: '',
@@ -291,7 +258,8 @@
         'roleList',
         'index',
         'navCurRoleId',
-        'externalSystemId'
+        'externalSystemId',
+        'versionLogs'
       ]),
       ...mapGetters('userGlobalConfig', ['globalConfig']),
       style () {
@@ -311,11 +279,7 @@
       },
       appName () {
         // 如果未获取到配置，使用默认title
-        if (this.globalConfig) {
-          const { name, nameEn } = this.globalConfig;
-          return this.curLanguageIsCn ? name : nameEn;
-        }
-        return this.$t('m.nav["蓝鲸权限中心"]');
+        return this.globalConfig && this.globalConfig.i18n ? this.globalConfig.i18n.productName : this.$t('m.nav["蓝鲸权限中心"]');
       },
       appLogo () {
         // 如果未获取到配置，使用默认logo
@@ -334,12 +298,6 @@
             active = 'GroupPerm';
           }
           this.active = active;
-        }
-        for (const [key, value] of this.docuLinkMap.entries()) {
-          if (key.includes(to.name)) {
-            this.curDocuLink = `${window.BK_DOCS_URL_PREFIX}${value}`;
-            break;
-          }
         }
       },
       user: {
@@ -467,11 +425,15 @@
       },
 
       handleOpenDocu () {
-        window.open(this.curDocuLink);
+        navDocCenterPath(this.versionLogs, '/UserGuide/Introduce/README.md', true);
       },
 
       handleOpenQuestion () {
         window.open(window.CE_URL);
+      },
+
+      handleOpenSource () {
+        window.open(`https://github.com/TencentBlueKing/bk-iam`);
       },
 
       back () {
@@ -541,6 +503,7 @@
             const OtherRoute = [
               'gradingAdminDetail',
               'gradingAdminCreate',
+              'gradingAdminClone',
               'gradingAdminEdit',
               'myManageSpaceCreate',
               'secondaryManageSpaceCreate',
@@ -668,10 +631,7 @@
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');
         window.localStorage.removeItem('applyGroupList');
-        const loginUrl = new URL(`${window.LOGIN_SERVICE_URL}/`);
-        loginUrl.searchParams.append('c_url', encodeURIComponent(window.location.href));
-        loginUrl.searchParams.append('is_from_logout', 1);
-        window.location = loginUrl.href;
+        window.location = `${window.LOGIN_SERVICE_URL}/?c_url=${encodeURIComponent(window.location.href)}&is_from_logout=1`;
       },
 
       handleManager () {

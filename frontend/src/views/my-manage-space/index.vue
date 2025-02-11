@@ -86,14 +86,30 @@
             </bk-table-column>
             <bk-table-column prop="members" width="300">
               <template slot-scope="child">
-                <iam-edit-member-selector
-                  field="members"
-                  width="200"
-                  :placeholder="$t(`m.verify['请输入']`)"
-                  :value="child.row.members"
-                  :index="child.$index"
-                  @on-change="handleUpdateSubMembers"
-                />
+                <template v-if="child.row.isEdit || child.row.members.length > 0">
+                  <IamEditMemberSelector
+                    field="members"
+                    width="200"
+                    :ref="`subManagerRef${child.$index}`"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :allow-empty="true"
+                    :is-edit-allow-empty="false"
+                    :value="child.row.members"
+                    :index="child.$index"
+                    @on-change="handleUpdateSubMembers"
+                    @on-empty-change="handleEmptyMemberChange(...arguments, child.row)"
+                  />
+                </template>
+                <template v-else>
+                  <IamManagerEditInput
+                    field="members"
+                    style="width: 100%;"
+                    :is-show-other="true"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :value="getMemberFilter(child.row.members)"
+                    @handleShow="handleOpenSubManagerEdit(child.row, child.$index)"
+                  />
+                </template>
               </template>
             </bk-table-column>
             <bk-table-column prop="description" :min-width="200">
@@ -196,9 +212,9 @@
                 iconColor[1] : iconColor[0] }" />
             <iam-edit-input
               field="name"
+              mode="edit"
               :placeholder="$t(`m.verify['请输入']`)"
               :value="row.name"
-              :mode="formatMode(row)"
               style="width: 100%; margin-left: 5px"
               :index="$index"
               :remote-hander="handleUpdateManageSpace"
@@ -207,16 +223,31 @@
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
-        <template slot-scope="{ row, $index }">
-          <iam-edit-member-selector
-            field="members"
-            width="200"
-            :placeholder="$t(`m.verify['请输入']`)"
-            :value="row.members"
-            :mode="formatMode(row)"
-            :index="$index"
-            @on-change="handleUpdateMembers"
-          />
+        <template slot-scope="{ row , $index }">
+          <template v-if="row.isEdit || row.members.length > 0">
+            <IamEditMemberSelector
+              field="members"
+              width="200"
+              :ref="`managerRef${$index}`"
+              :placeholder="$t(`m.verify['请输入']`)"
+              :allow-empty="true"
+              :is-edit-allow-empty="false"
+              :value="row.members"
+              :index="$index"
+              @on-change="handleUpdateMembers"
+              @on-empty-change="handleEmptyMemberChange(...arguments, row)"
+            />
+          </template>
+          <template v-else>
+            <IamManagerEditInput
+              field="members"
+              style="width: 100%;"
+              :is-show-other="true"
+              :placeholder="$t(`m.verify['请输入']`)"
+              :value="getMemberFilter(row.members)"
+              @handleShow="handleOpenManagerEdit(row, $index)"
+            />
+          </template>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['描述']`)" prop="description" :min-width="200">
@@ -224,9 +255,9 @@
           <iam-edit-textarea
             field="description"
             width="300"
+            mode="edit"
             :placeholder="$t(`m.verify['请输入']`)"
             :value="row.description"
-            :mode="formatMode(row)"
             :index="$index"
             :remote-hander="handleUpdateManageSpace"
           />
@@ -319,11 +350,12 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import { getWindowHeight, formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData, navDocCenterPath } from '@/common/util';
   import IamEditInput from './components/iam-edit/input';
   import IamEditMemberSelector from './components/iam-edit/member-selector';
   import IamEditTextarea from './components/iam-edit/textarea';
   import IamSearchSelect from '@/components/iam-search-select';
+  import IamManagerEditInput from '@/components/iam-edit/input';
   import { buildURLParams } from '@/common/url';
   import ManageInterviewDialog from '@/components/manage-interview-dialog';
   // import { bus } from '@/common/bus';
@@ -336,6 +368,7 @@
       IamEditMemberSelector,
       IamEditTextarea,
       IamSearchSelect,
+      IamManagerEditInput,
       ManageInterviewDialog
     },
     data () {
@@ -393,30 +426,24 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'roleList', 'externalSystemId']),
-            tableHeight () {
-                return getWindowHeight() - 185;
-            },
-            disabledPerm () {
-              return (payload, roleType) => {
-                const { type, members } = payload;
-                if (['subset_manager'].includes(type) || roleType) {
-                  return false;
-                } else {
-                  const result = members.map((item) => item.username).includes(this.user.username);
-                  return !result;
-                }
-              };
-          },
-            isStaff () {
-                return this.user.role.type === 'staff';
-            },
-            formatMode () {
-                return (payload) => {
-                    // return payload.is_member || this.isFilter ? 'edit' : 'detail';
-                    return 'edit';
-                };
-            }
+      ...mapGetters(['user', 'roleList', 'externalSystemId', 'versionLogs']),
+      tableHeight () {
+          return getWindowHeight() - 185;
+      },
+      disabledPerm () {
+        return (payload, roleType) => {
+          const { type, members } = payload;
+          if (['subset_manager'].includes(type) || roleType) {
+            return false;
+          } else {
+            const result = members.map((item) => item.username).includes(this.user.username);
+            return !result;
+          }
+        };
+    },
+      isStaff () {
+          return this.user.role.type === 'staff';
+      }
     },
     watch: {
       searchValue (newVal, oldVal) {
@@ -454,6 +481,13 @@
 
       getSubCellClass ({ row, column, rowIndex, columnIndex }) {
         return !['child-operate'].includes(column.property) ? 'iam-table-cell-1-cls' : '';
+      },
+
+      getMemberFilter (value) {
+        if (value.length) {
+          return _.isArray(value) ? value.map(item => item.username).join(';') : value;
+        }
+        return '--';
       },
 
       // 通过子集id找父级数据
@@ -502,6 +536,40 @@
           this.fetchGradingAdmin(true);
         }
       },
+      
+      handleOpenManagerEdit (payload, index) {
+        this.$set(this.tableList[index], 'isEdit', true);
+        this.$nextTick(() => {
+          const managerRef = this.$refs[`managerRef${index}`];
+          if (managerRef) {
+            managerRef.isEditable = true;
+            if (!payload.members.length) {
+              setTimeout(() => {
+                this.$refs[`managerRef${index}`].$refs.selector.focus();
+              }, 10);
+            }
+          }
+        });
+      },
+
+      handleOpenSubManagerEdit (payload, index) {
+        this.$set(payload, 'isEdit', true);
+        this.$nextTick(() => {
+          const subManagerRef = this.$refs[`subManagerRef${index}`];
+          if (subManagerRef) {
+            subManagerRef.isEditable = true;
+            if (!payload.members.length) {
+              setTimeout(() => {
+                subManagerRef.$refs.selector.focus();
+              }, 10);
+            }
+          }
+        });
+      },
+
+      handleEmptyMemberChange (index, row) {
+        row.isEdit = false;
+      },
 
       handleUpdateMembers (payload, index) {
         this.handleUpdateManageSpace(payload, index);
@@ -520,7 +588,7 @@
               await this.fetchManageTable(payload, 'role/updateRatingManager', 'rating_manager');
             },
             subset_manager: async () => {
-              await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
+              await this.fetchManageTable(payload, 'spaceManage/updateSecondManager', 'subset_manager');
             }
           };
           return typeMap[this.formData.type] ? typeMap[this.formData.type]() : '';
@@ -533,7 +601,7 @@
         this.formData = this.subTableList.find((e, i) => i === index);
         await this.fetchManageTable(
           payload,
-          'spaceManage/updateSecondManagerManager',
+          'spaceManage/updateSecondManager',
           'subset_manager'
         );
       },
@@ -624,9 +692,12 @@
             name: this.searchValue
           });
           this.pagination.count = data.count;
-          data.results = data.results.map((e) => {
-            e.children = [];
-            return e;
+          data.results = data.results.map((item) => {
+            item = Object.assign(item, {
+              isEdit: false,
+              children: []
+            });
+            return item;
           });
           this.tableList.splice(0, this.tableList.length, ...(data.results || []));
           if (this.isStaff) {
@@ -736,7 +807,7 @@
             window.localStorage.setItem('index', 1);
           },
           clone: () => {
-            routerName = 'gradingAdminCreate';
+            routerName = 'myManageSpaceClone';
             this.$store.commit('updateIndex', 0);
             window.localStorage.setItem('index', 0);
           },
@@ -968,9 +1039,9 @@
           }
         );
       },
+
       handleOpenDocu () {
-        const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
-        window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
+        navDocCenterPath(this.versionLogs, `/UserGuide/Feature/UserApply.md`, true);
       }
     }
   };
