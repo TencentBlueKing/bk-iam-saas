@@ -428,7 +428,7 @@
             item.visiable = true;
             item.level = 0;
             item.showRadio = false;
-            item.selected = false;
+            item.isSelected = false;
             item.expanded = index === 0;
             item.count = 0;
             item.disabled = !item.departments || item.departments.length < 1;
@@ -437,7 +437,7 @@
             item.async = item.departments && item.departments.length > 0;
             item.isNewMember = false;
             item.loading = false;
-            item.is_selected = false;
+            item.isSelected = false;
             item.parentNodeId = '';
             item.id = `${item.id}&${item.level}`;
             if (item.departments && item.departments.length > 0) {
@@ -449,9 +449,9 @@
                 if (Object.keys(this.curSelectedData).length > 0
                   && this.curSelectedData.id === child.id
                 ) {
-                  child.selected = true;
+                  child.isSelected = true;
                 } else {
-                  child.selected = false;
+                  child.isSelected = false;
                 }
                 child.expanded = false;
                 child.disabled = false;
@@ -473,7 +473,7 @@
             item.visiable = true;
           });
           if (Object.keys(this.curSelectedData).length < 1) {
-            children[0].selected = true;
+            children[0].isSelected = true;
             this.curSelectedData = _.cloneDeep(children[0]);
           }
           categories.splice(firstIndex + 1, 0, ...children);
@@ -528,11 +528,11 @@
             departments.forEach(depart => {
               depart.showRadio = false;
               depart.type = 'depart';
-              this.$set(depart, 'is_selected', false);
+              this.$set(depart, 'isSelected', false);
               if (Object.keys(this.curSelectedData).length > 0 && this.curSelectedData.id === depart.id) {
-                this.$set(depart, 'selected', true);
+                this.$set(depart, 'isSelected', true);
               } else {
-                this.$set(depart, 'selected', false);
+                this.$set(depart, 'isSelected', false);
               }
               depart.count = depart.recursive_member_count;
               // depart.showCount = true;
@@ -545,13 +545,13 @@
               user.id = guid();
               user.showRadio = false;
               user.type = 'user';
-              this.$set(user, 'is_selected', false);
+              this.$set(user, 'isSelected', false);
               if (Object.keys(this.curSelectedData).length > 0
                 && this.curSelectedData.username === user.username
               ) {
-                this.$set(user, 'selected', true);
+                this.$set(user, 'isSelected', true);
               } else {
-                this.$set(user, 'selected', false);
+                this.$set(user, 'isSelected', false);
               }
             });
             this.searchedUsers.splice(0, this.searchedUsers.length, ...users);
@@ -653,9 +653,9 @@
                 if (Object.keys(this.curSelectedData).length > 0
                   && this.curSelectedData.id === item.id
                 ) {
-                  item.selected = true;
+                  item.isSelected = true;
                 } else {
-                  item.selected = false;
+                  item.isSelected = false;
                 }
                 item.visiable = true;
               });
@@ -696,9 +696,9 @@
               child.showRadio = false;
 
               if (Object.keys(this.curSelectedData).length > 0 && this.curSelectedData.id === child.id) {
-                child.selected = true;
+                child.isSelected = true;
               } else {
-                child.selected = false;
+                child.isSelected = false;
               }
 
               child.expanded = false;
@@ -723,9 +723,9 @@
               if (Object.keys(this.curSelectedData).length > 0
                 && this.curSelectedData.username === child.username
               ) {
-                child.selected = true;
+                child.isSelected = true;
               } else {
-                child.selected = false;
+                child.isSelected = false;
               }
 
               child.expanded = false;
@@ -736,16 +736,16 @@
               child.async = false;
               child.isNewMember = false;
               child.parentNodeId = payload.id;
-              child.is_selected = false;
+              child.isSelected = false;
 
               // parentNodeId + username 组合成id
               child.id = `${child.parentNodeId}${child.username}`;
 
               const existSelectedNode = this.treeList.find(
-                item => item.is_selected && item.username === child.username
+                item => item.isSelected && item.username === child.username
               );
               if (existSelectedNode) {
-                child.is_selected = true;
+                child.isSelected = true;
                 child.disabled = true;
               }
             });
@@ -779,9 +779,9 @@
        */
       handleOnClick (payload) {
         this.treeList.forEach(item => {
-          item.selected = false;
+          item.isSelected = false;
         });
-        payload.selected = true;
+        payload.isSelected = true;
         this.curSelectedData = _.cloneDeep(payload);
       },
 
@@ -792,10 +792,10 @@
        */
       handleSearchClick (payload) {
         this.searchedResult.forEach(item => {
-          item.selected = false;
+          item.isSelected = false;
           if ((item.type === 'depart' && item.id === payload.id)
             || (item.type === 'user' && item.username === payload.username)) {
-            item.selected = true;
+            item.isSelected = true;
           }
         });
         this.curSelectedData = _.cloneDeep(payload);

@@ -1191,7 +1191,6 @@
           name = curChainData.name;
           systemId = curChainData.system_id;
         }
-        console.log(this.isFirstLevelEmpty);
         // 如果是手动输入或者第一次加载resource为空且身份不是超管，代表它的范围只是他本身
         if (this.isManualInput || (this.isFirstLevelEmpty && !this.isSuperManager)) {
           parentChain.push({

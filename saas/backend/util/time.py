@@ -33,8 +33,11 @@ def utc_string_to_timestamp(str_time: str) -> int:
     """
     后端UTC时间转换为时间戳
     """
-    t = string_to_datetime(str_time, fmt="%Y-%m-%dT%H:%M:%SZ")
-    return int(t.timestamp())
+    # Note: 该转换后是 naive datetime，即不带时区
+    naive_t = string_to_datetime(str_time, fmt="%Y-%m-%dT%H:%M:%SZ")
+    # 由于 str_time 本身就是 utc 时间字符串，所以可以设置时区为 UTC，这样就得到 aware datetime
+    aware_t = naive_t.replace(tzinfo=datetime.timezone.utc)
+    return int(aware_t.timestamp())
 
 
 def utc_to_local(utc_time):

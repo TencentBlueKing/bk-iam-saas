@@ -484,7 +484,7 @@
 
       handleCopy (payload) {
         this.$router.push({
-          name: 'gradingAdminCreate',
+          name: 'gradingAdminClone',
           params: {
             id: payload.id
           }
@@ -691,7 +691,7 @@
               await this.fetchManageTable(payload, 'role/updateRatingManager', 'rating_manager');
             },
             subset_manager: async () => {
-              await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
+              await this.fetchManageTable(payload, 'spaceManage/updateSecondManager', 'subset_manager');
             }
           };
           return typeMap[this.formData.type] ? typeMap[this.formData.type]() : '';
@@ -702,7 +702,7 @@
 
       async handleUpdateSubManageSpace (payload, index) {
         this.formData = this.subTableList.find((e, i) => i === index);
-        await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
+        await this.fetchManageTable(payload, 'spaceManage/updateSecondManager', 'subset_manager');
       },
 
       async handleLoadMore (payload) {
@@ -718,10 +718,7 @@
 
       handleCreate () {
         this.$router.push({
-          name: 'gradingAdminCreate',
-          params: {
-            id: 0
-          }
+          name: 'gradingAdminCreate'
         });
       },
 

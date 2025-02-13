@@ -70,7 +70,8 @@ const GLOBAL_VAR = {
   BK_DOCS_URL_PREFIX: process.env.BK_DOCS_URL_PREFIX || '',
   BK_DOMAIN: process.env.BK_DOMAIN || '',
   BK_SHARED_RES_URL: process.env.BK_SHARED_RES_URL || '',
-  BK_APP_CODE: process.env.BK_APP_CODE || ''
+  BK_APP_CODE: process.env.BK_APP_CODE || '',
+  DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER: process.env.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER || ''
 };
 
 // APA 重定向回首页，由首页Route响应处理
