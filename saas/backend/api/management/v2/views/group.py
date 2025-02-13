@@ -364,7 +364,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at", "created_time"}) for one in group_members]
         for result in results:
-            result['created_at'] = int(result.pop('created_time').timestamp())
+            result["created_at"] = int(result.pop("created_time").timestamp())
         return Response({"count": count, "results": results})
 
     @swagger_auto_schema(
