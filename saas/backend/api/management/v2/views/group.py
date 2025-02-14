@@ -32,6 +32,8 @@ from backend.api.management.v2.serializers import (
     ManagementGroupSLZ,
     ManagementGroupSubjectTemplateSLZ,
     ManagementQueryGroupSLZ,
+    ManagementGroupAuthorizationSLZ,
+
 )
 from backend.apps.group.audit import (
     GroupCreateAuditProvider,
@@ -722,3 +724,51 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         return Response([{"id": p.action_id} for p in policies])
+
+
+class ManagementGroupPolicyTemplateViewSet(GenericViewSet):
+    """用户组授权"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    management_api_permission = {
+        "create": ("ignore", "ignore"),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    group_biz = GroupBiz()
+    role_biz = RoleBiz()
+    policy_operation_biz = PolicyOperationBiz()
+    policy_query_biz = PolicyQueryBiz()
+    trans = ManagementCommonTrans()
+
+    @swagger_auto_schema(
+        operation_description="用户组权限模版授权",
+        request_body=ManagementGroupAuthorizationSLZ(label="权限"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.policy"],
+    )
+    @view_audit_decorator(GroupPolicyCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = ManagementGroupAuthorizationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        group = self.get_object()
+        data = serializer.validated_data
+
+        role = self.role_biz.get_role_by_group_id(group.id)
+        templates = self.group_trans.from_group_grant_data(data["templates"])
+        self.group_biz.grant(role, group, templates)
+
+        # 写入审计上下文
+        audit_context_setter(
+            group=group,
+            templates=[{"system_id": t["system_id"], "template_id": t["template_id"]} for t in data["templates"]],
+        )
+
+        return Response({})

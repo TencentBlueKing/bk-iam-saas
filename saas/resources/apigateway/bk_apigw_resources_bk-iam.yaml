@@ -3264,6 +3264,7 @@ paths:
       description: 超管用户组添加成员
       tags:
       - open
+      - v2
       responses:
         default:
           description: ''
@@ -3284,6 +3285,31 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+    delete:
+        operationId: admin_delete_group_members
+        description: 超管用户组删除成员
+        tags:
+            - open
+        responses:
+            default:
+                description: ''
+        x-bk-apigateway-resource:
+            isPublic: true
+            allowApplyPermission: true
+            matchSubpath: false
+            backend:
+                type: HTTP
+                method: delete
+                path: /api/v1/open/admin/groups/{id}/members/
+                matchSubpath: false
+                timeout: 0
+                upstreams: { }
+                transformHeaders: { }
+            authConfig:
+                userVerifiedRequired: false
+                resourcePermissionRequired: false
+            disabledStages: [ ]
+            descriptionEn:
   /api/v1/open/admin/systems/{system_id}/provider_config/:
     get:
       operationId: admin_list_provider_config
@@ -3301,57 +3327,6 @@ paths:
           type: HTTP
           method: get
           path: /api/v1/open/admin/systems/{system_id}/provider_config/
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: false
-          resourcePermissionRequired: false
-        disabledStages: [ ]
-        descriptionEn:
-  /api/v1/open/admin/templates/:
-    get:
-      operationId: admin_list_templates
-      description: 超管获取模板列表
-      tags:
-        - open
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/open/admin/templates/
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: false
-          resourcePermissionRequired: false
-        disabledStages: [ ]
-        descriptionEn:
-    post:
-      operationId: admin_create_templates
-      description: 超管创建模板
-      tags:
-        - open
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/open/admin/templates/
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -3445,3 +3420,191 @@ paths:
           resourcePermissionRequired: false
         disabledStages: [ ]
         descriptionEn:
+  /api/v1/open/admin/templates/:
+      get:
+          operationId: admin_list_templates
+          description: 超管获取模板列表
+          tags:
+              - open
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: get
+                  path: /api/v1/open/admin/templates/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+      post:
+          operationId: admin_create_templates
+          description: 超管创建模板
+          tags:
+              - open
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: post
+                  path: /api/v1/open/admin/templates/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/policies_template/:
+      post:
+          operationId: mgmt_api_bind_group_templates
+          description: 分级管理员绑定权限模板和用户组
+          tags:
+              - open
+              - v2
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: false
+              allowApplyPermission: false
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: post
+                  path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies_template/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+
+  /api/v2/open/management/systems/{system_id}/templates/:
+      post:
+          operationId: mgmt_api_create_templates
+          description: 分级管理员创建权限模板
+          tags:
+              - open
+              - v2
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: false
+              allowApplyPermission: false
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: post
+                  path: /api/v2/open/management/systems/{system_id}/templates/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+      get:
+          operationId: mgmt_api_list_templates
+          description: 分级管理员获取权限模板
+          tags:
+              - open
+              - v2
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: false
+              allowApplyPermission: false
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: get
+                  path: /api/v2/open/management/systems/{system_id}/templates/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+
+  /api/v2/open/management/systems/{system_id}/provider_config/:
+      get:
+          operationId: mgmt_api_list_system_provider_config
+          description: 分级管理员获取系统回调信息
+          tags:
+              - open
+              - v2
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: false
+              allowApplyPermission: false
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: get
+                  path: /api/v2/open/management/systems/{system_id}/provider_config/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+  /api/v2/open/management/systems/{system_id}/systems/:
+      get:
+          operationId: mgmt_api_list_system
+          description: 获取系统列表
+          tags:
+              - open
+              - v2
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: false
+              allowApplyPermission: false
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: get
+                  path: /api/v2/open/management/systems/{system_id}/systems/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+

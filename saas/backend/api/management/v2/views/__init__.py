@@ -26,7 +26,7 @@ from .group import (
     ManagementGroupPolicyViewSet,
     ManagementGroupSubjectTemplateViewSet,
     ManagementGroupViewSet,
-    ManagementSystemManagerGroupViewSet,
+    ManagementSystemManagerGroupViewSet, ManagementGroupPolicyTemplateViewSet,
 )
 from .subject import (
     ManagementDepartmentGroupBelongViewSet,
@@ -59,4 +59,12 @@ __all__ = [
     "ManagementSubsetManagerViewSet",
     "ManagementGradeManagerSubjectTemplateViewSet",
     "ManagementMemberGroupDetailViewSet",
+    "ManagementGroupPolicyTemplateViewSet",
+    "ManagementTemplateViewSet",
+    "ManagementSystemProviderConfigViewSet",
+    "ManagementSystemViewSet",
 ]
+
+from .system import ManagementSystemProviderConfigViewSet, ManagementSystemViewSet
+
+from .template import ManagementTemplateViewSet
