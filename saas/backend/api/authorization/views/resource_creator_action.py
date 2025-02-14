@@ -26,7 +26,8 @@ from ..serializers import (
     BatchResourceCreatorActionSLZ,
     ResourceCreatorActionAttributeSLZ,
     ResourceCreatorActionSLZ,
-    ResourceCreatorOneActionAttributeSLZ)
+    ResourceCreatorOneActionAttributeSLZ,
+)
 
 
 class ResourceCreatorActionView(AuthViewMixin, APIView):
@@ -184,8 +185,8 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
 
 class ResourceCreatorOneActionAttributeView(AuthViewMixin, APIView):
     """
-        新建关联授权 - 单个属性授权
-        """
+    新建关联授权 - 单个属性授权
+    """
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [AuthorizationAPIPermission]
@@ -220,16 +221,17 @@ class ResourceCreatorOneActionAttributeView(AuthViewMixin, APIView):
 
         # 转换为策略列表
         policy_list = self.trans.to_policy_list_for_attributes_of_creator(
-            system_id, [action_id, ], resource_type_id, attributes
+            system_id,
+            [
+                action_id,
+            ],
+            resource_type_id,
+            attributes,
         )
 
         # 授权
-        policies = self.grant_or_revoke(OperateEnum.GRANT.value,
-                                        subject, policy_list)
+        policies = self.grant_or_revoke(OperateEnum.GRANT.value, subject, policy_list)
 
-        audit_context_setter(operate=OperateEnum.GRANT.value,
-                             subject=subject,
-                             system_id=system_id,
-                             policies=policies)
+        audit_context_setter(operate=OperateEnum.GRANT.value, subject=subject, system_id=system_id, policies=policies)
 
         return self.batch_policy_response(policies)
