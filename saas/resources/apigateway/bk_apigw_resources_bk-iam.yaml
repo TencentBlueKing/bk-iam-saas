@@ -3445,3 +3445,29 @@ paths:
           resourcePermissionRequired: false
         disabledStages: [ ]
         descriptionEn:
+  /api/v1/open/authorization/resource_creator_one_action_attribute/:
+    post:
+      operationId: authorization_resource_creator_one_action_attribute
+      description: 新建关联授权-单个属性授权
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/resource_creator_action_attribute/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
