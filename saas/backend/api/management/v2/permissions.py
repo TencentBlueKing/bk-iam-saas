@@ -20,10 +20,7 @@ from backend.api.management.constants import (
     VerifyAPIParamSourceToObjectTypeMap,
 )
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
-from backend.api.management.v2.serializers import (
-    ManagementGroupIDsSLZ,
-    ManagementGroupApplicationBatchSLZ,
-)
+from backend.api.management.v2.serializers import ManagementGroupApplicationBatchSLZ, ManagementGroupIDsSLZ
 from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
 from backend.service.constants import RoleRelatedObjectType, RoleSourceType, RoleType
 

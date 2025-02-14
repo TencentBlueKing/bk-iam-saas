@@ -25,8 +25,8 @@ from backend.api.management.v2.serializers import (
     ManagementApplicationIDSLZ,
     ManagementGradeManagerApplicationResultSLZ,
     ManagementGradeManagerCreateApplicationSLZ,
-    ManagementGroupApplicationCreateSLZ,
     ManagementGroupApplicationBatchSLZ,
+    ManagementGroupApplicationCreateSLZ,
 )
 from backend.apps.application.models import Application
 from backend.apps.organization.models import User as UserModel
@@ -336,8 +336,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户组批量续期申请单",
         request_body=ManagementGroupApplicationBatchSLZ(label="用户组批量续期申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(
-            label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
         tags=["management.group.application"],
     )
     def batch(self, request, *args, **kwargs):
@@ -354,14 +353,12 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         # 转换为ApplicationBiz创建申请单所需数据结构
         user = UserModel.objects.filter(username=user_id).first()
         if not user:
-            raise (error_codes.INVALID_ARGS.
-                   format(f"user: {user_id} not exists"))
+            raise (error_codes.INVALID_ARGS.format(f"user: {user_id} not exists"))
 
         source_system_id = kwargs["system_id"]
 
         # 检查用户组数量是否超限
-        self.group_biz.check_subject_groups_quota(
-            Subject.from_username(user_id), data["groups"])
+        self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["groups"])
 
         # 创建申请
         applications = self.biz.create_for_group(
@@ -373,9 +370,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
                     List[ApplicationGroupInfoBean],
                     data["groups"],
                 ),
-                applicants=[Applicant(type=SubjectType.USER.value,
-                                      id=user.username,
-                                      display_name=user.display_name)],
+                applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
             source_system_id=source_system_id,
         )

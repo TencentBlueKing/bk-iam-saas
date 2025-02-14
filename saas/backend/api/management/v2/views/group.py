@@ -45,10 +45,7 @@ from backend.apps.group.audit import (
     GroupUpdateAuditProvider,
 )
 from backend.apps.group.models import Group
-from backend.apps.group.serializers import (
-    GroupAddMemberSLZ,
-    GroupBatchUpdateMemberSLZ,
-)
+from backend.apps.group.serializers import GroupAddMemberSLZ, GroupBatchUpdateMemberSLZ
 from backend.apps.group.views import split_members_to_subject_and_template
 from backend.apps.policy.models import Policy
 from backend.apps.policy.serializers import PolicySLZ
@@ -367,7 +364,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at", "created_time"}) for one in group_members]
         for result in results:
-            result['created_at'] = int(result.pop('created_time').timestamp())
+            result["created_at"] = int(result.pop("created_time").timestamp())
         return Response({"count": count, "results": results})
 
     @swagger_auto_schema(
@@ -506,9 +503,7 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
         data = serializer.validated_data
 
         members = [
-            GroupMemberExpiredAtBean(type=m["type"], id=m["id"],
-                                     expired_at=m["expired_at"])
-            for m in data["members"]
+            GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=m["expired_at"]) for m in data["members"]
         ]
 
         # 更新有效期

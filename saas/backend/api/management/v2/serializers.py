@@ -422,12 +422,8 @@ class ManagementGroupBatchSLZ(ExpiredAtSLZ):
 
 
 class ManagementGroupApplicationBatchSLZ(ReasonSLZ):
-    groups = serializers.ListField(
-        child=ManagementGroupBatchSLZ(label="用户组信息"))
+    groups = serializers.ListField(child=ManagementGroupBatchSLZ(label="用户组信息"))
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
-    content_template = serializers.DictField(label="审批单内容模板", required=False,
-                                             allow_empty=True, default=dict)
-    group_content = serializers.DictField(label="审批单内容", required=False,
-                                          allow_empty=True, default=dict)
-    title_prefix = serializers.CharField(label="审批单标题前缀", required=False,
-                                         allow_blank=True, default="")
+    content_template = serializers.DictField(label="审批单内容模板", required=False, allow_empty=True, default=dict)
+    group_content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
+    title_prefix = serializers.CharField(label="审批单标题前缀", required=False, allow_blank=True, default="")

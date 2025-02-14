@@ -405,14 +405,11 @@ class SearchTemplateGroupMemberSLZ(SearchMemberSLZ):
 
 
 class GroupMemberExpiredSLZ(GroupMemberSLZ):
-    expired_at = serializers.IntegerField(label="过期时间",
-                                          max_value=PERMANENT_SECONDS)
+    expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
 
 class GroupBatchUpdateMemberSLZ(serializers.Serializer):
-    members = serializers.ListField(label="成员列表",
-                                    child=GroupMemberExpiredSLZ(label="成员"),
-                                    allow_empty=False)
+    members = serializers.ListField(label="成员列表", child=GroupMemberExpiredSLZ(label="成员"), allow_empty=False)
 
     def validate_members(self, value):
         members = []
@@ -420,11 +417,9 @@ class GroupBatchUpdateMemberSLZ(serializers.Serializer):
         for m in value:
             # 过期时间不能小于当前时间
             if m["expired_at"] <= int(time.time()):
-                raise (serializers.
-                       ValidationError("expired_at must more then now"))
+                raise (serializers.ValidationError("expired_at must more then now"))
             # 屏蔽admin授权
-            if not (m["type"] == GroupMemberType.USER.value
-                    and m["id"] == ADMIN_USER):
+            if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER):
                 members.append(m)
 
         return members

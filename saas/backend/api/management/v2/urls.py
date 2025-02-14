@@ -97,8 +97,7 @@ urlpatterns = [
     # 用户组批量续期申请单
     path(
         "groups/-/batch/applications/",
-        views.ManagementGroupRenewApplicationViewSet.
-        as_view({"post": "batch"}),
+        views.ManagementGroupRenewApplicationViewSet.as_view({"post": "batch"}),
         name="open.management.v2.group_batch_renew_application",
     ),
     # 用户组申请单
