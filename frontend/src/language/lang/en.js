@@ -575,7 +575,8 @@ export const m = {
          '不可续期的用户组如下': 'The non renewable user groups are as follows: {value}',
          '不可移出的用户组如下': 'The user groups that cannot be removed are as follows',
          '手动输入蓝盾侧限制勾选组织架构提示': 'The range of user [{value}] is too large, please select again',
-         '组织架构重复添加多个相同用户名': 'User [{value}] already exists and cannot be added again'
+         '组织架构重复添加多个相同用户名': 'User [{value}] already exists and cannot be added again',
+         '最多选择权限模板数量': 'You can only select up to {value} permissions template'
     },
     // 二次确认弹窗相关
     dialog: {
