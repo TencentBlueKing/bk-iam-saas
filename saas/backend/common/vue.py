@@ -42,6 +42,8 @@ class VueTemplateView(TemplateView):
                 "BK_APP_CODE": settings.APP_CODE,
                 # 不允许作为用户组成员的部门 ID,用英文逗号分割
                 "DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER": settings.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER,
+                # 问题反馈地址
+                "CE_URL": settings.CE_URL,
             }
 
             # 添加前端功能启用开关
