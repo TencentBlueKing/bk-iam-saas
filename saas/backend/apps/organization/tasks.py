@@ -19,8 +19,10 @@ from django.db import transaction
 from django.utils import timezone
 
 from backend.apps.organization.models import SubjectToDelete, SyncErrorLog, SyncRecord
+from backend.apps.policy.models import Policy
 from backend.apps.role.models import RoleGroupMember, RoleScope, RoleUser, ScopeSubject
 from backend.apps.subject_template.models import SubjectTemplateRelation
+from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.biz.org_sync.department import DBDepartmentSyncExactInfo, DBDepartmentSyncService
 from backend.biz.org_sync.department_member import DBDepartmentMemberSyncService
 from backend.biz.org_sync.iam_department import IAMBackendDepartmentSyncService
@@ -33,8 +35,6 @@ from backend.common.lock import gen_organization_sync_lock
 from backend.component import iam, usermgr
 from backend.service.constants import SubjectType
 from backend.util.json import json_dumps
-from backend.apps.policy.models import Policy
-from backend.apps.temporary_policy.models import TemporaryPolicy
 
 from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 
