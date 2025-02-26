@@ -44,6 +44,10 @@ class VueTemplateView(TemplateView):
                 "DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER": settings.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER,
                 # 问题反馈地址
                 "CE_URL": settings.CE_URL,
+                # 权限模板最大限制数量
+                "GROUP_AUTH_TEMPLATE_ONCE_LIMIT": settings.SUBJECT_AUTHORIZATION_LIMIT.get(
+                    "group_auth_template_once_limit"
+                ),
             }
 
             # 添加前端功能启用开关
