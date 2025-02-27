@@ -56,6 +56,7 @@ const GLOBAL_VAR = {
   SITE_URL: process.env.SITE_URL || '',
   STATIC_URL: process.env.STATIC_URL || '',
   BK_PAAS_HOST: process.env.BK_PAAS_HOST || '',
+  CE_URL: process.env.CE_URL || '',
   CSRF_COOKIE_NAME: process.env.CSRF_COOKIE_NAME || '',
   SESSION_COOKIE_DOMAIN: process.env.SESSION_COOKIE_DOMAIN || '',
   BK_ITSM_APP_URL: process.env.BK_ITSM_APP_URL || '',
@@ -71,7 +72,8 @@ const GLOBAL_VAR = {
   BK_DOMAIN: process.env.BK_DOMAIN || '',
   BK_SHARED_RES_URL: process.env.BK_SHARED_RES_URL || '',
   BK_APP_CODE: process.env.BK_APP_CODE || '',
-  DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER: process.env.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER || ''
+  DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER: process.env.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER || '',
+  GROUP_AUTH_TEMPLATE_ONCE_LIMIT: process.env.GROUP_AUTH_TEMPLATE_ONCE_LIMIT || ''
 };
 
 // APA 重定向回首页，由首页Route响应处理

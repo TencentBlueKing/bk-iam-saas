@@ -98,7 +98,7 @@
       // 子节点左侧偏移的基础值
       leftBaseIndent: {
         type: Number,
-        default: 18
+        default: 22
       },
       // 点击事件 $emit 事件 类型
       // all: 既触发click 也触发 radio 事件
@@ -565,7 +565,7 @@
     }
     .arrow-icon {
       color: #c0c4cc;
-      margin-right: 4px;
+      margin: 0 4px;
     }
     .red-dot {
       display: inline-block;

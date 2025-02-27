@@ -505,9 +505,11 @@
               'gradingAdminCreate',
               'gradingAdminClone',
               'gradingAdminEdit',
+              'myManageSpace',
               'myManageSpaceCreate',
               'secondaryManageSpaceCreate',
               'secondaryManageSpaceDetail',
+              'secondaryManageSpaceEdit',
               'addGroupPerm',
               'authorBoundaryEditFirstLevel'
             ];
@@ -517,6 +519,8 @@
               });
             }
           }
+          // 更新后重置我的管理空间跳转开关
+          this.isRatingChange = false;
         }
       },
 
