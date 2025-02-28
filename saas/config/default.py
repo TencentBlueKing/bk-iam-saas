@@ -12,7 +12,6 @@ specific language governing permissions and limitations under the License.
 import os
 
 import environ
-import pymysql
 from celery.schedules import crontab
 
 # connect mysql
