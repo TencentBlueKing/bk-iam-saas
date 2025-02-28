@@ -15,10 +15,8 @@ import environ
 from celery.schedules import crontab
 
 # connect mysql
-# pymysql.install_as_MySQLdb()
-
-pymysql.version_info = (1, 4, 13, "final", 0)
 pymysql.install_as_MySQLdb()
+
 
 
 # environ
