@@ -16,7 +16,7 @@ import pymysql
 from celery.schedules import crontab
 
 # connect mysql
-pymysql.install_as_MySQLdb()
+# pymysql.install_as_MySQLdb()
 
 # environ
 env = environ.Env()
