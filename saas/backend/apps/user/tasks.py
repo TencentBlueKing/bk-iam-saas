@@ -147,7 +147,8 @@ class SendUserExpireRemindMailTask(Task):
                 logger.exception("send user_group_policy_expire_remind rtx fail, username=%s", user.username)
 
 
-current_app.tasks.register(SendUserExpireRemindMailTask())
+current_app.register_task(SendUserExpireRemindMailTask())
+
 
 
 @shared_task(ignore_result=True)
