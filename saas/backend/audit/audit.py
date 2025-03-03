@@ -20,8 +20,8 @@ from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.subject_template.models import SubjectTemplate
-from backend.audit.models import Event, get_event_model
-from backend.audit.tasks import log_audit_event
+from backend.audit.models import get_event_model
+from backend.audit.signals import send_bulk_create_signal
 from backend.common.base import is_open_api_request_path
 from backend.common.local import local
 from backend.service.models import Subject
@@ -245,8 +245,8 @@ def log_group_event(
         events.append(event)
 
     Event.objects.bulk_create(events)
-    # NOTE: 由于bulk_create不能触发signals，所以手动处理
-    _batch_audit_log(Event, events)
+    # NOTE: 由于bulk_create不能触发信号，手动触发信号
+    send_bulk_create_signal(Event, events)
 
 
 def log_role_event(
@@ -364,15 +364,5 @@ def log_subject_template_event(
         events.append(event)
 
     Event.objects.bulk_create(events)
-    # NOTE: 由于bulk_create不能触发signals，所以手动处理
-    _batch_audit_log(Event, events)
-
-
-def _batch_audit_log(event_model: Event, instances: List[Event]):
-    """
-    批量添加审计日志
-    """
-    suffix = event_model.__name__.split("_")[1]
-    for instance in instances:
-        id = instance.id.hex
-        log_audit_event.delay(suffix, id)
+    # NOTE: 由于bulk_create不能触发信号，手动触发信号
+    send_bulk_create_signal(Event, events)
