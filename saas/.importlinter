@@ -21,6 +21,7 @@ ignore_imports =
     backend.biz.application -> backend.apps.role.tasks
     backend.biz.application -> backend.audit.audit
     backend.audit.audit -> backend.apps.*.models
+    backend.audit.signals -> backend.audit.tasks
 
 [importlinter:contract:layers-api-service-biz]
 name=api service biz component
