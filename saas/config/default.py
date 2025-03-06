@@ -499,3 +499,6 @@ BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")
 
 # 不允许作为用户组成员的部门 ID,用英文逗号分割
 DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER", default="")
+
+# 问题反馈地址
+BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
