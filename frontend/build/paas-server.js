@@ -56,7 +56,7 @@ const GLOBAL_VAR = {
   SITE_URL: process.env.SITE_URL || '',
   STATIC_URL: process.env.STATIC_URL || '',
   BK_PAAS_HOST: process.env.BK_PAAS_HOST || '',
-  CE_URL: process.env.CE_URL || '',
+  BK_CE_URL: process.env.BK_CE_URL || '',
   CSRF_COOKIE_NAME: process.env.CSRF_COOKIE_NAME || '',
   SESSION_COOKIE_DOMAIN: process.env.SESSION_COOKIE_DOMAIN || '',
   BK_ITSM_APP_URL: process.env.BK_ITSM_APP_URL || '',
