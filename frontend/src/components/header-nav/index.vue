@@ -429,7 +429,7 @@
       },
 
       handleOpenQuestion () {
-        window.open(window.CE_URL);
+        window.open(window.BK_CE_URL);
       },
 
       handleOpenSource () {
@@ -465,7 +465,7 @@
 
       // 需要切换的时候刷新不同菜单下的同名路由
       handleRefreshSameRoute (payload) {
-        if (['sensitivityLevel', 'administrator', 'approvalProcess'].includes(this.$route.name) && [1, 3].includes(payload)) {
+        if (['resourcePermiss', 'sensitivityLevel', 'administrator', 'approvalProcess'].includes(this.$route.name) && [1, 3].includes(payload)) {
           this.reloadCurPage(this.$route);
         }
       },
