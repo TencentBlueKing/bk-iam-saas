@@ -501,4 +501,4 @@ BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")
 DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER", default="")
 
 # 问题反馈地址
-CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
+BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
