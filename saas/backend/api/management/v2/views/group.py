@@ -22,6 +22,7 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLo
 from backend.api.management.v2.filters import GroupFilter
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
+    GroupBatchUpdateMemberSLZ,
     ManagementGradeManagerGroupCreateSLZ,
     ManagementGroupBaseInfoUpdateSLZ,
     ManagementGroupGrantSLZ,
@@ -45,7 +46,7 @@ from backend.apps.group.audit import (
     GroupUpdateAuditProvider,
 )
 from backend.apps.group.models import Group
-from backend.apps.group.serializers import GroupAddMemberSLZ, GroupBatchUpdateMemberSLZ
+from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.group.views import split_members_to_subject_and_template
 from backend.apps.policy.models import Policy
 from backend.apps.policy.serializers import PolicySLZ
@@ -450,10 +451,6 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
             VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
             ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_UPDATE.value,
         ),
-        "batch": (
-            VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
-            ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_BATCH.value,
-        ),
     }
 
     lookup_field = "id"
@@ -488,6 +485,25 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
 
         return Response({})
 
+
+class ManagementGroupMemberBatchExpiredAtViewSet(GenericViewSet):
+    """用户组成员批量续期"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "update": (
+            VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
+            ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_BATCH_UPDATE.value,
+        ),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    biz = GroupBiz()
+
     @swagger_auto_schema(
         operation_description="用户组成员有效期批量更新",
         request_body=GroupBatchUpdateMemberSLZ(label="用户组成员"),
@@ -495,7 +511,7 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
         tags=["management.role.group.member"],
     )
     @view_audit_decorator(GroupMemberRenewAuditProvider)
-    def batch(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         group = self.get_object()
 
         serializer = GroupBatchUpdateMemberSLZ(data=request.data)

@@ -20,7 +20,7 @@ from .constants import ManagementAPIEnum
 class ManagementAPIAllowListConfig(BaseModel):
     """管理类API允许系统白名单"""
 
-    api = models.CharField("API", choices=ManagementAPIEnum.get_choices(), max_length=36, help_text="*代表任意")
+    api = models.CharField("API", choices=ManagementAPIEnum.get_choices(), max_length=64, help_text="*代表任意")
     system_id = models.CharField("接入系统", max_length=32)
 
     class Meta:

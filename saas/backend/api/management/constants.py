@@ -55,7 +55,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_GROUP_MEMBER_ADD = auto()
     V2_GROUP_MEMBER_DELETE = auto()
     V2_GROUP_MEMBER_EXPIRED_AT_UPDATE = auto()
-    V2_GROUP_MEMBER_EXPIRED_AT_BATCH = auto()
+    V2_GROUP_MEMBER_EXPIRED_AT_BATCH_UPDATE = auto()
     V2_GROUP_SUBJECT_TEMPLATE_LIST = auto()
     # 用户组权限
     V2_GROUP_POLICY_GRANT = auto()
@@ -65,7 +65,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 用户组申请单
     V2_GROUP_APPLICATION_CREATE = auto()
     V2_GROUP_APPLICATION_RENEW = auto()
-    V2_GROUP_APPLICATION_RENEW_BATCH = auto()
+    V2_GROUP_APPLICATION_BATCH_EXPIRED_AT_RENEW = auto()
     # 用户组归属
     V2_USER_GROUPS_BELONG_CHECK = auto()
     V2_DEPARTMENT_GROUPS_BELONG_CHECK = auto()
@@ -127,7 +127,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_GROUP_MEMBER_ADD, "[V2]添加用户组成员"),
             (V2_GROUP_MEMBER_DELETE, "[V2]删除用户组成员"),
             (V2_GROUP_MEMBER_EXPIRED_AT_UPDATE, "[V2]用户组成员续期"),
-            (V2_GROUP_MEMBER_EXPIRED_AT_BATCH, "[V2]用户组成员批量续期"),
+            (V2_GROUP_MEMBER_EXPIRED_AT_BATCH_UPDATE, "[V2]用户组成员批量续期"),
             (V2_GROUP_SUBJECT_TEMPLATE_LIST, "[V2]获取用户组人员模板列表"),
             # 用户组权限
             (V2_GROUP_POLICY_GRANT, "[V2]授权用户组"),
@@ -137,7 +137,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             # 用户组申请单
             (V2_GROUP_APPLICATION_CREATE, "[V2]创建用户组申请单"),
             (V2_GROUP_APPLICATION_RENEW, "[V2]用户组续期申请单"),
-            (V2_GROUP_APPLICATION_RENEW_BATCH, "[V2]用户组批量续期申请单"),
+            (V2_GROUP_APPLICATION_BATCH_EXPIRED_AT_RENEW, "[V2]用户组批量续期申请单"),
             # 用户组归属
             (V2_USER_GROUPS_BELONG_CHECK, "[V2]判断用户与用户组归属"),
             (V2_DEPARTMENT_GROUPS_BELONG_CHECK, "[V2]判断部门与用户组归属"),

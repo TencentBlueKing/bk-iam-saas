@@ -280,10 +280,6 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
             VerifyApiParamLocationEnum.GROUP_IDS_IN_BODY.value,
             ManagementAPIEnum.V2_GROUP_APPLICATION_RENEW.value,
         ),
-        "batch": (
-            VerifyApiParamLocationEnum.GROUPS_IN_BODY.value,
-            ManagementAPIEnum.V2_GROUP_APPLICATION_RENEW_BATCH.value,
-        ),
     }
 
     biz = ApplicationBiz()
@@ -333,13 +329,29 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
 
         return Response({"ids": [a.id for a in applications]})
 
+
+class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
+    """用户组批量续期申请单"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+    management_api_permission = {
+        "create": (
+            VerifyApiParamLocationEnum.GROUPS_IN_BODY.value,
+            ManagementAPIEnum.V2_GROUP_APPLICATION_BATCH_EXPIRED_AT_RENEW.value,
+        ),
+    }
+
+    biz = ApplicationBiz()
+    group_biz = GroupBiz()
+
     @swagger_auto_schema(
         operation_description="用户组批量续期申请单",
         request_body=ManagementGroupApplicationBatchSLZ(label="用户组批量续期申请单"),
         responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
         tags=["management.group.application"],
     )
-    def batch(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
         用户组批量续期申请单，支持不同过期时间
         """
