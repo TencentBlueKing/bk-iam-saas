@@ -22,12 +22,7 @@ from ..audit import SubjectPolicyGrantOrRevokeAuditProvider
 from ..constants import AuthorizationAPIEnum, OperateEnum, VerifyApiParamLocationEnum
 from ..mixins import AuthViewMixin
 from ..permissions import AuthorizationAPIPermission
-from ..serializers import (
-    BatchResourceCreatorActionSLZ,
-    ResourceCreatorActionAttributeSLZ,
-    ResourceCreatorActionSLZ,
-    ResourceCreatorOneActionAttributeSLZ,
-)
+from ..serializers import BatchResourceCreatorActionSLZ, ResourceCreatorActionAttributeSLZ, ResourceCreatorActionSLZ
 
 
 class ResourceCreatorActionView(AuthViewMixin, APIView):
@@ -173,60 +168,6 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
         # 转换为策略列表
         policy_list = self.trans.to_policy_list_for_attributes_of_creator(
             system_id, action_ids, resource_type_id, attributes
-        )
-
-        # 授权
-        policies = self.grant_or_revoke(OperateEnum.GRANT.value, subject, policy_list)
-
-        audit_context_setter(operate=OperateEnum.GRANT.value, subject=subject, system_id=system_id, policies=policies)
-
-        return self.batch_policy_response(policies)
-
-
-class ResourceCreatorOneActionAttributeView(AuthViewMixin, APIView):
-    """
-    新建关联授权 - 单个属性授权
-    """
-
-    authentication_classes = [ESBAuthentication]
-    permission_classes = [AuthorizationAPIPermission]
-    authorization_api_permission = {
-        "post": (
-            VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value,
-            AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
-        ),
-    }
-
-    biz = ResourceCreatorActionBiz()
-    trans = AuthorizationTrans()
-
-    @swagger_auto_schema(
-        operation_description="新建关联授权-单个属性授权",
-        request_body=ResourceCreatorOneActionAttributeSLZ,
-        responses={status.HTTP_200_OK: serializers.Serializer()},
-        tags=["open"],
-    )
-    @view_audit_decorator(SubjectPolicyGrantOrRevokeAuditProvider)
-    def post(self, request, *args, **kwargs):
-        serializer = ResourceCreatorOneActionAttributeSLZ(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        data = serializer.validated_data
-
-        subject = Subject.from_username(data["creator"])
-        system_id = data["system"]
-        action_id = data["action_id"]
-        resource_type_id = data["type"]
-        attributes = data["attributes"]
-
-        # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_attributes_of_creator(
-            system_id,
-            [
-                action_id,
-            ],
-            resource_type_id,
-            attributes,
         )
 
         # 授权

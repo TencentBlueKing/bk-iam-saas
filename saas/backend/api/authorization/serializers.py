@@ -219,5 +219,5 @@ class ResourceCreatorActionAttributeSLZ(ResourceCreatorActionBaseInfoSLZ):
     )
 
 
-class ResourceCreatorOneActionAttributeSLZ(ResourceCreatorActionAttributeSLZ):
+class ActionAttributeSLZ(ResourceCreatorActionAttributeSLZ):
     action_id = serializers.CharField(label="操作id")
