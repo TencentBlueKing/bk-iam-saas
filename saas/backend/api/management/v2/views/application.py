@@ -358,6 +358,7 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
         serializer = ManagementGroupApplicationBatchSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        group_ids = [group["id"] for group in data["groups"]]
 
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
@@ -370,7 +371,7 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
         source_system_id = kwargs["system_id"]
 
         # 检查用户组数量是否超限
-        self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["groups"])
+        self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), group_ids)
 
         # 创建申请
         applications = self.biz.create_for_group(

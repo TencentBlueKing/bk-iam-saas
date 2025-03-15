@@ -20,7 +20,7 @@ from backend.api.management.constants import (
     VerifyAPIParamSourceToObjectTypeMap,
 )
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
-from backend.api.management.v2.serializers import ManagementGroupApplicationBatchSLZ, ManagementGroupIDsSLZ
+from backend.api.management.v2.serializers import ManagementGroupIDsSLZ, ManagementGroupsSLZ
 from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
 from backend.service.constants import RoleRelatedObjectType, RoleSourceType, RoleType
 
@@ -116,7 +116,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
 
         # 参数来自body data - groups
         if param_source == VerifyApiParamLocationEnum.GROUPS_IN_BODY:
-            slz = ManagementGroupApplicationBatchSLZ(data=request.data)
+            slz = ManagementGroupsSLZ(data=request.data)
             slz.is_valid(raise_exception=True)
             group_ids = [group["id"] for group in slz.validated_data["groups"]]
 
