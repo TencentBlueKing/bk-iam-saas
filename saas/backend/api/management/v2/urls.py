@@ -57,6 +57,12 @@ urlpatterns = [
         views.ManagementGroupMemberExpiredAtViewSet.as_view({"put": "update"}),
         name="open.management.v2.group_member.expired_at",
     ),
+    # 用户组成员有效期批量更新（不支持人员模板）
+    path(
+        "groups/<int:id>/members/-/batch_expired_at/",
+        views.ManagementGroupMemberBatchExpiredAtViewSet.as_view({"put": "update"}),
+        name="open.management.v2.group_member.batch_expired_at",
+    ),
     # 用户组下类型为人员模板的成员
     path(
         "groups/<int:id>/subject_templates/",
@@ -87,6 +93,12 @@ urlpatterns = [
         "groups/-/renew/applications/",
         views.ManagementGroupRenewApplicationViewSet.as_view({"post": "create"}),
         name="open.management.v2.group_renew_application",
+    ),
+    # 用户组批量续期申请单
+    path(
+        "groups/-/batch_expired_at_renew/applications/",
+        views.ManagementGroupBatchExpiredAtRenewApplicationViewSet.as_view({"post": "create"}),
+        name="open.management.v2.group_batch_renew_application",
     ),
     # 用户组申请单
     path(
