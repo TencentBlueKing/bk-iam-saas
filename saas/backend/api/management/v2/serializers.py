@@ -17,12 +17,13 @@ from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.group.models import Group
-from backend.apps.group.serializers import GroupMemberExpiredSLZ
 from backend.apps.role.models import Role, RoleUser
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.biz.role import RoleCheckBiz
 from backend.biz.subject_template import SubjectTemplateBiz
+from backend.common.serializers import GroupMemberSLZ
+from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import ADMIN_USER, GroupMemberType
 from backend.service.models import Subject
 from backend.util.serializer import StringArrayField
@@ -433,6 +434,10 @@ class ManagementGroupApplicationBatchSLZ(ReasonSLZ, ManagementGroupsSLZ):
     content_template = serializers.DictField(label="审批单内容模板", required=False, allow_empty=True, default=dict)
     group_content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
     title_prefix = serializers.CharField(label="审批单标题前缀", required=False, allow_blank=True, default="")
+
+
+class GroupMemberExpiredSLZ(GroupMemberSLZ):
+    expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
 
 class GroupBatchUpdateMemberSLZ(serializers.Serializer):

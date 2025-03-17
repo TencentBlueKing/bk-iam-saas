@@ -402,7 +402,3 @@ class GroupSubjectTemplateListSLZ(serializers.ModelSerializer):
 
 class SearchTemplateGroupMemberSLZ(SearchMemberSLZ):
     template_id = serializers.IntegerField(label="模板ID", required=True)
-
-
-class GroupMemberExpiredSLZ(GroupMemberSLZ):
-    expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
