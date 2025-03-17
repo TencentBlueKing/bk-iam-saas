@@ -364,7 +364,7 @@
       },
 
       handleOpenQuestion () {
-        window.open(window.CE_URL);
+        window.open(window.BK_CE_URL);
       },
 
       back () {

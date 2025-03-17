@@ -1,3 +1,56 @@
+<!-- 2025-02-13 -->
+# V1.10.39 Version Update Log
+
+### Features
+* Added event communication for the renewal of embedded pages in Blue Shield.
+* When applying to join a user group, if the secondary resource owner leaves, the request is escalated to the primary administrator for approval.
+* Secondary management spaces now support editing personnel and resource instance authorization scopes.
+* Added automatic association of main operation with operation instances when cloning or editing secondary management spaces.
+* The page for redirecting when switching administrator identity now includes authorization boundaries and secondary management spaces.
+* Added a reason field to authorization boundaries.
+* Pagination added to the secondary management space in the management space role selector.
+* The Open API member list interface now supports retrieving the time members joined user groups.
+* Blue Shield business scenarios that expand the authorization personnel boundary no longer require interface calls to verify authorization scopes.
+* Blue Shield now supports limiting organizational structure business selection via environment variable injection.
+* Added pages requiring custom styling for adding authorization personnel boundaries.
+
+### Feature Enhancements
+* Unified parameter coordination for Blue Shield requirements.
+* Optimized menu for secondary management spaces.
+* Enhanced compatibility for permission templates under public components in secondary management spaces.
+
+### Fixes
+* Fixed an issue where table associated operation data would be emptied if the main operation had associated operations and the interface response data was empty.
+* Resolved the "undefined" issue when handling authorization scopes with only custom attributes and no resource instances.
+* Fixed style misalignment issues in fine-grained permission applications.
+* Corrected the redirection issue where a hierarchical administrator would need to switch to the user group page when editing authorization boundaries.
+* Removed permission template editing in management spaces.
+* Fixed an issue where editing resource instances in secondary management spaces would sometimes display selected instances as disabled.
+* Addressed whether the primary operation's resource authorization scope is consistent with the associated operation in aggregation scenarios.
+* Fixed occasional table style misalignment issues in the resource instance table module for administrator identities.
+* Resolved the 8-hour discrepancy issue in the validity period when users join a user group.
+
+---
+
+<!-- 2024-11-12 -->
+# V1.10.38 Version Update Log
+
+### Feature Enhancements
+* The management space personnel selector edit component supports re-editing the scenario after being set to empty by default (the administrator has left).
+
+---
+
+<!-- 2024-11-07 -->
+# V1.10.37 Version Update Log
+
+### Fixes
+* Fixed an error when previewing difference comparisons if a user group has no resource instances and attribute conditions.
+* Resource instance difference comparisons can only be previewed if the user group module exists and the user group itself exists.
+* Fixed an issue where incorrect child_type values prevented the expansion of non-terminal node topologies.
+* Resolved an issue where, in the main operations of user groups and secondary management spaces, removing unrestricted resource instances from associated operations occasionally caused authorization boundary overflows.
+
+---
+
 <!-- 2024-10-11 -->
 # V1.10.36 Version Update Log
 
@@ -2120,12 +2173,12 @@ Fixed an issue where clicking on "synchronize" in the user module->user type wou
 <!-- 2020-06-19 -->
 # V1.1.0 ChangeLog
 
-## BKIAM-V3 V1.1.0 goes online ！
+## BKIAM-V3 V1.1.0 goes online !
 
 ### Feature
 
 * [ feature ] `Apply` According to user scenarios, we support to apply by permission templates, join  groups, and
- customize application：
+ customize application:
 
 > `Apply by permission template` When users need permissions for a single system role, he can search for a template directly without relating an instance
 >

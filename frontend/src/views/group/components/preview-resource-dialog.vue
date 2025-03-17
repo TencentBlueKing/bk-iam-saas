@@ -70,22 +70,27 @@
     methods: {
       async fetchData () {
         // debugger
-        this.isLoading = true;
         const isTemplate = this.params.isTemplate;
         const method = isTemplate ? 'groupTemplateCompare' : 'groupPolicyCompare';
+        const { groupId, related_resource_type, resource_group_id: resourceGroupId } = this.params;
         const requestParams = {
-          id: this.params.groupId,
+          id: groupId,
           data: {
-            related_resource_type: this.params.related_resource_type,
-            resource_group_id: this.params.resource_group_id
+            related_resource_type,
+            resource_group_id: resourceGroupId
           }
         };
+        // 无实例和属性条件不需要调用接口
+        if (!related_resource_type.condition.length || !resourceGroupId) {
+          return;
+        }
         if (!isTemplate) {
           requestParams.data.policy_id = this.params.policy_id;
         } else {
           requestParams.templateId = this.params.id;
           requestParams.data.action_id = this.params.action_id;
         }
+        this.isLoading = true;
         try {
           const res = await this.$store.dispatch(`userGroup/${method}`, requestParams);
           this.conditionData = res.data.map(item => new CompareCondition(item));

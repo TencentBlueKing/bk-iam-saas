@@ -13,6 +13,7 @@ from .application import (
     ManagementGradeManagerApplicationViewSet,
     ManagementGradeManagerUpdatedApplicationViewSet,
     ManagementGroupApplicationViewSet,
+    ManagementGroupBatchExpiredAtRenewApplicationViewSet,
     ManagementGroupRenewApplicationViewSet,
 )
 from .approval import ManagementApplicationApprovalView
@@ -20,6 +21,7 @@ from .grade_manager import ManagementGradeManagerViewSet
 from .group import (
     ManagementGradeManagerGroupViewSet,
     ManagementGroupActionPolicyViewSet,
+    ManagementGroupMemberBatchExpiredAtViewSet,
     ManagementGroupMemberExpiredAtViewSet,
     ManagementGroupMemberViewSet,
     ManagementGroupPolicyActionViewSet,
@@ -62,6 +64,8 @@ __all__ = [
     "ManagementMemberGroupDetailViewSet",
     "ManagementGroupPolicyTemplateViewSet",
     "ManagementTemplateViewSet",
+    "ManagementGroupMemberBatchExpiredAtViewSet",
+    "ManagementGroupBatchExpiredAtRenewApplicationViewSet",
 ]
 
 from .template import ManagementTemplateViewSet

@@ -1191,7 +1191,6 @@
           name = curChainData.name;
           systemId = curChainData.system_id;
         }
-        console.log(this.isFirstLevelEmpty);
         // 如果是手动输入或者第一次加载resource为空且身份不是超管，代表它的范围只是他本身
         if (this.isManualInput || (this.isFirstLevelEmpty && !this.isSuperManager)) {
           parentChain.push({
@@ -1355,7 +1354,7 @@
       async handleAsyncNodes (node, index, flag) {
         const chainLen = this.curChain.length;
         // 兼容如果是实例视图最后一个节点且child_type为空，则代表没有下一级不需要调接口
-        if (!node.child_type && node.level + 1 >= chainLen) {
+        if (!node.childType && node.level + 1 >= chainLen) {
           node.expanded = false;
           node.async = false;
           this.emptyTreeData = formatCodeData(0, this.emptyData, true);

@@ -12,7 +12,7 @@
           <render-search>
             <div class="search-title">
               {{ $t(`m.info['从权限模板选择添加：']`) }}{{ $t(`m.common['已选择']`) }}
-              <span style="color: #2dcb56;">{{ currentSelectList.length }}</span>
+              <span style="color: #3a84ff;">{{ currentSelectList.length }}</span>
               {{ $t(`m.common['条']`) }}
             </div>
             <div slot="right">
@@ -42,6 +42,7 @@
             </div>
           </render-search>
           <!-- eslint-disable max-len -->
+          <bk-alert type="info" :title="$t(`m.info['最多选择权限模板数量']`, { value: maxSelectCount })" />
           <bk-table
             ref="permTemplateTableRef"
             :data="tableList"
@@ -55,7 +56,7 @@
             @page-limit-change="handleLimitChange"
             @select="handlerChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column type="selection" align="center" :selectable="getIsSelect"></bk-table-column>
+            <bk-table-column type="selection" align="center" :selectable="getDefaultSelect"></bk-table-column>
             <bk-table-column :label="$t(`m.permTemplate['模板名']`)">
               <template slot-scope="{ row }">
                 <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
@@ -196,6 +197,7 @@
         searchParams: {},
         sysCount: 0,
         actionCount: 0,
+        maxSelectCount: typeof window.GROUP_AUTH_TEMPLATE_ONCE_LIMIT === 'number' ? window.GROUP_AUTH_TEMPLATE_ONCE_LIMIT : 10,
         curSelectedSystem: [],
         curSelectedTemplate: [],
         tempalteDetailList: [],
@@ -339,8 +341,10 @@
         }
       },
 
-      getIsSelect (row, index) {
-        return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled;
+      getDefaultSelect (row) {
+        const index = this.currentSelectList.findIndex((v) => String(v) === String(row.id));
+        const isMax = this.currentSelectList.length >= this.maxSelectCount ? index !== -1 : true;
+        return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled && isMax;
       },
 
       handleEmptyClear () {

@@ -1017,7 +1017,8 @@
         }
 
         );
-        const curData = _.cloneDeep(this.tableList[this.curIndex]);
+        const tableList = _.cloneDeep(this.tableList);
+        const curData = _.cloneDeep(tableList[this.curIndex]);
         // eslint-disable-next-line max-len
         curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex]];
@@ -1047,13 +1048,13 @@
             && groupItem.related_resource_types[0].condition[0] === 'none');
         });
 
-        const relatedList = _.cloneDeep(this.tableList.filter(item => {
+        const relatedList = tableList.filter(item => {
           return !item.isAggregate
             && relatedActions.includes(item.id)
             // && item.resource_groups[this.curGroupIndex]
             // && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
             && item.resource_groups.map(item => !item.related_resource_types.every(sub => sub.empty))[0];
-        }));
+        });
 
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
@@ -1350,17 +1351,16 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
+          if (tempCurData[0] === 'none') {
+            return;
+          }
+          content.condition = _.cloneDeep(tempCurData);
         }
-        if (tempCurData[0] === 'none') {
-          return;
-        }
-        content.condition = _.cloneDeep(tempCurData);
         content.isError = false;
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
 
       handlerOnBatchPaste (payload, content, index, subIndex) {
-        console.log(payload, this.curCopyMode, this.curCopyData, this.curCopyKey, 454455);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -1521,7 +1521,6 @@
             }
           });
         }
-        console.log(payload, content, this.curCopyKey, tempCurData, '内容');
         if (content.hasOwnProperty('isError')) {
           content.isError = false;
         }
