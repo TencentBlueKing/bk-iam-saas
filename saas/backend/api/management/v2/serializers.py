@@ -233,7 +233,7 @@ class ManagementGroupIDsSLZ(serializers.Serializer):
     group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(label="用户组ID"))
 
 
-class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, ReasonSLZ):
+class ManagementGroupApplicationSLZ(serializers.Serializer):
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
     content_template = serializers.DictField(label="审批单内容模板", required=False, allow_empty=True, default=dict)
     group_content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
@@ -257,6 +257,12 @@ class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, R
             data["content_template"] = None
             data["group_content"] = None
         return data
+
+
+class ManagementGroupApplicationCreateSLZ(
+    ManagementGroupApplicationSLZ, ManagementGroupIDsSLZ, ExpiredAtSLZ, ReasonSLZ
+):
+    pass
 
 
 class ManagementApplicationIDSLZ(serializers.Serializer):
@@ -421,19 +427,16 @@ class ManagementSubjectTemplateSLZ(serializers.ModelSerializer):
         fields = ("id", "name", "description", "readonly", "source_group_id", "creator", "created_time")
 
 
-class ManagementGroupBatchSLZ(ExpiredAtSLZ):
+class ManagementGroupExpiredAtSLZ(ExpiredAtSLZ):
     id = serializers.IntegerField(help_text="用户组 ID")
 
 
 class ManagementGroupsSLZ(serializers.Serializer):
-    groups = serializers.ListField(child=ManagementGroupBatchSLZ(label="用户组信息"))
+    groups = serializers.ListField(child=ManagementGroupExpiredAtSLZ(label="用户组信息"))
 
 
-class ManagementGroupApplicationBatchSLZ(ReasonSLZ, ManagementGroupsSLZ):
-    applicant = serializers.CharField(label="申请者的用户名", max_length=32)
-    content_template = serializers.DictField(label="审批单内容模板", required=False, allow_empty=True, default=dict)
-    group_content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
-    title_prefix = serializers.CharField(label="审批单标题前缀", required=False, allow_blank=True, default="")
+class ManagementGroupApplicationBatchSLZ(ManagementGroupApplicationSLZ, ReasonSLZ, ManagementGroupsSLZ):
+    pass
 
 
 class GroupMemberExpiredSLZ(GroupMemberSLZ):
