@@ -448,7 +448,7 @@ class ManagementTemplateCreateSLZ(TemplateCreateSLZ):
 class ManagementTemplateIdSLZ(TemplateIdSLZ):
     pass
 
-  
+
 class ManagementGroupExpiredAtSLZ(ExpiredAtSLZ):
     id = serializers.IntegerField(help_text="用户组 ID")
 
