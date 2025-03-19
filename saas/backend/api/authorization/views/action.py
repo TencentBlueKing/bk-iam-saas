@@ -33,7 +33,7 @@ class ActionAttributeView(AuthViewMixin, APIView):
     authorization_api_permission = {
         "post": (
             VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value,
-            AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
+            AuthorizationAPIEnum.AUTHORIZATION_ATTRIBUTE.value,
         ),
     }
 
@@ -47,7 +47,7 @@ class ActionAttributeView(AuthViewMixin, APIView):
         tags=["open"],
     )
     @view_audit_decorator(SubjectPolicyGrantOrRevokeAuditProvider)
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         serializer = ActionAttributeSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
