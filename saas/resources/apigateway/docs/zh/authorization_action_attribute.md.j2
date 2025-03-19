@@ -1,0 +1,95 @@
+### 单个属性授权接口
+
+* 接口描述：
+    - 对单个操作进行属性授权
+
+
+#### Parameters
+
+| 字段 | 类型            |是否必须  | 描述                       |
+|:---|:--------------|:---|:-------------------------|
+| system | string        | 是 | 系统唯一标识                   |
+| type  | string        | 是 | 资源类型的唯一标识                |
+| creator | string        | 是 | 资源实例的创建者                 |
+| attributes | array(object) | 是 | 资源属性列表，`多个属性之间的权限逻辑是AND` |
+| action_id | string        | 是 | 操作唯一标识                   |
+
+attributes 列表的元素说明
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| id | string | 是 | 资源属性的唯一标识 |
+| name | string | 是 | 资源属性的名称 |
+| values | array(object) | 是 | 资源属性的值，支持多个值，`多个值之间的权限逻辑是OR` |
+
+values 列表的元素说明
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| id | string | 是 |  资源属性值的唯一标识 |
+| name | string | 是 | 资源属性值的名称 |
+
+
+#### Request
+
+```json
+{
+    "system": "bk_sops",
+    "type":"task",
+    "creator":"admin",
+    "action_id":"task_view",
+    "attributes": [
+        {
+            "id":"owner",
+            "name":"任务所属者",
+            "values": [
+                {
+                    "id": "admin",
+                    "name": "admin(管理员)"
+                }
+            ]
+        }
+    ]
+}
+```
+
+#### Response
+
+data 数组元素
+
+| 字段      |  类型      | 描述                    |
+|:---|:---|:----------------------|
+|action|object| creator 被授权对应的 Action |
+|policy_id|int| creator 被授权对应的策略 ID   |
+|statistics|object| 统计数据                  |
+
+action
+
+| 字段 |  类型 |  描述 |
+|:---|:---|:---|
+|id|string| 操作 ID |
+
+statistics
+
+| 字段 | 类型  | 描述   |
+|:---|:----|:-----|
+|instance_count| int | 实例数量 |
+
+```json
+{
+  "data": [  // 表示creator被授权对应的Action和策略ID列表
+    {
+        "action": {
+            "id": "task_view"
+        },
+        "policy_id": 1,
+        "statistics": {
+            "instance_count": 0
+      }
+    }
+  ],
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}
+```

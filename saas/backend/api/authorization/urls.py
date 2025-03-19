@@ -41,7 +41,7 @@ urlpatterns = [
         views.resource_creator_action.ResourceCreatorActionAttributeView.as_view(),
         name="open.grant_resource_creator_action_attribute",
     ),
-    # 新建关联授权 - 单个属性授权
+    # 单个属性授权
     path(
         "action_attribute/",
         views.action.ActionAttributeView.as_view(),
