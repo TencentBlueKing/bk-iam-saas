@@ -33,14 +33,14 @@
         @row-mouse-enter="handleRowMouseEnter"
         @row-mouse-leave="handleRowMouseLeave">
         <bk-table-column type="selection" align="center" :selectable="getSelectable"></bk-table-column>
-        <bk-table-column :label="$t(`m.userGroup['用户组']`)" width="400">
+        <bk-table-column :label="$t(`m.userGroup['用户组']`)">
           <template slot-scope="{ row }">
             <span class="group-name" :title="row.group_name" @click.stop="handleViewDetail(row)">
               {{ row.group_name }}
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t(`m.common['描述']`)" width="400">
+        <bk-table-column :label="$t(`m.common['描述']`)">
           <template slot-scope="{ row }">
             <span :title="row.group_desc">{{ row.group_desc || '--' }}</span>
           </template>
@@ -174,9 +174,8 @@
                   if (this.list.find(item => item.id === payload.process_id)) {
                       return this.list.find(item => item.id === payload.process_id).name;
                   }
-                  return this.$t(`m.approvalProcess['默认审批流程']`);
-              }
-              return '';
+                }
+                return this.$t(`m.approvalProcess['默认审批流程']`);
           };
       },
       curTitle () {
