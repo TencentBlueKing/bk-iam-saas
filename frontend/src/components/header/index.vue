@@ -121,7 +121,7 @@
     // 管理空间
     [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], NORMAL_DOCU_LINK],
     // 管理员
-    [['administrator'], NORMAL_DOCU_LINK],
+    [['administrator', 'systemAdministrator'], NORMAL_DOCU_LINK],
     // 审批流程
     [['approvalProcess'], NORMAL_DOCU_LINK],
     // 用户

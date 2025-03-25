@@ -45,16 +45,6 @@
             <span :title="row.group_desc">{{ row.group_desc || '--' }}</span>
           </template>
         </bk-table-column>
-        <template v-if="['rating_manager'].includes(user.role.type)">
-          <bk-table-column :label="$t(`m.nav['管理空间']`)">
-            <!-- <template slot-scope="{ row }">
-                            <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
-                                {{ row.role.name || '--' }}
-                            </span>
-                            <span>{{ user.role.name === row.role.name ? `(${il8n('levelSpace', '当前空间')})` : '' }}</span>
-                        </template> -->
-          </bk-table-column>
-        </template>
         <bk-table-column :label="$t(`m.approvalProcess['审批流程']`)">
           <template slot-scope="{ row }">
             <section class="process-select-wrapper" v-if="row.canEdit || row.isToggle">
@@ -62,6 +52,7 @@
                 :value="row.process_id"
                 :clearable="false"
                 searchable
+                :search-placeholder="$t(`m.approvalProcess['请输入关键字搜索']`)"
                 @selected="handleProcessSelect(...arguments, row)"
                 @toggle="handleSelectToggle(...arguments, row)">
                 <bk-option v-for="option in list"
@@ -84,7 +75,7 @@
               </bk-select>
             </section>
             <section class="process-name" v-else>
-              {{ row.process_id | proceeNameFilter(list) }}
+              {{ row.process_id | processNameFilter(list) }}
             </section>
           </template>
         </bk-table-column>
@@ -132,7 +123,7 @@
       RenderPermSideslider
     },
     filters: {
-      proceeNameFilter (value, list) {
+      processNameFilter (value, list) {
         const data = list.find(item => item.id === value);
         if (data) return data.name;
         return il8n('approvalProcess', '默认审批流程');

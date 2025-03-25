@@ -1,40 +1,46 @@
 <template>
-  <div class="iam-approval-process-set-wrapper">
-    <section class="iam-approval-process-set-item-wrapper" v-if="isShowProcessSelect">
-      <render-set-item
-        v-for="(item, index) in processSetList"
-        :key="index"
-        :ref="`${index}SetRef`"
-        :class="index > 0 ? 'set-margin-left' : ''"
-        :cur-value="item.process_id"
-        :title="item.title"
-        :list="processData[item.type]"
-        @selected="handleSelected(...arguments, item, index)" />
-    </section>
-    <section
-      :class="[
-        'iam-approval-process-set-content-wrapper',
-        { 'set-style': isShowProcessSelect },
-        { 'hide-process-table': isShowProcessTable },
-        { 'show-notice-alert': showNoticeAlert && showNoticeAlert() }
-      ]"
-    >
-      <bk-tab
-        :active.sync="active"
-        type="unborder-card"
-        ext-cls="iam-approval-process-set-tab-cls">
-        <bk-tab-panel
-          v-for="(panel, index) in panels"
-          v-bind="panel"
-          :key="index">
-        </bk-tab-panel>
-        <component
-          :is="active"
-          :list="processData[activeMap[active]]" />
-      </bk-tab>
-    </section>
+  <div>
+    <div class="iam-approval-process-set-wrapper">
+      <section class="iam-approval-process-set-item-wrapper" v-if="isShowProcessSelect">
+        <render-set-item
+          v-for="(item, index) in processSetList"
+          :key="index"
+          :ref="`${index}SetRef`"
+          :class="index > 0 ? 'set-margin-left' : ''"
+          :cur-value="item.process_id"
+          :title="item.title"
+          :list="processData[item.type]"
+          @selected="handleSelected(...arguments, item, index)" />
+      </section>
+      <section
+        :class="[
+          'iam-approval-process-set-content-wrapper',
+          { 'set-style': isShowProcessSelect },
+          { 'hide-process-table': isShowProcessTable },
+          { 'show-notice-alert': showNoticeAlert && showNoticeAlert() }
+        ]"
+      >
+        <bk-tab
+          :active.sync="active"
+          type="unborder-card"
+          ext-cls="iam-approval-process-set-tab-cls">
+          <bk-tab-panel
+            v-for="(panel, index) in panels"
+            v-bind="panel"
+            :key="index">
+          </bk-tab-panel>
+          <component
+            :is="active"
+            :list="processData[activeMap[active]]" />
+        </bk-tab>
+      </section>
+    </div>
+    <div class="approval-process-group-setting" v-if="!['subset_manager'].includes(user.role.type)">
+      <UserGroupSetting />
+    </div>
   </div>
 </template>
+
 <script>
   import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
@@ -44,6 +50,7 @@
   import CustomPermProcess from './components/custom-perm-process';
   import CreateRateManagerProcess from './components/create-rate-manager-process';
   import { formatCodeData } from '@/common/util';
+  import UserGroupSetting from '@/views/user-group-setting';
 
   /**
    * ACTIVE_COMPONENT_MAP
@@ -62,7 +69,8 @@
       JoinRateManagerProcess,
       JoinGroupProcess,
       CustomPermProcess,
-      CreateRateManagerProcess
+      CreateRateManagerProcess,
+      UserGroupSetting
     },
     data () {
       return {
@@ -272,9 +280,9 @@
     }
   };
 </script>
+
 <style lang="postcss">
     .iam-approval-process-set-wrapper {
-        padding: 24px;
         .iam-approval-process-set-item-wrapper {
             display: flex;
             justify-content: flex-start;
@@ -283,20 +291,18 @@
             }
         }
         .iam-approval-process-set-content-wrapper {
-            min-height: calc(100vh - 150px);
             background: #ffffff;
             border-radius: 2px;
             box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, .05);
             &.set-style {
                 margin-top: 20px;
-                min-height: calc(100vh - 250px);
             }
             &.hide-process-table {
               display: none;
             }
-            &.show-notice-alert {
-              min-height: calc(100vh - 190px);
-            }
+            /* &.show-notice-alert {
+              max-height: calc(100vh - 340px);
+            } */
             .iam-approval-process-set-tab-cls {
                 .bk-tab-header {
                     height: 60px;
@@ -314,5 +320,9 @@
                 }
             }
         }
+    }
+    .approval-process-group-setting {
+      padding-top: 24px;
+      padding-bottom: 48px;
     }
 </style>
