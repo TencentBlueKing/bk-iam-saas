@@ -90,6 +90,7 @@
   // import IamGuide from '@/components/iam-guide/index.vue';
   import { existValue, formatI18nKey, navDocCenterPath } from '@/common/util';
   import { bus } from '@/common/bus';
+  import { buildURLParams } from '@/common/url';
   import { mapGetters } from 'vuex';
   import { afterEach } from '@/router';
   import { kebabCase } from 'lodash';
@@ -163,6 +164,11 @@
         this.layoutCls = kebabCase(to.name) + '-container';
         this.routeName = to.name;
         this.userGroupId = to.params.id;
+        if (this.user.role && this.user.role.id > 0) {
+          window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
+            role_name: this.user.role.name
+          }))}`);
+        }
         this.$store.commit('updateRoute', from.name);
         this.getRouteInstanceSearch({ routeName: to.name });
       },

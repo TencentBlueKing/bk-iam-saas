@@ -43,6 +43,7 @@ export const getRouterDiff = (payload) => {
       'user',
       'permTemplateDetail',
       'administrator',
+      'systemAdministrator',
       'approvalProcess',
       'groupPermRenewal',
       'audit',
@@ -88,6 +89,7 @@ export const getRouterDiff = (payload) => {
       'gradingAdminEdit',
       'user',
       'administrator',
+      'systemAdministrator',
       'approval',
       'permRenewal',
       'audit',
@@ -110,7 +112,8 @@ export const getRouterDiff = (payload) => {
       'sensitivityLevel',
       'resourcePermManage',
       'renewalNotice',
-      'userOrgPerm'
+      'userOrgPerm',
+      'administrator'
     ];
   }
   if (payload === 'system_manager') {
@@ -129,6 +132,7 @@ export const getRouterDiff = (payload) => {
       'gradingAdminDetail',
       'gradingAdminEdit',
       'user',
+      'administrator',
       'approval',
       'permRenewal',
       'permTransfer',
@@ -171,6 +175,7 @@ export const getRouterDiff = (payload) => {
       'gradingAdminEdit',
       'user',
       'administrator',
+      'systemAdministrator',
       'approval',
       'permRenewal',
       'permTransfer',
@@ -205,6 +210,7 @@ export const getRouterDiff = (payload) => {
       'gradingAdminEdit',
       'user',
       'administrator',
+      'systemAdministrator',
       'approval',
       'permRenewal',
       'permTransfer',
@@ -263,6 +269,7 @@ export const getRouterDiff = (payload) => {
     'gradingAdminDetail',
     'gradingAdminEdit',
     'administrator',
+    'systemAdministrator',
     'approvalProcess',
     'approval',
     'permRenewal',
@@ -299,6 +306,7 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'user',
       'permTemplateDetail',
       'administrator',
+      'systemAdministrator',
       'approvalProcess',
       'groupPermRenewal',
       'audit',
@@ -359,6 +367,7 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'gradingAdminDetail',
       'gradingAdminEdit',
       'administrator',
+      'systemAdministrator',
       'approvalProcess',
       'approval',
       'permRenewal',
@@ -434,7 +443,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'userGroupSetting',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'systemAdministrator'
     ];
     if (['hasSystemNoSuperManager'].includes(managerPerm)) {
       // 非超管用户隐藏的路由
@@ -446,7 +456,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
         'gradingAdminClone',
         'gradingAdminDetail',
         'gradingAdminEdit',
-        'renewalNotice'
+        'renewalNotice',
+        'systemAdministrator'
       ];
       const systemManagerMenu = [
         ...menuList,

@@ -36,7 +36,7 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t(`m.set['更多权限设置']`)">
+        <!-- <bk-table-column :label="$t(`m.set['更多权限设置']`)">
           <template slot-scope="{ row }">
             <bk-checkbox
               :true-value="true"
@@ -47,7 +47,7 @@
               {{ $t(`m.set['拥有蓝鲸平台所有操作权限']`) }}
             </bk-checkbox>
           </template>
-        </bk-table-column>
+        </bk-table-column> -->
         <bk-table-column :label="$t(`m.common['操作-table']`)" width="120">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit">

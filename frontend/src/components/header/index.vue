@@ -121,7 +121,7 @@
     // 管理空间
     [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], NORMAL_DOCU_LINK],
     // 管理员
-    [['administrator'], NORMAL_DOCU_LINK],
+    [['administrator', 'systemAdministrator'], NORMAL_DOCU_LINK],
     // 审批流程
     [['approvalProcess'], NORMAL_DOCU_LINK],
     // 用户
@@ -247,6 +247,7 @@
             active = 'GroupPerm';
           }
           this.active = active;
+          this.handlePageTabChange(active);
         }
         for (const [key, value] of this.docuLinkMap.entries()) {
           if (key.includes(to.name)) {
@@ -492,16 +493,25 @@
 
       handlePageTabChange (name) {
         bus.$emit('on-tab-change', name);
-
-        let tab = '';
-        if (name === 'GroupDetail') {
-          tab = 'group_detail';
-        } else if (name === 'GroupPerm') {
-          tab = 'group_perm';
-        }
+        const nameMap = {
+          GroupDetail: () => {
+            return 'group_detail';
+          },
+          GroupPerm: () => {
+            return 'group_perm';
+          },
+          TemplateDetail: () => {
+            return 'TemplateDetail';
+          },
+          AttachGroup: () => {
+            return 'AttachGroup';
+          }
+        };
+        const tab = nameMap[name] ? nameMap[name]() : '';
         if (tab) {
           window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
-            tab: tab
+            tab: tab,
+            role_name: this.user.role.name
           }))}`);
         }
       }

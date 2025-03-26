@@ -208,6 +208,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import IamSearchSelect from '@/components/iam-search-select';
   import { fuzzyRtxSearch } from '@/common/rtx';
   import { buildURLParams } from '@/common/url';
@@ -341,6 +342,9 @@
         },
         tableHeight: getWindowHeight() - 185
       };
+    },
+    computed: {
+      ...mapGetters(['user'])
     },
     watch: {
       'pagination.current' (value) {
@@ -489,6 +493,7 @@
           limit,
           current,
           month: this.currentMonth,
+          role_name: this.user.role.name,
           ...this.searchParams
         };
         window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
