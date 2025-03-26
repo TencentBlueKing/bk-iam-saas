@@ -195,9 +195,7 @@
           this.processData[type] = Object.freeze(data);
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         }
       },
@@ -223,9 +221,7 @@
           }
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         }
       },

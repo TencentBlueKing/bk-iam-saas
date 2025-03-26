@@ -291,6 +291,7 @@
       bus.$on('nav-change', ({ id }, index) => {
         this.curRoleId = id;
         this.$store.commit('updateCurRoleId', this.curRoleId);
+        this.$store.commit('updateNavId', this.curRoleId);
       });
     },
     methods: {

@@ -243,7 +243,8 @@
         const { limit, current } = this.pagination;
         const queryParams = {
           limit,
-          current
+          current,
+          role_name: this.user.role.name
         };
         if (this.searchValue !== '') {
           this.emptyData.tipType = 'search';
@@ -292,9 +293,7 @@
           this.tableList = data.results;
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;

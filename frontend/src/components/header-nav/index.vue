@@ -125,7 +125,6 @@
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
-  import { buildURLParams } from '@/common/url';
   import { formatI18nKey, jsonpRequest, getManagerMenuPerm, navDocCenterPath } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
@@ -655,28 +654,6 @@
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');
         window.localStorage.removeItem('index');
-      },
-
-      handlePageTabChange (name) {
-        bus.$emit('on-tab-change', name);
-
-        let tab = '';
-        if (name === 'GroupDetail') {
-          tab = 'group_detail';
-        } else if (name === 'GroupPerm') {
-          tab = 'group_perm';
-        }
-        if (tab) {
-          window.history.replaceState(
-            {},
-            '',
-            `?${buildURLParams(
-              Object.assign({}, this.$route.query, {
-                tab: tab
-              })
-            )}`
-          );
-        }
       },
 
       // 根据角色设置

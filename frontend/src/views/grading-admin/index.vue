@@ -495,7 +495,8 @@
         const { limit, current } = this.pagination;
         const queryParams = {
           limit,
-          current
+          current,
+          role_name: this.user.role.name
         };
         if (this.searchValue !== '') {
           queryParams.name = this.searchValue;
