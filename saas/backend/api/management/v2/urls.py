@@ -72,7 +72,7 @@ urlpatterns = [
     ),
     # 用户组绑定权限模板的路由
     path(
-        "groups/<int:id>/policies_template/",
+        "groups/<int:id>/templates/",
         views.ManagementGroupPolicyTemplateViewSet.as_view({"post": "create"}),
         name="open.management.v2.group_policy_template",
     ),

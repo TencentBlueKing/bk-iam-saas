@@ -3470,7 +3470,7 @@ paths:
           resourcePermissionRequired: false
         disabledStages: [ ]
         descriptionEn:
-  /api/v2/open/management/systems/{system_id}/groups/{id}/policies_template/:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/template/:
       post:
           operationId: mgmt_api_bind_group_templates
           description: 分级管理员绑定权限模板和用户组
@@ -3487,7 +3487,7 @@ paths:
               backend:
                   type: HTTP
                   method: post
-                  path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies_template/
+                  path: /api/v2/open/management/systems/{system_id}/groups/{id}/template/
                   matchSubpath: false
                   timeout: 0
                   upstreams: { }
