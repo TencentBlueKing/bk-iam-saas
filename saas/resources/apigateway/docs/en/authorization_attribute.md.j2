@@ -1,0 +1,95 @@
+### Single Operation Attribute Authorization Interface
+
+* Preface Description：
+    - Attribute authorization for single actions
+
+
+#### Parameters
+
+| Field | Type | Required | Description |
+|:---|:--------------|:---|:-------------------------|
+| system | string        | yes | system unique identifier                   |
+| type  | string        | yes | Unique identifier for the resource type                |
+| creator | string        | yes | The creator of the resource instance                 |
+| attributes | array(object) | yes | A list of resource attributes, ``the permission logic between multiple attributes is AND`'' |
+| action_id | string        | yes | action unique identifier                   |
+
+Description of the elements of the attributes list
+
+| Field | Type | Required | Description |
+|:---|:---|:---|:---|
+| id | string | Yes | Unique identifier for the resource attribute |
+| name | string | Yes | The name of the resource attribute |
+| values | array(object) | Yes | The values of the resource attribute, multiple values are supported, and the permission logic between `multiple values is OR` |
+
+Description of the elements of the values list
+
+| Field | Type | Required | Description |
+|:---|:---|:---|:---|
+| id | string | Yes | The unique identifier of the resource attribute value |
+| name | string | Yes | The name of the resource attribute value |
+
+
+#### Request
+
+```json
+{
+    "system": "bk_sops",
+    "type":"task",
+    "creator":"admin",
+    "action_id":"task_view",
+    "attributes": [
+        {
+            "id":"owner",
+            "name":"task-owner",
+            "values": [
+                {
+                    "id": "admin",
+                    "name": "admin(管理员)"
+                }
+            ]
+        }
+    ]
+}
+```
+
+#### Response
+
+data array element
+
+| Field | Type | Description |
+|:---|:---|:---|
+|action|object| creator is authorized for the corresponding Action |
+|policy_id|int| creator's authorized policy ID |
+|statistics|object| Instance statistics |
+
+action
+
+| Field | Type | Description |
+|:---|:---|:---|
+|id|string| action ID |
+
+statistics
+
+| Field | Type | Description    |
+|:---|:---|:---|
+|instance_count| int | instance count |
+
+```json
+{
+  "data": [
+    {
+        "action": {
+            "id": "task_view"
+        },
+        "policy_id": 1,
+        "statistics": {
+            "instance_count": 0
+      }
+    }
+  ],
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}
+```

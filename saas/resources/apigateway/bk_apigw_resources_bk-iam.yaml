@@ -3499,3 +3499,29 @@ paths:
           resourcePermissionRequired: false
         disabledStages: [ ]
         descriptionEn:
+  /api/v1/open/authorization/attribute/:
+    post:
+      operationId: authorization_attribute
+      description: 操作属性授权
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/attribute/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:

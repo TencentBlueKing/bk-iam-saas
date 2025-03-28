@@ -217,3 +217,7 @@ class ResourceCreatorActionAttributeSLZ(ResourceCreatorActionBaseInfoSLZ):
     attributes = serializers.ListField(
         label="属性", default=list, child=SingleAttributeSLZ(label="属性"), allow_empty=True
     )
+
+
+class ActionAttributeSLZ(ResourceCreatorActionAttributeSLZ):
+    action_id = serializers.CharField(label="操作id")
