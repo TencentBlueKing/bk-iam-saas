@@ -1,7 +1,7 @@
 <template>
   <div class="iam-grading-admin-detail-wrapper">
     <p class="edit-action">
-      {{curRoleType === 'staff' ? $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) : $t(`m.grading['如需编辑管理空间的内容请点击']`)}}
+      {{curRoleType === 'staff' ? $t(`m.levelSpace['如需编辑空间信息的内容请点击']`) : $t(`m.grading['如需编辑管理空间的内容请点击']`)}}
       <bk-button
         theme="primary"
         text

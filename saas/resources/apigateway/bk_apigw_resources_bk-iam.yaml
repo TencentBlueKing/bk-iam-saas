@@ -3551,3 +3551,83 @@ paths:
                   resourcePermissionRequired: false
               disabledStages: [ ]
               descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/batch_expired_at/:
+    put:
+      operationId: v2_management_update_group_members_batch_expired_at
+      description: 批量更新用户组成员有效期
+      tags:
+        - open
+        - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/batch_expired_at/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/-/batch_expired_at_renew/applications/:
+    post:
+      operationId: v2_management_groups_batch_expired_at_renew_applications
+      description: 用户组批量续期申请单
+      tags:
+        - open
+        - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/groups/-/batch_expired_at_renew/applications/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:
+  /api/v1/open/authorization/attribute/:
+    post:
+      operationId: authorization_attribute
+      description: 操作属性授权
+      tags:
+        - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/attribute/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: [ ]
+        descriptionEn:

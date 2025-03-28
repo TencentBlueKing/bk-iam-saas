@@ -13,6 +13,7 @@ from .application import (
     ManagementGradeManagerApplicationViewSet,
     ManagementGradeManagerUpdatedApplicationViewSet,
     ManagementGroupApplicationViewSet,
+    ManagementGroupBatchExpiredAtRenewApplicationViewSet,
     ManagementGroupRenewApplicationViewSet,
 )
 from .approval import ManagementApplicationApprovalView
@@ -20,6 +21,7 @@ from .grade_manager import ManagementGradeManagerViewSet
 from .group import (
     ManagementGradeManagerGroupViewSet,
     ManagementGroupActionPolicyViewSet,
+    ManagementGroupMemberBatchExpiredAtViewSet,
     ManagementGroupMemberExpiredAtViewSet,
     ManagementGroupMemberViewSet,
     ManagementGroupPolicyActionViewSet,
@@ -36,6 +38,7 @@ from .subject import (
 )
 from .subject_template import ManagementGradeManagerSubjectTemplateViewSet
 from .subset_manager import ManagementSubsetManagerCreateListViewSet, ManagementSubsetManagerViewSet
+from .template import ManagementTemplateViewSet
 
 __all__ = [
     "ManagementSystemManagerGroupViewSet",
@@ -62,6 +65,6 @@ __all__ = [
     "ManagementMemberGroupDetailViewSet",
     "ManagementGroupPolicyTemplateViewSet",
     "ManagementTemplateViewSet",
+    "ManagementGroupMemberBatchExpiredAtViewSet",
+    "ManagementGroupBatchExpiredAtRenewApplicationViewSet",
 ]
-
-from .template import ManagementTemplateViewSet

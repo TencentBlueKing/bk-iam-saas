@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import time
+
 from django.conf import settings
 from django.db.models import QuerySet
 from django.utils.translation import gettext as _
@@ -22,7 +24,9 @@ from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.biz.subject_template import SubjectTemplateBiz
-from backend.service.constants import GroupMemberType
+from backend.common.serializers import GroupMemberSLZ
+from backend.common.time import PERMANENT_SECONDS
+from backend.service.constants import ADMIN_USER, GroupMemberType
 from backend.service.models import Subject
 from backend.util.serializer import StringArrayField
 
@@ -231,7 +235,7 @@ class ManagementGroupIDsSLZ(serializers.Serializer):
     group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(label="用户组ID"))
 
 
-class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, ReasonSLZ):
+class ManagementGroupApplicationSLZ(serializers.Serializer):
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
     content_template = serializers.DictField(label="审批单内容模板", required=False, allow_empty=True, default=dict)
     group_content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
@@ -255,6 +259,12 @@ class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, R
             data["content_template"] = None
             data["group_content"] = None
         return data
+
+
+class ManagementGroupApplicationCreateSLZ(
+    ManagementGroupApplicationSLZ, ManagementGroupIDsSLZ, ExpiredAtSLZ, ReasonSLZ
+):
+    pass
 
 
 class ManagementApplicationIDSLZ(serializers.Serializer):
@@ -437,3 +447,36 @@ class ManagementTemplateCreateSLZ(TemplateCreateSLZ):
 
 class ManagementTemplateIdSLZ(TemplateIdSLZ):
     pass
+
+  
+class ManagementGroupExpiredAtSLZ(ExpiredAtSLZ):
+    id = serializers.IntegerField(help_text="用户组 ID")
+
+
+class ManagementGroupsSLZ(serializers.Serializer):
+    groups = serializers.ListField(child=ManagementGroupExpiredAtSLZ(label="用户组信息"))
+
+
+class ManagementGroupApplicationBatchSLZ(ManagementGroupApplicationSLZ, ReasonSLZ, ManagementGroupsSLZ):
+    pass
+
+
+class GroupMemberExpiredSLZ(GroupMemberSLZ):
+    expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
+
+
+class GroupBatchUpdateMemberSLZ(serializers.Serializer):
+    members = serializers.ListField(label="成员列表", child=GroupMemberExpiredSLZ(label="成员"), allow_empty=False)
+
+    def validate_members(self, value):
+        members = []
+
+        for m in value:
+            # 过期时间不能小于当前时间
+            if m["expired_at"] <= int(time.time()):
+                raise serializers.ValidationError("expired_at must more then now")
+            # 屏蔽admin授权
+            if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER):
+                members.append(m)
+
+        return members

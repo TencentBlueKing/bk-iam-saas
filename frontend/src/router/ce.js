@@ -167,9 +167,6 @@ const ApprovalProcess = () => import(/* webpackChunkName: 'approvalProcess' */ '
 // 续期通知
 const RenewalNotice = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/renewal-notice');
 
-// 用户组设置
-const UserGroupSetting = () => import(/* webpackChunkName: 'userGroupSetting' */ '../views/user-group-setting');
-
 // 权限续期
 const PermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/perm-renewal');
 
@@ -460,7 +457,7 @@ export const routes = [
         path: 'user-org-perm',
         name: 'userOrgPerm',
         meta: {
-          headerTitle: il8n('nav', '用户/组织')
+          headerTitle: il8n('nav', '用户权限管理')
         },
         component: userOrgPerm
       },
@@ -468,7 +465,7 @@ export const routes = [
         path: 'user-group',
         name: 'userGroup',
         meta: {
-          headerTitle: il8n('nav', '用户组')
+          headerTitle: il8n('nav', '用户组管理')
         },
         component: UserGroup
       },
@@ -476,7 +473,7 @@ export const routes = [
         path: 'create-user-group',
         name: 'createUserGroup',
         meta: {
-          headerTitle: il8n('userGroup', '新建用户组'),
+          headerTitle: il8n('userGroup', '新建用户组管理'),
           backRouter: 'userGroup'
         },
         component: CreateUserGroup
@@ -485,7 +482,7 @@ export const routes = [
         path: 'clone-user-group',
         name: 'cloneUserGroup',
         meta: {
-          headerTitle: il8n('userGroup', '用户组克隆'),
+          headerTitle: il8n('userGroup', '用户组管理克隆'),
           backRouter: 'userGroup'
         },
         component: CloneUserGroup
@@ -682,6 +679,14 @@ export const routes = [
         component: SensitivityLevel
       },
       {
+        path: 'system-administrator',
+        name: 'systemAdministrator',
+        meta: {
+          headerTitle: il8n('common', '管理员')
+        },
+        component: Setting
+      },
+      {
         path: 'administrator',
         name: 'administrator',
         meta: {
@@ -693,7 +698,7 @@ export const routes = [
         path: 'approval-process',
         name: 'approvalProcess',
         meta: {
-          headerTitle: il8n('myApply', '审批流程')
+          headerTitle: il8n('myApply', '审批流程管理')
         },
         component: ApprovalProcess
       },
@@ -704,14 +709,6 @@ export const routes = [
           headerTitle: il8n('nav', '续期通知')
         },
         component: RenewalNotice
-      },
-      {
-        path: 'user-group-setting',
-        name: 'userGroupSetting',
-        meta: {
-          headerTitle: il8n('nav', '用户组设置')
-        },
-        component: UserGroupSetting
       },
       {
         path: 'no-perm',

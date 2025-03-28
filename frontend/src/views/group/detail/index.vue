@@ -24,7 +24,6 @@
   );
 
   export default {
-    name: '',
     components: {
       GroupPerm,
       GroupDetail
@@ -39,7 +38,7 @@
       };
     },
     computed: {
-            ...mapGetters(['externalSystemId'])
+            ...mapGetters(['externalSystemId', 'user'])
     },
     beforeRouteEnter (to, from, next) {
       store.commit('setHeaderTitle', '');
@@ -47,23 +46,20 @@
     },
     created () {
       this.id = Number(this.$route.params.id);
-      this.$once('hook:beforeDestroy', () => {
-        bus.$off('on-tab-change');
-      });
     },
     mounted () {
       this.componentWrapperHeight = window.innerHeight - 180;
       const query = this.$route.query;
       const tab = (query.tab || '').toLowerCase();
       this.componentName = (tab === 'group_perm' || tab === 'GroupPerm') ? 'GroupPerm' : 'GroupDetail';
-      bus.$on('on-tab-change', async (name) => {
+      bus.$on('on-tab-change', (name) => {
         this.comIsLoading = true;
-        this.componentName = name;
+        this.componentName = (name === 'group_perm' || name === 'GroupPerm') ? 'GroupPerm' : 'GroupDetail';
       });
     },
     methods: {
       /**
-       * 切换父组件的 loading 状态回调函数
+       * 换父组件的 loading 状态回调函数
        *
        * @param {boolean} isLoading loading 状态
        */

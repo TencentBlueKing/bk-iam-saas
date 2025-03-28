@@ -167,22 +167,14 @@ const currentNav = [
   },
   {
     icon: 'perm-manage',
-    name: il8n('nav', '权限管理'),
-    rkey: 'managePermission',
+    name: il8n('nav', '主动授权'),
+    rkey: 'proactiveAuthorization',
     children: [
-      {
-        icon: 'personal-user',
-        id: 'userOrgPermNav',
-        rkey: 'userOrgPerm',
-        name: il8n('nav', '用户/组织'),
-        path: `${SITE_URL}user-org-perm`,
-        disabled: false
-      },
       {
         icon: 'user-group',
         id: 'userGroupNav',
         rkey: 'userGroup',
-        name: il8n('nav', '用户组'),
+        name: il8n('nav', '用户组管理'),
         path: `${SITE_URL}user-group`,
         disabled: false
       },
@@ -201,6 +193,21 @@ const currentNav = [
         name: il8n('nav', '人员模板'),
         path: `${SITE_URL}member-template`,
         disabled: false
+      }
+    ]
+  },
+  {
+    icon: 'perm-manage',
+    name: il8n('nav', '权限管理'),
+    rkey: 'managePermission',
+    children: [
+      {
+        icon: 'personal-user',
+        id: 'userOrgPermNav',
+        rkey: 'userOrgPerm',
+        name: il8n('nav', '用户权限管理'),
+        path: `${SITE_URL}user-org-perm`,
+        disabled: false
       },
       {
         icon: 'personal-user',
@@ -216,37 +223,6 @@ const currentNav = [
         rkey: 'resourcePermiss',
         name: il8n('nav', '资源权限管理'),
         path: `${SITE_URL}resource-permiss`,
-        disabled: false
-      }
-      // {
-      //   icon: 'resource-perm-manage',
-      //   id: 'resourcePermManageNav',
-      //   rkey: 'resourcePermManage',
-      //   name: il8n('nav', '资源权限管理'),
-      //   path: `${SITE_URL}resource-perm-manage`,
-      //   disabled: false
-      // }
-    ]
-  },
-  {
-    icon: 'perm-manage',
-    name: il8n('nav', '管理空间'),
-    rkey: 'manageSpaces',
-    children: [
-      {
-        icon: 'auth-scope',
-        id: 'authorBoundaryNav',
-        rkey: 'authorBoundary',
-        name: il8n('nav', '授权边界-nav'),
-        path: `${SITE_URL}manage-spaces/authorization-boundary`,
-        disabled: false
-      },
-      {
-        icon: 'level-two-manage-space',
-        id: 'secondaryManageSpaceNav',
-        rkey: 'secondaryManageSpace',
-        name: il8n('nav', '二级管理空间'),
-        path: `${SITE_URL}manage-spaces/secondary-manage-space`,
         disabled: false
       }
     ]
@@ -265,6 +241,22 @@ const currentNav = [
     rkey: 'set',
     children: [
       {
+        icon: 'auth-scope',
+        id: 'authorBoundaryNav',
+        rkey: 'authorBoundary',
+        name: il8n('nav', '空间信息'),
+        path: `${SITE_URL}manage-spaces/authorization-boundary`,
+        disabled: false
+      },
+      {
+        icon: 'level-two-manage-space',
+        id: 'secondaryManageSpaceNav',
+        rkey: 'secondaryManageSpace',
+        name: il8n('nav', '二级管理空间'),
+        path: `${SITE_URL}manage-spaces/secondary-manage-space`,
+        disabled: false
+      },
+      {
         icon: 'mingandengji',
         id: 'sensitivityLevelNav',
         rkey: 'sensitivityLevel',
@@ -275,14 +267,22 @@ const currentNav = [
       {
         icon: 'super-admin',
         name: il8n('common', '管理员'),
-        id: 'settingNav',
+        id: 'systemAdministratorNav',
+        rkey: 'systemAdministrator',
+        path: `${SITE_URL}system-administrator`,
+        disabled: false
+      },
+      {
+        icon: 'super-admin',
+        name: il8n('common', '管理员'),
+        id: 'administratorNav',
         rkey: 'administrator',
         path: `${SITE_URL}administrator`,
         disabled: false
       },
       {
         icon: 'approval-process-manage',
-        name: il8n('myApply', '审批流程'),
+        name: il8n('myApply', '审批流程管理'),
         id: 'approvalProcessNav',
         rkey: 'approvalProcess',
         path: `${SITE_URL}approval-process`,
@@ -302,14 +302,6 @@ const currentNav = [
         id: 'auditNav',
         rkey: 'audit',
         path: `${SITE_URL}audit`,
-        disabled: false
-      },
-      {
-        icon: 'setting-fill',
-        name: il8n('nav', '用户组设置'),
-        id: 'userGroupSettingNav',
-        rkey: 'userGroupSetting',
-        path: `${SITE_URL}user-group-setting`,
         disabled: false
       }
     ]

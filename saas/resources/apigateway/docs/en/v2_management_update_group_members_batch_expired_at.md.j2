@@ -1,0 +1,46 @@
+### Bulk Renewal of User Group Membership
+
+#### Parameters
+
+| Field      | Type          | Location | Required | Description                                                                                                                         |
+| ---------- | ------------- | -------- | -------- |-------------------------------------------------------------------------------------------------------------------------------------|
+| system_id  | string        | path     | yes      | Access to system unique identifier                                                                                                  |
+| group_id   | int           | path     | yes      | User Group Id                                                                                                                       |
+| members    | array[object] | body     | yes      | List of members                                                                                                                     |
+| expired_at | int           | body     | yes      | Expiration timestamp (in seconds), i.e. the user or department will not have permissions related to the user group after expired_at |
+| type       | string        | body     | yes      | Member Type                                                                                                                         |
+| id         | string        | body     | yes      | Member Id                                                                                                                           |
+
+#### Request
+
+```json
+{
+  "members": [
+    {
+      "type": "user",
+      "id": "admin",
+      "expired_at": 1619587562
+    },
+    {
+      "type": "department",
+      "id": "1",
+      "expired_at": 1619587562
+    }
+  ]
+}
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "result": true,
+  "data": {}
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}
