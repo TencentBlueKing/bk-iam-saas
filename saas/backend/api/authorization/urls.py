@@ -44,7 +44,7 @@ urlpatterns = [
     # 单action属性授权
     path(
         "attribute/",
-        views.action.AuthAttributeView.as_view(),
+        views.resource.AuthAttributeView.as_view(),
         name="open.auth_attribute",
     ),
 ]
