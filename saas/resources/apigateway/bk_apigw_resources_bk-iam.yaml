@@ -3499,10 +3499,10 @@ paths:
           resourcePermissionRequired: false
         disabledStages: [ ]
         descriptionEn:
-  /api/v1/open/authorization/action_attribute/:
+  /api/v1/open/authorization/attribute/:
     post:
-      operationId: authorization_action_attribute
-      description: 单个属性授权
+      operationId: authorization_attribute
+      description: 操作属性授权
       tags:
         - open
       responses:
@@ -3515,7 +3515,7 @@ paths:
         backend:
           type: HTTP
           method: post
-          path: /api/v1/open/authorization/action_attribute/
+          path: /api/v1/open/authorization/attribute/
           matchSubpath: false
           timeout: 0
           upstreams: { }

@@ -41,10 +41,10 @@ urlpatterns = [
         views.resource_creator_action.ResourceCreatorActionAttributeView.as_view(),
         name="open.grant_resource_creator_action_attribute",
     ),
-    # 单个属性授权
+    # 单action属性授权
     path(
-        "action_attribute/",
-        views.action.ActionAttributeView.as_view(),
-        name="open.grant_action_attribute",
+        "attribute/",
+        views.action.AuthAttributeView.as_view(),
+        name="open.auth_attribute",
     ),
 ]

@@ -25,7 +25,7 @@ from ..permissions import AuthorizationAPIPermission
 from ..serializers import ActionAttributeSLZ
 
 
-class ActionAttributeView(AuthViewMixin, APIView):
+class AuthAttributeView(AuthViewMixin, APIView):
     """属性授权"""
 
     authentication_classes = [ESBAuthentication]
