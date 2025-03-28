@@ -20,7 +20,7 @@ from backend.api.management.constants import (
     VerifyAPIParamSourceToObjectTypeMap,
 )
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
-from backend.api.management.v2.serializers import ManagementGroupIDsSLZ
+from backend.api.management.v2.serializers import ManagementGroupIDsSLZ, ManagementGroupsSLZ
 from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
 from backend.service.constants import RoleRelatedObjectType, RoleSourceType, RoleType
 
@@ -110,6 +110,15 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
         if param_source == VerifyApiParamLocationEnum.GROUP_IDS_IN_QUERY:
             group_ids_str = request.query_params.get("group_ids")
             group_ids = list(map(int, group_ids_str.split(",")))
+
+            self._verify_api_by_groups(app_code, group_ids, api, system_id)
+            return
+
+        # 参数来自body data - groups
+        if param_source == VerifyApiParamLocationEnum.GROUPS_IN_BODY:
+            slz = ManagementGroupsSLZ(data=request.data)
+            slz.is_valid(raise_exception=True)
+            group_ids = [group["id"] for group in slz.validated_data["groups"]]
 
             self._verify_api_by_groups(app_code, group_ids, api, system_id)
             return

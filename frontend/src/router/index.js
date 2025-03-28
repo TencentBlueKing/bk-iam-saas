@@ -162,11 +162,12 @@ export const beforeEach = async (to, from, next) => {
   // 处理新标签页链接是管理员页面 ，但是上次用户信息是staff
   const isManagerPage = !isStaff && noFrom && navIndex < 1;
   // 如果进入没有权限或者是拿到的上次用户信息是非管理员身份但是新开标签页是管理员页面， 蓝盾交互不需要判断
-  if ((isNoPerm || isManagerPage) && isNoIframe) {
+  if ((isNoPerm || isManagerPage || to.query.role_name) && isNoIframe) {
     const roleList = await store.dispatch('roleList', {
       cancelWhenRouteChange: false,
       cancelPrevious: false,
-      limit: 100
+      limit: 100,
+      name: to.query.role_name
     });
     if (roleList && roleList.length > 0) {
       curRoleList = [...roleList];
@@ -175,6 +176,7 @@ export const beforeEach = async (to, from, next) => {
         const { id } = roleList[0];
         [curRoleId, currentRoleId] = [id, id];
         store.commit('updateCurRoleId', id);
+        store.commit('updateNavId', id);
         await getManagerInfo();
       }
     }
@@ -186,6 +188,7 @@ export const beforeEach = async (to, from, next) => {
       curRoleId = 0;
       navIndex = 0;
       store.commit('updateCurRoleId', 0);
+      store.commit('updateNavId', 0);
     }
     currentRoleId = curRoleId;
     navDiffMenuIndex(navIndex);
@@ -227,6 +230,7 @@ export const beforeEach = async (to, from, next) => {
             const { id } = curRoleList[0];
             [curRoleId, currentRoleId] = [id, id];
             store.commit('updateCurRoleId', id);
+            store.commit('updateNavId', id);
             await getManagerInfo();
           }
           next();

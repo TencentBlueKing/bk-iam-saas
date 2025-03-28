@@ -205,16 +205,16 @@ export const ALL_ROUTES_LIST = new Map([
   [['addMemberBoundary'], 'addMemberBoundaryNav'],
   // 资源权限
   [['resourcePermiss'], 'resourcePermissNav'],
-  // 管理员
-  [['administrator'], 'settingNav'],
+  // 管理空间下的管理员
+  [['systemAdministrator'], 'systemAdministratorNav'],
+  // 平台管理下的管理员
+  [['administrator'], 'administratorNav'],
   // 审批流程
   [['approvalProcess'], 'approvalProcessNav'],
   // 用户
   [['user'], 'userNav'],
   // 审计
   [['audit'], 'auditNav'],
-  // 用户组设置
-  [['userGroupSetting'], 'userGroupSettingNav'],
   // 敏感等级
   [['sensitivityLevel'], 'sensitivityLevelNav'],
   // 人员模板

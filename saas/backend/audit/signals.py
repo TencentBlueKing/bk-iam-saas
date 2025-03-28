@@ -29,3 +29,9 @@ def audit_event_handler(sender, instance, created, **kwargs):
     id = instance.id.hex
 
     log_audit_event.delay(suffix, id)
+
+
+def send_bulk_create_signal(model_class, instances):
+    """提供批量创建的信号"""
+    for instance in instances:
+        post_save.send(sender=model_class, instance=instance, created=True)
