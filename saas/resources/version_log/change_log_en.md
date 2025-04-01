@@ -1,3 +1,24 @@
+<!-- 2025-04-01 -->
+# V1.10.40 Version Update Log
+
+### Features
+* Added document link environment variable BK_CE_URL
+* Added OpenAPI for single action attribute authorization
+* Added OpenAPI for batch renewal of user groups
+* Added OpenAPI related to permission templates
+
+### Feature Enhancements
+* Platform management and management space resource permission management share the same business logic
+* Rectification of the sidebar under the management space navigation bar
+* Added administrator identity for quick search and positioning on all pages requiring administrator verification
+
+### Fixes
+* Fixed uncleaned SaaS table data for departed users
+* Fixed missing audit logs due to bulk_create not triggering signals
+* Fixed abnormal select box style in the approval process management -> join user group approval process
+
+---
+
 <!-- 2025-02-13 -->
 # V1.10.39 Version Update Log
 

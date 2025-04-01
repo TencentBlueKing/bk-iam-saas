@@ -1,9 +1,9 @@
-swagger: '2.0'
+swagger: "2.0"
 basePath: /
 info:
-  version: '0.1'
+  version: "0.1"
   title: API Gateway Resources
-  description: ''
+  description: ""
 schemes:
   - http
 paths:
@@ -15,7 +15,7 @@ paths:
         - engine
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -31,21 +31,21 @@ paths:
             hosts:
               - host: http://{env.engine}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/engine/healthz:
     get:
       operationId: engine_healthz
-      description: 检查engine服务是否健康
+      description: 检查 engine 服务是否健康
       tags:
         - engine
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -61,22 +61,22 @@ paths:
             hosts:
               - host: http://{env.engine}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/engine/ping:
     get:
       operationId: engine_ping
-      description: 检查engine连通性
+      description: 检查 engine 连通性
       tags:
         - engine
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -92,12 +92,12 @@ paths:
             hosts:
               - host: http://{env.engine}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/engine/search:
     post:
@@ -107,7 +107,7 @@ paths:
         - engine
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -123,21 +123,21 @@ paths:
             hosts:
               - host: http://{env.engine}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/engine/version:
     get:
       operationId: engine_version
-      description: 检查engine程序版本
+      description: 检查 engine 程序版本
       tags:
         - engine
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -153,12 +153,12 @@ paths:
             hosts:
               - host: http://{env.engine}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
   /api/v1/model/systems:
     post:
       operationId: system_create
@@ -167,7 +167,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -183,11 +183,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}:
     get:
@@ -197,7 +197,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -213,11 +213,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: system_update
@@ -226,7 +226,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -242,21 +242,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/actions:
     delete:
       operationId: system_batch_delete_actions
-      description: 批量删除actions
+      description: 批量删除 actions
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -272,20 +272,20 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: system_add_actions
-      description: 新增actions
+      description: 新增 actions
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -301,21 +301,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/actions/{action_id}:
     delete:
       operationId: system_delete_action
-      description: 删除action
+      description: 删除 action
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -331,20 +331,20 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: system_update_action
-      description: 更新action
+      description: 更新 action
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -360,21 +360,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/actions/{action_id}/policies:
     delete:
       operationId: system_delete_action_policies
-      description: 删除action的policies
+      description: 删除 action 的 policies
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -390,11 +390,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/clients:
     get:
@@ -404,7 +404,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -420,21 +420,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/configs/{name}:
     post:
       operationId: system_add_configs
-      description: 配置新增name=common_actions/feature_shield_rules/resource_creator_actions
+      description: 配置新增 name=common_actions/feature_shield_rules/resource_creator_actions
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -450,20 +450,20 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: system_update_configs
-      description: 配置更新name=common_actions/feature_shield_rules/resource_creator_actions
+      description: 配置更新 name=common_actions/feature_shield_rules/resource_creator_actions
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -479,11 +479,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/instance-selections:
     delete:
@@ -493,7 +493,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -509,20 +509,20 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: system_add_instance_selections
-      description: 新增instance_selections
+      description: 新增 instance_selections
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -538,11 +538,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/instance-selections/{instance_selection_id}:
     delete:
@@ -552,7 +552,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -568,11 +568,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: system_update_instance_selection
@@ -581,7 +581,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -597,11 +597,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/query:
     get:
@@ -611,7 +611,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -627,11 +627,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/resource-types:
     delete:
@@ -641,7 +641,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -657,20 +657,20 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: system_add_resource_types
-      description: 新增resource_type
+      description: 新增 resource_type
       tags:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -686,11 +686,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/resource-types/{resource_type_id}:
     delete:
@@ -700,7 +700,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -716,11 +716,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: system_update_resource_types
@@ -729,7 +729,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -745,11 +745,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/systems/{system_id}/token:
     get:
@@ -759,7 +759,7 @@ paths:
         - model
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -775,11 +775,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
   /api/v1/open/application/:
     post:
       operationId: application
@@ -788,7 +788,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -799,12 +799,12 @@ paths:
           path: /api/v1/open/application/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/application/approval_bot/role/:
     post:
@@ -814,7 +814,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -825,12 +825,12 @@ paths:
           path: /api/v1/open/application/approval_bot/role/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/application/approval_bot/user/:
     post:
@@ -840,7 +840,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -851,12 +851,12 @@ paths:
           path: /api/v1/open/application/approval_bot/user/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/application/policies/:
     post:
@@ -866,7 +866,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -877,12 +877,12 @@ paths:
           path: /api/v1/open/application/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/application/{sn}/:
     get:
@@ -892,7 +892,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -903,22 +903,22 @@ paths:
           path: /api/v1/open/application/{sn}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/authorization/batch_instance/:
     post:
       operationId: authorization_batch_instance
-      description: 批量操作批量资源授权回收, deprecated
+      description: 批量操作批量资源授权回收，deprecated
       tags:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -929,12 +929,12 @@ paths:
           path: /api/v1/open/authorization/batch_instance/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/authorization/batch_path/:
     post:
@@ -944,7 +944,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -955,12 +955,12 @@ paths:
           path: /api/v1/open/authorization/batch_path/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/authorization/batch_resource_creator_action/:
     post:
@@ -970,7 +970,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -981,22 +981,22 @@ paths:
           path: /api/v1/open/authorization/batch_resource_creator_action/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/authorization/instance/:
     post:
       operationId: authorization_instance
-      description: 单个资源授权回收, deprecated
+      description: 单个资源授权回收，deprecated
       tags:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -1007,12 +1007,12 @@ paths:
           path: /api/v1/open/authorization/instance/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/authorization/path/:
     post:
@@ -1022,7 +1022,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1033,12 +1033,12 @@ paths:
           path: /api/v1/open/authorization/path/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/authorization/resource_creator_action/:
     post:
@@ -1048,7 +1048,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -1059,22 +1059,22 @@ paths:
           path: /api/v1/open/authorization/resource_creator_action/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/authorization/resource_creator_action_attribute/:
     post:
       operationId: authorization_resource_creator_action_attribute
-      description: 新建关联授权-属性授权
+      description: 新建关联授权 - 属性授权
       tags:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1085,22 +1085,22 @@ paths:
           path: /api/v1/open/authorization/resource_creator_action_attribute/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/departments/{department_id}/groups:
     get:
       operationId: open_departments_groups
-      description: 查询部门加入的组列表(注意部门-组关系存在有限期, 只会返回未过期的组列表)
+      description: 查询部门加入的组列表 (注意部门 - 组关系存在有限期，只会返回未过期的组列表)
       tags:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -1116,11 +1116,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/grade_managers/:
     get:
@@ -1130,7 +1130,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1141,12 +1141,12 @@ paths:
           path: /api/v1/open/management/grade_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: management_grade_managers
@@ -1155,7 +1155,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1166,12 +1166,12 @@ paths:
           path: /api/v1/open/management/grade_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/grade_managers/{id}/:
     put:
@@ -1181,7 +1181,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1192,12 +1192,12 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/grade_managers/{id}/groups/:
     get:
@@ -1207,7 +1207,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1218,12 +1218,12 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: management_grade_manager_create_groups
@@ -1232,7 +1232,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1243,12 +1243,12 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/grade_managers/{id}/members/:
     delete:
@@ -1258,7 +1258,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1269,12 +1269,12 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     get:
       operationId: management_grade_manager_members
@@ -1283,7 +1283,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1294,12 +1294,12 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: management_add_grade_manager_members
@@ -1308,7 +1308,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1319,12 +1319,12 @@ paths:
           path: /api/v1/open/management/grade_managers/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/groups/applications/:
     post:
@@ -1334,7 +1334,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1345,12 +1345,12 @@ paths:
           path: /api/v1/open/management/groups/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/groups/{id}/:
     delete:
@@ -1360,7 +1360,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1371,12 +1371,12 @@ paths:
           path: /api/v1/open/management/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: management_grade_manager_update_group
@@ -1385,7 +1385,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1396,12 +1396,12 @@ paths:
           path: /api/v1/open/management/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/groups/{id}/actions/policies/:
     delete:
@@ -1411,7 +1411,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1422,12 +1422,12 @@ paths:
           path: /api/v1/open/management/groups/{id}/actions/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/groups/{id}/members/:
     delete:
@@ -1437,7 +1437,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1448,12 +1448,12 @@ paths:
           path: /api/v1/open/management/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     get:
       operationId: management_group_members
@@ -1462,7 +1462,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1473,12 +1473,12 @@ paths:
           path: /api/v1/open/management/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: management_add_group_members
@@ -1487,7 +1487,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1498,12 +1498,12 @@ paths:
           path: /api/v1/open/management/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/groups/{id}/policies/:
     delete:
@@ -1513,7 +1513,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1524,12 +1524,12 @@ paths:
           path: /api/v1/open/management/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: management_groups_policies
@@ -1538,7 +1538,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1549,12 +1549,12 @@ paths:
           path: /api/v1/open/management/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/users/grade_managers/:
     get:
@@ -1564,7 +1564,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1575,12 +1575,12 @@ paths:
           path: /api/v1/open/management/users/grade_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/management/users/grade_managers/{id}/groups/:
     get:
@@ -1590,7 +1590,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1601,12 +1601,12 @@ paths:
           path: /api/v1/open/management/users/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/systems/{system_id}/policies:
     get:
@@ -1616,7 +1616,7 @@ paths:
         - system
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1632,11 +1632,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/systems/{system_id}/policies/-/subjects:
     get:
@@ -1646,7 +1646,7 @@ paths:
         - system
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1662,11 +1662,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/systems/{system_id}/policies/{policy_id}:
     get:
@@ -1676,7 +1676,7 @@ paths:
         - system
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1692,21 +1692,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/users/{user_id}/groups:
     get:
       operationId: open_user_groups
-      description: 查询用户加入的组列表(注意用户-组关系存在有限期, 只会返回未过期的组列表)
+      description: 查询用户加入的组列表 (注意用户 - 组关系存在有限期，只会返回未过期的组列表)
       tags:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -1722,11 +1722,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/policy/auth:
     post:
@@ -1736,7 +1736,7 @@ paths:
         - policy
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1752,21 +1752,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/policy/auth_by_actions:
     post:
       operationId: policy_auth_by_actions
-      description: 批量action直接鉴权
+      description: 批量 action 直接鉴权
       tags:
         - policy
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1782,11 +1782,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/policy/auth_by_resources:
     post:
@@ -1796,7 +1796,7 @@ paths:
         - policy
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1812,11 +1812,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/policy/query:
     post:
@@ -1826,7 +1826,7 @@ paths:
         - policy
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1842,11 +1842,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/policy/query_by_actions:
     post:
@@ -1856,7 +1856,7 @@ paths:
         - policy
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1872,11 +1872,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/policy/query_by_ext_resources:
     post:
@@ -1886,7 +1886,7 @@ paths:
         - policy
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -1902,21 +1902,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/systems/{system_id}/policies:
     get:
       operationId: system_policies
-      description: 拉取系统下某个操作的策略列表(废弃, 请使用open_system_policies)
+      description: 拉取系统下某个操作的策略列表 (废弃，请使用 open_system_policies)
       tags:
         - system
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -1932,21 +1932,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/systems/{system_id}/policies/-/subjects:
     get:
       operationId: system_policies_subjects
-      description: 根据策略 ID 拉群策略对应的用户信息(废弃, 请使用open_system_policies_subjects)
+      description: 根据策略 ID 拉群策略对应的用户信息 (废弃，请使用 open_system_policies_subjects)
       tags:
         - system
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -1962,21 +1962,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/systems/{system_id}/policies/{policy_id}:
     get:
       operationId: system_get_policy
-      description: 获取某条策略详情(废弃, 请使用open_system_get_policy)
+      description: 获取某条策略详情 (废弃，请使用 open_system_get_policy)
       tags:
         - system
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -1992,21 +1992,21 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/web/:
     x-bk-apigateway-method-any:
       operationId: api_v1_web_any
-      description: SaaS调用后台 API 入口
+      description: SaaS 调用后台 API 入口
       tags:
         - web
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -2022,11 +2022,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/applications/{callback_id}/approve/:
     post:
@@ -2037,7 +2037,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2048,12 +2048,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/applications/{callback_id}/approve/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/applications/{callback_id}/cancel/:
     put:
@@ -2064,7 +2064,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2075,12 +2075,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/applications/{callback_id}/cancel/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/departments/{department_id}/groups/belong/:
     get:
@@ -2091,7 +2091,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2102,12 +2102,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/departments/{department_id}/groups/belong/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/:
     post:
@@ -2118,7 +2118,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2129,12 +2129,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/-/applications/:
     post:
@@ -2145,7 +2145,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2156,12 +2156,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/-/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/:
     delete:
@@ -2172,7 +2172,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2183,12 +2183,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     get:
       operationId: v2_management_grade_manager_detail
@@ -2198,7 +2198,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2209,12 +2209,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: v2_management_update_grade_manager
@@ -2224,7 +2224,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2235,12 +2235,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/applications/:
     post:
@@ -2251,7 +2251,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2262,12 +2262,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/:
     get:
@@ -2278,7 +2278,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2289,12 +2289,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: v2_management_grade_manager_create_groups
@@ -2304,7 +2304,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2315,12 +2315,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subject_templates/:
     get:
@@ -2331,7 +2331,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2342,12 +2342,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subject_templates/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/:
     get:
@@ -2358,7 +2358,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2369,12 +2369,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: v2_management_grade_manager_create_subset_manager
@@ -2384,7 +2384,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2395,12 +2395,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/-/applications/:
     post:
@@ -2411,7 +2411,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2422,12 +2422,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/-/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/:
     post:
@@ -2438,7 +2438,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2449,12 +2449,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/:
     delete:
@@ -2465,7 +2465,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2476,12 +2476,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: v2_management_grade_manager_update_group
@@ -2491,7 +2491,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2502,12 +2502,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/actions/-/policies/:
     delete:
@@ -2518,7 +2518,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2529,12 +2529,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/actions/-/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/members/:
     delete:
@@ -2545,7 +2545,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2556,12 +2556,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     get:
       operationId: v2_management_group_members
@@ -2571,7 +2571,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2582,12 +2582,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: v2_management_add_group_members
@@ -2597,7 +2597,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2608,12 +2608,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/expired_at/:
     put:
@@ -2624,7 +2624,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2635,12 +2635,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/expired_at/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/policies/:
     delete:
@@ -2651,7 +2651,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2662,12 +2662,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     get:
       operationId: v2_management_groups_policies_list
@@ -2677,7 +2677,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2688,12 +2688,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: v2_management_groups_policies_grant
@@ -2703,7 +2703,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2714,12 +2714,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/policies/-/actions/:
     get:
@@ -2730,7 +2730,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2741,12 +2741,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/-/actions/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/subset_managers/{id}/:
     delete:
@@ -2757,7 +2757,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2768,12 +2768,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     get:
       operationId: v2_management_subset_manager_detail
@@ -2783,7 +2783,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2794,12 +2794,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: v2_management_subset_manager_update
@@ -2809,7 +2809,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2820,12 +2820,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/:
     get:
@@ -2836,7 +2836,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2847,12 +2847,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: v2_management_subset_manager_create_groups
@@ -2862,7 +2862,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2873,12 +2873,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/users/{user_id}/groups/belong/:
     get:
@@ -2889,7 +2889,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2900,23 +2900,23 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/users/{user_id}/groups/belong/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/policy/systems/{system_id}/auth/:
     post:
       operationId: v2_policy_auth
-      description: v2直接鉴权
+      description: v2 直接鉴权
       tags:
         - policy
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2932,11 +2932,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/policy/systems/{system_id}/auth_by_actions/:
     post:
@@ -2947,7 +2947,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2963,11 +2963,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/policy/systems/{system_id}/query/:
     post:
@@ -2978,7 +2978,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -2994,11 +2994,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/policy/systems/{system_id}/query_by_actions/:
     post:
@@ -3009,7 +3009,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3025,11 +3025,11 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /healthz:
     get:
@@ -3039,7 +3039,7 @@ paths:
         - basic
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3055,22 +3055,22 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /metrics:
     get:
       operationId: metrics
-      description: 接口暴露程序metrics
+      description: 接口暴露程序 metrics
       tags:
         - basic
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3086,12 +3086,12 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /ping:
     get:
@@ -3101,7 +3101,7 @@ paths:
         - basic
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3117,12 +3117,12 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /version:
     get:
@@ -3132,7 +3132,7 @@ paths:
         - basic
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3148,12 +3148,12 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           appVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/admin/groups/:
     post:
@@ -3163,7 +3163,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3174,12 +3174,12 @@ paths:
           path: /api/v1/open/admin/groups/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/admin/groups/{id}/:
     delete:
@@ -3189,7 +3189,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3200,12 +3200,12 @@ paths:
           path: /api/v1/open/admin/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     put:
       operationId: admin_update_group
@@ -3214,7 +3214,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3225,48 +3225,48 @@ paths:
           path: /api/v1/open/admin/groups/{id}/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/admin/groups/{id}/policies/:
-      post:
-          operationId: admin_groups_policies_grant
-          description: 超管授权用户组
-          tags:
-              - open
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: true
-              allowApplyPermission: true
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: post
-                  path: /api/v1/open/admin/groups/{id}/policies/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
+    post:
+      operationId: admin_groups_policies_grant
+      description: 超管授权用户组
+      tags:
+        - open
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/admin/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v1/open/admin/groups/{id}/members/:
     post:
       operationId: admin_add_group_members
       description: 超管用户组添加成员
       tags:
-      - open
+        - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3285,30 +3285,30 @@ paths:
         disabledStages: []
         descriptionEn:
     delete:
-        operationId: admin_delete_group_members
-        description: 超管用户组删除成员
-        tags:
-            - open
-        responses:
-            default:
-                description: ''
-        x-bk-apigateway-resource:
-            isPublic: true
-            allowApplyPermission: true
-            matchSubpath: false
-            backend:
-                type: HTTP
-                method: delete
-                path: /api/v1/open/admin/groups/{id}/members/
-                matchSubpath: false
-                timeout: 0
-                upstreams: { }
-                transformHeaders: { }
-            authConfig:
-                userVerifiedRequired: false
-                resourcePermissionRequired: false
-            disabledStages: [ ]
-            descriptionEn:
+      operationId: admin_delete_group_members
+      description: 超管用户组删除成员
+      tags:
+        - open
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/open/admin/groups/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v1/open/admin/systems/{system_id}/provider_config/:
     get:
       operationId: admin_list_provider_config
@@ -3317,7 +3317,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3328,12 +3328,12 @@ paths:
           path: /api/v1/open/admin/systems/{system_id}/provider_config/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/admin/templates/:
     get:
@@ -3343,7 +3343,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3354,12 +3354,12 @@ paths:
           path: /api/v1/open/admin/templates/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
     post:
       operationId: admin_create_templates
@@ -3368,7 +3368,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3379,12 +3379,12 @@ paths:
           path: /api/v1/open/admin/templates/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/admin/systems/:
     get:
@@ -3395,7 +3395,7 @@ paths:
         - open/admin
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -3406,12 +3406,12 @@ paths:
           path: /api/v1/open/admin/systems/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/admin/roles/system_managers/systems/{system_id}/members/:
     get:
@@ -3422,7 +3422,7 @@ paths:
         - open/admin
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -3433,22 +3433,22 @@ paths:
           path: /api/v1/open/admin/roles/system_managers/systems/{system_id}/members/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/model/share/systems/{system_id}/query:
     get:
       operationId: model_share_system_query
-      description: '模型共享: 查询 system 通用信息'
+      description: "模型共享：查询 system 通用信息"
       tags:
         - securityAudit
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: false
@@ -3464,93 +3464,93 @@ paths:
             hosts:
               - host: http://{env.backend}
                 weight: 100
-          transformHeaders: { }
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/template/:
-      post:
-          operationId: mgmt_api_bind_group_templates
-          description: 分级管理员绑定权限模板和用户组
-          tags:
-              - open
-              - v2
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: false
-              allowApplyPermission: false
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: post
-                  path: /api/v2/open/management/systems/{system_id}/groups/{id}/template/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
+    post:
+      operationId: mgmt_api_bind_group_templates
+      description: 分级管理员绑定权限模板和用户组
+      tags:
+        - open
+        - v2
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/template/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
 
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/templates/:
-      post:
-          operationId: mgmt_api_create_templates
-          description: 分级管理员创建权限模板
-          tags:
-              - open
-              - v2
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: false
-              allowApplyPermission: false
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: post
-                  path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/templates/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
-      get:
-          operationId: mgmt_api_list_templates
-          description: 分级管理员获取权限模板
-          tags:
-              - open
-              - v2
-          responses:
-              default:
-                  description: ''
-          x-bk-apigateway-resource:
-              isPublic: false
-              allowApplyPermission: false
-              matchSubpath: false
-              backend:
-                  type: HTTP
-                  method: get
-                  path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/templates/
-                  matchSubpath: false
-                  timeout: 0
-                  upstreams: { }
-                  transformHeaders: { }
-              authConfig:
-                  userVerifiedRequired: false
-                  resourcePermissionRequired: false
-              disabledStages: [ ]
-              descriptionEn:
+    post:
+      operationId: mgmt_api_create_templates
+      description: 分级管理员创建权限模板
+      tags:
+        - open
+        - v2
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/templates/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+    get:
+      operationId: mgmt_api_list_templates
+      description: 分级管理员获取权限模板
+      tags:
+        - open
+        - v2
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/templates/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/batch_expired_at/:
     put:
       operationId: v2_management_update_group_members_batch_expired_at
@@ -3560,7 +3560,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3571,12 +3571,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/batch_expired_at/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/-/batch_expired_at_renew/applications/:
     post:
@@ -3587,7 +3587,7 @@ paths:
         - v2
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: true
         allowApplyPermission: true
@@ -3598,12 +3598,12 @@ paths:
           path: /api/v2/open/management/systems/{system_id}/groups/-/batch_expired_at_renew/applications/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
         descriptionEn:
   /api/v1/open/authorization/attribute/:
     post:
@@ -3613,7 +3613,7 @@ paths:
         - open
       responses:
         default:
-          description: ''
+          description: ""
       x-bk-apigateway-resource:
         isPublic: false
         allowApplyPermission: true
@@ -3624,10 +3624,90 @@ paths:
           path: /api/v1/open/authorization/attribute/
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
           resourcePermissionRequired: false
-        disabledStages: [ ]
+        disabledStages: []
+        descriptionEn:
+  /api/v1/open/application/policies/with-custom-ticket/:
+    post:
+      operationId: application_grant_policy_with_custom_ticket
+      description: 创建自定义权限申请单 - 支持自定义审批内容
+      tags:
+        - open
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        enableWebsocket: false
+        backend:
+          name: default
+          method: post
+          path: /api/v1/open/application/policies/with-custom-ticket/
+          matchSubpath: false
+          timeout: 0
+        pluginConfigs: []
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: false
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/subject_templates/:
+    get:
+      operationId: v2_management_list_group_subject_template
+      description: 获取用户组下类型为人员模板的成员列表
+      tags:
+        - open
+        - v2
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        enableWebsocket: false
+        backend:
+          name: default
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/subject_templates/
+          matchSubpath: false
+          timeout: 0
+        pluginConfigs: []
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: false
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/group_member_types/{member_type}/members/{member_id}/groups/-/details/:
+    get:
+      operationId: v2_management_query_group_detail_of_specified_member
+      description: 批量查询用户或组织或人员模板加入的用户组详情
+      tags:
+        - open
+        - v2
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        enableWebsocket: false
+        backend:
+          name: default
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/group_member_types/{member_type}/members/{member_id}/groups/-/details/
+          matchSubpath: false
+          timeout: 0
+        pluginConfigs: []
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: false
         descriptionEn:
