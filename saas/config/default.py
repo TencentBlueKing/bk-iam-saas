@@ -455,6 +455,7 @@ ROLE_RESOURCE_RELATION_TYPE = [
     {"system_id": "bk_bcs_app", "type": "project"},
     {"system_id": "bk_monitorv3", "type": "space"},
     {"system_id": "bk_paas3", "type": "application"},
+    {"system_id": "bk_dbm", "type": "biz"},
 ]
 
 ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
