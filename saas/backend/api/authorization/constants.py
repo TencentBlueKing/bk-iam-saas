@@ -26,8 +26,16 @@ class AuthorizationAPIEnum(BaseAPIEnum):
     AUTHORIZATION_INSTANCE = auto()
     # 新建关联实例授权API，白名单控制时主要是控制System+ResourceType
     CREATOR_AUTHORIZATION_INSTANCE = auto()
+    # 属性授权
+    AUTHORIZATION_ATTRIBUTE = auto()
 
-    _choices_labels = skip(((AUTHORIZATION_INSTANCE, "实例授权"), (CREATOR_AUTHORIZATION_INSTANCE, "新建关联实例授权")))
+    _choices_labels = skip(
+        (
+            (AUTHORIZATION_INSTANCE, "实例授权"),
+            (CREATOR_AUTHORIZATION_INSTANCE, "新建关联实例授权"),
+            (AUTHORIZATION_ATTRIBUTE, "属性授权"),
+        )
+    )
 
 
 class AllowListMatchOperationEnum(ChoicesEnum, LowerStrEnum):

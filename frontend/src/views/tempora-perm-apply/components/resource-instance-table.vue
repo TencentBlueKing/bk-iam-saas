@@ -1173,27 +1173,6 @@
       handlerOnPaste (payload, row, content) {
         let tempCurData = ['none'];
         if (this.curCopyMode === 'normal') {
-          // if (this.curCopyData.length < 1) {
-          //     tempCurData = []
-          // } else {
-          //     if (this.curCopyData[0] !== 'none') {
-          //         tempCurData = this.curCopyData.map(item => {
-          //             delete item.id
-          //             return item
-          //         })
-          //         tempCurData.forEach((item, index) => {
-          //             if (content.condition[index]) {
-          //                 if (content.condition[index].id) {
-          //                     item.id = content.condition[index].id
-          //                 } else {
-          //                     item.id = ''
-          //                 }
-          //             } else {
-          //                 item.id = ''
-          //             }
-          //         })
-          //     }
-          // }
           if (!payload.flag) {
             return;
           }
@@ -1235,11 +1214,11 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
+          if (tempCurData[0] === 'none') {
+            return;
+          }
+          content.condition = _.cloneDeep(tempCurData);
         }
-        if (tempCurData[0] === 'none') {
-          return;
-        }
-        content.condition = _.cloneDeep(tempCurData);
         content.isError = false;
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },

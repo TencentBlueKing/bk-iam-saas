@@ -125,7 +125,6 @@
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
-  import { buildURLParams } from '@/common/url';
   import { formatI18nKey, jsonpRequest, getManagerMenuPerm, navDocCenterPath } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
@@ -429,7 +428,7 @@
       },
 
       handleOpenQuestion () {
-        window.open(window.CE_URL);
+        window.open(window.BK_CE_URL);
       },
 
       handleOpenSource () {
@@ -465,7 +464,7 @@
 
       // 需要切换的时候刷新不同菜单下的同名路由
       handleRefreshSameRoute (payload) {
-        if (['sensitivityLevel', 'administrator', 'approvalProcess'].includes(this.$route.name) && [1, 3].includes(payload)) {
+        if (['resourcePermiss', 'sensitivityLevel', 'approvalProcess'].includes(this.$route.name) && [1, 3].includes(payload)) {
           this.reloadCurPage(this.$route);
         }
       },
@@ -503,10 +502,13 @@
             const OtherRoute = [
               'gradingAdminDetail',
               'gradingAdminCreate',
+              'gradingAdminClone',
               'gradingAdminEdit',
+              'myManageSpace',
               'myManageSpaceCreate',
               'secondaryManageSpaceCreate',
               'secondaryManageSpaceDetail',
+              'secondaryManageSpaceEdit',
               'addGroupPerm',
               'authorBoundaryEditFirstLevel'
             ];
@@ -516,6 +518,8 @@
               });
             }
           }
+          // 更新后重置我的管理空间跳转开关
+          this.isRatingChange = false;
         }
       },
 
@@ -650,28 +654,6 @@
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');
         window.localStorage.removeItem('index');
-      },
-
-      handlePageTabChange (name) {
-        bus.$emit('on-tab-change', name);
-
-        let tab = '';
-        if (name === 'GroupDetail') {
-          tab = 'group_detail';
-        } else if (name === 'GroupPerm') {
-          tab = 'group_perm';
-        }
-        if (tab) {
-          window.history.replaceState(
-            {},
-            '',
-            `?${buildURLParams(
-              Object.assign({}, this.$route.query, {
-                tab: tab
-              })
-            )}`
-          );
-        }
       },
 
       // 根据角色设置

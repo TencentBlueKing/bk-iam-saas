@@ -1,5 +1,5 @@
 <template>
-  <div class="iam-grade-split-wrapper">
+  <div class="iam-resource-instance-table-wrapper">
     <div :class="[
            'iam-resource-expand'
          ]"
@@ -150,9 +150,9 @@
       :width="resourceSliderWidth"
       quick-close
       transfer
-      ext-cls="relate-instance-sideslider"
+      ext-cls="related-instance-slider"
       @update:isShow="handleResourceCancel('mask')">
-      <div slot="content" class="sideslider-content">
+      <div slot="content" class="slider-content">
         <render-resource
           ref="renderResourceRef"
           :data="condition"
@@ -879,11 +879,11 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
+          if (tempCurData[0] === 'none') {
+            return;
+          }
+          content.condition = _.cloneDeep(tempCurData);
         }
-        if (tempCurData[0] === 'none') {
-          return;
-        }
-        content.condition = _.cloneDeep(tempCurData);
         content.isError = false;
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
@@ -1427,115 +1427,6 @@
     }
   };
 </script>
-
-<style lang="postcss">
-    .iam-grade-split-wrapper {
-        min-height: 101px;
-        .bk-table {
-            width: 100%;
-            margin-top: 8px;
-            border-right: none;
-            border-bottom: none;
-            font-size: 12px;
-            .bk-table-header-wrapper {
-                th:first-child .cell {
-                    padding-left: 20px;
-                }
-            }
-            .bk-table-body {
-                tr {
-                    &:hover {
-                        background-color: transparent;
-                        & > td {
-                            background-color: transparent;
-                            .remove-icon {
-                                display: inline-block;
-                            }
-                        }
-                    }
-                }
-                td:first-child .cell,
-                th:first-child .cell {
-                    padding-left: 15px;
-                    /* padding-left: 10px; */
-                }
-            }
-            .relation-content-wrapper,
-            .conditions-wrapper {
-                position: relative;
-                height: 100%;
-                padding: 17px 0;
-                color: #63656e;
-                .resource-type-name {
-                    display: block;
-                    margin-bottom: 9px;
-                }
-                .iam-condition-item {
-                    width: 90%;
-                }
-            }
-
-            .remove-icon {
-                display: none;
-                position: absolute;
-                top: 5px;
-                right: 10px;
-                cursor: pointer;
-                &:hover {
-                    color: #3a84ff;
-                }
-                i {
-                    font-size: 20px;
-                }
-            }
-
-            .relation-content-item {
-                margin-top: 17px;
-                &:first-child {
-                    margin-top: 0;
-                }
-                .content-name {
-                    margin-bottom: 9px;
-                }
-            }
-
-            .set-padding {
-                padding: 10px 0;
-            }
-
-            .action-name {
-                /* margin-left: 6px; */
-                display: inline-block;
-                max-width: 200px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                word-break: keep-all;
-                vertical-align: bottom;
-            }
-
-            .conditions-item {
-                margin-top: 7px;
-                &:first-child {
-                    margin-top: 0;
-                }
-            }
-        }
-
-    }
-    .relate-instance-sideslider {
-        .sideslider-content {
-            height: calc(100vh - 114px);
-        }
-        .bk-sideslider-footer {
-            background-color: #ffffff !important;
-            border-color: #dcdee5!important;
-        }
-    }
-
-    .tab-button{
-        margin: 10px 0;
-    }
-</style>
 
 <style lang="postcss" scoped>
 @import '@/css/mixins/space-resource-instance-table.css';

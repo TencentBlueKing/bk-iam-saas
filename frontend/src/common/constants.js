@@ -130,6 +130,7 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
   'permTemplateDiff',
   'createUserGroup',
   'gradingAdminCreate',
+  'gradingAdminClone',
   'gradingAdminEdit',
   'myManageSpaceCreate',
   'myManageSpaceClone',
@@ -184,27 +185,36 @@ export const ALL_ROUTES_LIST = new Map([
     'myPermNav'
   ],
   // 我的管理空间
-  [['myManageSpace', 'myManageSpaceCreate', 'myManageSpaceClone', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
+  [['myManageSpace', 'myManageSpaceCreate', 'myManageSpaceClone', 'myManageSpaceSubDetail'], 'myManageSpaceNav'],
   // 分级管理员
-  [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
+  [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminClone', 'gradingAdminEdit'], 'gradingAdminNav'],
   // 二级管理空间
-  [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],
+  [
+    [
+      'secondaryManageSpace',
+      'secondaryManageSpaceCreate',
+      'secondaryManageSpaceClone',
+      'secondaryManageSpaceDetail',
+      'secondaryManageSpaceEdit'
+    ],
+    'secondaryManageSpaceNav'
+  ],
   // 授权边界
   [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
   // 最大可授权人员边界
   [['addMemberBoundary'], 'addMemberBoundaryNav'],
   // 资源权限
   [['resourcePermiss'], 'resourcePermissNav'],
-  // 管理员
-  [['administrator'], 'settingNav'],
+  // 管理空间下的管理员
+  [['systemAdministrator'], 'systemAdministratorNav'],
+  // 平台管理下的管理员
+  [['administrator'], 'administratorNav'],
   // 审批流程
   [['approvalProcess'], 'approvalProcessNav'],
   // 用户
   [['user'], 'userNav'],
   // 审计
   [['audit'], 'auditNav'],
-  // 用户组设置
-  [['userGroupSetting'], 'userGroupSettingNav'],
   // 敏感等级
   [['sensitivityLevel'], 'sensitivityLevelNav'],
   // 人员模板
@@ -231,11 +241,17 @@ export const MANAGE_SPACE_REDIRECT_ROUTES = new Map([
   ],
   // 管理空间
   [
-    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
-    'ratingManager'],
+    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminClone', 'gradingAdminEdit'],
+    'ratingManager'
+  ],
+  // 授权边界
+  [
+    ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'],
+    'authorBoundary'
+  ],
   // 二级管理员
   [
-    ['secondaryManageSpaceCreate', 'secondaryManageSpaceDetail', 'secondaryManageSpaceEdit'],
+    ['secondaryManageSpaceCreate', 'secondaryManageSpaceClone', 'secondaryManageSpaceDetail', 'secondaryManageSpaceEdit'],
     'secondaryManageSpace'
   ]
 ]);
@@ -376,6 +392,17 @@ export const SEND_DAYS_LIST = [
     label: '周日',
     value: 'sunday'
   }
+];
+
+// 不需要校验组织架构授权范围的页面
+export const NO_VERIFY_ORG_ROUTES = [
+  'authorBoundaryEditFirstLevel',
+  'authorBoundaryEditSecondLevel',
+  'applyJoinUserGroup',
+  'addMemberBoundary',
+  'gradingAdminCreate',
+  'gradingAdminClone',
+  'gradingAdminEdit'
 ];
 
 // 只显示角色名称的审计类型

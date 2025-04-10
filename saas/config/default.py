@@ -456,6 +456,7 @@ ROLE_RESOURCE_RELATION_TYPE = [
     {"system_id": "bk_bcs_app", "type": "project"},
     {"system_id": "bk_monitorv3", "type": "space"},
     {"system_id": "bk_paas3", "type": "application"},
+    {"system_id": "bk_dbm", "type": "biz"},
 ]
 
 ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
@@ -497,3 +498,9 @@ BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.c
 
 # 全局配置地址
 BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")
+
+# 不允许作为用户组成员的部门 ID,用英文逗号分割
+DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER", default="")
+
+# 问题反馈地址
+BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")

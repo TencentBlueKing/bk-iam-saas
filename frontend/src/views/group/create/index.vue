@@ -967,7 +967,7 @@
           try {
             const { code, data } = await this.$store.dispatch('userGroup/addUserGroup', params);
             if (code === 0 && data) {
-              this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 3000);
+              this.messageSuccess(this.$t(`m.info['新建用户组管理成功']`), 3000);
               if (this.externalSystemId) { // 如果用户组新建成功需要发送一个postmessage给外部页面
                 window.parent.postMessage({ type: 'IAM', data, code: 'create_user_group_submit' }, '*');
               } else {

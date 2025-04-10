@@ -2,28 +2,6 @@
   <!-- eslint-disable max-len -->
   <nav :class="['nav-layout', { sticked: navStick }]" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <div :class="['nav-wrapper', { unfold: unfold, flexible: !navStick }]">
-      <!-- <bk-select
-                v-if="unfold && index === 1"
-                :value="navCurRoleId || curRoleId"
-                :clearable="false"
-                placeholder="选择分级管理员"
-                :search-placeholder="$t(`m.common['切换身份']`)"
-                searchable
-                ext-cls="iam-nav-select-cls"
-                ext-popover-cls="iam-nav-select-dropdown-content"
-                @change="handleSwitchRole"
-            >
-                <bk-option
-                    v-for="item in curRoleList"
-                    :key="item.id"
-                    :id="item.id"
-                    :name="item.name"
-                >
-                </bk-option>
-                <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer;">
-                    <i class="bk-icon icon-plus-circle mr10"></i>管理我的分级管理员
-                </div>
-            </bk-select> -->
       <bk-select
         ref="select"
         v-if="unfold && index === 1"
@@ -50,17 +28,11 @@
           :show-link-line="false"
           :default-is-expanded-nodes="[navCurRoleId || curRoleId]"
           :default-selected-node="navCurRoleId || curRoleId"
+          :before-select="handleBeforeSelect"
           @expand-change="handleExpandNode"
           @select-change="handleSelectNode"
         >
-          <div slot-scope="{ node,data }">
-            <!-- <div
-              class="single-hide"
-              :style="[
-                { 'max-width': '220px' },
-                { opacity: data.is_member ? '1' : '0.4' }
-              ]"
-              :title="data.name"> -->
+          <div slot-scope="{ node, data }">
             <div
               :class="[
                 'single-hide',
@@ -70,27 +42,25 @@
                 { 'max-width': '220px' }
               ]"
               :title="data.name">
-              <Icon
-                :type="data.level > 0 ? 'level-two-manage-space' : 'level-one-manage-space'"
-                :style="{
-                  color: formatColor(data)
-                }"
-              />
-              <span>{{data.name}}</span>
+              <template v-if="!['loadMore'].includes(data.nodeType)">
+                <Icon
+                  :type="node.level > 0 ? 'level-two-manage-space' : 'level-one-manage-space'"
+                  :style="{
+                    color: formatColor(data)
+                  }"
+                />
+                <span>{{data.name}}</span>
+              </template>
+              <div class="tree-load-more" v-else>
+                <bk-button
+                  size="small"
+                  :text="true"
+                  @click="handleSubLoadMore(data)"
+                >
+                  {{ data.name }}
+                </bk-button>
+              </div>
             </div>
-            <div
-              v-if="node.level > 0 && subRoleList.length < subPagination.count"
-              class="tree-load-more">
-              <bk-button
-                :text="true"
-                size="small"
-                @click="handleSubLoadMore">
-                {{ $t(`m.common['查看更多']`) }}
-              </bk-button>
-            </div>
-            <!-- <bk-star
-                                v-if="(node.children && node.level > 0) || (node.children.length === 0 && node.level === 0)"
-                                :rate="node.id === curRoleId" :max-stars="1" /> -->
           </div>
         </bk-big-tree>
         <div
@@ -214,7 +184,6 @@
         isUnfold: true,
         routerMap: Object.freeze(ALL_ROUTES_LIST),
         curRoleList: [],
-        subRoleList: [],
         manageSpaceRoutes: Object.freeze(MANAGE_SPACE_REDIRECT_ROUTES),
         curRoleId: 0,
         hoverId: -1,
@@ -227,11 +196,6 @@
           current: 1,
           count: 1,
           limit: 20
-        },
-        subPagination: {
-          current: 1,
-          count: 0,
-          limit: 100
         }
       };
     },
@@ -287,16 +251,16 @@
         handler (value) {
           // 如果不是搜索或者首次调用才获取公共接口数据
           if (value.length && this.pagination.current === 1 && !this.isSearch) {
-            value.forEach((e) => {
-              e.level = 0;
-              // if (e.sub_roles && e.sub_roles.length) {
-              //   e.sub_roles.forEach(sub => {
-              //     sub.level = 1;
-              //   });
-              //   e.children = e.sub_roles;
-              // }
-              if (e.has_subset_manager) {
-                this.$set(e, 'children', [{ name: '' }]);
+            value.forEach((item) => {
+              item.level = 0;
+              if (item.has_subset_manager) {
+                // 页面初始化二级管理员设置默认值
+                this.$set(item, 'children', [{ name: '' }]);
+                this.$set(item, 'pagination', {
+                  current: 1,
+                  limit: 20,
+                  count: 0
+                });
               }
             });
             this.curRoleList.splice(0, this.curRoleList.length, ...value);
@@ -327,6 +291,7 @@
       bus.$on('nav-change', ({ id }, index) => {
         this.curRoleId = id;
         this.$store.commit('updateCurRoleId', this.curRoleId);
+        this.$store.commit('updateNavId', this.curRoleId);
       });
     },
     methods: {
@@ -353,26 +318,49 @@
       async fetchSubManagerList (row) {
         row.subManageLoading = true;
         try {
+          const { current, limit } = row.pagination;
           const { data } = await this.$store.dispatch(
             'spaceManage/getStaffSubManagerList',
             {
-              limit: this.subPagination.limit,
-              offset: (this.subPagination.current - 1) * this.subPagination.limit,
+              limit,
+              offset: (current - 1) * limit,
               id: row.id,
               with_super: true
             }
           );
-          data && data.results.forEach(item => {
+          const results = data.results || [];
+          const count = data.count || 0;
+          const curPageConfig = { ...row.pagination, ...{ count } };
+          results.forEach(item => {
             item.level = 1;
             item.type = 'subset_manager';
           });
-          this.subPagination.count = data.count || 0;
-          row.children = [...row.children, ...data.results].filter(item => item.name);
-          this.subRoleList = [...row.children];
+          const childNodes = [...row.children, ...results].filter(item => item.name !== '' && item.nodeType !== 'loadMore');
+          const loadMore = {
+            nodeType: 'loadMore',
+            name: this.$t('查看更多'),
+            parent: {
+              ...row,
+              ...{
+                children: childNodes,
+                pagination: curPageConfig
+              }
+            }
+          };
+          row = Object.assign(row, {
+            children: childNodes.length >= count ? [...childNodes] : [...childNodes, ...[loadMore]],
+            pagination: curPageConfig
+          });
+          const parenNodeIndex = this.curRoleList.findIndex(v => `${v.name}&${v.id}` === `${row.name}&${row.id}`);
+          if (parenNodeIndex > -1) {
+            this.$set(this.curRoleList[parenNodeIndex], 'children', row.children);
+            this.$refs.selectTree && this.$refs.selectTree.setData(this.curRoleList);
+          }
         } catch (e) {
-          console.error(e);
-          row.children = [];
-          this.subRoleList = [];
+          row = Object.assign(row, {
+            children: [],
+            pagination: { current: 1, limit: 20, count: 0 }
+          });
           this.messageAdvancedError(e);
         } finally {
           row.subManageLoading = false;
@@ -400,7 +388,6 @@
           }
           this.curRoleList = [...this.curRoleList, ...results];
         } catch (e) {
-          console.error(e);
           this.curRoleList = [];
           this.messageAdvancedError(e);
         }
@@ -408,10 +395,18 @@
 
       async handleExpandNode (payload) {
         if (payload.state.expanded) {
-          this.resetSubPagination();
-          this.subRoleList = [];
           this.curRoleData = payload;
-          payload.data = Object.assign(payload.data, { children: [] });
+          payload.data = Object.assign(
+            payload.data,
+            {
+              children: [],
+              pagination: {
+                current: 1,
+                limit: 20,
+                count: 0
+              }
+            }
+          );
           await this.fetchSubManagerList(payload.data);
           if (this.$refs.selectTree) {
             this.$refs.selectTree.setData(this.curRoleList);
@@ -425,7 +420,6 @@
         if (value) {
           this.selectCls = 'iam-nav-select-dropdown-content';
           this.resetPagination();
-          this.resetSubPagination();
           await this.resetRoleList('handleClearSearch');
         }
       },
@@ -449,6 +443,7 @@
               this.$set(item, 'level', 0);
               if (item.has_subset_manager) {
                 this.$set(item, 'children', [{ name: '' }]);
+                this.$set(item, 'pagination', { current: 1, limit: 20, count: 0 });
               }
             });
             this.curRoleList = [...this.curRoleList, ...result];
@@ -465,14 +460,18 @@
         }
       },
 
-      async handleSubLoadMore () {
-        if (this.subRoleList.length < this.subPagination.count) {
+      async handleSubLoadMore (payload) {
+        if (!payload.parent) {
+          return;
+        }
+        const { children, pagination } = payload.parent;
+        if (children.length < pagination.count) {
           const params = {
-            current: ++this.subPagination.current,
-            limit: this.subPagination.limit
+            current: ++pagination.current,
+            limit: pagination.limit
           };
-          this.subPagination = Object.assign(this.subPagination, params);
-          this.fetchSubManagerList(this.curData);
+          payload.parent.pagination = Object.assign(payload.parent.pagination, params);
+          await this.fetchSubManagerList(payload.parent);
         }
       },
 
@@ -488,7 +487,6 @@
           this.updateRouter(type);
           this.resetLocalStorage();
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         }
       },
@@ -518,7 +516,6 @@
       // 监听当前已选中的角色是否有变更
       fetchRoleUpdate ({ role }) {
         const { id, type } = role;
-        // console.log(role, '变更');
         this.curRole = type;
         this.curRoleId = this.navCurRoleId || id;
         this.$store.commit('updateCurRoleId', this.curRoleId);
@@ -621,11 +618,13 @@
       },
 
       handleSelectNode (node) {
-        // if (!node.data.is_member) return;
         this.handleToggle(false);
         this.$refs.select.close();
-        // this.handleSwitchRole(node.id);
         this.handleSwitchRole(node.data);
+      },
+
+      handleBeforeSelect (node) {
+        return !['loadMore'].includes(node.data.nodeType);
       },
 
       async handleRemoteTree  (value) {
@@ -635,7 +634,6 @@
         }
         this.curRoleList = [];
         this.resetPagination();
-        this.resetSubPagination();
         if (value) {
           this.isSearch = true;
           await this.fetchSearchManageList(value);
@@ -712,7 +710,7 @@
             this.$store.commit('setHeaderTitle', '');
             window.localStorage.removeItem('iam-header-title-cache');
             window.localStorage.removeItem('iam-header-name-cache');
-            if (roleType === 'staff' || roleType === '') {
+            if (['', 'staff'].includes(roleType)) {
               this.$router.push({
                 name: 'myPerm'
               });
@@ -782,17 +780,6 @@
         );
       },
 
-      resetSubPagination () {
-        this.subPagination = Object.assign(
-          {},
-          {
-            current: 1,
-            count: 0,
-            limit: 100
-          }
-        );
-      },
-
       handleClearSearch () {
         this.isSearch = false;
         this.$refs.select.searchValue = '';
@@ -804,12 +791,6 @@
 
 <style lang="postcss">
 @import './index.css';
-
-.iam-select-collection {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
 
   .iam-nav-select-dropdown-content .bk-big-tree {
     &-node {

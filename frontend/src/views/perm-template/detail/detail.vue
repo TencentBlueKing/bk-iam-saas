@@ -7,7 +7,9 @@
           theme="primary"
           size="small"
           text
-          @click="handleEdit">
+          style="padding: 0;"
+          @click="handleEdit"
+        >
           {{ $t(`m.common['编辑']`) }}
         </bk-button>
       </p>

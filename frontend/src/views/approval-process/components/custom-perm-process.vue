@@ -158,7 +158,7 @@
       };
     },
     computed: {
-            ...mapGetters(['externalSystemId']),
+            ...mapGetters(['externalSystemId', 'user']),
             isCanBatchDelete () {
                 return this.currentSelectList.length > 0 && this.tableList.length > 0;
             },
@@ -302,7 +302,8 @@
         const queryParams = {
           limit,
           current,
-          system_id: this.searchValue[0]
+          system_id: this.searchValue[0],
+          role_name: this.user.role.name
         };
         if (this.searchKeyword !== '') {
           queryParams.keyword = this.searchKeyword;

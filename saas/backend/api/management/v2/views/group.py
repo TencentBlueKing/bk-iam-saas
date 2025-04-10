@@ -22,7 +22,9 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLo
 from backend.api.management.v2.filters import GroupFilter
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
+    GroupBatchUpdateMemberSLZ,
     ManagementGradeManagerGroupCreateSLZ,
+    ManagementGroupAuthorizationSLZ,
     ManagementGroupBaseInfoUpdateSLZ,
     ManagementGroupGrantSLZ,
     ManagementGroupMemberDeleteSLZ,
@@ -69,6 +71,7 @@ from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import GroupSaaSAttributeEnum, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.trans.group import GroupTrans
 from backend.trans.open_management import ManagementCommonTrans
 
 
@@ -362,7 +365,9 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         limit, offset = CompatiblePagination().get_limit_offset_pair(request)
 
         count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
-        results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
+        results = [one.dict(include={"type", "id", "name", "expired_at", "created_time"}) for one in group_members]
+        for result in results:
+            result["created_at"] = int(result.pop("created_time").timestamp())
         return Response({"count": count, "results": results})
 
     @swagger_auto_schema(
@@ -472,6 +477,51 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
         members = [
             GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=data["expired_at"])
             for m in data["members"]
+        ]
+
+        # 更新有效期
+        self.biz.update_members_expired_at(group.id, members)
+
+        # 写入审计上下文
+        audit_context_setter(group=group, members=data["members"])
+
+        return Response({})
+
+
+class ManagementGroupMemberBatchExpiredAtViewSet(GenericViewSet):
+    """用户组成员批量续期"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "update": (
+            VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
+            ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_BATCH_UPDATE.value,
+        ),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户组成员有效期批量更新",
+        request_body=GroupBatchUpdateMemberSLZ(label="用户组成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.member"],
+    )
+    @view_audit_decorator(GroupMemberRenewAuditProvider)
+    def update(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        serializer = GroupBatchUpdateMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        members = [
+            GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=m["expired_at"]) for m in data["members"]
         ]
 
         # 更新有效期
@@ -720,3 +770,57 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         return Response([{"id": p.action_id} for p in policies])
+
+
+class ManagementGroupPolicyTemplateViewSet(GenericViewSet):
+    """用户组授权"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    management_api_permission = {
+        "create": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_GRANT.value),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    group_biz = GroupBiz()
+    group_trans = GroupTrans()
+    role_biz = RoleBiz()
+    policy_operation_biz = PolicyOperationBiz()
+    policy_query_biz = PolicyQueryBiz()
+    trans = ManagementCommonTrans()
+
+    @swagger_auto_schema(
+        operation_description="用户组权限模版授权",
+        request_body=ManagementGroupAuthorizationSLZ(label="权限"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.policy"],
+    )
+    @view_audit_decorator(GroupPolicyCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = ManagementGroupAuthorizationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        group = self.get_object()
+        data = serializer.validated_data
+
+        role = self.role_biz.get_role_by_group_id(group.id)
+        templates = self.group_trans.from_group_grant_data(data["templates"])
+
+        # 校验授权范围
+        self.group_biz.check_before_grant(
+            group, templates, role, need_check_action_not_exists=False, need_check_resource_name=False
+        )
+        self.group_biz.grant(role, group, templates)
+
+        # 写入审计上下文
+        audit_context_setter(
+            group=group,
+            templates=[{"system_id": t["system_id"], "template_id": t["template_id"]} for t in data["templates"]],
+        )
+
+        return Response({})

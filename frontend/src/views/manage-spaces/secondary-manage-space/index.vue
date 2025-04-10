@@ -60,13 +60,13 @@
           <span :title="row.description">{{ row.description || '--' }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
+      <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater" />
       <bk-table-column :label="$t(`m.grading['更新时间']`)" width="240">
         <template slot-scope="{ row }">
           <span :title="row.updated_time">{{ row.updated_time }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="300">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="120">
         <template slot-scope="{ row }">
           <section>
             <bk-button
@@ -80,7 +80,7 @@
               theme="primary"
               text
               style="margin-left: 10px;"
-              @click="handleView(row, 'create')"
+              @click="handleView(row, 'clone')"
             >
               {{ $t(`m.levelSpace['克隆']`) }}
             </bk-button>
@@ -228,7 +228,7 @@
           members: members || role.members,
           id: role.id
         };
-        await this.$store.dispatch('spaceManage/updateSecondManagerManager', params);
+        await this.$store.dispatch('spaceManage/updateSecondManager', params);
         this.resetPagination();
         this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
         await this.fetchGradingAdmin(true);
@@ -304,7 +304,12 @@
           },
           create: () => {
             this.$router.push({
-              name: 'secondaryManageSpaceCreate',
+              name: 'secondaryManageSpaceCreate'
+            });
+          },
+          clone: () => {
+            this.$router.push({
+              name: 'secondaryManageSpaceClone',
               params: {
                 id
               }

@@ -22,6 +22,7 @@ from backend.api.admin.serializers import (
     AdminTemplateListSLZ,
 )
 from backend.api.authentication import ESBAuthentication
+from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.template.audit import TemplateCreateAuditProvider
 from backend.apps.template.views import TemplateQueryMixin
@@ -53,7 +54,8 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-        queryset = RoleListQuery(role, request.user).query_template()
+        user = User.objects.get(username="admin")
+        queryset = RoleListQuery(role, user).query_template()
 
         # 查询 role 的 system-actions set
         role_system_actions = RoleListQuery(role).get_scope_system_actions()
