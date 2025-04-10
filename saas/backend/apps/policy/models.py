@@ -44,9 +44,9 @@ class Policy(BaseModel):
         verbose_name = "权限策略"
         verbose_name_plural = "权限策略"
 
-        index_together = [
-            ("subject_id", "subject_type", "system_id"),
-            ("action_id", "system_id", "subject_type", "subject_id"),
+        indexes = [
+            models.Index(fields=["subject_id", "subject_type", "system_id"]),  # 第一个索引
+            models.Index(fields=["action_id", "system_id", "subject_type", "subject_id"]),  # 第二个索引
         ]
 
     @property
