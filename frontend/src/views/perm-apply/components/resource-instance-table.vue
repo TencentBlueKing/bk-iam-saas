@@ -1351,17 +1351,16 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
+          if (tempCurData[0] === 'none') {
+            return;
+          }
+          content.condition = _.cloneDeep(tempCurData);
         }
-        if (tempCurData[0] === 'none') {
-          return;
-        }
-        content.condition = _.cloneDeep(tempCurData);
         content.isError = false;
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
 
       handlerOnBatchPaste (payload, content, index, subIndex) {
-        console.log(payload, this.curCopyMode, this.curCopyData, this.curCopyKey, 454455);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -1522,7 +1521,6 @@
             }
           });
         }
-        console.log(payload, content, this.curCopyKey, tempCurData, '内容');
         if (content.hasOwnProperty('isError')) {
           content.isError = false;
         }

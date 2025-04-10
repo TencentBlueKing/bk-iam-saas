@@ -81,7 +81,6 @@ export default {
         // 本地开发环境调试
         commitParams = await getPlatformConfig(state.initialConfig);
       }
-      console.log(commitParams, '配置项数据');
       setDocumentTitle(commitParams.i18n || {});
       setShortcutIcon(commitParams.favicon);
       commit('setCurrentGlobalConfig', commitParams);

@@ -41,7 +41,7 @@
       this.componentWrapperHeight = window.innerHeight - 108 - 2;
       bus.$on('on-tab-change', (name) => {
         this.curComponent = name;
-        window.history.replaceState({}, '', `?${buildURLParams({ tab: this.curComponent })}`);
+        window.history.replaceState({}, '', `?${buildURLParams({ tab: this.curComponent, role_name: this.$route.query.name })}`);
       });
     },
     created () {

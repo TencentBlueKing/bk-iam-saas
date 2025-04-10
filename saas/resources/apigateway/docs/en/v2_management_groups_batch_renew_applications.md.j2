@@ -1,0 +1,54 @@
+### User Group Batch Renewal Request Form
+
+#### Parameters
+
+| Field      | Type          | Location | Required | Description                                                                                                                          |
+| ---------- | ------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| system_id  | string        | path     | yes      | Access to system unique identifier                                                                                                   |
+| applicant  | string        | body     | yes      | Applicants, i.e. username                                                                                                            |
+| reason     | string        | body     | yes      | Reason for application                                                                                                               |
+| groups     | array[object] | body     | yes      | User group list                                                                                                                      |
+| expired_at | int           | body     | yes      | Expiration timestamp (in seconds), i.e., the user will not have the relevant privileges of the requested user group after expired_at |
+| id         | int           | body     | yes      | User group id                                                                                                                        |
+
+#### Request
+
+```json
+{
+  "reason": "development need",
+  "applicant": "blueking",
+  "groups": [
+    {
+      "expired_at": 4102444800,
+      "id": 1
+    },
+    {
+      "expired_at": 4102444800,
+      "id": 2
+    },
+    {
+      "expired_at": 4102444800,
+      "id": 3
+    }
+  ]
+}
+```
+
+#### Response
+
+| Field | Type       | Description                                                                                                                                                   |
+| ----- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ids   | array[int] | A list of application document IDs, which are split into different application documents because the approval process is different for different user groups. |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "result": true,
+  "data": {
+    "ids": [1, 2, 3]
+  }
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

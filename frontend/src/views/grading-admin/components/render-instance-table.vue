@@ -879,11 +879,11 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
+          if (tempCurData[0] === 'none') {
+            return;
+          }
+          content.condition = _.cloneDeep(tempCurData);
         }
-        if (tempCurData[0] === 'none') {
-          return;
-        }
-        content.condition = _.cloneDeep(tempCurData);
         content.isError = false;
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },

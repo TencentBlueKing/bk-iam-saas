@@ -1,7 +1,7 @@
 <template>
   <div class="iam-grading-admin-detail-wrapper" v-bkloading="{ isLoading: loading, opacity: 1 }">
     <p class="edit-action" v-show="curRoleType !== 'subset_manager'">
-      {{ $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) }}
+      {{ $t(`m.levelSpace['如需编辑空间信息的内容请点击']`) }}
       <bk-button
         theme="primary"
         text

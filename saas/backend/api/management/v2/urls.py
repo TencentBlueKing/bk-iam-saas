@@ -57,6 +57,12 @@ urlpatterns = [
         views.ManagementGroupMemberExpiredAtViewSet.as_view({"put": "update"}),
         name="open.management.v2.group_member.expired_at",
     ),
+    # 用户组成员有效期批量更新（不支持人员模板）
+    path(
+        "groups/<int:id>/members/-/batch_expired_at/",
+        views.ManagementGroupMemberBatchExpiredAtViewSet.as_view({"put": "update"}),
+        name="open.management.v2.group_member.batch_expired_at",
+    ),
     # 用户组下类型为人员模板的成员
     path(
         "groups/<int:id>/subject_templates/",
@@ -69,6 +75,12 @@ urlpatterns = [
         "groups/<int:id>/policies/",
         views.ManagementGroupPolicyViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.management.v2.group_policy",
+    ),
+    # 用户组绑定权限模板的路由
+    path(
+        "groups/<int:id>/templates/",
+        views.ManagementGroupPolicyTemplateViewSet.as_view({"post": "create"}),
+        name="open.management.v2.group_policy_template",
     ),
     # 用户组自定义权限 - 操作级别的变更，不涉及Resources
     path(
@@ -87,6 +99,12 @@ urlpatterns = [
         "groups/-/renew/applications/",
         views.ManagementGroupRenewApplicationViewSet.as_view({"post": "create"}),
         name="open.management.v2.group_renew_application",
+    ),
+    # 用户组批量续期申请单
+    path(
+        "groups/-/batch_expired_at_renew/applications/",
+        views.ManagementGroupBatchExpiredAtRenewApplicationViewSet.as_view({"post": "create"}),
+        name="open.management.v2.group_batch_renew_application",
     ),
     # 用户组申请单
     path(
@@ -161,5 +179,11 @@ urlpatterns = [
         "grade_managers/<int:id>/subject_templates/",
         views.ManagementGradeManagerSubjectTemplateViewSet.as_view({"get": "list"}),
         name="open.management.v2.grade_manager_subject_template",
+    ),
+    # 分级管理员创建权限模板
+    path(
+        "grade_managers/<int:id>/templates/",
+        views.ManagementTemplateViewSet.as_view({"get": "list", "post": "create"}),
+        name="open.management.v2.template",
     ),
 ]

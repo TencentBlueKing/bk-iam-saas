@@ -539,6 +539,7 @@
         hasSelectedUsers: [],
         hasSelectedDepartments: [],
         hasSelectedTemplates: [],
+        hasExistOrgData: [],
         treeList: [],
         infiniteTreeKey: -1,
         searchedResult: [],
@@ -562,7 +563,6 @@
         ],
         searchConditionValue: 'fuzzy',
         isSearchFocus: false,
-
         panels: [
           { name: 'organization', label: this.$t(`m.common['组织架构']`) },
           { name: 'manual', label: this.$t(`m.common['手动输入']`) },
@@ -996,10 +996,14 @@
             });
             const result = await this.fetchSubjectScopeCheck(users, 'user');
             if (result && result.length) {
-              const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+              const hasSelectedUsers = [...this.defaultUsers, ...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
               const userTemp = result.filter((item) => {
-                return !hasSelectedUsers.map((subItem) =>
+                const isExistData = hasSelectedUsers.map((subItem) =>
                   `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
+                if (isExistData) {
+                  this.hasExistOrgData.push(`${item.username} (${item.name})`);
+                }
+                return !isExistData;
               });
               this.hasSelectedUsers.push(...userTemp);
               this.hasSelectedManualUsers.push(...userTemp);
@@ -1035,10 +1039,17 @@
             });
             const result = await this.fetchSubjectScopeCheck(departments, 'depart');
             if (result && result.length) {
-              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+              const hasSelectedDepartments = [
+                ...this.defaultDepartments,
+                ...this.hasSelectedDepartments,
+                ...this.hasSelectedManualDepartments
+              ];
               const departTemp = result.filter((item) => {
-                return !hasSelectedDepartments.map((subItem) =>
-                  subItem.id.toString()).includes(item.id.toString());
+                const isExistData = hasSelectedDepartments.map((v) => String(v.id)).includes(String(item.id));
+                if (isExistData) {
+                  this.hasExistOrgData.push(item.name);
+                }
+                return !isExistData;
               });
               this.hasSelectedManualDepartments.push(...departTemp);
               this.hasSelectedDepartments.push(...departTemp);
@@ -1091,10 +1102,17 @@
               return getUsername(item);
             })
           });
+          this.hasExistOrgData = [];
+          const hasSelectedUsers = this.hasSelectedUsers.map((item) => item.username);
+          const defaultUsers = this.defaultUsers.map((item) => item.id);
           const temps = res.data.filter((item) => {
             this.$set(item, 'type', 'user');
             this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
-            return !this.hasSelectedUsers.map((subItem) => subItem.username).includes(item.username);
+            const isExistName = [...defaultUsers, ...hasSelectedUsers].includes(item.username);
+            if (isExistName) {
+              this.hasExistOrgData.push(`${item.username} (${item.name})`);
+            }
+            return !isExistName;
           });
           this.hasSelectedUsers.push(...temps);
           this.hasSelectedManualUsers.push(...temps);
@@ -1129,16 +1147,21 @@
               this.manualInputError = !!this.manualValue;
               this.getDiffSystemOrgData();
               this.fetchManualTableData();
+              // 处理多个相同用户名
+              this.handleGetUniqueName();
               return;
             }
-            this.formatOrgAndUser();
+            await this.formatOrgAndUser();
+            this.handleGetUniqueName();
           } else {
             if (this.isStaff) {
               this.manualInputError = !!this.manualValue;
               this.getDiffSystemOrgData();
+              this.handleGetUniqueName();
               return;
             }
-            this.formatOrgAndUser();
+            await this.formatOrgAndUser();
+            this.handleGetUniqueName();
           }
         } catch (e) {
           console.error(e);
@@ -1175,10 +1198,17 @@
             });
             const result = await this.fetchSubjectScopeCheck(list);
             if (result && result.length) {
-              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+              const hasSelectedDepartments = [
+                ...this.defaultDepartments,
+                ...this.hasSelectedDepartments,
+                ...this.hasSelectedManualDepartments
+              ];
               const departTemp = result.filter((item) => {
-                return !hasSelectedDepartments.map((subItem) =>
-                  subItem.id.toString()).includes(item.id.toString());
+                const isExistData = hasSelectedDepartments.map((v) => String(v.id)).includes(String(item.id));
+                if (isExistData) {
+                  this.hasExistOrgData.push(item.name);
+                }
+                return !isExistData;
               });
               this.hasSelectedManualDepartments.push(...departTemp);
               this.hasSelectedDepartments.push(...departTemp);
@@ -1872,6 +1902,12 @@
           return;
         }
         this.fetchManualTableData();
+      },
+
+      handleGetUniqueName () {
+        if (this.hasExistOrgData.length) {
+          this.messageWarn(this.$t(`m.info['组织架构重复添加多个相同用户名']`, { value: [...new Set(this.hasExistOrgData)].join() }));
+        }
       },
       
       handleAfterLeave () {
