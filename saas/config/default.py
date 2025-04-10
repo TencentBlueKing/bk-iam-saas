@@ -13,11 +13,11 @@ import os
 import pymysql
 import environ
 from celery.schedules import crontab
+from django.utils.functional import cached_property
+from django.db.backends.mysql.features import DatabaseFeatures
 
 # connect mysql
 pymysql.install_as_MySQLdb()
-
-
 
 # environ
 env = environ.Env()
@@ -27,6 +27,20 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # load environment variables from .env file
 environ.Env.read_env()
+
+
+# 定义一个补丁来兼容 MySQL 5.7
+class PatchFeatures:
+    @cached_property
+    def minimum_database_version(self):
+        if self.connection.mysql_is_mariadb:
+            return 10, 4
+        else:
+            return 5, 7
+
+
+# 将补丁应用到 DatabaseFeatures 中
+DatabaseFeatures.minimum_database_version = PatchFeatures.minimum_database_version
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -341,7 +355,6 @@ MAX_DEBUG_TRACE_COUNT = 1000
 ENABLE_PYINSTRUMENT = env.bool("BKAPP_ENABLE_PYINSTRUMENT", default=False)  # 需要开启时则配置环境变量
 PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
 
-
 # ---------------
 # app 自定义配置
 # ---------------
@@ -448,7 +461,6 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 # disable display systems
 HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=["bk_iam", "bk_ci_rbac"])
 
-
 # role resource relation type 用于自定期权限申请的权限审批
 ROLE_RESOURCE_RELATION_TYPE = [
     {"system_id": "bk_cmdb", "type": "biz"},
@@ -461,7 +473,6 @@ ROLE_RESOURCE_RELATION_TYPE = [
 
 ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
 
-
 # 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置
 BK_IAM_SYSTEM_ID = "bk_iam"
 if BK_IAM_HOST_TYPE == "direct":
@@ -473,18 +484,14 @@ elif BK_IAM_HOST_TYPE == "apigateway":
 BK_IAM_MIGRATION_APP_NAME = "iam"
 BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 
-
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
-
 
 # BCS初始化ROLE网关api配置
 BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
 
-
 # BK BOT approval审批机器人通知
 BK_BOT_APPROVAL_APIGW_URL = env.str("BK_BOT_APPROVAL_APIGW_URL", default="")
-
 
 # BK BOT approval审批机器人通知
 BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL", default="")
@@ -494,7 +501,6 @@ BK_NOTIFICATION_EXEMPTION_USERS = env.list("BK_NOTIFICATION_EXEMPTION_USERS", de
 
 # 文档地址
 BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/")
-
 
 # 全局配置地址
 BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")
