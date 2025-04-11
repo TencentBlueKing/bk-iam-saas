@@ -75,7 +75,7 @@ authors = ["TencentBlueKing <contactus_bk@tencent.com>"]
 version = "0.0.0"
 
 [tool.poetry.dependencies]
-python = "3.11.11"
+python = "3.11.10"
 Django = "4.2.19"
 pymysql = "1.1.1"
 MarkupSafe = "2.1.1"
