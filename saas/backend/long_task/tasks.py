@@ -187,7 +187,7 @@ class SubTask(Task):
         ResultStore(task.id).clear()
 
 
-current_app.tasks.register(SubTask())
+current_app.register_task(SubTask())
 
 
 class TaskFactory(Task):
@@ -220,7 +220,7 @@ class TaskFactory(Task):
         SubTask().delay(id)
 
 
-current_app.tasks.register(TaskFactory())
+current_app.register_task(TaskFactory())
 
 
 def register_handler(_type: str):

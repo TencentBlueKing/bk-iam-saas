@@ -51,7 +51,7 @@ class SystemAllowAuthSystem(BaseModel):
         verbose_name = "系统允许授权的系统"
         verbose_name_plural = "系统允许授权的系统"
         ordering = ["-id"]
-        index_together = ["system_id", "auth_system_id"]
+        indexes = [models.Index(fields=["system_id", "auth_system_id"])]
 
     @classmethod
     @cachedmethod(timeout=5 * 60)  # 缓存5分钟

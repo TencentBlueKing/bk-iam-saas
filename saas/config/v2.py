@@ -189,14 +189,22 @@ CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 _APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
 CSRF_COOKIE_NAME = f"bkiam_csrftoken_{_APP_URL_MD5_16BIT}"
 # 对于特殊端口，带端口和不带端口都得添加，其他只需要添加默认原生的即可
-CSRF_TRUSTED_ORIGINS = [_BK_PAAS_HOSTNAME, _BK_PAAS_NETLOC] if _BK_PAAS_IS_SPECIAL_PORT else [_BK_PAAS_NETLOC]
+SCHEME_HTTPS = 'https'
+SCHEME_HTTP = 'http'
+CSRF_TRUSTED_ORIGINS = [
+    f"{SCHEME_HTTPS}://{_BK_PAAS_HOSTNAME}", f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}"
+                                             f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}"
+] if _BK_PAAS_IS_SPECIAL_PORT else [
+    f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}"
 
+]
 # cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 CORS_ORIGIN_WHITELIST = (
-    [f"{_BK_PAAS_SCHEME}://{_BK_PAAS_HOSTNAME}", f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"]
+    [f"{SCHEME_HTTPS}://{_BK_PAAS_HOSTNAME}", f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}",
+     f"{SCHEME_HTTP}://{_BK_PAAS_HOSTNAME}", f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}"]
     if _BK_PAAS_IS_SPECIAL_PORT
-    else [f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"]
+    else [f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}"]
 )
 
 # Static files (CSS, JavaScript, Images)

@@ -41,7 +41,7 @@ class TemporaryPolicy(BaseModel):
         verbose_name = "临时权限策略"
         verbose_name_plural = "临时权限策略"
 
-        index_together = ["subject_id", "subject_type", "system_id"]
+        indexes = [models.Index(fields=["subject_id", "subject_type", "system_id"])]
 
     @property
     def resources(self):

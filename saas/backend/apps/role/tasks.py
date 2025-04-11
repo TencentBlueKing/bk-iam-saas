@@ -180,7 +180,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
                 logger.exception("send role_group_expire_remind rtx fail, usernames=%s", usernames)
 
 
-current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
+current_app.register_task(SendRoleGroupExpireRemindMailTask())
 
 
 @shared_task(ignore_result=True)
@@ -740,7 +740,7 @@ class InitBizGradeManagerTask(Task):
         return templates
 
 
-current_app.tasks.register(InitBizGradeManagerTask())
+current_app.register_task(InitBizGradeManagerTask())
 
 
 class AuthScopeMerger:
@@ -952,7 +952,7 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
             self.group_biz.grant(role, group, templates, need_check=False)
 
 
-current_app.tasks.register(InitBcsProjectManagerTask())
+current_app.register_task(InitBcsProjectManagerTask())
 
 
 @shared_task(ignore_result=True)

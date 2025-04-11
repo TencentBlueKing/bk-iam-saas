@@ -42,7 +42,7 @@ class PermTemplate(BaseModel):
         verbose_name = "权限模板"
         verbose_name_plural = "权限模板"
         ordering = ["-created_time"]
-        index_together = ["system_id"]
+        indexes = [models.Index(fields=["system_id"])]
 
     @property
     def action_ids(self):
@@ -94,8 +94,8 @@ class PermTemplatePolicyAuthorized(BaseModel):
     class Meta:
         verbose_name = "权限模板授权"
         verbose_name_plural = "权限模板授权"
-        index_together = [
-            ["system_id"],
+        indexes = [
+            models.Index(fields=["system_id"]),  # 创建单字段索引
         ]
         unique_together = ["template_id", "subject_type", "subject_id"]
         ordering = ["-updated_time"]
