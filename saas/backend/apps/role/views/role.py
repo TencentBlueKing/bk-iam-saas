@@ -699,6 +699,7 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
 
         sorted_members = sorted(members, key=lambda m: m["parent_id"])
         for group_id, per_members in groupby(sorted_members, key=lambda m: m["parent_id"]):
+            per_members = list(per_members)  # ✅ 缓存下来，防止多次使用失效
             part_members = [
                 GroupMemberExpiredAtBean(type=one["type"], id=one["id"], expired_at=one["expired_at"])
                 for one in per_members
