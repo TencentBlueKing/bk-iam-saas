@@ -163,7 +163,6 @@ if REDIS_USE_SENTINEL:
 # 当Redis Cache 使用IGNORE_EXCEPTIONS时，设置指定的 logger 输出异常
 DJANGO_REDIS_LOGGER = "app"
 
-
 # 判断是否为本地开发环境
 IS_LOCAL = False
 
@@ -186,7 +185,7 @@ _BK_PAAS_SCHEME = _BK_PAAS_HOST_PARSE_URL.scheme
 # 注意：Cookie Domain是不支持端口的
 SESSION_COOKIE_DOMAIN = _BK_PAAS_HOSTNAME
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
-_APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
+_APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]  # nosec B113
 CSRF_COOKIE_NAME = f"bkiam_csrftoken_{_APP_URL_MD5_16BIT}"
 # 对于特殊端口，带端口和不带端口都得添加，其他只需要添加默认原生的即可
 SCHEME_HTTPS = 'https'
@@ -236,8 +235,8 @@ LOGGING = {
         },
         "verbose": {
             "format": "%(levelname)s [%(asctime)s] %(pathname)s "
-            "%(lineno)d %(funcName)s %(process)d %(thread)d "
-            "\n \t %(request_id)s\t%(message)s \n",
+                      "%(lineno)d %(funcName)s %(process)d %(thread)d "
+                      "\n \t %(request_id)s\t%(message)s \n",
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     },

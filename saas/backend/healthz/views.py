@@ -124,7 +124,7 @@ class HealthChecker:
     def iam(self):
         try:
             url = url_join(settings.BK_IAM_HOST, "/healthz")
-            resp = requests.get(url)
+            resp = requests.get(url, timeout=5)
             if resp.status_code != requests.codes.ok:
                 return False, f"iam backend response status[{resp.status_code}] not OK"
         except Exception as e:  # pylint: disable=broad-except
