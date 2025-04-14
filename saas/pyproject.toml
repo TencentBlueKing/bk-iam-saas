@@ -23,7 +23,6 @@ exclude = "*migrations*,*.pyc,.git,__pycache__,node_modules/*,*/templates_module
 
 [tool.bandit]
 exclude_dirs = ["tests"]
-tests = []
 skips = ["B101", "B110", "B311", "B303"]
 
 [tool.mypy]

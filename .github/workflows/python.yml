@@ -33,7 +33,7 @@ jobs:
           pip install flake8
           pip install -r saas/requirements_dev.txt
     - name: Lint with flake8
-      run: flake8 --config=saas/pyproject.toml saas
+      run: python -m pyproject_flake8 saas
     - name: Lint with bandit
       run: bandit -c saas/pyproject.toml -r saas
     - name: Lint with mypy
