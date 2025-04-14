@@ -128,24 +128,23 @@ wrapt==1.17.2; python_full_version >= "3.6.2" and python_version >= "3.6" and py
 zipp==3.21.0; python_version < "3.8" and python_version >= "3.6"
 zope.event==4.5.0; python_version >= "2.7" and python_full_version < "3.0.0" or python_version > "3.5"
 zope.interface==5.4.0; python_version >= "2.7" and python_full_version < "3.0.0" or python_version > "3.5" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version > "3.5"
-tomli == "2.2.1"
-#toml == "0.10.2"
-pyproject-flake8 == "7.0.0"
-flake8-comprehensions == "3.16.0"
-pytest == "8.3.5"
-pytest-django == "4.11.1"
-django-dynamic-fixture == "4.0.1"
-converge == "1.1.1"
-mock == "5.2.0"
-black == "25.1.0"
-mypy == "1.15.0"
-types-requests == "2.32.0.20250328"
-types-pytz == "2025.2.0.20250326"
-types-redis == "4.6.0.20241004"
-types-six == "1.17.0.20250403"
-types-mock == "5.2.0.20250306"
-isort == "6.0.1"
-pytest-cov == "6.1.1"
-flake8-bugbear == "24.12.12"
-bandit == "1.8.3"
-import-linter == "2.3"
+toml = 0.10.2
+pyproject-flake8 == 7.0.0
+flake8-comprehensions == 3.16.0
+pytest == 8.3.5
+pytest-django == 4.11.1
+django-dynamic-fixture == 4.0.1
+converge == 1.1.1
+mock == 5.2.0
+black == 25.1.0
+mypy == 1.15.0
+types-requests == 2.32.0.20250328
+types-pytz == 2025.2.0.20250326
+types-redis == 4.6.0.20241004
+types-six == 1.17.0.20250403
+types-mock == 5.2.0.20250306
+isort == 6.0.1
+pytest-cov == 6.1.1
+flake8-bugbear == 24.12.12
+bandit == 1.8.3
+import-linter == 2.3
