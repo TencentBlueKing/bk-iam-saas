@@ -114,7 +114,6 @@ six==1.17.0; (python_version >= "2.7" and python_full_version < "3.0.0") or (pyt
 smmap==5.0.0; python_version >= "3.6"
 sqlparse==0.4.4; python_version >= "3.5"
 thrift==0.21.0; python_version >= "3.6"
-toml==0.10.1
 tongsuopy-crayon==1.0.2b6; python_full_version >= "3.6.2" and python_version < "3.11" and python_version >= "3.6"
 typing-extensions==4.12.2
 uritemplate==3.0.1; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6"
