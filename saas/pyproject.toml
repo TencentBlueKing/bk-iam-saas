@@ -12,14 +12,24 @@ line_length = 119
 skip = [".mypy_cache", ".git", "*/migrations"]
 
 [tool.flake8]
-ignore = "C901,E203,W503,B010,B009"
+ignore = ["C901", "E203", "W503", "B010", "B009"]
 max-line-length = 119
 max-complexity = 12
 format = "pylint"
 show_source = true
 statistics = true
 count = true
-exclude = "*migrations*,*.pyc,.git,__pycache__,node_modules/*,*/templates_module*,*/bin/*,*/settings/*,config,tests/unittest_settings.py"
+exclude = [
+    "*migrations*",
+    "*.pyc",
+    ".git",
+    "__pycache__",
+    "node_modules/*",
+    "*/templates_module*",
+    "*/bin/*",
+    "*/settings/*",
+    "config",
+    "tests/unittest_settings.py"]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
@@ -40,8 +50,7 @@ module = [
     "*.config.*",
     "*.tests.unittest_settings",
     "*.backend.tracing.*",
-    "*.settings"
-]
+    "*.settings"]
 ignore_errors = true
 
 [tool.pytest.ini_options]
