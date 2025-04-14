@@ -1617,7 +1617,9 @@ class PolicyOperationBiz:
         policy = self.query_biz.get_policy_by_id(subject, policy_id)
         resource_type = policy.get_related_resource_type(resource_group_id, resource_system_id, resource_type_id)
         if not resource_type:
-            raise error_codes.VALIDATE_ERROR.format(_("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
+            raise error_codes.VALIDATE_ERROR.format(
+                _("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id)
+            )
 
         condition_list = ConditionBeanList(resource_type.condition)
         # 删除condition id对应的condition

@@ -86,7 +86,9 @@ class DBDepartmentSyncService(BaseSyncDBService):
 
         # 1. 使用BFS转换出可顺序删除的列表，使用mptt进行删除
         id_parent_ids = [(i.id, i.parent_id) for i in deleted_departments]
-        sorted_departments = convert_list_for_mptt(id_parent_ids, reverse=True)  # 把子级部门排到前面, 保证先删除的是子级部门
+        sorted_departments = convert_list_for_mptt(
+            id_parent_ids, reverse=True
+        )  # 把子级部门排到前面, 保证先删除的是子级部门
 
         # 2. 以mptt方式删除部门，不可批量删除，因为存在依赖，删除时可能前一个parent也在删除中，树无法变更
         created_department_dict = {i.id: i for i in deleted_departments}

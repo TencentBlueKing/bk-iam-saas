@@ -458,7 +458,9 @@ class RoleCheckBiz:
         )
         names = {i.data.get("name") for i in applications}
         if new_name in names:
-            raise error_codes.CONFLICT_ERROR.format(_("存在同名分级管理员[{}]或者在处理中的单据，请修改后再提交").format(new_name), True)
+            raise error_codes.CONFLICT_ERROR.format(
+                _("存在同名分级管理员[{}]或者在处理中的单据，请修改后再提交").format(new_name), True
+            )
 
     def check_subset_manager_unique_name(self, grade_manager: Role, new_name: str, old_name: str = ""):
         """
@@ -523,7 +525,9 @@ class RoleCheckBiz:
         role_ids = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).values_list("id", flat=True)
         exists_count = RoleUser.objects.filter(username=subject.id, role_id__in=role_ids).count()
         if exists_count >= limit:
-            raise serializers.ValidationError(_("成员({}): 可加入的分级管理员数量已超限 {}").format(subject.id, exists_count))
+            raise serializers.ValidationError(
+                _("成员({}): 可加入的分级管理员数量已超限 {}").format(subject.id, exists_count)
+            )
 
     def check_grade_manager_of_system_limit(self, system_id: str):
         """
@@ -551,7 +555,9 @@ class RoleCheckBiz:
             RoleType.GRADE_MANAGER.value, system_id, source_type=RoleSourceType.API.value
         )
         if exists_count >= limit:
-            raise serializers.ValidationError(_("系统({}): 可创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
+            raise serializers.ValidationError(
+                _("系统({}): 可创建的分级管理员数量已超过最大值 {}").format(system_id, limit)
+            )
 
 
 class RoleListQuery:
@@ -928,7 +934,8 @@ class RoleAuthorizationScopeChecker:
         system_action_scope = self.system_action_scope
         if system_id not in system_action_scope and SYSTEM_ALL not in system_action_scope:
             raise error_codes.FORBIDDEN.format(
-                message=_("{} 系统不在分级管理员的授权范围内，请先编辑分级管理员授权范围").format(system_id), replace=True
+                message=_("{} 系统不在分级管理员的授权范围内，请先编辑分级管理员授权范围").format(system_id),
+                replace=True,
             )
 
     def _check_action_in_scope(self, system_id, action_id):
@@ -939,7 +946,8 @@ class RoleAuthorizationScopeChecker:
         action_scope = system_action_scope[system_id]
         if action_id not in action_scope:
             raise error_codes.FORBIDDEN.format(
-                message=_("{} 操作不在分级管理员的授权范围内，请先编辑分级管理员授权范围").format(action_id), replace=True
+                message=_("{} 操作不在分级管理员的授权范围内，请先编辑分级管理员授权范围").format(action_id),
+                replace=True,
             )  # 操作不在授权范围内
 
         return ""
@@ -1029,7 +1037,10 @@ class RoleAuthorizationScopeChecker:
         differ = ActionScopeDiffer(policy, PolicyBean.parse_obj(policy_scope))
         if not differ.diff():
             raise error_codes.FORBIDDEN.format(
-                message=_("{} 操作选择的资源实例不在分级管理员的授权范围内，请编辑分级管理员授权范围").format(policy.action_id), replace=True
+                message=_("{} 操作选择的资源实例不在分级管理员的授权范围内，请编辑分级管理员授权范围").format(
+                    policy.action_id
+                ),
+                replace=True,
             )  # 操作的资源选择范围不满足分级管理员的资源选择范围
 
     def check_systems(self, system_ids: List[str]):
@@ -1129,7 +1140,8 @@ class RoleSubjectScopeChecker:
                 if len(department_ancestors[int(s.id)] & department_scopes) == 0:
                     if raise_exception:
                         raise error_codes.FORBIDDEN.format(
-                            message=_("部门({})在分级管理员的授权范围内，请编辑分级管理员授权范围").format(s.id), replace=True
+                            message=_("部门({})在分级管理员的授权范围内，请编辑分级管理员授权范围").format(s.id),
+                            replace=True,
                         )
 
                     need_delete_set.add((s.type, s.id))
@@ -1142,7 +1154,8 @@ class RoleSubjectScopeChecker:
                 if len(department_set & department_scopes) == 0:
                     if raise_exception:
                         raise error_codes.FORBIDDEN.format(
-                            message=_("用户({})在分级管理员的授权范围内，请编辑分级管理员授权范围").format(s.id), replace=True
+                            message=_("用户({})在分级管理员的授权范围内，请编辑分级管理员授权范围").format(s.id),
+                            replace=True,
                         )
 
                     need_delete_set.add((s.type, s.id))

@@ -63,7 +63,9 @@ class ActionSLZ(serializers.Serializer):
     description_en = serializers.CharField()
     type = serializers.CharField(label="操作类型")
     version = serializers.IntegerField()
-    related_resource_types = serializers.ListField(label="关联资源类型", child=RelatedResourceTypeSLZ(label="资源类型"))
+    related_resource_types = serializers.ListField(
+        label="关联资源类型", child=RelatedResourceTypeSLZ(label="资源类型")
+    )
     related_actions = serializers.ListField(child=serializers.CharField())
     related_environments = serializers.ListField(child=RelatedEnvironmentSLZ())
 

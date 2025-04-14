@@ -325,7 +325,9 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         # 校验权限
         checker = RoleObjectRelationChecker(request.role)
         if not checker.check_group(group):
-            raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True
+            )
 
         if request.query_params.get("keyword"):
             slz = SearchMemberSLZ(data=request.query_params)
@@ -468,7 +470,9 @@ class GroupsMemberViewSet(GenericViewSet):
                 readonly = group.readonly
                 if readonly:
                     raise error_codes.FORBIDDEN.format(
-                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        message=_("只读用户组({})无法进行({})操作！").format(
+                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label
+                        ),
                         replace=True,
                     )
                 if members:
@@ -533,7 +537,9 @@ class GroupsMemberViewSet(GenericViewSet):
                 readonly = group.readonly
                 if readonly:
                     raise error_codes.FORBIDDEN.format(
-                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        message=_("只读用户组({})无法进行({})操作！").format(
+                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label
+                        ),
                         replace=True,
                     )
                 if members:
@@ -1246,7 +1252,9 @@ class GroupTemplateMemberViewSet(GroupPermissionMixin, GenericViewSet):
         # 校验权限
         checker = RoleObjectRelationChecker(request.role)
         if not checker.check_group(group):
-            raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True
+            )
 
         if keyword:
             group_members = self.group_biz.search_template_group_member_by_keyword(group.id, template_id, keyword)

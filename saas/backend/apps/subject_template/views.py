@@ -65,7 +65,9 @@ def check_readonly_subject_template(func):
     def decorate(view, request, *args, **kwargs):
         subject_template = view.get_object()
         if subject_template.readonly:
-            raise error_codes.FORBIDDEN.format(message=_("只读人员模版({})禁止变更").format(subject_template.id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("只读人员模版({})禁止变更").format(subject_template.id), replace=True
+            )
 
         response = func(view, request, *args, **kwargs)
         return response
@@ -328,7 +330,9 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
         templates = self.get_queryset().filter(id__in=template_ids)
         for template in templates:
             if template.readonly:
-                raise error_codes.FORBIDDEN.format(message=_("只读人员模版({})禁止变更").format(template.id), replace=True)
+                raise error_codes.FORBIDDEN.format(
+                    message=_("只读人员模版({})禁止变更").format(template.id), replace=True
+                )
 
             try:
                 # 校验用户组数量是否超限

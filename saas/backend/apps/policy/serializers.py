@@ -180,7 +180,9 @@ ENV_COND_TYPE_SLZ_MAP = {
 
 # for validate
 class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
-    condition = serializers.ListField(label="生效条件", child=EnvConditionSLZ(label="条件"), min_length=2, max_length=3)
+    condition = serializers.ListField(
+        label="生效条件", child=EnvConditionSLZ(label="条件"), min_length=2, max_length=3
+    )
 
     def validate(self, data):
         condition_type_set = {c["type"] for c in data["condition"]}
@@ -211,7 +213,11 @@ class ResourceGroupSLZ(serializers.Serializer):
     id = serializers.CharField(label="ID", allow_blank=True)
     related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"))
     environments = serializers.ListField(
-        label="环境属性条件", child=EnvironmentSLZ(label="环境属性条件"), allow_empty=True, required=False, default=list
+        label="环境属性条件",
+        child=EnvironmentSLZ(label="环境属性条件"),
+        allow_empty=True,
+        required=False,
+        default=list,
     )
 
     def validate(self, data):
@@ -294,7 +300,9 @@ class PolicyPartDeleteSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="资源类型系统ID")
     resource_group_id = serializers.CharField(label="资源条件组ID")
     type = serializers.CharField(label="资源类型")
-    ids = serializers.ListField(label="整体删除的条件ID", child=serializers.CharField(label="ConditionID"), allow_empty=True)
+    ids = serializers.ListField(
+        label="整体删除的条件ID", child=serializers.CharField(label="ConditionID"), allow_empty=True
+    )
     condition = serializers.ListField(label="部分删除条件", child=ConditionDeleteSLZ(label="条件"), allow_empty=True)
 
     def validate(self, data):

@@ -132,7 +132,9 @@ class GradeMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", default=False)
 
     def validate(self, data):
@@ -186,7 +188,9 @@ class GradeMangerDetailSchemaSLZ(BaseGradeMangerSchemaSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSchemaSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
 
     class Meta:
         model = Role
@@ -405,7 +409,9 @@ class AuthorizedSubjectsSLZ(serializers.Serializer):
 
 
 class SubsetMangerCreateSLZ(GradeMangerCreateSLZ):
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True
+    )
     inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围")
 
     def validate(self, data):

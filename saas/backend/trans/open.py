@@ -35,7 +35,9 @@ class OpenRelatedResource(BaseModel):
     system_id: str = Field(alias="system")
     type: str
     paths: List[List[OpenResourcePathNode]] = []
-    attributes: List[Any] = []  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
+    attributes: List[Any] = (
+        []
+    )  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段传 system 或 system_id
@@ -165,9 +167,11 @@ class OpenCommonTrans:
             policy = PolicyBean.parse_obj(
                 {
                     "action_id": open_policy.action_id,
-                    "resource_groups": [{"id": gen_uuid(), "related_resource_types": related_resource_types}]
-                    if related_resource_types
-                    else [],
+                    "resource_groups": (
+                        [{"id": gen_uuid(), "related_resource_types": related_resource_types}]
+                        if related_resource_types
+                        else []
+                    ),
                 }
             )
             policies.append(policy)

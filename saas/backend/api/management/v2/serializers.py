@@ -53,7 +53,9 @@ class ManagementResourcePathsSLZ(serializers.Serializer):
     type = serializers.CharField(label="资源类型")
     paths = serializers.ListField(
         label="批量层级",
-        child=serializers.ListField(label="拓扑层级", child=ManagementResourcePathNodeSLZ(label="实例"), allow_empty=False),
+        child=serializers.ListField(
+            label="拓扑层级", child=ManagementResourcePathNodeSLZ(label="实例"), allow_empty=False
+        ),
         allow_empty=True,
     )
 
@@ -83,9 +85,13 @@ class ManagementGradeManagerCreateApplicationSLZ(GradeMangerBaseInfoSLZ, ReasonS
     authorization_scopes = serializers.ListField(
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
-    group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
+    group_name = serializers.CharField(
+        label="同步用户组名称", max_length=512, required=False, allow_blank=True, default=""
+    )
     sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
     callback_id = serializers.CharField(label="回调ID", max_length=32, required=False, allow_blank=True, default="")
@@ -179,7 +185,8 @@ class ManagementGroupMemberSLZ(serializers.Serializer):
 class ManagementGroupMemberDeleteSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
     ids = serializers.CharField(
-        label="成员IDs", help_text="成员IDs，多个以英文逗号分隔, 对于type=user，则ID为用户名，对于type=department，则为部门ID"
+        label="成员IDs",
+        help_text="成员IDs，多个以英文逗号分隔, 对于type=user，则ID为用户名，对于type=department，则为部门ID",
     )
 
     def validate(self, data):
@@ -244,14 +251,18 @@ class ManagementGroupApplicationSLZ(serializers.Serializer):
     def validate(self, data):
         if data["content_template"] and data["group_content"]:
             if "schemes" not in data["content_template"] or "form_data" not in data["content_template"]:
-                raise serializers.ValidationError({"content_template": ["content_template中必须包含schemes和form_data"]})
+                raise serializers.ValidationError(
+                    {"content_template": ["content_template中必须包含schemes和form_data"]}
+                )
             if (
                 not isinstance(data["content_template"]["form_data"], list)
                 or len(data["content_template"]["form_data"]) != 1
                 or "value" not in data["content_template"]["form_data"][0]
                 or not isinstance(data["content_template"]["form_data"][0]["value"], list)
             ):
-                raise serializers.ValidationError({"content_template": ["content_template中必须包含form_data且为空数组"]})
+                raise serializers.ValidationError(
+                    {"content_template": ["content_template中必须包含form_data且为空数组"]}
+                )
 
             if set(map(str, data["group_ids"])) != set(data["group_content"].keys()):
                 raise serializers.ValidationError({"group_content": ["group_content中的key必须与group_ids一致"]})
@@ -289,7 +300,9 @@ class ManagementMemberGroupDetailInputInPathSLZ(serializers.Serializer):
             except ValueError:
                 raise serializers.ValidationError(
                     {
-                        "member_id": [f"当 group_member_type 为 {group_member_type} 时，member_id({member_id}) 必须为整数"],
+                        "member_id": [
+                            f"当 group_member_type 为 {group_member_type} 时，member_id({member_id}) 必须为整数"
+                        ],
                     }
                 )
 
@@ -336,10 +349,14 @@ class ManagementSubsetMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     authorization_scopes = serializers.ListField(
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True
+    )
     inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围", required=False, default=False)
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
-    group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
+    group_name = serializers.CharField(
+        label="同步用户组名称", max_length=512, required=False, allow_blank=True, default=""
+    )
 
     def validate(self, data):
         data = super().validate(data)
@@ -396,9 +413,13 @@ class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
     authorization_scopes = serializers.ListField(
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
-    group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
+    group_name = serializers.CharField(
+        label="同步用户组名称", max_length=512, required=False, allow_blank=True, default=""
+    )
     sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
 
 
