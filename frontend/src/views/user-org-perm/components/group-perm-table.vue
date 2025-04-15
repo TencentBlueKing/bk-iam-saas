@@ -211,7 +211,7 @@
     <MemberTemplateDetailSlider :show.sync="isShowTempSlider" :cur-detail-data="tempDetailData" />
   </div>
 </template>
-  
+
   <script>
   import { cloneDeep } from 'lodash';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
@@ -545,11 +545,11 @@
         };
         this.$emit('on-add-group', emitParams);
       },
-        
+
       handlePageChange (page) {
         this.$emit('on-page-change', page);
       },
-  
+
       handleLimitChange (limit) {
         this.$emit('on-limit-change', limit);
       },
@@ -561,7 +561,7 @@
       handleChange (selection, row) {
         this.fetchSelectedGroups('multiple', selection, row);
       },
-  
+
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: async () => {
@@ -599,7 +599,7 @@
         };
         return typeMap[type]();
       },
-      
+
       fetchCustomTotal (payload) {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
@@ -612,7 +612,7 @@
       handleEmptyClear () {
         this.$emit('on-clear');
       },
-  
+
       handleEmptyRefresh () {
         this.$emit('on-refresh');
       },
@@ -623,7 +623,7 @@
     }
   };
   </script>
-  
+
   <style lang="postcss" scoped>
   @import '@/views/user-org-perm/user-org-perm.css';
   </style>

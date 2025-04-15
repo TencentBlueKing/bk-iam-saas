@@ -97,7 +97,7 @@ export default {
       delete requestParams.id;
       return http.put(`${AJAX_URL_PREFIX}/subject_templates/${id}/`, requestParams, config);
     },
-    
+
     /**
      * 删除人员模版
      *
@@ -148,7 +148,7 @@ export default {
       delete requestParams.id;
       return http.get(`${AJAX_URL_PREFIX}/subject_templates/${id}/groups/?${json2Query(requestParams)}`, requestParams, config);
     },
-    
+
     /**
      * 删除人员模板用户关联
      *

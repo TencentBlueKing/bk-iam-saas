@@ -124,7 +124,7 @@
             ...this.systemListAll
           );
         }
-                
+
         this.$emit('system-selection-change', this.systemSelectData);
       },
 

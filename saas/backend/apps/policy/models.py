@@ -38,7 +38,9 @@ class Policy(BaseModel):
     # policy_id = models.BigIntegerField("后端policy_id", default=0)
 
     # 策略的鉴权类型
-    auth_type = models.CharField("策略的鉴权类型", max_length=16, choices=AuthType.get_choices(), default=AuthType.ABAC.value)
+    auth_type = models.CharField(
+        "策略的鉴权类型", max_length=16, choices=AuthType.get_choices(), default=AuthType.ABAC.value
+    )
 
     class Meta:
         verbose_name = "权限策略"

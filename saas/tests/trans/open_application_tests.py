@@ -22,15 +22,20 @@ class TestAccessSystemApplicationTrans:
 
         trans.action_check_biz.check = mock.Mock(return_value=None)
 
-        with patch.object(
-            PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_empty_fields, patch.object(
-            PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
-        ) as fake_check_instance_selection, patch.object(
-            OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_instance_system, patch.object(
-            OpenPolicy, "fill_instance_name", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_instance_name:
+        with (
+            patch.object(
+                PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_empty_fields,
+            patch.object(
+                PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
+            ) as fake_check_instance_selection,
+            patch.object(
+                OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_instance_system,
+            patch.object(
+                OpenPolicy, "fill_instance_name", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_instance_name,
+        ):
             policy_list = trans.to_policy_list(
                 {
                     "system": "system",

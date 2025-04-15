@@ -237,7 +237,7 @@
       handleCancel () {
         this.$emit('update:show', false);
       },
-            
+
       handleAfterLeave () {
         this.resetData();
         this.$emit('update:show', false);

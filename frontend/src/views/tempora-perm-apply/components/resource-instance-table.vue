@@ -541,7 +541,7 @@
         this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
-      
+
       fetchInstanceDefaultCheck (payload) {
         if (this.isRecommend) {
           this.$nextTick(() => {
@@ -1477,7 +1477,7 @@
             this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
           }
         }
-                
+
         this.tableList.forEach(item => {
           let tempExpiredAt = '';
           if (item.expired_at === '' && item.expired_display) {
@@ -1486,7 +1486,7 @@
 
           if (!item.isAggregate) {
             const { type, id, name, environment, description, policy_id, isNew, isChanged } = item;
-                        
+
             const groupResourceTypes = [];
             if (item.resource_groups.length > 0) {
               item.resource_groups.forEach(groupItem => {
@@ -1504,7 +1504,7 @@
                         const attributeList = (attribute && attribute.length > 0)
                           ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                           : [];
-        
+
                         const instanceList = (instance && instance.length > 0)
                           ? instance.map(({ name, type, paths }) => {
                             const tempPath = _.cloneDeep(paths);

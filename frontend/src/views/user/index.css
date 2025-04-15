@@ -117,8 +117,8 @@
         -webkit-animation: dot 4s infinite step-start both;
         animation: dot 4s infinite step-start both;
       }
-      :root .dotting { 
-        margin-right: 8px; 
+      :root .dotting {
+        margin-right: 8px;
       }
     }
     .tree-wrapper {

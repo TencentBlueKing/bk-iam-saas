@@ -175,7 +175,7 @@
                   </bk-popover>
                 </div>
               </template>
-              
+
             </bk-table-column>
             <template slot="empty">
               <ExceptionEmpty
@@ -339,7 +339,7 @@
         />
       </template>
     </bk-table>
-        
+
     <ManageInterviewDialog
       :show.sync="showImageDialog"
       :show-footer="false"
@@ -536,7 +536,7 @@
           this.fetchGradingAdmin(true);
         }
       },
-      
+
       handleOpenManagerEdit (payload, index) {
         this.$set(this.tableList[index], 'isEdit', true);
         this.$nextTick(() => {

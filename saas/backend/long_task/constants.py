@@ -21,7 +21,9 @@ class TaskStatus(ChoicesEnum):
     FAILURE = 3
     CANCEL = 4
 
-    _choices_labels = skip(((PENDING, "未开始"), (RUNNING, "运行中"), (SUCCESS, "成功"), (FAILURE, "失败"), (CANCEL, "取消")))
+    _choices_labels = skip(
+        ((PENDING, "未开始"), (RUNNING, "运行中"), (SUCCESS, "成功"), (FAILURE, "失败"), (CANCEL, "取消"))
+    )
 
 
 class TaskType(ChoicesEnum, LowerStrEnum):

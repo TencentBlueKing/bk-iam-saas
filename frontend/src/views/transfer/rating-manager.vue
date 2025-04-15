@@ -110,7 +110,7 @@
           this.isLoading = false;
         }
       },
-            
+
       handleEmptyRefresh () {
         this.fetchData();
       },
@@ -129,7 +129,7 @@
             ...this.rateListAll
           );
         }
-                
+
         this.$emit('rate-selection-change', this.rateSelectData);
       },
 

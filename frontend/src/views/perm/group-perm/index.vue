@@ -418,7 +418,7 @@
           }
         });
       },
-      
+
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: () => {

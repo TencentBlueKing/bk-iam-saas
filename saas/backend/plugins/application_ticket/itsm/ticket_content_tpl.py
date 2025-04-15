@@ -102,7 +102,9 @@ FORM_SCHEMES = {
     },
     FormSchemeEnum.RESOURCE_ATTRIBUTE_TABLE.value: {
         "type": "table",
-        "attrs": {"column": [{"name": "属性条件", "key": "attributes", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value}]},
+        "attrs": {
+            "column": [{"name": "属性条件", "key": "attributes", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value}]
+        },
     },
     FormSchemeEnum.RESOURCE_BOTH_TABLE.value: {
         "type": "table",

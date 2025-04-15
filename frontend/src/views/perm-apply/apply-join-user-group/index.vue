@@ -389,7 +389,7 @@
         </bk-button>
       </div>
     </bk-sideslider>
-            
+
     <confirmDialog
       :width="600"
       :show.sync="isShowConfirmDialog"
@@ -814,7 +814,7 @@
           }
         }
       },
-            
+
       handleFormatRecursion (list) {
         list.forEach(data => {
           if (data.actions && data.actions.length) {
@@ -1268,7 +1268,7 @@
           // this.requestQueue.shift()
         }
       },
-      
+
       async handleRemoteSystem (value) {
         const params = {};
         if (this.externalSystemId) {
@@ -1290,7 +1290,7 @@
               (item) => item.name.toLowerCase().indexOf(val) > -1);
         });
       },
-      
+
       handleClickMenu (payload) {
         const { menu } = payload;
         if (menu.id) {
@@ -1331,7 +1331,7 @@
         this.curGroupId = payload.id;
         this.isShowPermSideSlider = true;
       },
-      
+
       handleAnimationEnd () {
         this.curGroupName = '';
         this.curGroupId = '';
@@ -1461,7 +1461,7 @@
         const expiredAt = this.expiredAtUse + nowSecond;
         return expiredAt;
       },
-            
+
       async handleResourceSubmit () {
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
@@ -1622,7 +1622,7 @@
         this.params = {};
         this.resourceInstanceSideSliderTitle = '';
       },
-            
+
       refreshCurrentQuery () {
         const params = {};
         const queryParams = {

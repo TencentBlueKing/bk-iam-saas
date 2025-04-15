@@ -43,7 +43,7 @@
                 <span>{{ $t(`m.grading['${item.name}']`)}}</span>
               </div>
             </div>
-      
+
           </div>
           <div v-show="isSelectSystem">
             <div class="resource-instance-wrapper"

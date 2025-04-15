@@ -579,7 +579,7 @@
           });
         });
       },
-            
+
       // 获取相对关系
       getTemporaryCustomRelatedActions (data) {
         this.applyAgiagnIds = [data.id];

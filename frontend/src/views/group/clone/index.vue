@@ -6,7 +6,7 @@
           :data="formData"
           ref="basicInfoRef"
           @on-change="handleBasicInfoChange" />
-       
+
         <div class="select-wrap-checkbox">
           <bk-checkbox
             v-model="formData.apply_disable"
@@ -481,7 +481,7 @@
           this.messageAdvancedError(e);
         }
       },
-            
+
       // 先请求最外层数据（系统）
       async fetchGroupSystem () {
         this.tableList = [];

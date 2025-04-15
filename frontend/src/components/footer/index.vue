@@ -19,7 +19,7 @@
     <div>{{ copyright }} {{ version }}</div>
   </div>
 </template>
-  
+
 <script>
   import { mapGetters } from 'vuex';
   export default {

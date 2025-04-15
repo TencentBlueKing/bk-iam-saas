@@ -847,16 +847,16 @@
           if (resourceLen) {
             for (let i = 0; i < resourceLen; i++) {
               // const noCarryNoLimitPath = payload[1]
-          
+
               // const arr = path[0]
               // const tempPath = arr.filter(item => item.id !== '*')
-          
+
               // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
               const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
-          
+
               // const curChildrenIds = node.children.map(item => item.id)
               curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
-          
+
               // deleteInstanceItem.path.splice(deleteIndex, 1)
               if (deleteIndex > -1) {
                 isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);

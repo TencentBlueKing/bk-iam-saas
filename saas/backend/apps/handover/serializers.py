@@ -32,7 +32,7 @@ class HandoverInfoSLZ(serializers.Serializer):
     )
 
     def validate(self, data):
-        if all([not value for value in data.values()]):
+        if all(not value for value in data.values()):
             raise serializers.ValidationError("交接的权限内容不可为空")
         return data
 

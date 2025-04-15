@@ -313,7 +313,7 @@
           this.pagination.count = data.count;
           data.results = data.results.length && data.results.sort(
             (a, b) => new Date(b.updated_time) - new Date(a.updated_time));
-                        
+
           this.tableList.splice(0, this.tableList.length, ...(data.results || []));
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {

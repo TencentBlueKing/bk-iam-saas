@@ -143,7 +143,9 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 if data.type == ApplicationType.JOIN_GROUP
                 else f"申请续期 {len(data.content.groups)} 个用户组"
             )
-        title = "{}：{}".format(title_prefix, "、".join([f"({one.role_name}){one.name}" for one in data.content.groups]))
+        title = "{}：{}".format(
+            title_prefix, "、".join([f"({one.role_name}){one.name}" for one in data.content.groups])
+        )
         if len(title) > 64:
             title = title[:64] + "..."
 
@@ -192,7 +194,9 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         if approval_title:
             params["title"] = approval_title
         else:
-            title_prefix = "申请创建管理空间" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑管理空间"
+            title_prefix = (
+                "申请创建管理空间" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑管理空间"
+            )
             params["title"] = f"{title_prefix}：{data.content.name}"
 
         if approval_content:

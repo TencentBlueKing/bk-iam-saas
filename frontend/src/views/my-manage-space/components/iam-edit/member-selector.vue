@@ -204,7 +204,7 @@
           // this.triggerChange();
         }
       },
-            
+
       triggerChange () {
         console.log(this.isAllowTrigger, this.displayValue, '显示内容');
         // 单独处理初始化为空但编辑不能为空数据

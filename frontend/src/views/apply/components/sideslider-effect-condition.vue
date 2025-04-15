@@ -161,7 +161,7 @@
 <style lang="postcss">
     .effect-wrap{
         padding: 20px 30px 0 30px;
-        
+
     }
     .effect-item{
         padding: 10px;

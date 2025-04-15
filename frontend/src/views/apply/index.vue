@@ -40,7 +40,7 @@
     [['create_rating_manager'], 'RenderRatingManager'],
     [['update_rating_manager'], 'RenderRatingManager']
   ]);
-    
+
   export default {
     name: '',
     components: {

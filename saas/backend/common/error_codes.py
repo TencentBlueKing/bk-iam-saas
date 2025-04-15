@@ -44,7 +44,9 @@ class ErrorCodes:
     )
     FORBIDDEN = ErrorCode(_("没有访问权限"), code_num=1902403, status_code=status.HTTP_403_FORBIDDEN)
     NOT_FOUND_ERROR = ErrorCode(_("数据不存在"), code_num=1902404, status_code=status.HTTP_404_NOT_FOUND)
-    METHOD_NOT_ALLOWED = ErrorCode(_("不支持当前的请求方法"), code_num=1902405, status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+    METHOD_NOT_ALLOWED = ErrorCode(
+        _("不支持当前的请求方法"), code_num=1902405, status_code=status.HTTP_405_METHOD_NOT_ALLOWED
+    )
     # 通用错误
     COMMON_ERROR = ErrorCode(_("请求失败"), code_num=1902400, status_code=status.HTTP_400_BAD_REQUEST)
     CONFLICT_ERROR = ErrorCode(_("与已有资源冲突(重名等)"), code_num=1902409, status_code=status.HTTP_409_CONFLICT)
@@ -70,11 +72,15 @@ class ErrorCodes:
     ENGINE_REQUEST_ERROR = ErrorCode(_("请求ENGINE错误"), code_num=1902102, status_code=status.HTTP_200_OK)
 
     # [第三方接入系统: 19022xx]
-    RESOURCE_PROVIDER_ERROR = ErrorCode(_("接入系统资源接口请求失败"), code_num=1902200, status_code=status.HTTP_200_OK)
+    RESOURCE_PROVIDER_ERROR = ErrorCode(
+        _("接入系统资源接口请求失败"), code_num=1902200, status_code=status.HTTP_200_OK
+    )
     RESOURCE_PROVIDER_AUTH_INFO_VALID = ErrorCode(
         _("接入系统注册的API认证信息不合法"), code_num=1902200, status_code=status.HTTP_200_OK
     )
-    RESOURCE_PROVIDER_VALIDATE_ERROR = ErrorCode(_("API参数校验失败"), code_num=1902200, status_code=status.HTTP_200_OK)
+    RESOURCE_PROVIDER_VALIDATE_ERROR = ErrorCode(
+        _("API参数校验失败"), code_num=1902200, status_code=status.HTTP_200_OK
+    )
     RESOURCE_PROVIDER_UNAUTHORIZED = ErrorCode(
         _("接入系统资源接口请求API认证失败"), code_num=1902201, status_code=status.HTTP_200_OK
     )
@@ -101,7 +107,9 @@ class ErrorCodes:
     )
 
     # 通用系统错误
-    SYSTEM_ERROR = ErrorCode(_("系统异常,请联系管理员处理"), code_num=1902500, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    SYSTEM_ERROR = ErrorCode(
+        _("系统异常,请联系管理员处理"), code_num=1902500, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
 
     # [ITSM请求或处理等错误 19026xx]
     ITSM_PROCESSOR_NOT_SUPPORT = ErrorCode(

@@ -64,7 +64,9 @@ urlpatterns = [
                 re_path(r"^temporary_policies/", include("backend.apps.temporary_policy.urls")),
                 re_path(r"^iam/", include("backend.iam.urls")),
                 # notice
-                re_path(r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")),
+                re_path(
+                    r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")
+                ),
             ]
         ),
     ),

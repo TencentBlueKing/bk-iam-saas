@@ -918,7 +918,7 @@
         this.curOperate = 'quit';
         this.handleDeleteActions('quit', true);
       },
-      
+
       handleQuitRenewal (row) {
         this.curOperate = 'quit';
         this.singleData = Object.assign({}, row);

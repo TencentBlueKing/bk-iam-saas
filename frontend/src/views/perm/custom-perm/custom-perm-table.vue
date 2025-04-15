@@ -578,7 +578,7 @@
           payload && payload.hide();
         }
       },
-      
+
       // 区分删除操作还是实例
       handleDeleteActionOrInstance (payload, type) {
         const { id, name, condition } = payload;

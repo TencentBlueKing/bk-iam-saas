@@ -86,7 +86,7 @@ export default {
       });
       return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/groups/?${json2Query(queryParams)}`, params, config);
     },
-    
+
     /**
      * 角色用户组成员-部门用户组列表
      *

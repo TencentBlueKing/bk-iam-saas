@@ -660,7 +660,7 @@
           });
         }
       },
-      
+
       handleOpenRenewal (row, index) {
         row.isShowRenewal = false;
         row.customValueBackup = row.customValue;
@@ -1647,7 +1647,7 @@
 
           if (!item.isAggregate) {
             const { type, id, name, environment, description, policy_id, isNew, isChanged } = item;
-                        
+
             const groupResourceTypes = [];
             if (item.resource_groups.length > 0) {
               item.resource_groups.forEach(groupItem => {
@@ -1671,7 +1671,7 @@
                         const attributeList = (attribute && attribute.length > 0)
                           ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                           : [];
-        
+
                         const instanceList = (instance && instance.length > 0)
                           ? instance.map(({ name, type, paths }) => {
                             const tempPath = _.cloneDeep(paths);
@@ -1866,7 +1866,7 @@
         console.log('this.resourceSelectData', this.resourceSelectData);
         this.handlerChangeError();
       },
-            
+
       // 全选
       handlerAllChange (selection) {
         selection = selection.map(e => e.name);
@@ -1897,7 +1897,7 @@
       }
     }
   };
-       
+
 </script>
 
 <style scoped>

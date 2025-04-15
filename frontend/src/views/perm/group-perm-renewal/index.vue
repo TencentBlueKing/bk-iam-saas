@@ -202,7 +202,7 @@
       @on-after-leave="handleAfterDeleteLeave"
       @on-cancel="hideCancelDelete"
       @on-submit="handleSubmitDelete" />
-            
+
   </smart-action>
 </template>
 <script>
@@ -559,7 +559,7 @@
           }
         });
       },
-      
+
       fetchCustomTotal (index) {
         const { checkList, tabActive, name, id } = this.tableList[index];
         this.$nextTick(() => {
@@ -891,7 +891,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      
+
     }
   }
   .group-perm-renewal-ext-cls {

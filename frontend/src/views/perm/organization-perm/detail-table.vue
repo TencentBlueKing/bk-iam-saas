@@ -171,7 +171,7 @@
       }
     }
   };
-  
+
 </script>
 <style lang='postcss'>
     .iam-perm-table {

@@ -86,7 +86,7 @@
       hideCancelDelete () {
         this.$emit('on-cancel');
       },
-            
+
       handleAfterDeleteLeave () {
         this.reason = '';
         this.isShowReasonError = false;

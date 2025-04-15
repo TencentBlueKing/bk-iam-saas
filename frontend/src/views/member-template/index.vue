@@ -371,7 +371,7 @@
       },
       '$route': {
         handler (value) {
-    
+
         },
         immediate: true
       }

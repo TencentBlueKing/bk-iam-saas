@@ -426,6 +426,6 @@ export default {
       const queryParams = Object.assign({}, { offset, limit });
       return http.post(`${AJAX_URL_PREFIX}/groups/search/?${json2Query(queryParams)}`, params, config);
     }
-        
+
   }
 };

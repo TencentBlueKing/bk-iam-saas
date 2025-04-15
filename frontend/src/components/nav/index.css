@@ -132,7 +132,7 @@ $duration: 0.3s;
     /* border: 1px solid #2f3847 !important; */
     padding: 0 !important;
     /* color: #fff !important; */
-    
+
     .bk-options-wrapper ::-webkit-scrollbar-thumb {
         /* background-color: #5f6e85; */
         background: rgba(0,0,0,0.30);

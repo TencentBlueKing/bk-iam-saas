@@ -55,7 +55,7 @@
     </template>
   </div>
 </template>
-  
+
   <script>
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
@@ -85,7 +85,7 @@
             tipType: ''
           };
         }
-      
+
       },
       componentLoading: {
         type: Boolean,
@@ -384,7 +384,7 @@
           curData.loading = false;
         }
       },
-  
+
       // 用户人员模板用户组权限
       async fetchPermByTempSearch () {
         let curData = this.memberTempPermData.find((item) => item.id === 'userTempPerm');
@@ -483,7 +483,7 @@
           curData.loading = false;
         }
       },
-  
+
       async fetchInitData () {
         const routeMap = {
           userOrgPerm: () => {
@@ -647,23 +647,23 @@
       handleRemoveGroup (payload) {
         this.handleRefreshGroup(payload, 1);
       },
-  
+
       handlePageChange (current, payload) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
         this.formatPaginationData(payload, current, curData.pagination.limit);
       },
-  
+
       handleLimitChange (limit, payload) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
         curData.current = 1;
         this.formatPaginationData(payload, curData.current, limit);
       },
-  
+
       handleEmptyRefresh () {
         this.resetPagination();
         this.$emit('on-refresh');
       },
-  
+
       handleEmptyClear () {
         this.resetPagination();
         this.$emit('on-clear');
@@ -677,7 +677,7 @@
     }
   };
   </script>
-  
+
   <style lang="postcss" scoped>
   .user-org-group-perm {
     width: 100%;

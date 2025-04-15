@@ -312,7 +312,7 @@
         isShowTable: false,
         isShowReasonError: false,
         AGGREGATION_EDIT_ENUM
-                
+
       };
     },
     computed: {
@@ -1004,7 +1004,7 @@
         this.submitLoading = true;
         window.changeDialog = false;
         console.log('params', params);
-                
+
         const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
         try {
           await this.$store.dispatch(`role/${dispatchMethod}`, params);

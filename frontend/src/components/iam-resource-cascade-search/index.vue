@@ -177,7 +177,7 @@
         </template>
       </div>
     </div>
-    
+
     <bk-sideslider
       :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
@@ -218,7 +218,7 @@
   import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { delLocationHref } from '@/common/util';
-  
+
   export default {
     provide: function () {
       return {
@@ -768,7 +768,7 @@
           }
         }
       },
-            
+
       handleFormatRecursion (list) {
         list.forEach(data => {
           if (data.actions && data.actions.length) {
@@ -862,7 +862,7 @@
           }
         }
       },
-      
+
       // 显示资源实例
       handleShowResourceInstance (data, resItem, resIndex, groupIndex) {
         this.params = {
@@ -959,7 +959,7 @@
           values: [value]
         };
       },
-      
+
       resetDataAfterClose () {
         this.curResIndex = -1;
         this.groupIndex = -1;
@@ -983,7 +983,7 @@
           }
         );
       },
-      
+
       resetSearchParams () {
         this.applyGroupData = Object.assign({}, {
           system_id: this.externalSystemId || '',

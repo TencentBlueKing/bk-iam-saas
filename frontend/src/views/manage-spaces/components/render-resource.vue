@@ -797,7 +797,7 @@
           data: tempConditionData
         };
       },
-      
+
       handleConditionClearAll (payload, index) {
         payload.forEach((item, i) => {
           this.handleInstanceClearAll(item, i, index);

@@ -272,7 +272,7 @@
         this.curData = _.cloneDeep(value);
         await this.getHasSystem();
       },
-      
+
       fetchData () {
         this.handleEmptyClear();
       },

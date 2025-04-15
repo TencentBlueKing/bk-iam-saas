@@ -265,7 +265,9 @@ class TemplateCheckBiz:
 
         try:
             PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, template_id)
-            raise error_codes.VALIDATE_ERROR.format(_("用户组: {} 不能授权已授权的模板: {}").format(subject.id, template.name))
+            raise error_codes.VALIDATE_ERROR.format(
+                _("用户组: {} 不能授权已授权的模板: {}").format(subject.id, template.name)
+            )
         except Http404:
             pass
 

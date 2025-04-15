@@ -305,7 +305,7 @@
         }
         window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
       },
-      
+
       async fetchUserGroupSearch () {
         try {
           const { current, limit } = this.curSearchPagination;
@@ -445,7 +445,7 @@
         this.curSearchParams = {};
         this.tabKey = +new Date();
       },
-      
+
       handleEmptyRefresh () {
         this.isSearchPerm = false;
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();

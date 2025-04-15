@@ -115,7 +115,7 @@
         this.$emit('update:expanded', this.isExpanded);
         this.$emit('on-expanded', this.isExpanded);
       },
-      
+
       handleDeleteAll () {
         this.$emit('on-delete-all');
       }

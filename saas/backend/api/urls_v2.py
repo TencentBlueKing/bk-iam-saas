@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.urls import include, re_path
+
 urlpatterns = [
     # 管理类API - 对于V2 API，所有管理类API都默认在系统下
     re_path(r"^management/systems/(?P<system_id>[\w|-]+)/", include("backend.api.management.v2.urls")),

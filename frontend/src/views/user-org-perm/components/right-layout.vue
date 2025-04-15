@@ -270,7 +270,7 @@
       handleSelectedGroup (payload) {
         this.selectedGroups = [...payload];
       },
-      
+
       handleGetMembers () {
         const userList = [];
         const departList = [];

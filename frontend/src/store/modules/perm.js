@@ -740,7 +740,7 @@ export default {
       }
       return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     },
-      
+
     /**
      *  通过组织加入人员模板的用户组权限
      *
@@ -912,7 +912,7 @@ export default {
         config
       );
     },
-  
+
     /**
        * 用户模块——>通过组织加入人员模板的用户组权限
        *

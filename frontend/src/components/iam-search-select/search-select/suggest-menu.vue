@@ -80,7 +80,7 @@
           }
 
           const children = _remoteKeyImmediateChildrenMap[current[primaryKey]] || current.children;
-                    
+
           if (children) {
             // 搜索本地配置子项
             for (let j = 0; j < children.length; j++) {
@@ -98,14 +98,14 @@
             }
             continue;
           }
-                    
+
           // 匹配验证规则
           if (typeof current.validate === 'function') {
             if (current.validate([{ name: search }]) !== true) {
               continue;
             }
           }
-                    
+
           stack.push({
             keyName: current[displayKey],
             keyId: current[primaryKey],
@@ -117,7 +117,7 @@
 
         this.list = Object.freeze(stack);
       },
-            
+
       handleKeydown (event) {
         if (!this.needRender) {
           return;
@@ -136,7 +136,7 @@
         this.scrollActiveToView(event);
         this.$emit('enter-invalid-toggle', true);
       },
-            
+
       handleClick (payload) {
         const displayKey = this.searchSelect.displayKey;
         const primaryKey = this.searchSelect.primaryKey;
@@ -150,7 +150,7 @@
           }]
         });
       },
-            
+
       renderList () {
         // 列表为空
         if (this.list.length < 1) {

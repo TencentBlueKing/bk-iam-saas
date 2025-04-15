@@ -360,7 +360,7 @@
               subjects: [{
                 type: 'department',
                 id
-                     
+
               }]
             };
           },

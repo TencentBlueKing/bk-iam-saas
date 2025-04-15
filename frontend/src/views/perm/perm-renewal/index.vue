@@ -380,7 +380,7 @@
             font-size: 12px;
             color: #ea3636;
         }
-        
+
         .reason-error-tips {
             top: 0;
         }

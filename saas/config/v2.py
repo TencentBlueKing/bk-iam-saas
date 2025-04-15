@@ -7,6 +7,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import hashlib
 import os
 from urllib.parse import urlparse
@@ -68,7 +69,8 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": "",  # 多个本地内存缓存时才需要设置
-        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
+        "TIMEOUT": 60
+        * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
         # "VERSION": 1,  # 用于避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的，由于内存缓存每次部署都会重置，所以不需要设置
         # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
@@ -82,7 +84,8 @@ CACHES = {
         "BACKEND": "django_redis.cache.RedisCache",
         # 若需要支持主从配置，则LOCATION为List[master_url, slave_url]
         "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
-        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
+        "TIMEOUT": 60
+        * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
         "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
         # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
@@ -115,7 +118,8 @@ if REDIS_USE_SENTINEL:
         "BACKEND": "django_redis.cache.RedisCache",
         # The hostname in LOCATION is the primary (service / master) name
         "LOCATION": f"redis://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
-        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
+        "TIMEOUT": 60
+        * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
         "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
         # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
@@ -189,20 +193,26 @@ CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 _APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
 CSRF_COOKIE_NAME = f"bkiam_csrftoken_{_APP_URL_MD5_16BIT}"
 # 对于特殊端口，带端口和不带端口都得添加，其他只需要添加默认原生的即可
-SCHEME_HTTPS = 'https'
-SCHEME_HTTP = 'http'
-CSRF_TRUSTED_ORIGINS = [
-    f"{SCHEME_HTTPS}://{_BK_PAAS_HOSTNAME}", f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}"
-                                             f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}"
-] if _BK_PAAS_IS_SPECIAL_PORT else [
-    f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}"
-
-]
+SCHEME_HTTPS = "https"
+SCHEME_HTTP = "http"
+CSRF_TRUSTED_ORIGINS = (
+    [
+        f"{SCHEME_HTTPS}://{_BK_PAAS_HOSTNAME}",
+        f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}" f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}",
+        f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}",
+    ]
+    if _BK_PAAS_IS_SPECIAL_PORT
+    else [f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}"]
+)
 # cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 CORS_ORIGIN_WHITELIST = (
-    [f"{SCHEME_HTTPS}://{_BK_PAAS_HOSTNAME}", f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}",
-     f"{SCHEME_HTTP}://{_BK_PAAS_HOSTNAME}", f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}"]
+    [
+        f"{SCHEME_HTTPS}://{_BK_PAAS_HOSTNAME}",
+        f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}",
+        f"{SCHEME_HTTP}://{_BK_PAAS_HOSTNAME}",
+        f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}",
+    ]
     if _BK_PAAS_IS_SPECIAL_PORT
     else [f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}"]
 )

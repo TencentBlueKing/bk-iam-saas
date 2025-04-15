@@ -56,7 +56,7 @@
     </div>
   </div>
 </template>
-  
+
 <script>
   import _ from 'lodash';
   import { formatCodeData } from '@/common/util';
@@ -136,7 +136,7 @@
           }
         }
       },
-      
+
       async fetchTemplateList () {
         this.tableLoading = true;
         try {
@@ -275,7 +275,7 @@
     }
   };
 </script>
-  
+
 <style lang="postcss" scoped>
 .iam-member-template-wrapper {
     .template-input-wrapper {

@@ -1263,7 +1263,7 @@
             id = this.curChain[chainLen - 1].id;
             name = this.curChain[chainLen - 1].name;
             systemId = this.curChain[chainLen - 1].system_id;
-  
+
             parentChainData = {
               type: id,
               type_name: name,
@@ -1330,7 +1330,7 @@
               paths: [parentChain]
             }
           ];
-  
+
           if (node.isExistNoCarryLimit) {
             const p = [parentChain.slice(0, parentChain.length - 1)];
             params.push({

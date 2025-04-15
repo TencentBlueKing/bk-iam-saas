@@ -39,13 +39,17 @@ class TestRoleTrans:
             )
         )
 
-        with patch.object(
-            PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_empty_fields, patch.object(
-            PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
-        ) as fake_check_instance_selection, patch.object(
-            PolicyBeanList, "check_resource_name", MagicMock(side_effect=lambda: None)
-        ) as fake_check_resource_name:
+        with (
+            patch.object(
+                PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_empty_fields,
+            patch.object(
+                PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
+            ) as fake_check_instance_selection,
+            patch.object(
+                PolicyBeanList, "check_resource_name", MagicMock(side_effect=lambda: None)
+            ) as fake_check_resource_name,
+        ):
 
             role = trans.from_role_data(
                 {

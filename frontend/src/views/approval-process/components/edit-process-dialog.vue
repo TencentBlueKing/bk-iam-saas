@@ -98,7 +98,7 @@
       handleCancel () {
         this.$emit('on-cancel');
       },
-            
+
       handleAfterLeave () {
         this.curProcessValue = '';
         this.$emit('update:show', false);

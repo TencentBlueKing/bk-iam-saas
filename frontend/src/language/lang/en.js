@@ -985,7 +985,7 @@ export const m = {
         '添加成员提示': 'The permission templates and groups created by the Management Space are only visible to the members and can only be authorized to them',
         '选择操作和资源实例范围': 'Select action and resource instance scope',
         '选择可授权人员范围': 'Select scope of authorized personnel',
-        '被授权范围': 'Authorized scope', 
+        '被授权范围': 'Authorized scope',
         '添加系统和操作': 'Add Systems and Actions',
         '修改管理空间授权范围': 'Modify the authorization scope of management space',
         '刷新列表': 'Refresh',

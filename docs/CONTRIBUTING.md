@@ -36,4 +36,3 @@
 ## 代码协议
 
 [MIT LICENSE](https://github.com/TencentBlueKing/bk-iam-saas/blob/master/LICENSE) 为bk-iam的开源协议，您贡献的代码也会受此协议保护。
-

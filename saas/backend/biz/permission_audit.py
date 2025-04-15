@@ -103,9 +103,11 @@ class QueryAuthorizedSubjects(object):
                     "system": resource_instance["system_id"],
                     "type": resource_instance["type"],
                     "id": resource_instance["id"],
-                    "attribute": {"_bk_iam_path_": translate_path(resource_instance["path"])}
-                    if resource_instance.get("path")
-                    else {},
+                    "attribute": (
+                        {"_bk_iam_path_": translate_path(resource_instance["path"])}
+                        if resource_instance.get("path")
+                        else {}
+                    ),
                 }
                 for resource_instance in self.resource_instances
             ]

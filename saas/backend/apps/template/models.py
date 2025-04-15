@@ -86,7 +86,10 @@ class PermTemplatePolicyAuthorized(BaseModel):
     system_id = models.CharField("系统ID", max_length=32)
     _data = models.TextField("授权数据", db_column="data")  # 调研压缩的json字段
     _auth_types = models.TextField(
-        "模板授权策略的鉴权类型", db_column="auth_types", help_text="JSON存储 {'action_id': auth_type, ...}", default="{}"
+        "模板授权策略的鉴权类型",
+        db_column="auth_types",
+        help_text="JSON存储 {'action_id': auth_type, ...}",
+        default="{}",
     )
 
     objects = PermTemplatePolicyAuthorizedManager()

@@ -171,7 +171,7 @@
           this.$set(row, 'showPopover', true);
         }
       },
-      
+
       handleCellMouseLeave (row, column, cell, event) {
         if (['resource_instance'].includes(column.property)) {
           this.$set(row, 'showPopover', false);

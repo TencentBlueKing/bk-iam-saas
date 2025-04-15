@@ -1964,7 +1964,7 @@
           return p;
         }, {});
       },
-            
+
       handleActionChecked (newVal, oldVal, val, actData, payload) {
         const data = this.linearActionList.find(item => item.id === actData.id);
         this.isShowActionError = false;
@@ -2158,7 +2158,7 @@
           this.handleAggregateActionChange(false);
         }
       },
-            
+
       /**
        *
        * @param {Boolean} setChecked
@@ -2338,7 +2338,7 @@
             this.tableData = data || [];
             this.tableData.forEach(item => {
               // item.expired_at = 1627616000
-  
+
               // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
               if (item.tag === 'add') {
                 if (item.expired_at <= this.user.timestamp) {
@@ -2351,7 +2351,7 @@
                   item.isExpired = true;
                 }
               }
-  
+
               // // 新增的权限不判断是否过期
               // if (item.expired_at <= this.user.timestamp && item.tag !== 'add') {
               //     item.isShowRenewal = true
@@ -2472,7 +2472,7 @@
         let actions = tableData.actions;
         let recommendActions = [];
         let recommendFlag = false;
-                
+
         if (this.$refs.resInstanceRecommendTableRef) {
           const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
           recommendActions = tableRecommendData.actions;
@@ -2585,7 +2585,7 @@
         //   return next.is_favorite - pre.is_favorite;
         // });
       },
-            
+
       // 申请期限逻辑
       handleDeadlineChange (payload) {
         if (payload) {

@@ -361,7 +361,7 @@
             }
         }
     }
-    
+
     /deep/ .confirm-space-dialog {
             .bk-dialog-footer {
                background-color: #ffffff;

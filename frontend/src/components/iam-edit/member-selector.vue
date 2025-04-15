@@ -143,7 +143,7 @@
         }
         this.triggerChange();
       },
-            
+
       triggerChange () {
         this.isEditable = false;
         if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {

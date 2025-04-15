@@ -47,7 +47,7 @@
 <script>
   import { language } from '@/language';
   import BkUserSelector from '@blueking/user-selector';
-    
+
   const getDefaultData = () => ({
     name: '',
     description: '',

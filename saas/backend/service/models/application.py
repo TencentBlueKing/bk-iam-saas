@@ -275,7 +275,9 @@ class GroupApplicationData(ApplicationDataBaseInfo):
 
         level_count = Counter(obj.highest_sensitivity_level for obj in self.content.groups)
         for level in sorted(level_count.keys(), reverse=True):
-            comments.append("最高敏感等级 {} 的用户组{}个".format(SensitivityLevel.get_choice_label(level), level_count[level]))
+            comments.append(
+                "最高敏感等级 {} 的用户组{}个".format(SensitivityLevel.get_choice_label(level), level_count[level])
+            )
 
         return "包含" + ", ".join(comments)
 

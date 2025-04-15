@@ -740,7 +740,7 @@
         this.actionSearchValue = '';
         this.emptyData.tipType = '';
       },
-            
+
       handleEmptyRefresh () {
         this.fetchPageData();
       },
@@ -1402,7 +1402,7 @@
           return p;
         }, {});
       },
-            
+
       handleActionChecked (newVal, oldVal, val, actData, payload) {
         const data = this.linearActionList.find(item => item.id === actData.id);
         this.isShowActionError = false;
@@ -1595,7 +1595,7 @@
           this.handleAggregateActionChange(false);
         }
       },
-            
+
       /**
        *
        * @param {Boolean} setChecked

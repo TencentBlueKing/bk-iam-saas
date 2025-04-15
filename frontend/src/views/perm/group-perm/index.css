@@ -40,7 +40,7 @@
     .member-wrapper {
         display: flex;
         justify-content: flex-start;
-  
+
         .user,
         .depart,
         .template {

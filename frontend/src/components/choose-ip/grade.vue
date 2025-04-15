@@ -1050,7 +1050,7 @@
             return p;
           }, []);
         }
-                        
+
         params.ancestors.push(...parentData, ancestorItem);
 
         try {

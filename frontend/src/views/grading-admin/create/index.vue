@@ -290,7 +290,7 @@
   import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
   import GradePolicy from '@/model/grade-policy';
   import Condition from '@/model/condition';
-    
+
   export default {
     components: {
       IamGuide,
@@ -814,7 +814,7 @@
         this.aggregations = this.aggregations.filter(item => item.actions.length > 1);
         this.setAggregateExpanded();
       },
-            
+
       handleDeleteResourceAll () {
         this.originalList = [];
         this.policyList = [];

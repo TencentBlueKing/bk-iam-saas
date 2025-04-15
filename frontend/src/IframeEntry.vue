@@ -53,7 +53,7 @@
   import { mapGetters } from 'vuex';
   import { afterEach } from '@/router';
   import { kebabCase } from 'lodash';
-    
+
   export default {
     name: 'iframe-entry',
     provide () {

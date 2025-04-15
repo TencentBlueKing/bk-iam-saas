@@ -727,7 +727,9 @@ class GroupBiz:
         policy_list = self.policy_query_svc.new_policy_list_by_subject(system_id, subject)
         for action_id in action_ids:
             if policy_list.get(action_id):
-                raise error_codes.VALIDATE_ERROR.format(_("系统: {} 的操作: {} 权限已存在").format(system_id, action_id))
+                raise error_codes.VALIDATE_ERROR.format(
+                    _("系统: {} 的操作: {} 权限已存在").format(system_id, action_id)
+                )
 
     def _gen_grant_lock(self, subject: Subject, template: GroupTemplateGrantBean, uuid: str) -> GroupAuthorizeLock:
         """

@@ -424,7 +424,7 @@
         </bk-button>
       </div>
     </bk-dialog>
-    
+
     <!-- 蓝盾侧限制组织架构人员提示框 -->
     <IamLimitOrgDialog :show.sync="isShowLimitDialog" :title="limitOrgNodeTip" />
   </div>
@@ -1909,7 +1909,7 @@
           this.messageWarn(this.$t(`m.info['组织架构重复添加多个相同用户名']`, { value: [...new Set(this.hasExistOrgData)].join() }));
         }
       },
-      
+
       handleAfterLeave () {
         this.isPrev = true;
         this.expiredAt = 15552000;

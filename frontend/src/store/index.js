@@ -713,7 +713,7 @@ const store = new Vuex.Store({
     setTreeSelectedNode (state, payload) {
       state.curTreeSelectedNode = payload;
     },
-    
+
     updateSystemList (state, list) {
       state.allSystemList = [...list];
     }

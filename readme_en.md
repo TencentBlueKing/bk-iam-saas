@@ -13,7 +13,7 @@ BK-IAM SaaS (bk-iam-saas) is docked to [BK-IAM](https://github.com/TencentBlueKi
 
 ## Features
 
-BK-IAM is a universal permission control product developed based on ABAC(a powerful permission model) and combined with various permission control business scenarios. 
+BK-IAM is a universal permission control product developed based on ABAC(a powerful permission model) and combined with various permission control business scenarios.
 
 - Powerful permission model engine: Based on the powerful ABAC permission model, it can support as rich business permission scenarios as possible.
 - Fine-grained permission control: Support instance-level permission control granularity
@@ -58,7 +58,7 @@ BK-IAM is a universal permission control product developed based on ABAC(a power
 - [BK-BCS](https://github.com/Tencent/bk-bcs)：a basic container service platform which provides orchestration and management for micro-service business.
 - [BK-BCS-SaaS](https://github.com/Tencent/bk-bcs-saas)：a SaaS provides users with highly scalable, flexible and easy-to-use container products and services.
 - [BK-PaaS](https://github.com/Tencent/bk-PaaS)：an development platform that allows developers to create, develop, deploy and manage SaaS applications easily and quickly.
-- [BK-SOPS](https://github.com/Tencent/bk-sops)：an lightweight scheduling SaaS  for task flow scheduling and execution through a visual graphical interface. 
+- [BK-SOPS](https://github.com/Tencent/bk-sops)：an lightweight scheduling SaaS  for task flow scheduling and execution through a visual graphical interface.
 - [BK-CMDB](https://github.com/Tencent/bk-cmdb)：an enterprise-level configuration management platform for assets and applications.
 - [BK-JOB](https://github.com/Tencent/bk-job): BlueKing JOB is a set of operation and maintenance script management platform with the ability to handle a large number of tasks concurrently.
 

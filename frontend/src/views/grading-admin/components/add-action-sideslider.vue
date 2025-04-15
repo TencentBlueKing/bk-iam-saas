@@ -556,7 +556,7 @@
                   actions: _.cloneDeep(isExistSys.list)
                 });
               }
-    
+
               if (this.defaultValue.length > 0) {
                 const curAllActionIds = [];
                 this.systemData[item.id].list.forEach(subItem => {
