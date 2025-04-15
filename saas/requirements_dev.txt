@@ -131,3 +131,7 @@ wrapt==1.17.2 ; python_full_version == "3.11.11"
 zipp==3.21.0 ; python_full_version == "3.11.11"
 zope-event==5.0 ; python_full_version == "3.11.11"
 zope-interface==7.2 ; python_full_version == "3.11.11"
+types-pytz==2021.1.0
+types-redis==3.5.4
+types-six==0.1.7
+types-mock==0.1.3
