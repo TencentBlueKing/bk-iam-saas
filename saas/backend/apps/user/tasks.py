@@ -150,7 +150,6 @@ class SendUserExpireRemindMailTask(Task):
 current_app.register_task(SendUserExpireRemindMailTask())
 
 
-
 @shared_task(ignore_result=True)
 def user_group_policy_expire_remind():
     """
@@ -390,7 +389,9 @@ def check_user_permission_clean_task():
         created_time__lt=hour_before, retry_count__lte=MAX_USER_PERMISSION_CLEAN_RETRY_COUNT
     ).filter(~Q(status=UserPermissionCleanupRecordStatusEnum.SUCCEED.value))
 
-    qs.update(status=UserPermissionCleanupRecordStatusEnum.CREATED.value, retry_count=F("retry_count") + 1)  # 重置status
+    qs.update(
+        status=UserPermissionCleanupRecordStatusEnum.CREATED.value, retry_count=F("retry_count") + 1
+    )  # 重置status
 
     for r in qs:
         user_permission_clean(r.username)

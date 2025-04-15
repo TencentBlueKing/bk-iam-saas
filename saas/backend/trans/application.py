@@ -102,9 +102,9 @@ class ApplicationDataTrans:
                         continue
 
                     raise error_codes.VALIDATE_ERROR.format(
-                        _("操作 [{}] 关联的资源类型 [{}] 单次申请限{}个实例，实例权限数过多不利于您后期维护，更多实例建议您申请范围权限。").format(
-                            policy.action_id, c.type, settings.APPLY_POLICY_ADD_INSTANCES_LIMIT
-                        )
+                        _(
+                            "操作 [{}] 关联的资源类型 [{}] 单次申请限{}个实例，实例权限数过多不利于您后期维护，更多实例建议您申请范围权限。"
+                        ).format(policy.action_id, c.type, settings.APPLY_POLICY_ADD_INSTANCES_LIMIT)
                     )
 
     def from_grant_policy_application(self, applicant: str, data: Dict) -> ActionApplicationDataBean:
@@ -260,7 +260,7 @@ class ApplicationDataTrans:
             count = len([one for one in old_policies if one.action_id == p.action_id]) + 1
             if count > settings.TEMPORARY_POLICY_LIMIT:
                 raise error_codes.VALIDATE_ERROR.format(
-                    _("临时权限操作 [{}] 申请限最大{}条，临时权限过多不利于您后期维护，建议您删除部分权限再申请。").format(
-                        p.action_id, settings.TEMPORARY_POLICY_LIMIT
-                    )
+                    _(
+                        "临时权限操作 [{}] 申请限最大{}条，临时权限过多不利于您后期维护，建议您删除部分权限再申请。"
+                    ).format(p.action_id, settings.TEMPORARY_POLICY_LIMIT)
                 )

@@ -160,7 +160,9 @@ class ASActionWithCustomTicketSLZ(serializers.Serializer):
         label="关联资源类型", child=ASResourceTypeWithCustomTicketSLZ(label="资源类型"), allow_empty=True, default=list
     )
 
-    ticket_content = serializers.DictField(label="单条权限的审批单内容", required=False, allow_empty=True, default=dict)
+    ticket_content = serializers.DictField(
+        label="单条权限的审批单内容", required=False, allow_empty=True, default=dict
+    )
 
 
 class ASApplicationCustomPolicyWithCustomTicketSLZ(serializers.Serializer):
@@ -173,10 +175,14 @@ class ASApplicationCustomPolicyWithCustomTicketSLZ(serializers.Serializer):
     )
 
     ticket_title_prefix = serializers.CharField(label="审批单标题前缀", required=False, allow_blank=True, default="")
-    ticket_content_template = serializers.DictField(label="审批单内容模板", required=False, allow_empty=True, default=dict)
+    ticket_content_template = serializers.DictField(
+        label="审批单内容模板", required=False, allow_empty=True, default=dict
+    )
 
     system = serializers.CharField(label="系统ID")
-    actions = serializers.ListField(label="申请操作", child=ASActionWithCustomTicketSLZ(label="操作"), allow_empty=False)
+    actions = serializers.ListField(
+        label="申请操作", child=ASActionWithCustomTicketSLZ(label="操作"), allow_empty=False
+    )
 
     def validate_expired_at(self, value):
         """
@@ -198,7 +204,11 @@ class ASApplicationCustomPolicyWithCustomTicketSLZ(serializers.Serializer):
 
             if not isinstance(content_template["form_data"], list) or len(content_template["form_data"]) == 0:
                 raise serializers.ValidationError(
-                    {"ticket_content_template": ["ticket_content_template 中必须包含 form_data，且 form_data 必须为非空数组"]}
+                    {
+                        "ticket_content_template": [
+                            "ticket_content_template 中必须包含 form_data，且 form_data 必须为非空数组"
+                        ]
+                    }
                 )
 
             # IAM 所需的策略 Form （索引）

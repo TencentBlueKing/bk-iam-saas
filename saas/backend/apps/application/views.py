@@ -309,7 +309,9 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
 
         # 必须是分级管理员的成员才可以申请修改
         if not can_user_manage_role(user_id, role.id):
-            raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限申请修改").format(role.name), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("非分级管理员({})的成员，无权限申请修改").format(role.name), replace=True
+            )
 
         # 查询已有的策略范围
         old_scopes = self.role_biz.list_auth_scope(role.id)

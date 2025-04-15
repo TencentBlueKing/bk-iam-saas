@@ -54,7 +54,9 @@ class ApplicationSLZ(ReasonSLZ):
     """
 
     system = SystemInfoSLZ(label="系统信息")
-    actions = serializers.ListField(label="操作策略", child=PolicyActionSLZ(label="策略"), required=False, default=list)
+    actions = serializers.ListField(
+        label="操作策略", child=PolicyActionSLZ(label="策略"), required=False, default=list
+    )
     aggregations = serializers.ListField(
         label="聚合操作", child=AggActionListSLZ(label="聚合操作"), required=False, default=list
     )
@@ -245,7 +247,9 @@ class ApplicantSLZ(serializers.Serializer):
 
 
 class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
-    groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupInfoSLZ(label="用户组"), allow_empty=False)
+    groups = serializers.ListField(
+        label="加入的用户组", child=ApplicationGroupInfoSLZ(label="用户组"), allow_empty=False
+    )
     source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
     applicants = serializers.ListField(label="权限获得者", child=ApplicantSLZ("获得者"), required=False, default=list)
 
@@ -263,7 +267,9 @@ class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
 
 
 class RenewGroupApplicationSLZ(ReasonSLZ):
-    groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupExpiredAtSLZ(label="用户组"), allow_empty=False)
+    groups = serializers.ListField(
+        label="加入的用户组", child=ApplicationGroupExpiredAtSLZ(label="用户组"), allow_empty=False
+    )
     source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
 
 

@@ -34,7 +34,9 @@ class Event(BaseModel):
     time = models.DateTimeField(auto_now_add=True)
     type = models.CharField("事件类型", max_length=64, choices=AuditType.get_choices())
     username = models.CharField("用户名", max_length=64)
-    role_type = models.CharField("角色类型", max_length=32, default=RoleType.STAFF.value, choices=RoleType.get_choices())
+    role_type = models.CharField(
+        "角色类型", max_length=32, default=RoleType.STAFF.value, choices=RoleType.get_choices()
+    )
     role_id = models.IntegerField("角色ID", default=0)
     system_id = models.CharField("系统id", max_length=32, default="")  # 策略操作时记录
     object_type = models.CharField("对象类型", max_length=32, choices=AuditObjectType.get_choices())

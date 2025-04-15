@@ -224,7 +224,7 @@ class SystemActionSensitivityLevelCountViewSet(GenericViewSet):
         action_list = self.biz.list_without_cache_sensitivity_level(system_id)
         level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
 
-        data = {sensitivity_level: count for sensitivity_level, count in level_count.items()}
+        data = dict(level_count.items())
         data["all"] = len(action_list.actions)
 
         return Response(data)
