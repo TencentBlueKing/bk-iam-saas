@@ -702,7 +702,7 @@
         this.curResIndex = -1;
         this.curGroupIndex = -1;
       },
-      
+
       handlerConditionMouseover (payload) {
         if (Object.keys(this.curCopyParams).length < 1 && this.curCopyMode === 'normal') {
           return;
@@ -1244,7 +1244,7 @@
                         const attributeList = (attribute && attribute.length > 0)
                           // eslint-disable-next-line max-len
                           ? attribute.map(({ id, name, values }) => ({ id, name, values })) : [];
-        
+
                         const instanceList = (instance && instance.length > 0)
                           ? instance.map(({ name, type, path }) => {
                             const tempPath = _.cloneDeep(path);

@@ -267,7 +267,7 @@
       max-width: 390px;
       word-break: break-all;
     }
-  
+
     &-members {
       position: relative;
       top: -2px;

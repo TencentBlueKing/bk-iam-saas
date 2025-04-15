@@ -85,7 +85,7 @@
     id: '',
     display_name: ''
   };
-    
+
   export default {
     components: {
       BkUserSelector
@@ -273,7 +273,7 @@
         payload.values = [...tempValues];
         this.trigger();
       },
-            
+
       async fetchValue (item) {
         item.loading = true;
         try {

@@ -122,7 +122,7 @@
             const actions = this.formData.selectedActions.map(
               actionId => ({ id: this.actionList.find(act => act.id === actionId).id })
             );
-                        
+
             const commonList = [];
             commonList.splice(0, 0, ...this.commonList);
 

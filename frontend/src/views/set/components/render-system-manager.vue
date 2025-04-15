@@ -89,7 +89,7 @@
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   import RenderItem from '../common/render-item';
   import { getWindowHeight, formatCodeData } from '@/common/util';
-    
+
   export default {
     name: '',
     components: {
@@ -182,7 +182,7 @@
       handleSystemRtxEnter (event, payload) {
         if (event.keyCode === 13) {
           event.stopPropagation();
-                
+
           this.handleSystemRtxBlur(payload);
         }
       },

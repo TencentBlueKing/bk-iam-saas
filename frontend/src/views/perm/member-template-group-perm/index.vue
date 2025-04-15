@@ -252,7 +252,7 @@
             limit,
             offset: limit * (current - 1)
           };
- 
+
           if (this.isSearchPerm) {
             url = 'perm/getMemberTempByUserSearch';
             params = {
@@ -299,7 +299,7 @@
             limit,
             offset: limit * (current - 1)
           };
- 
+
           if (this.isSearchPerm) {
             url = 'perm/getMemberTempByDepartSearch';
             params = {
@@ -468,7 +468,7 @@
           return routeMap[this.$route.name]();
         }
       },
-      
+
       formatRoleMembers (payload) {
         if (payload && payload.length) {
           const hasName = payload.some((v) => v.username);

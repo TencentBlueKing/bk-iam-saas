@@ -85,7 +85,7 @@
       handleChange () {
         this.$emit('on-change');
       },
-      
+
       handleSelectAll (isAll, payload) {
         this.$emit('on-select-all', isAll, payload);
       },

@@ -590,7 +590,7 @@
         window.CUR_LANGUAGE = formatI18nKey();
         this.$i18n.locale = formatI18nKey();
       },
-        
+
       async handleChangeLocale (language) {
         const curDomain = window.BK_DOMAIN || window.location.hostname.replace(/^.*(\.[^.]+\.[^.]+)$/, '$1');
         Cookies.remove(
@@ -629,7 +629,7 @@
         // this.curHeight = document.getElementsByClassName('user-dropdown')[0].offsetHeight
         this.isShowGradingWrapper = !this.isShowGradingWrapper;
       },
-      
+
       handleLogout () {
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');

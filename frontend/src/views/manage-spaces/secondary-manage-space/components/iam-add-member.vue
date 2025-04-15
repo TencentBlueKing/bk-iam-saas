@@ -572,7 +572,7 @@
           }
         }
       },
-            
+
       handleSearchInput () {
         this.isSearchFocus = true;
       },
@@ -580,7 +580,7 @@
       handleSearchBlur () {
         this.isSearchFocus = false;
       },
-            
+
       handleEmptyClear () {
         this.keyword = '';
         this.emptyData.tipType = '';
@@ -787,7 +787,7 @@
               } else {
                 child.is_selected = false;
               }
-    
+
               if (this.defaultDepartments.length > 0
                 && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
               ) {
@@ -1268,7 +1268,7 @@
         const Fn = Function;
         return new Fn('return ' + fn)();
       },
-            
+
       async handleSkip () {
         // bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
         // await this.$store.dispatch('role/updateCurrentRole', { id: 0 });

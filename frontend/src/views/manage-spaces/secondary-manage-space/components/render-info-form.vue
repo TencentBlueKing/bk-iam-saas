@@ -367,7 +367,7 @@
           this.isLoading = false;
         }
       },
- 
+
       async fetchAuthorizationScopeActions (systemId) {
         try {
           const { data } = await this.$store.dispatch(
@@ -461,7 +461,7 @@
         this.isShowMemberAdd = false;
         this.originalList = cloneDeep(tempActions);
       },
-      
+
       getFilterAggregation (payload) {
         const curSelectActions = [];
         this.policyList.forEach((item) => {

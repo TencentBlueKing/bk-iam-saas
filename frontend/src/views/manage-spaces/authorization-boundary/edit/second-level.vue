@@ -163,7 +163,7 @@
         isShowTable: false,
         reasonEmptyError: false,
         boundaryValue: 'dynamic'
-                
+
       };
     },
     computed: {
@@ -224,7 +224,7 @@
         deep: true
       }
     },
-        
+
     methods: {
       isShowTableClick () {
         this.isShowTable = !this.isShowTable;
@@ -819,7 +819,7 @@
         this.submitLoading = true;
         window.changeDialog = false;
         console.log('params', params);
-                
+
         const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
         try {
           await this.$store.dispatch(`role/${dispatchMethod}`, params);

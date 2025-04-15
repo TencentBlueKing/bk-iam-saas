@@ -371,7 +371,7 @@
           }
         }
       },
-      
+
       /**
        * handleBasicInfoChange
        */

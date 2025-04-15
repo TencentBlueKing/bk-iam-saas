@@ -121,7 +121,7 @@
                     } else {
                       pre = `${pre} ${e.value}`;
                     }
-                                        
+
                     return pre;
                   }, '');
                 }

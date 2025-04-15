@@ -70,7 +70,7 @@
         this.activeIndex = -1;
         if (this.isMultiable) {
           // 多选
-                        
+
           // 没有过滤项默认不选中——不做选中处理
           if (!this.search) {
             return;
@@ -186,7 +186,7 @@
           }
         }
       },
-            
+
       handleClick (item) {
         // 禁用
         if (item.disabled) {
@@ -198,7 +198,7 @@
           return;
         }
         const primaryKey = this.searchSelect.primaryKey;
-                
+
         // 多选
         if (this.isMultiable) {
           const checkeMap = { ...this.checkeMap };
@@ -219,7 +219,7 @@
           this.handleSubmit();
         }
       },
-            
+
       handleKeydown (e) {
         if (!this.needRender) {
           return;
@@ -238,13 +238,13 @@
         }
         this.scrollActiveToView(event);
       },
-            
+
       handleSubmit (e) {
         this.$emit('select-check', Object.values(this.checkeMap));
-                
+
         this.$emit('change');
       },
-            
+
       handleCancel () {
         this.$emit('cancel');
       },
@@ -321,7 +321,7 @@
                             <ul ref="list" class="iam-bk-search-list-menu">
                                 { this.list.map((item, index) => {
                                     const id = item[primaryKey];
-                                    
+
                                     return (
                                         <li class={{
                                             'iam-bk-search-list-menu-item': true,
@@ -341,7 +341,7 @@
                                     );
                                 }) }
                             </ul>
-                            
+
                         </div>
             );
           }
@@ -376,7 +376,7 @@
         );
       }
     },
-        
+
     render (h) {
       if (!this.needRender) {
         return null;

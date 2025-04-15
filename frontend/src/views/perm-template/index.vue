@@ -340,7 +340,7 @@
           count: 0
         });
       },
-      
+
       resetLocationHref () {
         const urlFields = [...this.searchData.map(item => item.id), ...['current', 'limit']];
         delLocationHref(urlFields);

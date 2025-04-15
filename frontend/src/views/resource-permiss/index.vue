@@ -142,7 +142,7 @@
         @enter="handleSearch">
       </bk-input>
     </div>
-        
+
     <bk-table
       :data="tableList"
       size="small"
@@ -652,7 +652,7 @@
         this.curResIndex = -1;
         this.resourceTypeError = false;
       },
-            
+
       // 搜索
       handleSearch () {
         if (this.searchValue) {
@@ -726,7 +726,7 @@
         }
         return this.tableListClone.slice(startIndex, endIndex);
       }
-            
+
     }
   };
 </script>

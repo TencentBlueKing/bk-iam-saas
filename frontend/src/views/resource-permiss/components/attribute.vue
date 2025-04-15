@@ -189,7 +189,7 @@
         row.values = [...tempValues];
         this.trigger();
       },
-      
+
       handleClear (value, payload) {
         payload.values = [];
         this.trigger();

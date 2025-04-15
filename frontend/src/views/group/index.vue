@@ -973,7 +973,7 @@
           this[method]();
         }
       },
-            
+
       handleToggle (value) {
         if (value) {
           this.formatOption();

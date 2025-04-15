@@ -468,7 +468,7 @@
           this.curFilterSystem = '';
         }
       },
-            
+
       handleRemove (row, payload) {
         window.changeDialog = true;
         if (row.isAggregate) {
@@ -1251,7 +1251,7 @@
                         const attributeList = (attribute && attribute.length > 0)
                           // eslint-disable-next-line max-len
                           ? attribute.map(({ id, name, values }) => ({ id, name, values })) : [];
-        
+
                         const instanceList = (instance && instance.length > 0)
                           ? instance.map(({ name, type, path }) => {
                             const tempPath = _.cloneDeep(path);

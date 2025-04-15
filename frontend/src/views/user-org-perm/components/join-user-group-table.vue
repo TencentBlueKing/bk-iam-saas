@@ -428,7 +428,7 @@
         });
         window.open(routeData.href, '_blank');
       },
-      
+
       fetchSelectedGroups (type, payload, row) {
         this.isShowGroupError = false;
         const typeMap = {
@@ -489,7 +489,7 @@
           }
         });
       },
-      
+
       setDefaultSelect (payload) {
         return !this.curUserGroup.includes(payload.id.toString());
       },

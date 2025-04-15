@@ -250,7 +250,7 @@
           this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, this.systemPolicyList.length === 0);
         }
       },
-      
+
       async handleEmptyClear () {
         await this.handleRefreshSystem();
         this.$emit('on-clear');

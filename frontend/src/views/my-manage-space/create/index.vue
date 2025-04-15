@@ -64,7 +64,7 @@
                 <span>{{ $t(`m.grading['${item.name}']`)}}</span>
               </div>
             </div>
-      
+
           </div>
           <!-- <div class="sub-title" v-if="isSelectSystem">
                         {{ $t(`m.common['共']`) }}
@@ -1152,6 +1152,6 @@
     .aggregate-action-btn {
         background-color: #F0F1F5;
     }
-    
+
 }
 </style>

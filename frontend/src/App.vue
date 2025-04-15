@@ -94,7 +94,7 @@
   import { mapGetters } from 'vuex';
   import { afterEach } from '@/router';
   import { kebabCase } from 'lodash';
-    
+
   export default {
     name: 'app',
     provide () {
@@ -346,7 +346,7 @@
           this.messageAdvancedError(e);
         }
       },
-      
+
       /**
        * 获取用户全局配置
        */
@@ -464,7 +464,7 @@
             overflow: hidden;
         }
     }
-    
+
     .single-hide {
         overflow: hidden;
         text-overflow: ellipsis;

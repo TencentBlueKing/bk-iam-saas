@@ -74,7 +74,7 @@
                     } else {
                       pre = `${pre} ${e.value}`;
                     }
-                                        
+
                     return pre;
                   }, '');
                 }
@@ -111,7 +111,7 @@
         color: #63656e;
         cursor: pointer;
         margin: 0 20px !important;
-        
+
         &:hover {
             border-color: #3a84ff;
             .operate-icon {

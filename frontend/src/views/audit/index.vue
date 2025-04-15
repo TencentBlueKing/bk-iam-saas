@@ -467,7 +467,7 @@
       async fetchPageData () {
         await this.fetchAuditList();
       },
-      
+
       getDate (payload) {
         return payload.split('-').join('');
       },

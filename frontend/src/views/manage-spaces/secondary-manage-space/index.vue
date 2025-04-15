@@ -270,7 +270,7 @@
           }
         });
       },
-            
+
       async handleView ({ id, name }, type) {
         const navRoute = {
           detail: () => {

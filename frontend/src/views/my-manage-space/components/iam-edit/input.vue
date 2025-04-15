@@ -32,7 +32,7 @@
 </template>
 <script>
   import il8n from '@/language';
-    
+
   export default {
     name: 'iam-edit-input',
     props: {

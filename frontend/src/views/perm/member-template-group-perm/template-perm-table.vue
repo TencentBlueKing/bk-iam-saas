@@ -158,7 +158,7 @@
         this.curGroupId = id;
         this.isShowPermSideSlider = true;
       },
-      
+
       handlePageChange (page) {
         this.$emit('on-page-change', page);
       },

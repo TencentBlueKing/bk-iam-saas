@@ -58,7 +58,7 @@
   import IamEditTextarea from '@/components/iam-edit/textarea';
   import RenderLayout from '../common/render-layout';
   import MemberTable from '../components/member-table';
-    
+
   export default {
     name: '',
     provide: function () {
@@ -198,7 +198,7 @@
           }
         }
       },
-            
+
       fetchMemberList (payload) {
         const params = {
           id: payload,

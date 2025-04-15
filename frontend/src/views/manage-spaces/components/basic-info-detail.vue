@@ -162,7 +162,7 @@
       handleUpdateMembers (payload) {
         this.handleUpdateRatingManager(payload);
       },
-            
+
       // 退出已有二级成员的一级管理空间
       async handleExitPermManage () {
         await this.$store.dispatch('role/updateCurrentRole', { id: 0 });

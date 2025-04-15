@@ -637,7 +637,7 @@
           );
         }
       },
-      
+
       handleEmptyRefresh () {
         this.handleInit();
         this.fetchDetail(this.groupId);

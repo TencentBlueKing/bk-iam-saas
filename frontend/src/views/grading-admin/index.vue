@@ -636,7 +636,7 @@
           this.tableLoading = false;
         }
       },
-            
+
       async fetchManageTable (payload, url, type) {
         const { name, description, members } = payload;
         const params = {
@@ -674,7 +674,7 @@
           this.messageAdvancedError(e);
         }
       },
-            
+
       handleUpdateMembers (payload, index) {
         this.handleUpdateManageSpace(payload, index);
       },
@@ -682,7 +682,7 @@
       handleUpdateSubMembers (payload, index) {
         this.handleUpdateSubManageSpace(payload, index);
       },
-     
+
       // 一二级存在平铺展示数据
       async handleUpdateManageSpace (payload, index) {
         this.formData = this.tableList.find((e, i) => i === index);
@@ -767,7 +767,7 @@
         this.resetSubPagination();
         await this.fetchSearchManageList();
       },
-            
+
       handleEmptyRefresh () {
         this.resetPagination();
         this.resetSubPagination();

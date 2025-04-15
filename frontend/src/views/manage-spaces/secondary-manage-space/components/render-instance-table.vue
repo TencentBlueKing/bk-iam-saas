@@ -169,7 +169,7 @@
         </template>
       </bk-table>
     </template>
-        
+
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
@@ -564,7 +564,7 @@
         this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
-      
+
       handleSpanMethod ({ row, column, rowIndex, columnIndex }) {
         if (this.isCreateMode) {
           if (columnIndex === 0) {
@@ -1969,7 +1969,7 @@
                         const attributeList = (attribute && attribute.length > 0)
                           // eslint-disable-next-line max-len
                           ? attribute.map(({ id, name, values }) => ({ id, name, values })) : [];
-        
+
                         const instanceList = (instance && instance.length > 0)
                           ? instance.map(({ name, type, path, paths }) => {
                             let tempPath = _.cloneDeep(paths);

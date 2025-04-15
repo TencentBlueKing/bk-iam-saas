@@ -672,7 +672,7 @@
           isSearchPerm: false
         });
       },
-      
+
       // 处理折叠有搜索参数的业务场景
       async fetchHasSearchData () {
         this.isSearchPerm = true;
@@ -801,7 +801,7 @@
           value: payload
         };
       },
-      
+
       handlePathData (data, type) {
         if (data.resourceInstancesPath && data.resourceInstancesPath.length) {
           const lastIndex = data.resourceInstancesPath.length - 1;
@@ -897,7 +897,7 @@
           });
         }
       },
-      
+
       handleMemberChange (payload, name) {
         this.permMembers = [...payload];
         this.$nextTick(() => {
@@ -1013,7 +1013,7 @@
         }
         this.emptyData = Object.assign({}, this[payload], { tipType });
       },
-      
+
       handleEmptyRefresh () {
         if (this.isHasDataNoExpand) {
           this.fetchFirstData();

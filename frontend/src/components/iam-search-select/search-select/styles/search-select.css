@@ -138,7 +138,7 @@
                 font-size: 14px;
             }
         }
-        
+
         .search-nextfix {
             @extend .search-prefix;
             color: #c4c6cc;

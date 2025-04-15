@@ -111,7 +111,7 @@ export default class Policy {
           this.isNew
         )
       );
-            
+
       if ((this.related_environments && !!this.related_environments.length)) {
         const environments = item.environments && !!item.environments.length ? item.environments : [];
         prev.push({ id: item.id, related_resource_types: relatedResourceTypes, environments: environments });

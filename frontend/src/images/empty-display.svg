@@ -32,25 +32,25 @@
 <path id="形状结合-2" class="st3" d="M24,67v5h5v1h-6v-6H24z"/>
 <path id="形状结合备份" class="st3" d="M91,72h5v-5h1v6h-6V72z"/>
 <g id="编组-4">
-	
+
 		<rect id="矩形" x="70.5" y="17.3" transform="matrix(0.3584 -0.9336 0.9336 0.3584 29.2187 78.1384)" class="st4" width="2" height="1"/>
-	
+
 		<rect id="矩形备份-6" x="69" y="21.1" transform="matrix(0.3584 -0.9336 0.9336 0.3584 24.8061 79.2002)" class="st4" width="2" height="1"/>
-	
+
 		<rect id="矩形备份-7" x="67.6" y="24.8" transform="matrix(0.3584 -0.9336 0.9336 0.3584 20.4008 80.2611)" class="st4" width="2" height="1"/>
-	
+
 		<rect id="矩形备份-8" x="66.2" y="28.5" transform="matrix(0.3584 -0.9336 0.9336 0.3584 15.9929 81.3109)" class="st4" width="2" height="1"/>
 </g>
 <g id="编组-3">
-	
+
 		<rect id="矩形-2" x="29.8" y="25.2" transform="matrix(0.848 -0.5299 0.5299 0.848 -9.2957 20.023)" class="st4" width="1" height="2"/>
-	
+
 		<rect id="矩形备份-2" x="31.9" y="28.6" transform="matrix(0.848 -0.5299 0.5299 0.848 -10.7716 21.6587)" class="st4" width="1" height="2"/>
-	
+
 		<rect id="矩形备份-3" x="34" y="32" transform="matrix(0.848 -0.5299 0.5299 0.848 -12.246 23.2998)" class="st4" width="1" height="2"/>
-	
+
 		<rect id="矩形备份-4" x="36.1" y="35.4" transform="matrix(0.848 -0.5299 0.5299 0.848 -13.722 24.9355)" class="st4" width="1" height="2"/>
-	
+
 		<rect id="矩形备份-5" x="38.2" y="38.8" transform="matrix(0.848 -0.5299 0.5299 0.848 -15.1926 26.5697)" class="st4" width="1" height="2"/>
 </g>
 <circle id="椭圆形" class="st4" cx="78" cy="20" r="1"/>

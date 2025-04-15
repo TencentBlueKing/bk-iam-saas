@@ -73,7 +73,7 @@ export default class AggregationPolicy {
       return this.instances.length < 1;
     }
   }
-  
+
   get value () {
     if (this.empty) {
       return il8n('verify', '请选择');

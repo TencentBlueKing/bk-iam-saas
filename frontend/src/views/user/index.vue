@@ -580,7 +580,7 @@
         this.searchKeyWord = '';
         this.emptyData.tipType = '';
       },
-            
+
       /**
        * handleEmptyRefresh
        */

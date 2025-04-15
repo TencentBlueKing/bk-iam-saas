@@ -147,7 +147,7 @@
         };
         return typeMap[payload]();
       },
-      
+
       handleAssociateChange (payload) {
         const { count } = payload;
         const tabIndex = this.tabList.findIndex((item) => ['associate_groups'].includes(item.id));

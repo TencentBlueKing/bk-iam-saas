@@ -806,7 +806,7 @@
             this.scrollToLocation(this.$refs[`basicInfoContentRef${index}`][0]);
             return;
           }
-                    
+
           // 依赖实例时才需要校验
           if (item.related_resource_types.filter(t => t.selection_mode && !t.id).length) {
             this.messageWarn(this.$t(`m.access['资源实例选择方式至少选择一个']`), 3000);

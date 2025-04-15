@@ -557,7 +557,7 @@
     }
   };
 </script>
-      
+
 <style lang="postcss" scoped>
 .mail-notice-slider-wrapper {
   .mail-notice-item {

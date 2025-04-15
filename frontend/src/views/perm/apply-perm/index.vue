@@ -413,7 +413,7 @@
         this.currentSelectList = [];
         this.$refs.groupTableRef && this.$refs.groupTableRef.clearSelection();
       },
-         
+
       async handleRecursionFunc () {
         try {
           const { data } = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: this.systemId });
@@ -497,7 +497,7 @@
           this.sliderLoading = false;
         }
       },
-            
+
       async fetchCurUserGroup () {
         try {
           const res = await this.$store.dispatch('perm/getPersonalGroups', {
@@ -677,7 +677,7 @@
           name: 'permApply'
         });
       },
-            
+
       async handleSubmit () {
         let validateFlag = true;
         if (!this.reason) {

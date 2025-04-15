@@ -12,7 +12,7 @@
         activeIndex: 0
       };
     },
-        
+
     computed: {
       needRender () {
         // 没有选中key，且输入框中没有输入值
@@ -83,11 +83,11 @@
         }
         this.scrollActiveToView(event);
       },
-            
+
       handleClick (item, index) {
         this.$emit('select', item, index);
       },
-            
+
       handleCondition () {
         this.$emit('select-conditon', this.condition);
       }

@@ -687,7 +687,7 @@
       },
 
       handleAfterEditLeave () {
-                
+
       },
 
       handleSearch (payload, result) {
@@ -755,7 +755,7 @@
       handleBatchQuit () {
         this.handleDeleteActions('quit');
       },
-      
+
       // 批量操作对应操作项
       handleDeleteActions (type) {
         const typeMap = {
@@ -1089,7 +1089,7 @@
         .member-wrapper {
           display: flex;
           justify-content: flex-start;
-    
+
           .user,
           .depart,
           .template {
@@ -1099,7 +1099,7 @@
             background: #f0f1f5;
             border-radius: 2px;
             margin-right: 2px;
-  
+
             i {
               font-size: 14px;
               color: #c4c6cc;

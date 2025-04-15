@@ -110,7 +110,7 @@
   import BkUserSelector from '@blueking/user-selector';
   import RenderItem from '../common/render-item';
   import RenderAction from '../common/render-action';
-    
+
   export default {
     name: '',
     components: {

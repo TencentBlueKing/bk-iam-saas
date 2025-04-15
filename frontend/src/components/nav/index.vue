@@ -512,7 +512,7 @@
           }
         }
       },
-      
+
       // 监听当前已选中的角色是否有变更
       fetchRoleUpdate ({ role }) {
         const { id, type } = role;

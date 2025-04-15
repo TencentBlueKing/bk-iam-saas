@@ -307,7 +307,7 @@
       //   this.triggerChange();
       // }
     },
-    
+
     mounted () {
       if (this.$parent) {
         setTimeout(() => {
@@ -577,7 +577,7 @@
             const {
               width: searchSelectWidth
             } = this.$refs.searchSelect.getBoundingClientRect();
-  
+
             let tagWidthTotal = 0;
             for (let i = 0; i < allTag.length; i++) {
               const { width } = allTag[i].getBoundingClientRect();

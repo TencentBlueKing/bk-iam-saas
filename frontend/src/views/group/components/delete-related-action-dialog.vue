@@ -85,11 +85,11 @@
       handleSubmitDelete () {
         this.$emit('on-submit');
       },
-  
+
       handleCancelDelete () {
         this.$emit('update:show', false);
       },
-  
+
       handleAfterDeleteLeave () {
         this.$emit('update:show', false);
         this.$emit('on-after-leave');
