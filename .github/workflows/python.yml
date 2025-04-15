@@ -16,7 +16,7 @@ jobs:
       matrix:
         python-version: [3.11]
         poetry-version: [2.1.1]
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
 
     steps:
