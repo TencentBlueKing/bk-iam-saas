@@ -97,6 +97,7 @@ python-crontab==3.2.0 ; python_full_version == "3.11.11"
 python-dateutil==2.9.0.post0 ; python_full_version == "3.11.11"
 python-editor==1.0.4 ; python_full_version == "3.11.11"
 python-json-logger==0.1.7 ; python_full_version == "3.11.11"
+pyproject-flake8==6.1.0
 pytz==2022.6 ; python_full_version == "3.11.11"
 pywin32==310 ; python_full_version == "3.11.11" and platform_system == "Windows"
 pyyaml==6.0.2 ; python_full_version == "3.11.11"
