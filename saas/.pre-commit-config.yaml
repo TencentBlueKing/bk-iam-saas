@@ -46,19 +46,19 @@ repos:
         language: python
         pass_filenames: false
         entry: pytest -c saas/pyproject.toml saas
-#      - id: poetry-export
-#        name: poetry-export
-#        description: run poetry export to sync lock file with requirements.txt
-#        entry: bash -c "cd saas && poetry export -f requirements.txt --output requirements.txt --without-hashes"
-#        language: python
-#        language_version: python3
-#        pass_filenames: false
-#        files: ^.*/poetry.lock$
-#      - id: poetry-export-dev
-#        name: poetry-export-dev
-#        description: run poetry export to sync lock file with requirements_dev.txt
-#        entry: bash -c "cd saas && poetry export --dev -f requirements.txt --output requirements_dev.txt --without-hashes"
-#        language: python
-#        language_version: python3
-#        pass_filenames: false
-#        files: ^.*/poetry.lock$
+      - id: poetry-export
+        name: poetry-export
+        description: run poetry export to sync lock file with requirements.txt
+        entry: bash -c "cd saas && poetry export -f requirements.txt --output requirements.txt --without-hashes"
+        language: python
+        language_version: python3
+        pass_filenames: false
+        files: ^.*/poetry.lock$
+      - id: poetry-export-dev
+        name: poetry-export-dev
+        description: run poetry export to sync lock file with requirements_dev.txt
+        entry: bash -c "cd saas && poetry export --dev -f requirements.txt --output requirements_dev.txt --without-hashes"
+        language: python
+        language_version: python3
+        pass_filenames: false
+        files: ^.*/poetry.lock$

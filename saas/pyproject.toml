@@ -75,7 +75,7 @@ authors = ["TencentBlueKing <contactus_bk@tencent.com>"]
 license = "MIT License"
 
 [tool.poetry.dependencies]
-python = "3.11.11"
+python = "3.11.10"
 # blueapps requirement
 Django = "4.2.20"
 pymysql = "1.1.1"
