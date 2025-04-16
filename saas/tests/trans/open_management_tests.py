@@ -20,12 +20,14 @@ class TestManagementCommonTrans:
         trans = ManagementCommonTrans()
         trans.action_check_biz.check = mock.Mock(return_value=None)
 
-        with patch.object(
-            PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_empty_fields, patch.object(
-            PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
-        ) as fake_check_instance_selection:
-
+        with (
+            patch.object(
+                PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_empty_fields,
+            patch.object(
+                PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
+            ) as fake_check_instance_selection,
+        ):
             policy_list = trans.to_policy_list_for_batch_action_and_resources(
                 "system",
                 ["action1", "action2"],
@@ -59,12 +61,14 @@ class TestGradeManagerTrans:
         trans = GradeManagerTrans()
         trans.action_check_biz.check = mock.Mock(return_value=None)
 
-        with patch.object(
-            PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_empty_fields, patch.object(
-            PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
-        ) as fake_check_instance_selection:
-
+        with (
+            patch.object(
+                PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_empty_fields,
+            patch.object(
+                PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
+            ) as fake_check_instance_selection,
+        ):
             role = trans.to_role_info(
                 {
                     "system": "system",

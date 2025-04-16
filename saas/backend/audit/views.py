@@ -23,7 +23,6 @@ from .serializers import EventDetailSchemaSLZ, EventDetailSLZ, EventListSchemaSL
 
 
 class EventViewSet(mixins.ListModelMixin, GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.AUDIT.value)]
 
     lookup_field = "id"

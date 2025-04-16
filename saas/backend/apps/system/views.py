@@ -24,7 +24,6 @@ from .serializers import QueryResourceTypeSLZ, SystemQuerySLZ, SystemResourceTyp
 
 
 class SystemViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = SystemBiz()
@@ -68,7 +67,6 @@ class SystemViewSet(GenericViewSet):
 
 
 class ResourceTypeViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = ResourceTypeBiz()

@@ -392,10 +392,10 @@ class TestBackendPolicyOperationService:
         template_qs.filter.return_value = template_qs
         template_qs.values.return_value = template_policy_auth_types
 
-        with patch("backend.apps.policy.models.Policy.objects", policy_qs), patch(
-            "backend.apps.template.models.PermTemplatePolicyAuthorized.objects", template_qs
+        with (
+            patch("backend.apps.policy.models.Policy.objects", policy_qs),
+            patch("backend.apps.template.models.PermTemplatePolicyAuthorized.objects", template_qs),
         ):
-
             svc = BackendPolicyOperationService()
             auth_type = svc._calculate_auth_type(
                 Subject(type=SubjectType.GROUP.value, id="1"), 0, "test", changed_policy_auth_types
@@ -415,9 +415,10 @@ class TestBackendPolicyOperationService:
 
     def test_alter_backend_policies_ok(self):
         svc = BackendPolicyOperationService()
-        with patch.object(svc, "_calculate_auth_type", return_value=AuthType.ABAC.value), patch(
-            "backend.component.iam.alter_group_policies_v2"
-        ) as mock_alter_group_policies_v2:
+        with (
+            patch.object(svc, "_calculate_auth_type", return_value=AuthType.ABAC.value),
+            patch("backend.component.iam.alter_group_policies_v2") as mock_alter_group_policies_v2,
+        ):
             svc.alter_backend_policies(
                 Subject(type=SubjectType.GROUP.value, id="1"),
                 0,

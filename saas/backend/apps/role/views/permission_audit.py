@@ -22,7 +22,6 @@ from backend.util.time import format_localtime
 
 
 class QueryAuthorizedSubjectsViewSet(GenericViewSet):
-
     permission_classes = [RolePermission]
     method_permission = {
         "post": PermissionCodeEnum.VIEW_AUTHORIZED_SUBJECTS.value,

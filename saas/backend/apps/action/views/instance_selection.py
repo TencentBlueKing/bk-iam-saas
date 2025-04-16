@@ -18,7 +18,6 @@ from ..serializers import InstanceSelectionQuerySLZ, InstanceSelectionSLZ
 
 
 class InstanceSelectionView(views.APIView):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = InstanceSelectionBiz()

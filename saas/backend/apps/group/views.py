@@ -141,7 +141,6 @@ def split_members_to_subject_and_template(members):
 
 
 class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -297,7 +296,6 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
 
 
 class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -325,7 +323,9 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         # 校验权限
         checker = RoleObjectRelationChecker(request.role)
         if not checker.check_group(group):
-            raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True
+            )
 
         if request.query_params.get("keyword"):
             slz = SearchMemberSLZ(data=request.query_params)
@@ -418,7 +418,6 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupsMemberViewSet(GenericViewSet):
-
     queryset = Group.objects.all()
     serializer_class = GroupsAddMemberSLZ
 
@@ -468,7 +467,9 @@ class GroupsMemberViewSet(GenericViewSet):
                 readonly = group.readonly
                 if readonly:
                     raise error_codes.FORBIDDEN.format(
-                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        message=_("只读用户组({})无法进行({})操作！").format(
+                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label
+                        ),
                         replace=True,
                     )
                 if members:
@@ -533,7 +534,9 @@ class GroupsMemberViewSet(GenericViewSet):
                 readonly = group.readonly
                 if readonly:
                     raise error_codes.FORBIDDEN.format(
-                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        message=_("只读用户组({})无法进行({})操作！").format(
+                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label
+                        ),
                         replace=True,
                     )
                 if members:
@@ -563,7 +566,6 @@ class GroupsMemberViewSet(GenericViewSet):
 
 
 class GroupsMemberRenewViewSet(GenericViewSet):
-
     group_biz = GroupBiz()
 
     @swagger_auto_schema(
@@ -606,7 +608,6 @@ class GroupsMemberRenewViewSet(GenericViewSet):
 
 
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GROUP.value)]
 
     queryset = Group.objects.all()
@@ -649,7 +650,6 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {"create": PermissionCodeEnum.MANAGE_GROUP.value}
 
@@ -710,7 +710,6 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -840,7 +839,6 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupSystemViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
     queryset = Group.objects.all()
     lookup_field = "id"
@@ -1126,7 +1124,6 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
 
 
 class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
-
     queryset = Group.objects.all()
     serializer_class = GroupSLZ
 
@@ -1181,7 +1178,6 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
-
     queryset = Group.objects.all()
     filterset_class = GroupSubjectTemplateFilter
     filter_backends = [NoCheckModelFilterBackend]
@@ -1217,7 +1213,6 @@ class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupTemplateMemberViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -1246,7 +1241,9 @@ class GroupTemplateMemberViewSet(GroupPermissionMixin, GenericViewSet):
         # 校验权限
         checker = RoleObjectRelationChecker(request.role)
         if not checker.check_group(group):
-            raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True
+            )
 
         if keyword:
             group_members = self.group_biz.search_template_group_member_by_keyword(group.id, template_id, keyword)

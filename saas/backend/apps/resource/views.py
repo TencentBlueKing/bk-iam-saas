@@ -25,7 +25,6 @@ from .serializers import (
 
 
 class ResourceViewSet(ViewSet):
-
     biz = ResourceBiz()
 
     @swagger_auto_schema(
@@ -117,7 +116,6 @@ class ResourceViewSet(ViewSet):
 
 
 class ResourceListFilterByDisplayNameViewSet(ViewSet):
-
     biz = ResourceBiz()
 
     @swagger_auto_schema(

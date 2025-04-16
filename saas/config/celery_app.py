@@ -34,6 +34,7 @@ app.conf.task_queues = [
     Queue("bk_iam", Exchange("bk_iam"), routing_key="bk_iam", queue_arguments={"x-ha-policy": "all"}),
 ]
 
+
 # set periodic tasks
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):

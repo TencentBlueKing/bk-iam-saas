@@ -20,7 +20,6 @@ from backend.common.debug import RedisStorage
 
 
 class DebugViewSet(GenericViewSet):
-
     authentication_classes = [BasicAppCodeAuthentication]
     permission_classes = [IsAuthenticated]
 

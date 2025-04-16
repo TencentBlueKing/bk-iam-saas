@@ -73,7 +73,6 @@ class ApprovalProcessViewSet(GenericViewSet):
 
 
 class ApprovalProcessGlobalConfigViewSet(mixins.ListModelMixin, GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GLOBAL_SETTING.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -112,7 +111,6 @@ class ApprovalProcessGlobalConfigViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class ActionApprovalProcessViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value)]
 
     biz = ApprovalProcessBiz()
@@ -224,7 +222,7 @@ class SystemActionSensitivityLevelCountViewSet(GenericViewSet):
         action_list = self.biz.list_without_cache_sensitivity_level(system_id)
         level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
 
-        data = {sensitivity_level: count for sensitivity_level, count in level_count.items()}
+        data = dict(level_count.items())
         data["all"] = len(action_list.actions)
 
         return Response(data)
@@ -269,7 +267,6 @@ class ActionSensitivityLevelViewSet(GenericViewSet):
 
 
 class GroupApprovalProcessViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GROUP.value)]
 
     biz = ApprovalProcessBiz()

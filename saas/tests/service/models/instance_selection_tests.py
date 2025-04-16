@@ -112,14 +112,11 @@ class TestInstanceSelection:
             resource_type_chain=[ChainNode(system_id="system", id="test1"), ChainNode(system_id="system", id="test2")],
         )
 
-        assert (
-            ins.list_match_path_system_id(
-                [
-                    PathResourceType(system_id="", id="test1"),
-                    PathResourceType(system_id="", id="test2"),
-                    PathResourceType(system_id="", id="test2"),
-                    PathResourceType(system_id="", id="test2"),
-                ]
-            )
-            == ["system", "system", "system", "system"]
-        )
+        assert ins.list_match_path_system_id(
+            [
+                PathResourceType(system_id="", id="test1"),
+                PathResourceType(system_id="", id="test2"),
+                PathResourceType(system_id="", id="test2"),
+                PathResourceType(system_id="", id="test2"),
+            ]
+        ) == ["system", "system", "system", "system"]

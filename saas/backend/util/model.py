@@ -86,7 +86,6 @@ class ListModel(BaseModel):
 
 
 class PartialModel(BaseModel):
-
     # 某些情况下，只需要用到数据类的部分字段，_partial_fields用于记录数据类对象的哪些字段是可用，配合from_partial_data一起使用
     _partial_fields: List[str] = PrivateAttr()
 

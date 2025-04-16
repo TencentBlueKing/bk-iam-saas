@@ -40,7 +40,6 @@ from backend.service.constants import PermissionCodeEnum
 
 
 class CategoryViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
@@ -72,7 +71,6 @@ class CategoryViewSet(GenericViewSet):
 
 
 class DepartmentViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
@@ -107,7 +105,6 @@ class DepartmentViewSet(GenericViewSet):
 
 
 class UserView(views.APIView):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
@@ -133,7 +130,6 @@ class UserView(views.APIView):
 
 
 class OrganizationViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     @cachedmethod(timeout=60 * 5)
@@ -229,7 +225,6 @@ class OrganizationSyncTaskView(views.APIView):
 
 
 class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     queryset = SyncRecord.objects.filter(type=SyncType.Full.value)

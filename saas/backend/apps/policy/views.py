@@ -54,7 +54,6 @@ from .serializers import (
 
 
 class PolicyViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
@@ -161,7 +160,6 @@ class PolicyViewSet(GenericViewSet):
 
 
 class PolicyResourceGroupDeleteViewSet(GenericViewSet):
-
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
 
@@ -189,7 +187,6 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
 
 
 class PolicySystemViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()
@@ -208,7 +205,6 @@ class PolicySystemViewSet(GenericViewSet):
 
 
 class PolicyExpireSoonViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()

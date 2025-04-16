@@ -62,7 +62,9 @@ class EngineService:
             return []
 
         if len(query_data) > MAX_ENGINE_SEARCH_RESOURCE_COUNT:
-            raise error_codes.ENGINE_REQUEST_ERROR.format("查询的资源实例不能超过{}个".format(MAX_ENGINE_SEARCH_RESOURCE_COUNT))
+            raise error_codes.ENGINE_REQUEST_ERROR.format(
+                "查询的资源实例不能超过{}个".format(MAX_ENGINE_SEARCH_RESOURCE_COUNT)
+            )
 
         resp_data = batch_query_subjects(query_data)
         return resp_data["results"]

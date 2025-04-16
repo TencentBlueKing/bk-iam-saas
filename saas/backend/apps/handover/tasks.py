@@ -34,7 +34,6 @@ EXECUTE_HANDOVER_MAP: Dict[str, Type[BaseHandoverHandler]] = {
 
 @shared_task(ignore_result=True)
 def execute_handover_task(handover_from, handover_to, handover_record_id):
-
     handover_task_list = HandoverTask.objects.filter(handover_record_id=handover_record_id)
 
     # 用于整个交接的最终状态判断

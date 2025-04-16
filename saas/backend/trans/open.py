@@ -35,7 +35,9 @@ class OpenRelatedResource(BaseModel):
     system_id: str = Field(alias="system")
     type: str
     paths: List[List[OpenResourcePathNode]] = []
-    attributes: List[Any] = []  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
+    attributes: List[Any] = (
+        []
+    )  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段传 system 或 system_id
@@ -55,7 +57,7 @@ class OpenRelatedResource(BaseModel):
                 self._raise_match_selection_fail_exception(path)
 
             # 判断是否路径上每个节点都有system，有的话不需要使用实例视图填充
-            if all([node.system_id != "" for node in path]):
+            if all(node.system_id != "" for node in path):
                 continue
 
             # 取匹配的实例视图的第一个来做填充
@@ -76,7 +78,7 @@ class OpenRelatedResource(BaseModel):
         Note: 这里的填充名字只会对缺名称的进行填充，因为对于授权API是说，是可以完全信任接入系统传的名称
         """
         # 必须保证所有资源实例的system_id都存在
-        assert all([node.system_id != "" for path in self.paths for node in path])
+        assert all(node.system_id != "" for path in self.paths for node in path)
 
         # 查询资源Name
         resource_biz = ResourceBiz()
@@ -165,9 +167,11 @@ class OpenCommonTrans:
             policy = PolicyBean.parse_obj(
                 {
                     "action_id": open_policy.action_id,
-                    "resource_groups": [{"id": gen_uuid(), "related_resource_types": related_resource_types}]
-                    if related_resource_types
-                    else [],
+                    "resource_groups": (
+                        [{"id": gen_uuid(), "related_resource_types": related_resource_types}]
+                        if related_resource_types
+                        else []
+                    ),
                 }
             )
             policies.append(policy)

@@ -242,7 +242,6 @@ class RoleGroupMemberGroupViewSet(SubjectGroupSearchViewSet):
 
 
 class RoleGroupMemberDepartmentGroupViewSet(SubjectDepartmentGroupSearchViewSet):
-
     subject_template_biz = SubjectTemplateBiz()
 
     @swagger_auto_schema(

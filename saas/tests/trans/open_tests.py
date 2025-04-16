@@ -48,11 +48,14 @@ class TestOpenCommonTrans:
         trans = OpenCommonTrans()
         trans.action_check_biz.check = Mock(return_value=None)
 
-        with patch.object(
-            PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_empty_fields, patch.object(
-            PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
-        ) as fake_check_instance_selection:
+        with (
+            patch.object(
+                PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_empty_fields,
+            patch.object(
+                PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
+            ) as fake_check_instance_selection,
+        ):
             policy_list = trans._to_policy_list(
                 "system",
                 [

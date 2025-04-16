@@ -42,7 +42,7 @@ class PermTemplate(BaseModel):
         verbose_name = "权限模板"
         verbose_name_plural = "权限模板"
         ordering = ["-created_time"]
-        index_together = ["system_id"]
+        indexes = [models.Index(fields=["system_id"])]
 
     @property
     def action_ids(self):
@@ -86,7 +86,10 @@ class PermTemplatePolicyAuthorized(BaseModel):
     system_id = models.CharField("系统ID", max_length=32)
     _data = models.TextField("授权数据", db_column="data")  # 调研压缩的json字段
     _auth_types = models.TextField(
-        "模板授权策略的鉴权类型", db_column="auth_types", help_text="JSON存储 {'action_id': auth_type, ...}", default="{}"
+        "模板授权策略的鉴权类型",
+        db_column="auth_types",
+        help_text="JSON存储 {'action_id': auth_type, ...}",
+        default="{}",
     )
 
     objects = PermTemplatePolicyAuthorizedManager()
@@ -94,8 +97,8 @@ class PermTemplatePolicyAuthorized(BaseModel):
     class Meta:
         verbose_name = "权限模板授权"
         verbose_name_plural = "权限模板授权"
-        index_together = [
-            ["system_id"],
+        indexes = [
+            models.Index(fields=["system_id"]),  # 创建单字段索引
         ]
         unique_together = ["template_id", "subject_type", "subject_id"]
         ordering = ["-updated_time"]

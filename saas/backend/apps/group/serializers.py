@@ -295,7 +295,9 @@ class GroupPolicyUpdateSLZ(serializers.Serializer):
 class TemplateAuthorizationSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     template_id = serializers.IntegerField(label="模板ID", required=False, default=0)
-    actions = serializers.ListField(label="操作策略", child=BasePolicyActionSLZ(label="策略"), required=False, default=list)
+    actions = serializers.ListField(
+        label="操作策略", child=BasePolicyActionSLZ(label="策略"), required=False, default=list
+    )
     aggregations = serializers.ListField(
         label="聚合操作", child=BaseAggActionListSLZ(label="聚合操作"), required=False, default=list
     )
@@ -310,7 +312,9 @@ class TemplateAuthorizationSLZ(serializers.Serializer):
 
 
 class GroupAuthorizationSLZ(serializers.Serializer):
-    templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=False)
+    templates = serializers.ListField(
+        label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=False
+    )
 
     def validate(self, data):
         # 单次授权限制
@@ -342,7 +346,9 @@ class GroupCreateSLZ(serializers.Serializer):
     description = serializers.CharField(label="描述", allow_blank=True)
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"))
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
-    templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
+    templates = serializers.ListField(
+        label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True
+    )
     apply_disable = serializers.BooleanField(label="是否不可申请", default=False)
     sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
 

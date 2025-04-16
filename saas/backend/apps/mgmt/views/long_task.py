@@ -23,7 +23,6 @@ from backend.service.constants import PermissionCodeEnum
 
 
 class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_LONG_TASK.value,

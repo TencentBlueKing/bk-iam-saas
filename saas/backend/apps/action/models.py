@@ -24,7 +24,7 @@ class AggregateAction(models.Model):
         verbose_name = "聚合操作"
         verbose_name_plural = "聚合操作"
 
-        index_together = ["system_id"]
+        indexes = [models.Index(fields=["system_id"])]
 
     @property
     def action_ids(self):

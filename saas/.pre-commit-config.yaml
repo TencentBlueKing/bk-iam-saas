@@ -27,7 +27,7 @@ repos:
         pass_filenames: false
         entry: black --config=saas/pyproject.toml saas
       - id: flake8
-        name: flak8
+        name: flake8
         language: python
         pass_filenames: false
         entry: pflake8 --config=saas/pyproject.toml saas

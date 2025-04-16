@@ -53,7 +53,6 @@ from .serializers import (
 
 
 class UserGroupViewSet(GenericViewSet):
-
     pagination_class = CustomPageNumberPagination
 
     biz = GroupBiz()
@@ -108,7 +107,6 @@ class UserGroupViewSet(GenericViewSet):
 
 
 class UserDepartmentGroupViewSet(GenericViewSet):
-
     pagination_class = None
 
     biz = GroupBiz()
@@ -134,7 +132,6 @@ class UserDepartmentGroupViewSet(GenericViewSet):
 
 
 class UserGroupRenewViewSet(GenericViewSet):
-
     pagination_class = CustomPageNumberPagination
 
     # service
@@ -226,7 +223,6 @@ class UserCommonActionViewSet(GenericViewSet):
 
 
 class RoleViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = RoleBiz()
@@ -247,7 +243,6 @@ class RoleViewSet(GenericViewSet):
 
 
 class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
-
     queryset = Group.objects.all()
     serializer_class = GroupSLZ
 
@@ -340,7 +335,6 @@ class UserDepartmentGroupSearchViewSet(SubjectGroupSearchMixin):
 
 
 class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
@@ -404,7 +398,6 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class UserSubjectTemplateGroupViewSet(GenericViewSet):
-
     pagination_class = CustomPageNumberPagination
 
     biz = SubjectTemplateBiz()
@@ -471,7 +464,6 @@ def search_group_ids(data) -> Optional[List[int]]:
 
 
 class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
-
     pagination_class = CustomPageNumberPagination
 
     biz = SubjectTemplateBiz()

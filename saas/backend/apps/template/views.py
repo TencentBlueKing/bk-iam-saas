@@ -98,7 +98,6 @@ class TemplatePermissionMixin:
 
 
 class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_TEMPLATE.value,
@@ -261,7 +260,6 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
 
 class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_TEMPLATE.value,

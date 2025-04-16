@@ -35,7 +35,6 @@ class Command(BaseCommand):
 
         for i in paginator.page_range:
             for role in paginator.page(i):
-
                 # 遍历role创建每一个group
                 group_ids = list(
                     RoleRelatedObject.objects.filter(

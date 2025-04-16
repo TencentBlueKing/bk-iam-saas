@@ -33,7 +33,9 @@ class ResourceQuerySLZ(serializers.Serializer):
     action_system_id = serializers.CharField(
         label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
     )
-    action_id = serializers.CharField(label="操作系统id", required=False, allow_blank=True, allow_null=True, default="")
+    action_id = serializers.CharField(
+        label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
+    )
 
 
 class BaseInfoSLZ(serializers.Serializer):
@@ -67,4 +69,6 @@ class ResourceQueryByDisplayNameSLZ(serializers.Serializer):
     action_system_id = serializers.CharField(
         label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
     )
-    action_id = serializers.CharField(label="操作系统id", required=False, allow_blank=True, allow_null=True, default="")
+    action_id = serializers.CharField(
+        label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
+    )

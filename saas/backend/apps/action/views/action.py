@@ -22,7 +22,6 @@ from ..serializers import ActionSLZ, GroupActionQuerySLZ
 
 
 class ActionViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = ActionBiz()

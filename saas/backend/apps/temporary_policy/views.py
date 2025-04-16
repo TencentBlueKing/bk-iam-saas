@@ -23,7 +23,6 @@ from backend.service.models import Subject
 
 
 class TemporaryPolicyViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
@@ -75,7 +74,6 @@ class TemporaryPolicyViewSet(GenericViewSet):
 
 
 class TemporaryPolicySystemViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()

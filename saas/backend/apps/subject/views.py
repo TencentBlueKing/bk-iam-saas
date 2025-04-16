@@ -40,7 +40,6 @@ from .serializers import QueryRoleSLZ, SubjectGroupSLZ, UserRelationSLZ
 
 
 class SubjectGroupViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = CustomPageNumberPagination
@@ -86,7 +85,6 @@ class SubjectGroupViewSet(GenericViewSet):
 
 
 class SubjectDepartmentGroupViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None
@@ -107,7 +105,6 @@ class SubjectDepartmentGroupViewSet(GenericViewSet):
 
 
 class SubjectSystemViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -128,7 +125,6 @@ class SubjectSystemViewSet(GenericViewSet):
 
 
 class SubjectPolicyViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -225,7 +221,6 @@ class SubjectPolicyViewSet(GenericViewSet):
 
 
 class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
-
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
 
@@ -253,7 +248,6 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
 
 
 class SubjectRoleViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = RoleBiz()
@@ -274,7 +268,6 @@ class SubjectRoleViewSet(GenericViewSet):
 
 
 class SubjectTemporaryPolicyViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -326,7 +319,6 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
 
 
 class SubjectTemporaryPolicySystemViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数

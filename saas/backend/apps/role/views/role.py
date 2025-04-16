@@ -274,7 +274,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             self.role_check_biz.check_subject_grade_manager_limit(Subject.from_username(member["username"]))
 
         if not can_user_manage_role(user_id, role.id):
-            raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限修改").format(role.name), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("非分级管理员({})的成员，无权限修改").format(role.name), replace=True
+            )
 
         with gen_role_upsert_lock(data["name"]):
             # 名称唯一性检查
@@ -369,7 +371,6 @@ class RoleSubjectScopeView(views.APIView):
 
 
 class SystemManagerViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
@@ -576,7 +577,9 @@ class RoleCommonActionViewSet(GenericViewSet):
 
         max_common_action = 20  # 常用操作最大值
         if self.queryset.filter(system_id=system_id).count() >= max_common_action:
-            raise error_codes.INVALID_ARGS.format(_("系统{}的常用操作不能超过{}个").format(system_id, max_common_action))
+            raise error_codes.INVALID_ARGS.format(
+                _("系统{}的常用操作不能超过{}个").format(system_id, max_common_action)
+            )
 
         name = serializer.validated_data["name"]
         if RoleCommonAction.objects.filter(role_id=request.role.id).filter(Q(name=name) | Q(name_en=name)).exists():
@@ -605,7 +608,6 @@ class RoleCommonActionViewSet(GenericViewSet):
 
 
 class UserView(views.APIView):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
@@ -695,7 +697,9 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
 
         checker = RoleObjectRelationChecker(role)
         if not checker.check_group_ids(group_ids):
-            raise error_codes.FORBIDDEN.format(message=_("非管理员({})的用户组，无权限续期").format(role.name), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("非管理员({})的用户组，无权限续期").format(role.name), replace=True
+            )
 
         sorted_members = sorted(members, key=lambda m: m["parent_id"])
         for group_id, per_members in groupby(sorted_members, key=lambda m: m["parent_id"]):
@@ -710,7 +714,7 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
                     part_members,
                 )
 
-            for m in per_members:
+            for m in part_members:
                 if m["type"] == GroupMemberType.TEMPLATE.value:
                     self.group_biz.update_subject_template_expired_at(int(group_id), int(m["id"]), m["expired_at"])
 
@@ -720,7 +724,6 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class RoleGroupMembersRenewViewSet(GroupPermissionMixin, GenericViewSet):
-
     queryset = Group.objects.all()
     lookup_field = "id"
 
@@ -960,7 +963,9 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 非分级管理员/子集管理员成员，则无法更新基本信息
         if not can_user_manage_role(user_id, role.id):
-            raise error_codes.FORBIDDEN.format(message=_("非管理员({})的成员，无权限修改").format(role.name), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("非管理员({})的成员，无权限修改").format(role.name), replace=True
+            )
 
         self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
 
