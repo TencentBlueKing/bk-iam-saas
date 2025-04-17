@@ -232,7 +232,7 @@ class ResourceProviderClient:
             return default
 
         # 校验类型是否一致
-        if type(data) != type(default):
+        if not isinstance(data, type(default)):
             raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
                 f"{self.system_id}'s API response data wrong! "
                 f"the type of data must be {type(default)}, but got {type(data)}! [data={data}]."
