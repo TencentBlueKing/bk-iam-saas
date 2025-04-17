@@ -15,7 +15,7 @@ RUN rm /etc/apt/sources.list && \
 
 RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://mirrors.cloud.tencent.com/pypi/simple/' > ~/.pip/pip.conf
 
-RUN apt-get update && apt-get install -y gcc libssl1.0-dev default-libmysqlclient-dev build-essential
+RUN apt-get update && apt-get install -y gcc libssl-dev default-libmysqlclient-dev build-essential
 
 
 
