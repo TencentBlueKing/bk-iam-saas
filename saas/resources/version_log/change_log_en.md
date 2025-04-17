@@ -6,6 +6,14 @@
 
 ---
 
+<!-- 2025-04-10 -->
+# V1.10.41 Version Update Log
+
+### Fixes
+* Fix the abnormal flow of custom permission auditing in dbm
+
+---
+
 <!-- 2025-04-01 -->
 # V1.10.40 Version Update Log
 
