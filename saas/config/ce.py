@@ -191,30 +191,24 @@ CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 _APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
 CSRF_COOKIE_NAME = f"bkiam_csrftoken_{_APP_URL_MD5_16BIT}"
 # 对于特殊端口，带端口和不带端口都得添加，其他只需要添加默认原生的即可
-SCHEME_HTTPS = "https"
-SCHEME_HTTP = "http"
+# 构造基础域名
+_BK_PAAS_BASE = f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"
+
+# 是否使用特殊端口，决定是否额外加一个 hostname
 CSRF_TRUSTED_ORIGINS = (
-    [
-        f"{SCHEME_HTTPS}://{_BK_PAAS_HOSTNAME}",
-        f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}" f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}",
-        f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}",
-    ]
-    if _BK_PAAS_IS_SPECIAL_PORT
-    else [f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}"]
-)
-# cors
-CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
-CORS_ORIGIN_WHITELIST = (
-    [
-        f"{SCHEME_HTTPS}://{_BK_PAAS_HOSTNAME}",
-        f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}",
-        f"{SCHEME_HTTP}://{_BK_PAAS_HOSTNAME}",
-        f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}",
-    ]
-    if _BK_PAAS_IS_SPECIAL_PORT
-    else [f"{SCHEME_HTTP}://{_BK_PAAS_NETLOC}", f"{SCHEME_HTTPS}://{_BK_PAAS_NETLOC}"]
+    [_BK_PAAS_BASE, f"{_BK_PAAS_SCHEME}://{_BK_PAAS_HOSTNAME}"] if _BK_PAAS_IS_SPECIAL_PORT else [_BK_PAAS_BASE]
 )
 
+CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
+# cors
+# 信任源和 CORS 来源
+_BK_PAAS_BASE = f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"
+_BK_PAAS_BASE_NO_PORT = f"{_BK_PAAS_SCHEME}://{_BK_PAAS_HOSTNAME}"
+CROSS_SITE_ORIGINS = [_BK_PAAS_BASE, _BK_PAAS_BASE_NO_PORT] if _BK_PAAS_IS_SPECIAL_PORT else [_BK_PAAS_BASE]
+
+CSRF_TRUSTED_ORIGINS = CROSS_SITE_ORIGINS
+CORS_ORIGIN_WHITELIST = CROSS_SITE_ORIGINS
+CORS_ALLOW_CREDENTIALS = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 # 站点URL
