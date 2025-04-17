@@ -1,3 +1,11 @@
+<!-- 2025-04-17 -->
+# V1.10.42 Version Update Log
+
+### Feature Enhancements
+* The compatibility gateway's lower version does not support resource configuration for the OpenAPI 3.0 protocol
+
+---
+
 <!-- 2025-04-10 -->
 # V1.10.41 Version Update Log
 
