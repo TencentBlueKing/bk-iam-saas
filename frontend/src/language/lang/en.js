@@ -597,6 +597,7 @@ export const m = {
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
         '确认恢复默认？': 'Are you sure to restore defaults?',
+        '确认变更全局审批流程？': "Confirm the global approval process for changes?",
         '将删除': 'Will be deleted',
         '将产生以下影响': 'will have the following impact',
         '组内用户和组织将被全部移除': 'All users and organizations in the group will be removed',
