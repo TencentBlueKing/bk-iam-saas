@@ -8,6 +8,22 @@
     @update:isShow="handleCancel">
     <div slot="content" class="content-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
       <section v-show="!isLoading">
+        <bk-alert type="info" class="space-info-tip" v-show="isRatingManager">
+          <div slot="title">
+            <span>
+              {{ $t(`m.info['空间管理员可为用户组分配的权限受限于当前空间的管控范围。如果找不到所需权限，您可以前往空间信息页申请新的权限管控范围。']`) }}
+            </span>
+            <bk-button
+              text
+              type="primary"
+              size="small"
+              style="padding: 0"
+              @click="handleNavSpace"
+            >
+              {{ $t(`m.common['前往申请']`) }}
+            </bk-button>
+          </div>
+        </bk-alert>
         <div class="template-content-wrapper">
           <render-search>
             <div class="search-title">
@@ -222,6 +238,9 @@
             },
             isDisabled () {
                 return this.requestQueueBySys.length > 0 || this.requestQueueByTemplate.length > 0;
+            },
+            isRatingManager () {
+              return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             }
     },
     watch: {
@@ -575,6 +594,12 @@
           name: 'permTemplateEdit',
           params: { id: data.id, systemId: data.system.id }
         });
+      },
+
+      handleNavSpace () {
+        this.$router.push({
+          name: 'authorBoundary'
+        });
       }
     }
   };
@@ -656,6 +681,17 @@
             position: absolute;
             left: -15px;
             top: -11px;
+        }
+        .iam-search-wrapper {
+          margin-bottom: 8px;
+        }
+        .space-info-tip {
+          display: flex;
+          line-height: 32px;
+          margin-bottom: 8px;
+          .bk-alert-wraper {
+            align-items: center;
+          }
         }
     }
 </style>

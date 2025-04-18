@@ -113,7 +113,17 @@
       },
 
       handleProcessSelect (value, option) {
-        this.$emit('selected', value);
+        this.$bkInfo({
+          title: this.$t(`m.dialog['确认变更全局审批流程？']`),
+          confirmLoading: true,
+          extCls: 'render-process-info',
+          confirmFn: () => {
+            this.$emit('selected', value);
+          },
+          cancelFn: () => {
+            this.$refs.select.selected = this.curValue;
+          }
+        });
       },
 
       handleOpenCreateLink () {
@@ -243,5 +253,10 @@
                 }
             }
         }
+    }
+    .render-process-info {
+      .bk-dialog-header-inner {
+        white-space: pre-wrap !important;
+      }
     }
 </style>
