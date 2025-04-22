@@ -578,6 +578,7 @@ export const m = {
          '手动输入蓝盾侧限制勾选组织架构提示': 'The range of user [{value}] is too large, please select again',
          '组织架构重复添加多个相同用户名': 'User [{value}] already exists and cannot be added again',
          '最多选择权限模板数量': 'You can only select up to {value} permissions template',
+         '权限模板用户组存在空实例': 'There is empty instance in the {value} user group',
          '空间管理员可为用户组分配的权限受限于当前空间的管控范围。如果找不到所需权限，您可以前往空间信息页申请新的权限管控范围。': 'The permissions that space administrators can assign to user groups are limited by the current control scope of the space. If you cannot find the required permissions, you can go to the space information page to apply for a new permission control scope.'
     },
     // 二次确认弹窗相关
