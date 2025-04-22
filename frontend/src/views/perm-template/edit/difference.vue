@@ -15,10 +15,7 @@
         :loading="isLoading"
         :disabled="(disabled || !isLastPage) && !isNoAddActions"
         @click="handleNextStep">
-        <span v-if="!isLastPage && !isNoAddActions" v-bk-tooltips="$t(`m.info['请先确认完所有实例']`)">
-          {{ $t(`m.common['提交']`) }}
-        </span>
-        <span v-else>
+        <span v-bk-tooltips="{ content: $t(`m.info['请先确认完所有实例']`), disabled: !(!isLastPage && !isNoAddActions) }">
           {{ $t(`m.common['提交']`) }}
         </span>
       </bk-button>
@@ -96,7 +93,7 @@
           this.handleUpdateCommit();
           return;
         }
-        const { flag, groups, isNoAdd } = this.$refs.syncRef.getData();
+        const { flag, groups, isNoAdd, emptyIndex } = this.$refs.syncRef.getData();
         groups.forEach(e => {
           e.actions.forEach(_ => {
             if (!_.resource_groups || !_.resource_groups.length) {
@@ -105,6 +102,9 @@
           });
         });
         if (flag) {
+          if (emptyIndex > -1) {
+            this.messageWarn(this.$t(`m.info['权限模板用户组存在空实例']`, { value: emptyIndex }), 3000);
+          }
           return;
         }
         if (this.preGroupOnePage) {
