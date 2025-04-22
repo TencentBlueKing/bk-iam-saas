@@ -168,6 +168,7 @@
   import { getRouterDiff } from '@/common/router-handle';
   import { NEED_CONFIRM_DIALOG_ROUTER, MANAGE_SPACE_REDIRECT_ROUTES, ALL_ROUTES_LIST } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
+  import { buildURLParams } from '@/common/url';
   import IamGuide from '@/components/iam-guide/index.vue';
 
   export default {
@@ -486,6 +487,11 @@
           this.$store.commit('updateNavId', id);
           this.updateRouter(type);
           this.resetLocalStorage();
+          if (id > 0) {
+            window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
+              role_name: this.user.role.name
+            }))}`);
+          }
         } catch (e) {
           this.messageAdvancedError(e);
         }
