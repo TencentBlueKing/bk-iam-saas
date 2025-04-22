@@ -78,7 +78,9 @@ class RoleUser(BaseModel):
         verbose_name = "角色的用户"
         verbose_name_plural = "角色的用户"
         ordering = ["id"]
-        index_together = [("role_id", "username")]
+        indexes = [
+            models.Index(fields=["role_id", "username"]),  # 创建复合索引
+        ]
 
 
 class RoleUserSystemPermission(BaseModel):
@@ -151,7 +153,7 @@ class RolePerm(models.Model):
     class Meta:
         verbose_name = "角色的权限"
         verbose_name_plural = "角色的权限"
-        index_together = ["role_id"]
+        indexes = [models.Index(fields=["role_id"])]
 
 
 class RoleScope(models.Model):
@@ -166,7 +168,7 @@ class RoleScope(models.Model):
     class Meta:
         verbose_name = "角色的限制范围"
         verbose_name_plural = "角色的限制范围"
-        index_together = ["role_id"]
+        indexes = [models.Index(fields=["role_id"])]
 
     @classmethod
     def delete_action_from_scope(cls, system_id: str, action_id: str):
@@ -221,9 +223,9 @@ class ScopeSubject(models.Model):
     class Meta:
         verbose_name = "subject限制"
         verbose_name_plural = "subject限制"
-        index_together = [
-            ("subject_id", "subject_type", "role_id"),
-            ("role_id", "role_scope_id"),
+        indexes = [
+            models.Index(fields=["subject_id", "subject_type", "role_id"]),
+            models.Index(fields=["role_id", "role_scope_id"]),
         ]
 
 
@@ -281,7 +283,7 @@ class RoleCommonAction(BaseModel):
         verbose_name = "角色常用操作"
         verbose_name_plural = "角色常用操作"
         ordering = ["id"]
-        index_together = ["role_id", "system_id"]
+        indexes = [models.Index(fields=["role_id", "system_id"])]
 
     @property
     def action_ids(self):
@@ -304,7 +306,7 @@ class RoleSource(BaseModel):
     class Meta:
         verbose_name = "角色创建来源"
         verbose_name_plural = "角色创建来源"
-        index_together = ["source_system_id", "source_type"]
+        indexes = [models.Index(fields=["source_system_id", "source_type"])]
 
     @classmethod
     def get_role_count(cls, role_type: str, system_id: str, source_type: str = RoleSourceType.API.value):
@@ -357,7 +359,7 @@ class RoleConfig(BaseModel):
     class Meta:
         verbose_name = "角色配置"
         verbose_name_plural = "角色配置"
-        index_together = ["role_id", "type"]
+        indexes = [models.Index(fields=["role_id", "type"])]
 
     @property
     def config(self):

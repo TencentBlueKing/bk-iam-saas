@@ -55,7 +55,7 @@ class OpenRelatedResource(BaseModel):
                 self._raise_match_selection_fail_exception(path)
 
             # 判断是否路径上每个节点都有system，有的话不需要使用实例视图填充
-            if all([node.system_id != "" for node in path]):
+            if all(node.system_id != "" for node in path):
                 continue
 
             # 取匹配的实例视图的第一个来做填充
@@ -76,7 +76,7 @@ class OpenRelatedResource(BaseModel):
         Note: 这里的填充名字只会对缺名称的进行填充，因为对于授权API是说，是可以完全信任接入系统传的名称
         """
         # 必须保证所有资源实例的system_id都存在
-        assert all([node.system_id != "" for path in self.paths for node in path])
+        assert all(node.system_id != "" for path in self.paths for node in path)
 
         # 查询资源Name
         resource_biz = ResourceBiz()
