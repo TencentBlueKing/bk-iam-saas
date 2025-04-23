@@ -306,7 +306,8 @@ export const m = {
         '点击复制': 'Click to copy',
         '复制成功': 'Copy successful',
         '暂无可复制数据': 'There is currently no replicable data',
-        '了解更多': 'Learn more'
+        '了解更多': 'Learn more',
+        '前往申请': 'Go apply'
     },
     // 校验
     verify: {
@@ -576,7 +577,9 @@ export const m = {
          '不可移出的用户组如下': 'The user groups that cannot be removed are as follows',
          '手动输入蓝盾侧限制勾选组织架构提示': 'The range of user [{value}] is too large, please select again',
          '组织架构重复添加多个相同用户名': 'User [{value}] already exists and cannot be added again',
-         '最多选择权限模板数量': 'You can only select up to {value} permissions template'
+         '最多选择权限模板数量': 'You can only select up to {value} permissions template',
+         '权限模板用户组存在空实例': 'There is empty instance in the {value} user group',
+         '空间管理员可为用户组分配的权限受限于当前空间的管控范围。如果找不到所需权限，您可以前往空间信息页申请新的权限管控范围。': 'The permissions that space administrators can assign to user groups are limited by the current control scope of the space. If you cannot find the required permissions, you can go to the space information page to apply for a new permission control scope.'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -595,6 +598,7 @@ export const m = {
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
         '确认恢复默认？': 'Are you sure to restore defaults?',
+        '确认变更全局审批流程？': "Confirm the global approval process for changes?",
         '将删除': 'Will be deleted',
         '将产生以下影响': 'will have the following impact',
         '组内用户和组织将被全部移除': 'All users and organizations in the group will be removed',
