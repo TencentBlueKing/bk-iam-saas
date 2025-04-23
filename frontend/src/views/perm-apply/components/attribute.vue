@@ -72,7 +72,7 @@
 </template>
 
 <script>
-  import _ from 'lodash';
+  import { cloneDeep, debounce } from 'lodash';
   import { sleep } from '@/common/util';
   import Attribute from '@/model/attribute';
   import BkUserSelector from '@blueking/user-selector';
@@ -119,7 +119,8 @@
         },
         attrValueListMap: {},
         curToggleItem: '',
-        curKeyWord: ''
+        curKeyWord: '',
+        curSelectDom: null
       };
     },
     computed: {
@@ -146,7 +147,6 @@
     watch: {
       value: {
         handler (val) {
-          console.log(this.params.system_id, '资源类型id');
           if (val.length < 1) {
             this.attrValues = [new Attribute(ATTRIBUTE_ITEM)];
             return;
@@ -266,17 +266,20 @@
       },
 
       handleAttrValueToggle (val, index, payload) {
-        const curOptionDom = this.$refs[`${payload.id}&${index}&valueRef`][0].$refs.optionList;
+        this.curSelectDom = this.$refs[`${payload.id}&${index}&valueRef`][0];
+        const curOptionDom = this.curSelectDom.$refs.optionList;
         curOptionDom.addEventListener('scroll', this.handleScroll);
         if (val) {
           // 记录当前操作的属性值数据
           this.curOperateData = payload;
           // 处理多个下拉框切换或者搜索数据后重新打开下拉框需要重置分页数据
           if ((this.curToggleItem && `${payload.id}&${index}&valueRef` !== this.curToggleItem) || !this.curKeyWord) {
+            this.curSelectDom.searchLoading = false;
             this.resetPagination(payload, '', false, false);
           }
           this.curToggleItem = `${payload.id}&${index}&valueRef`;
         } else {
+          this.curSelectDom = null;
           this.curOperateData = {};
           curOptionDom.removeEventListener('scroll', this.handleScroll);
         }
@@ -293,7 +296,7 @@
             );
             // 删除loading项
             if (loadItemIndex !== -1) {
-              this.attrValueListMap[this.curOperateData.id] = _.cloneDeep(
+              this.attrValueListMap[this.curOperateData.id] = cloneDeep(
                 this.attrValueListMap[this.curOperateData.id].slice(0, loadItemIndex)
               );
             }
@@ -304,21 +307,29 @@
         }
       },
 
-      async handleRemoteValue (val) {
-        this.curKeyWord = val;
+      handleRemoteValue (value) {
+        if (this.curSelectDom) {
+          this.curSelectDom.searchLoading = false;
+        }
+        this.handleDebounceSearch(value);
+      },
+
+      handleDebounceSearch: debounce(function (value) {
+        this.curKeyWord = value;
         if (this.curOperateData.id) {
           const loadItemIndex = this.attrValueListMap[this.curOperateData.id].findIndex(
             item => item.id === '' && item.display_name === ''
           );
           // 删除loading项
           if (loadItemIndex !== -1) {
-            this.attrValueListMap[this.curOperateData.id] = _.cloneDeep(
+            this.attrValueListMap[this.curOperateData.id] = cloneDeep(
               this.attrValueListMap[this.curOperateData.id].slice(0, loadItemIndex)
             );
           }
-          await this.resetPagination(this.curOperateData, val, false, false);
+          this.curSelectDom.searchLoading = true;
+          this.resetPagination(this.curOperateData, value, false, false);
         }
-      },
+      }, 800),
 
       async fetchResourceAttrValues (payload, keyword = '', isLoading = true, isScrollRemote = false) {
         payload.loading = isLoading && !isScrollRemote;
@@ -342,13 +353,16 @@
             } else {
               res.data.results = res.data.results.filter((item) => item.id !== '');
             }
-            this.attrValueListMap[payload.id] = _.cloneDeep(res.data.results);
+            this.attrValueListMap[payload.id] = cloneDeep(res.data.results);
           }
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
         } finally {
           payload.loading = false;
+          if (this.curSelectDom) {
+            this.curSelectDom.searchLoading = false;
+          }
           sleep(300).then(() => {
             payload.isScrollRemote = false;
           });
