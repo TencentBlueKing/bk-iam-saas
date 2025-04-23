@@ -71,6 +71,7 @@
 </template>
 
 <script>
+  import { debounce } from 'lodash';
   import { sleep } from '@/common/util';
   import Attribute from '@/model/attribute';
   import BkUserSelector from '@blueking/user-selector';
@@ -128,7 +129,8 @@
         attrValueListMap: {},
         isDisabledMode: false,
         curToggleItem: '',
-        curKeyWord: ''
+        curKeyWord: '',
+        curSelectDom: null
       };
     },
     computed: {
@@ -333,16 +335,19 @@
         if (this.isDisabledMode) {
           return;
         }
-        const curOptionDom = this.$refs[`${payload.id}&${index}&valueRef`][0].$refs.optionList;
+        this.curSelectDom = this.$refs[`${payload.id}&${index}&valueRef`][0];
+        const curOptionDom = this.curSelectDom.$refs.optionList;
         curOptionDom.addEventListener('scroll', this.handleScroll);
         if (val) {
           // 记录当前操作的属性值数据
           this.curOperateData = payload;
           if ((this.curToggleItem && `${payload.id}&${index}&valueRef` !== this.curToggleItem) || !this.curKeyWord) {
+            this.curSelectDom.searchLoading = false;
             this.resetPagination(payload, '', false, false);
           }
           this.curToggleItem = `${payload.id}&${index}&valueRef`;
         } else {
+          this.curSelectDom = null;
           this.curOperateData = {};
           curOptionDom.removeEventListener('scroll', this.handleScroll);
         }
@@ -363,14 +368,22 @@
         }
       },
 
-      async handleRemoteValue (val) {
-        this.curKeyWord = val;
+      handleRemoteValue (value) {
+        if (this.curSelectDom) {
+          this.curSelectDom.searchLoading = false;
+        }
+        this.handleDebounceSearch(value);
+      },
+
+      handleDebounceSearch: debounce(function (value) {
+        this.curKeyWord = value;
         if (this.curOperateData.id) {
           // 删除loading项
           this.attrValueListMap[this.curOperateData.id].shift();
-          await this.resetPagination(this.curOperateData, val, false, false);
+          this.curSelectDom.searchLoading = true;
+          this.resetPagination(this.curOperateData, value, false, false);
         }
-      },
+      }, 800),
 
       async fetchResourceAttrValues (payload, keyword = '', isLoading = true, isScrollRemote = false) {
         payload.loading = isLoading && !isScrollRemote;
@@ -401,6 +414,9 @@
           this.messageAdvancedError(e);
         } finally {
           payload.loading = false;
+          if (this.curSelectDom) {
+            this.curSelectDom.searchLoading = false;
+          }
           sleep(300).then(() => {
             payload.isScrollRemote = false;
           });
