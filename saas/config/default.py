@@ -10,10 +10,10 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import os
-
 import environ
 import pymysql
 from celery.schedules import crontab
+import ssl
 
 # connect mysql
 pymysql.install_as_MySQLdb()
@@ -316,8 +316,19 @@ if "RABBITMQ_HOST" in env:
         vhost=env.str("RABBITMQ_VHOST"),
     )
 else:
-    BROKER_URL = env.str("BK_BROKER_URL", default="")
-
+    # 创建TLS上下文
+    context = ssl.create_default_context(
+        cafile='/etc/rabbitmq/ssl/ca_certificate.pem',
+    )
+    # 设置不验证主机名（根据实际情况决定）
+    context.check_hostname = False
+    # 设置不验证对等证书（因为是单向TLS，只验证服务器证书）
+    context.verify_mode = ssl.CERT_NONE
+    BROKER_URL=env.str("BROKER_URL", context)
+    broker_use_ssl={
+        'ca_certs': '/etc/rabbitmq/ssl/ca_certificate.pem',
+        'cert_reqs': ssl.CERT_NONE,
+    }
 # tracing: sentry support
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
 # tracing: otel 相关配置
@@ -339,7 +350,6 @@ MAX_DEBUG_TRACE_COUNT = 1000
 # profile record
 ENABLE_PYINSTRUMENT = env.bool("BKAPP_ENABLE_PYINSTRUMENT", default=False)  # 需要开启时则配置环境变量
 PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
-
 
 # ---------------
 # app 自定义配置
@@ -447,7 +457,6 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 # disable display systems
 HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=["bk_iam", "bk_ci_rbac"])
 
-
 # role resource relation type 用于自定期权限申请的权限审批
 ROLE_RESOURCE_RELATION_TYPE = [
     {"system_id": "bk_cmdb", "type": "biz"},
@@ -460,7 +469,6 @@ ROLE_RESOURCE_RELATION_TYPE = [
 
 ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
 
-
 # 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置
 BK_IAM_SYSTEM_ID = "bk_iam"
 if BK_IAM_HOST_TYPE == "direct":
@@ -472,18 +480,14 @@ elif BK_IAM_HOST_TYPE == "apigateway":
 BK_IAM_MIGRATION_APP_NAME = "iam"
 BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 
-
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
-
 
 # BCS初始化ROLE网关api配置
 BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
 
-
 # BK BOT approval审批机器人通知
 BK_BOT_APPROVAL_APIGW_URL = env.str("BK_BOT_APPROVAL_APIGW_URL", default="")
-
 
 # BK BOT approval审批机器人通知
 BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL", default="")
@@ -493,7 +497,6 @@ BK_NOTIFICATION_EXEMPTION_USERS = env.list("BK_NOTIFICATION_EXEMPTION_USERS", de
 
 # 文档地址
 BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/")
-
 
 # 全局配置地址
 BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")

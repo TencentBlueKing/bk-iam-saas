@@ -28,6 +28,12 @@ DATABASES = {
         "PASSWORD": env.str("MYSQL_PASSWORD"),
         "HOST": env.str("MYSQL_HOST"),
         "PORT": env.int("MYSQL_PORT"),
+        "OPTIONS": {
+           'ssl':{
+               'ca':env.str("CERTIFICATE_PATH",'/etc/mysql/ssl/ca.pem'),
+               'ssl_mode': 'REQUIRED '
+           }
+        },
     },
     "audit": {
         "ENGINE": "django.db.backends.mysql",
@@ -55,6 +61,8 @@ REDIS_PORT = env.int("REDIS_PORT", 6379)
 REDIS_PASSWORD = env.str("REDIS_PASSWORD", "")
 REDIS_MAX_CONNECTIONS = env.int("REDIS_MAX_CONNECTIONS", 100)
 REDIS_DB = env.int("REDIS_DB", 0)
+REDIS_USE_TLS = env.bool("REDIS_USE_TLS", True)  # 默认启用TLS
+REDIS_SSL_CA_CERTS = env.str("REDIS_SSL_CA_CERTS", "/etc/redis/tls/ca.crt")
 # sentinel check
 REDIS_USE_SENTINEL = env.bool("REDIS_USE_SENTINEL", False)
 REDIS_SENTINEL_MASTER_NAME = env.str("REDIS_SENTINEL_MASTER_NAME", "mymaster")
@@ -85,7 +93,7 @@ CACHES = {
     "redis": {
         "BACKEND": "django_redis.cache.RedisCache",
         # 若需要支持主从配置，则LOCATION为List[master_url, slave_url]
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+        "LOCATION": f"rediss://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
         "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
         "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
@@ -104,7 +112,10 @@ CACHES = {
             # Redis 连接池配置
             "CONNECTION_POOL_KWARGS": {
                 # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
-                "max_connections": REDIS_MAX_CONNECTIONS
+                "max_connections": REDIS_MAX_CONNECTIONS,
+                'ssl_ca_certs': REDIS_SSL_CA_CERTS,
+                'ssl_cert_reqs':'required',
+                'ssl_validate_ocsp':False
             },
         },
     },
@@ -118,7 +129,7 @@ if REDIS_USE_SENTINEL:
     CACHES["redis"] = {
         "BACKEND": "django_redis.cache.RedisCache",
         # The hostname in LOCATION is the primary (service / master) name
-        "LOCATION": f"redis://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
+        "LOCATION": f"rediss://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
         "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
         "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
@@ -139,13 +150,19 @@ if REDIS_USE_SENTINEL:
             "SENTINEL_KWARGS": {
                 "password": REDIS_SENTINEL_PASSWORD,
                 "socket_timeout": 5,
+                'ssl':REDIS_USE_TLS,
+                'ssl_ca_certs': REDIS_SSL_CA_CERTS,
+                'ssl_cert_reqs': 'required',
             },
             # You can still override the connection pool (optional).
             "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
             # Redis 连接池配置
             "CONNECTION_POOL_KWARGS": {
                 # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
-                "max_connections": REDIS_MAX_CONNECTIONS
+                "max_connections": REDIS_MAX_CONNECTIONS,
+                'ssl': REDIS_USE_TLS,
+                'ssl_ca_certs': REDIS_SSL_CA_CERTS,
+                'ssl_cert_reqs': 'required',
             },
         },
     }
