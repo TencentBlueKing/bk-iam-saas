@@ -316,19 +316,23 @@ if "RABBITMQ_HOST" in env:
         vhost=env.str("RABBITMQ_VHOST"),
     )
 else:
-    # 创建TLS上下文
-    context = ssl.create_default_context(
-        cafile='/etc/rabbitmq/ssl/ca_certificate.pem',
-    )
-    # 设置不验证主机名（根据实际情况决定）
-    context.check_hostname = False
-    # 设置不验证对等证书（因为是单向TLS，只验证服务器证书）
-    context.verify_mode = ssl.CERT_NONE
-    BROKER_URL=env.str("BROKER_URL", context)
-    broker_use_ssl={
-        'ca_certs': '/etc/rabbitmq/ssl/ca_certificate.pem',
-        'cert_reqs': ssl.CERT_NONE,
-    }
+    RABBITMQ_SSL_CA = env.str('RABBITMQ_SSL_CA')
+    BROKER_URL = env.str("BROKER_URL")
+    # 根据 URL 协议判断是否使用 SSL
+    if BROKER_URL.startswith('amqps://'):
+        # TLS/SSL 配置
+        ssl_context = ssl.create_default_context(cafile=RABBITMQ_SSL_CA)
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+
+        BROKER_USE_SSL = {
+            'ca_certs': RABBITMQ_SSL_CA,
+            'cert_reqs': ssl.CERT_NONE,
+        }
+    else:
+        BROKER_USE_SSL = None
+
+broker_use_ssl = BROKER_USE_SSL
 # tracing: sentry support
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
 # tracing: otel 相关配置
