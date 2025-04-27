@@ -44,7 +44,7 @@
               :title="data.name">
               <template v-if="!['loadMore'].includes(data.nodeType)">
                 <Icon
-                  :type="node.level > 0 ? 'level-two-manage-space' : 'level-one-manage-space'"
+                  :type="getRoleIcon(node)"
                   :style="{
                     color: formatColor(data)
                   }"
@@ -224,13 +224,19 @@
         };
       },
       formatRoleIcon () {
-          const { role } = this.user;
-          const levelIcon = 'icon iam-icon';
-          if (role && ['subset_manager'].includes(role.type)) {
+        const levelIcon = 'icon iam-icon';
+        const roleMap = {
+          system_manager: () => {
+            return `${levelIcon} iamcenter-guanlikongjian-3`;
+          },
+          subset_manager: () => {
             return `${levelIcon} iamcenter-level-two-manage-space`;
-          } else {
+          },
+          other_manager: () => {
             return `${levelIcon} iamcenter-level-one-manage-space`;
           }
+        };
+        return roleMap[this.user.role.type] ? roleMap[this.user.role.type]() : roleMap['other_manager']();
       }
     },
     watch: {
@@ -745,6 +751,22 @@
         this.$emit('reload-page', this.$route);
       },
 
+      getRoleIcon (node) {
+        const { level, data } = node;
+        const levelMap = {
+          0: () => {
+            if (['system_manager'].includes(data.type)) {
+              return 'guanlikongjian-3';
+            }
+            return 'level-one-manage-space';
+          },
+          1: () => {
+            return 'level-two-manage-space';
+          }
+        };
+        return levelMap[level] ? levelMap[level]() : levelMap[0]();
+      },
+
       // 清除页面localstorage
       resetLocalStorage () {
         window.localStorage.removeItem('customPermProcessList');
@@ -763,16 +785,16 @@
       },
 
       formatColor (node) {
-        // if (node.id === this.curRoleId) {
-        switch (node.level) {
-          case 0: {
-            return '#FF9C01';
-          }
-          case 1: {
+        console.log(node);
+        const managerMap = {
+          system_manager: () => {
+            return '#3A84FF';
+          },
+          subset_manager: () => {
             return '#9B80FE';
           }
-        }
-        // }
+        };
+        return managerMap[node.type] ? managerMap[node.type]() : '#FF9C01';
       },
 
       resetPagination () {
@@ -864,6 +886,10 @@
 
     .iamcenter-level-two-manage-space {
         color: #9B80FE;
+    }
+
+    .iamcenter-guanlikongjian-3 {
+      color: #3A84FF;
     }
 }
 </style>
