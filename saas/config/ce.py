@@ -30,8 +30,10 @@ DATABASES = {
         "PORT": env.int("MYSQL_PORT"),
         "OPTIONS": {
             'ssl': {
-                'ca': env.str("CERTIFICATE_PATH", '/etc/mysql/ssl/ca.pem'),
-                'ssl_mode': 'REQUIRED'
+                'ca': env.str("MYSQL_SSL_CA_CERTS"),
+                'ssl_mode': 'REQUIRED',
+                'cert': env.str("MYSQL_SSL_CERT") if env.str("MYSQL_SSL_CERT") else None,
+                'key': env.str("MYSQL_SSL_KEY") if env.str("MYSQL_SSL_KEY") else None,
             } if env.bool("MYSQL_USE_SSL", True) else {}
         } if env.bool("MYSQL_USE_SSL", True) else {},
     },
@@ -44,8 +46,10 @@ DATABASES = {
         "PORT": env.int("AUDIT_DB_PORT", default=env.int("MYSQL_PORT")),
         "OPTIONS": {
             'ssl': {
-                'ca': env.str("CERTIFICATE_PATH", '/etc/mysql/ssl/ca.pem'),
-                'ssl_mode': 'REQUIRED'
+                'ca': env.str("MYSQL_SSL_CA_CERTS"),
+                'ssl_mode': 'REQUIRED',
+                'cert': env.str("MYSQL_SSL_CERT") if env.str("MYSQL_SSL_CERT") else None,
+                'key': env.str("MYSQL_SSL_KEY") if env.str("MYSQL_SSL_KEY") else None,
             } if env.bool("MYSQL_USE_SSL", True) else {}
         } if env.bool("MYSQL_USE_SSL", True) else {},
     },
@@ -68,7 +72,7 @@ REDIS_PASSWORD = env.str("REDIS_PASSWORD", "")
 REDIS_MAX_CONNECTIONS = env.int("REDIS_MAX_CONNECTIONS", 100)
 REDIS_DB = env.int("REDIS_DB", 0)
 REDIS_USE_TLS = env.bool("REDIS_USE_TLS", True)  # 默认启用TLS
-REDIS_SSL_CA_CERTS = env.str("REDIS_SSL_CA_CERTS", "/etc/redis/tls/ca.crt")
+REDIS_SSL_CA_CERTS = env.str("REDIS_SSL_CA_CERTS")
 # sentinel check
 REDIS_USE_SENTINEL = env.bool("REDIS_USE_SENTINEL", False)
 REDIS_SENTINEL_MASTER_NAME = env.str("REDIS_SENTINEL_MASTER_NAME", "mymaster")
@@ -207,7 +211,9 @@ else:
                     "max_connections": REDIS_MAX_CONNECTIONS,
                     'ssl_ca_certs': REDIS_SSL_CA_CERTS,
                     'ssl_cert_reqs':'required',
-                    'ssl_validate_ocsp':False
+                    'ssl_validate_ocsp':False,
+                    'ssl_certfile': env.str("REDIS_SSL_CERT") if env.str("REDIS_SSL_CERT") else None,
+                    'ssl_keyfile': env.str("REDIS_SSL_KEY") if env.str("REDIS_SSL_KEY") else None,
                 },
             },
         },
@@ -245,6 +251,8 @@ else:
                     'ssl': True,
                     'ssl_ca_certs': REDIS_SSL_CA_CERTS,
                     'ssl_cert_reqs': 'required',
+                    'ssl_certfile': env.str("REDIS_SSL_CERT") if env.str("REDIS_SSL_CERT") else None,
+                    'ssl_keyfile': env.str("REDIS_SSL_KEY") if env.str("REDIS_SSL_KEY") else None,
                 },
                 # You can still override the connection pool (optional).
                 "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
@@ -255,6 +263,8 @@ else:
                     'ssl': True,
                     'ssl_ca_certs': REDIS_SSL_CA_CERTS,
                     'ssl_cert_reqs': 'required',
+                    'ssl_certfile': env.str("REDIS_SSL_CERT") if env.str("REDIS_SSL_CERT") else None,
+                    'ssl_keyfile': env.str("REDIS_SSL_KEY") if env.str("REDIS_SSL_KEY") else None,
                 },
             },
         }

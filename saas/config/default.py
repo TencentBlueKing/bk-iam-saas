@@ -316,22 +316,31 @@ if "RABBITMQ_HOST" in env:
         vhost=env.str("RABBITMQ_VHOST"),
     )
 else:
-    RABBITMQ_SSL_CA = env.str('RABBITMQ_SSL_CA')
+    RABBITMQ_SSL_CA_CERTS = env.str('RABBITMQ_SSL_CA_CERTS')
     BROKER_URL = env.str("BROKER_URL")
+    RABBITMQ_SSL_CERT = env.str("RABBITMQ_SSL_CERT")
+    RABBITMQ_SSL_KEY = env.str("RABBITMQ_SSL_KEY")
     # 根据 URL 协议判断是否使用 SSL
     if BROKER_URL.startswith('amqps://'):
         # TLS/SSL 配置
-        ssl_context = ssl.create_default_context(cafile=RABBITMQ_SSL_CA)
+        ssl_context = ssl.create_default_context(cafile=RABBITMQ_SSL_CA_CERTS)
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
-
-        BROKER_USE_SSL = {
-            'ca_certs': RABBITMQ_SSL_CA,
-            'cert_reqs': ssl.CERT_NONE,
-        }
+        if RABBITMQ_SSL_CERT and RABBITMQ_SSL_KEY:
+            ssl_context.load_cert_chain(certfile=RABBITMQ_SSL_CERT, keyfile=RABBITMQ_SSL_KEY)
+            BROKER_USE_SSL = {
+                'ca_certs': RABBITMQ_SSL_CA_CERTS,
+                'certfile': RABBITMQ_SSL_CERT,
+                'keyfile': RABBITMQ_SSL_KEY,
+                'cert_reqs': ssl.CERT_REQUIRED,
+            }
+        else:
+            BROKER_USE_SSL = {
+                'ca_certs': RABBITMQ_SSL_CA_CERTS,
+                'cert_reqs': ssl.CERT_NONE,
+            }
     else:
         BROKER_USE_SSL = None
-
 broker_use_ssl = BROKER_USE_SSL
 # tracing: sentry support
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
