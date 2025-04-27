@@ -785,7 +785,6 @@
       },
 
       formatColor (node) {
-        console.log(node);
         const managerMap = {
           system_manager: () => {
             return '#3A84FF';
