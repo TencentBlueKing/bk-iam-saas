@@ -28,7 +28,7 @@ DATABASES = {
         "PASSWORD": env.str("MYSQL_PASSWORD"),
         "HOST": env.str("MYSQL_HOST"),
         "PORT": env.int("MYSQL_PORT"),
-        "OPTIONS": {}
+        "OPTIONS": {},
     },
     "audit": {
         "ENGINE": "django.db.backends.mysql",
@@ -37,7 +37,7 @@ DATABASES = {
         "PASSWORD": env.str("AUDIT_DB_PASSWORD", default=env.str("MYSQL_PASSWORD")),
         "HOST": env.str("AUDIT_DB_HOST", default=env.str("MYSQL_HOST")),
         "PORT": env.int("AUDIT_DB_PORT", default=env.int("MYSQL_PORT")),
-        "OPTIONS": {}
+        "OPTIONS": {},
     },
 }
 MYSQL_USE_SSL = env.bool("MYSQL_USE_SSL", False)
@@ -70,7 +70,7 @@ REDIS_PASSWORD = env.str("REDIS_PASSWORD", "")
 REDIS_MAX_CONNECTIONS = env.int("REDIS_MAX_CONNECTIONS", 100)
 REDIS_DB = env.int("REDIS_DB", 0)
 REDIS_USE_TLS = env.bool("REDIS_USE_TLS", False)  # 是否使用ssl
-REDIS_SSL_CA_CERTS = env.str("REDIS_SSL_CA_CERTS")
+REDIS_SSL_CA_CERTS = env.str("REDIS_SSL_CA_CERTS", default="")
 # sentinel check
 REDIS_USE_SENTINEL = env.bool("REDIS_USE_SENTINEL", False)
 REDIS_SENTINEL_MASTER_NAME = env.str("REDIS_SENTINEL_MASTER_NAME", "mymaster")
@@ -127,16 +127,13 @@ CACHES = {
 }
 if REDIS_USE_TLS:
     ssl_config = {
-        'ssl_ca_certs': REDIS_SSL_CA_CERTS,  # 统一改为小写
-        'ssl_cert_reqs': 'required',          # 统一改为小写
+        "ssl_ca_certs": REDIS_SSL_CA_CERTS,
+        "ssl_cert_reqs": "required",
     }
     REDIS_SSL_CERT = env.str("REDIS_SSL_CERT", default="")
     REDIS_SSL_KEY = env.str("REDIS_SSL_KEY", default="")
     if REDIS_SSL_CERT and REDIS_SSL_KEY:
-        ssl_config.update({
-            'ssl_certfile': REDIS_SSL_CERT,  # 统一改为小写
-            'ssl_keyfile': REDIS_SSL_KEY     # 统一改为小写
-        })
+        ssl_config.update({"ssl_certfile": REDIS_SSL_CERT, "ssl_keyfile": REDIS_SSL_KEY})  # 统一改为小写  # 统一改为小写
     CACHES["redis"]["OPTIONS"].update(ssl_config)
 
 # redis sentinel
@@ -179,16 +176,14 @@ if REDIS_USE_SENTINEL:
         },
     }
     if REDIS_USE_TLS:
-        sentinel_ssl = {
-            'ssl': True,
-            'ssl_ca_certs': REDIS_SSL_CA_CERTS,
-            'ssl_cert_reqs': 'required'
-        }
-        if 'ssl_certfile' in ssl_config:
-            sentinel_ssl.update({
-                'ssl_certfile': ssl_config['ssl_certfile'],
-                'ssl_keyfile': ssl_config['ssl_keyfile'],
-            })
+        sentinel_ssl = {"ssl": True, "ssl_ca_certs": REDIS_SSL_CA_CERTS, "ssl_cert_reqs": "required"}
+        if "ssl_certfile" in ssl_config:
+            sentinel_ssl.update(
+                {
+                    "ssl_certfile": ssl_config["ssl_certfile"],
+                    "ssl_keyfile": ssl_config["ssl_keyfile"],
+                }
+            )
         CACHES["redis"]["OPTIONS"].setdefault("SENTINEL_KWARGS", {}).update(sentinel_ssl)
         CACHES["redis"]["OPTIONS"].setdefault("CONNECTION_POOL_KWARGS", {}).update(sentinel_ssl)
 

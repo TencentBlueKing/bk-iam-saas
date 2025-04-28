@@ -10,10 +10,11 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import os
+import ssl
+
 import environ
 import pymysql
 from celery.schedules import crontab
-import ssl
 
 # connect mysql
 pymysql.install_as_MySQLdb()
@@ -316,11 +317,11 @@ if "RABBITMQ_HOST" in env:
         vhost=env.str("RABBITMQ_VHOST"),
     )
 else:
-    BROKER_URL = env.str("BROKER_URL")
+    BROKER_URL = env.str("BROKER_URL", default="")
     # 根据 URL 协议判断是否使用 SSL
-    if BROKER_URL.startswith('amqps://'):
+    if BROKER_URL.startswith("amqps://"):
         # TLS/SSL 配置
-        RABBITMQ_SSL_CA_CERTS = env.str('RABBITMQ_SSL_CA_CERTS')
+        RABBITMQ_SSL_CA_CERTS = env.str("RABBITMQ_SSL_CA_CERTS")
         ssl_context = ssl.create_default_context(cafile=RABBITMQ_SSL_CA_CERTS)
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
@@ -329,19 +330,18 @@ else:
         if RABBITMQ_SSL_CERT and RABBITMQ_SSL_KEY:
             ssl_context.load_cert_chain(certfile=RABBITMQ_SSL_CERT, keyfile=RABBITMQ_SSL_KEY)
             BROKER_USE_SSL = {
-                'ca_certs': RABBITMQ_SSL_CA_CERTS,
-                'certfile': RABBITMQ_SSL_CERT,
-                'keyfile': RABBITMQ_SSL_KEY,
-                'cert_reqs': ssl.CERT_REQUIRED,
+                "ca_certs": RABBITMQ_SSL_CA_CERTS,
+                "certfile": RABBITMQ_SSL_CERT,
+                "keyfile": RABBITMQ_SSL_KEY,
+                "cert_reqs": ssl.CERT_REQUIRED,
             }
         else:
             BROKER_USE_SSL = {
-                'ca_certs': RABBITMQ_SSL_CA_CERTS,
-                'cert_reqs': ssl.CERT_NONE,
+                "ca_certs": RABBITMQ_SSL_CA_CERTS,
+                "cert_reqs": ssl.CERT_NONE,
             }
     else:
         BROKER_USE_SSL = None
-broker_use_ssl = BROKER_USE_SSL
 # tracing: sentry support
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
 # tracing: otel 相关配置
