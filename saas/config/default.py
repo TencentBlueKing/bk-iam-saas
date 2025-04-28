@@ -316,16 +316,16 @@ if "RABBITMQ_HOST" in env:
         vhost=env.str("RABBITMQ_VHOST"),
     )
 else:
-    RABBITMQ_SSL_CA_CERTS = env.str('RABBITMQ_SSL_CA_CERTS')
     BROKER_URL = env.str("BROKER_URL")
-    RABBITMQ_SSL_CERT = env.str("RABBITMQ_SSL_CERT")
-    RABBITMQ_SSL_KEY = env.str("RABBITMQ_SSL_KEY")
     # 根据 URL 协议判断是否使用 SSL
     if BROKER_URL.startswith('amqps://'):
         # TLS/SSL 配置
+        RABBITMQ_SSL_CA_CERTS = env.str('RABBITMQ_SSL_CA_CERTS')
         ssl_context = ssl.create_default_context(cafile=RABBITMQ_SSL_CA_CERTS)
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
+        RABBITMQ_SSL_CERT = env.str("RABBITMQ_SSL_CERT")
+        RABBITMQ_SSL_KEY = env.str("RABBITMQ_SSL_KEY")
         if RABBITMQ_SSL_CERT and RABBITMQ_SSL_KEY:
             ssl_context.load_cert_chain(certfile=RABBITMQ_SSL_CERT, keyfile=RABBITMQ_SSL_KEY)
             BROKER_USE_SSL = {

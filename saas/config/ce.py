@@ -28,14 +28,7 @@ DATABASES = {
         "PASSWORD": env.str("MYSQL_PASSWORD"),
         "HOST": env.str("MYSQL_HOST"),
         "PORT": env.int("MYSQL_PORT"),
-        "OPTIONS": {
-            'ssl': {
-                'ca': env.str("MYSQL_SSL_CA_CERTS"),
-                'ssl_mode': 'REQUIRED',
-                'cert': env.str("MYSQL_SSL_CERT") if env.str("MYSQL_SSL_CERT") else None,
-                'key': env.str("MYSQL_SSL_KEY") if env.str("MYSQL_SSL_KEY") else None,
-            } if env.bool("MYSQL_USE_SSL", True) else {}
-        } if env.bool("MYSQL_USE_SSL", True) else {},
+        "OPTIONS": {}
     },
     "audit": {
         "ENGINE": "django.db.backends.mysql",
@@ -44,16 +37,21 @@ DATABASES = {
         "PASSWORD": env.str("AUDIT_DB_PASSWORD", default=env.str("MYSQL_PASSWORD")),
         "HOST": env.str("AUDIT_DB_HOST", default=env.str("MYSQL_HOST")),
         "PORT": env.int("AUDIT_DB_PORT", default=env.int("MYSQL_PORT")),
-        "OPTIONS": {
-            'ssl': {
-                'ca': env.str("MYSQL_SSL_CA_CERTS"),
-                'ssl_mode': 'REQUIRED',
-                'cert': env.str("MYSQL_SSL_CERT") if env.str("MYSQL_SSL_CERT") else None,
-                'key': env.str("MYSQL_SSL_KEY") if env.str("MYSQL_SSL_KEY") else None,
-            } if env.bool("MYSQL_USE_SSL", True) else {}
-        } if env.bool("MYSQL_USE_SSL", True) else {},
+        "OPTIONS": {}
     },
 }
+MYSQL_USE_SSL = env.bool("MYSQL_USE_SSL", False)
+if MYSQL_USE_SSL:
+    default_ssl_options = {
+        "ca": env.str("MYSQL_SSL_CA_CERTS"),
+    }
+    MYSQL_SSL_CERT = env.str("MYSQL_SSL_CERT", default="")
+    MYSQL_SSL_KEY = env.str("MYSQL_SSL_KEY", default="")
+    if MYSQL_SSL_CERT and MYSQL_SSL_KEY:
+        default_ssl_options["cert"] = MYSQL_SSL_CERT
+        default_ssl_options["key"] = MYSQL_SSL_KEY
+    for db in DATABASES.values():
+        db["OPTIONS"]["ssl"] = default_ssl_options
 
 if env.str("BKCI_DB_NAME", default="") and env.str("BKCI_DB_USERNAME", default=""):
     DATABASES["bkci"] = {
@@ -71,7 +69,7 @@ REDIS_PORT = env.int("REDIS_PORT", 6379)
 REDIS_PASSWORD = env.str("REDIS_PASSWORD", "")
 REDIS_MAX_CONNECTIONS = env.int("REDIS_MAX_CONNECTIONS", 100)
 REDIS_DB = env.int("REDIS_DB", 0)
-REDIS_USE_TLS = env.bool("REDIS_USE_TLS", True)  # 默认启用TLS
+REDIS_USE_TLS = env.bool("REDIS_USE_TLS", False)  # 是否使用ssl
 REDIS_SSL_CA_CERTS = env.str("REDIS_SSL_CA_CERTS")
 # sentinel check
 REDIS_USE_SENTINEL = env.bool("REDIS_USE_SENTINEL", False)
@@ -85,189 +83,114 @@ try:
 except Exception as e:  # pylint: disable=broad-except
     print(f"REDIS_SENTINEL_ADDR {REDIS_SENTINEL_ADDR_STR} is invalid: {e}")
 
-if not REDIS_USE_TLS:
-    # 非TLS连接配置（新增部分）
-    CACHES = {
-        # 默认缓存是本地内存，使用最近最少使用（LRU）的淘汰策略，使用pickle 序列化数据
-        "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "",  # 多个本地内存缓存时才需要设置
-            "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
-            "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
-            # "VERSION": 1,  # 用于避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的，由于内存缓存每次部署都会重置，所以不需要设置
-            # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
-            # 内存缓存特有参数
-            "OPTIONS": {
-                "MAX_ENTRIES": 1000,  # 支持缓存的key最多数量，越大将会占用更多内存
-                "CULL_FREQUENCY": 3,  # 当达到 MAX_ENTRIES 时被淘汰的部分条目，淘汰率是 1 / CULL_FREQUENCY，默认淘汰 1/3的缓存key
+CACHES = {
+    # 默认缓存是本地内存，使用最近最少使用（LRU）的淘汰策略，使用pickle 序列化数据
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "",  # 多个本地内存缓存时才需要设置
+        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
+        "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
+        # "VERSION": 1,  # 用于避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的，由于内存缓存每次部署都会重置，所以不需要设置
+        # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
+        # 内存缓存特有参数
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000,  # 支持缓存的key最多数量，越大将会占用更多内存
+            "CULL_FREQUENCY": 3,  # 当达到 MAX_ENTRIES 时被淘汰的部分条目，淘汰率是 1 / CULL_FREQUENCY，默认淘汰 1/3的缓存key
+        },
+    },
+    "redis": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        # 若需要支持主从配置，则LOCATION为List[master_url, slave_url]
+        "LOCATION": f"redis{'s' if REDIS_USE_TLS else ''}://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
+        "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
+        "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
+        # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
+        "OPTIONS": {
+            # Sentinel模式 django_redis.client.SentinelClient (django-redis>=5.0.0)
+            # 集群模式 django_redis.client.HerdClient
+            # 单实例模式 django_redis.client.DefaultClient
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",  # 根据redis是单机还是集群模式, 修改Client class
+            "PASSWORD": REDIS_PASSWORD,
+            "SOCKET_CONNECT_TIMEOUT": 5,  # socket 建立连接超时设置，单位秒
+            "SOCKET_TIMEOUT": 5,  # 连接建立后的读写操作超时设置，单位秒
+            "IGNORE_EXCEPTIONS": True,  # redis 只作为缓存使用, 触发异常不能影响正常逻辑，可能只是稍微慢点而已
+            # 默认使用pickle 序列化数据，可选序列化方式有：pickle、json、msgpack
+            # "SERIALIZER": "django_redis.serializers.pickle.PickleSerializer"
+            # Redis 连接池配置
+            "CONNECTION_POOL_KWARGS": {
+                # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
+                "max_connections": REDIS_MAX_CONNECTIONS
             },
         },
-        "redis": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            # 若需要支持主从配置，则LOCATION为List[master_url, slave_url]
-            "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
-            "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
-            "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
-            "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
-            # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
-            "OPTIONS": {
-                # Sentinel模式 django_redis.client.SentinelClient (django-redis>=5.0.0)
-                # 集群模式 django_redis.client.HerdClient
-                # 单实例模式 django_redis.client.DefaultClient
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",  # 根据redis是单机还是集群模式, 修改Client class
-                "PASSWORD": REDIS_PASSWORD,
-                "SOCKET_CONNECT_TIMEOUT": 5,  # socket 建立连接超时设置，单位秒
-                "SOCKET_TIMEOUT": 5,  # 连接建立后的读写操作超时设置，单位秒
-                "IGNORE_EXCEPTIONS": True,  # redis 只作为缓存使用, 触发异常不能影响正常逻辑，可能只是稍微慢点而已
-                # 默认使用pickle 序列化数据，可选序列化方式有：pickle、json、msgpack
-                # "SERIALIZER": "django_redis.serializers.pickle.PickleSerializer"
-                # Redis 连接池配置
-                "CONNECTION_POOL_KWARGS": {
-                    # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
-                    "max_connections": REDIS_MAX_CONNECTIONS,
-                },
+    },
+}
+if REDIS_USE_TLS:
+    ssl_config = {
+        'ssl_ca_certs': REDIS_SSL_CA_CERTS,  # 统一改为小写
+        'ssl_cert_reqs': 'required',          # 统一改为小写
+    }
+    REDIS_SSL_CERT = env.str("REDIS_SSL_CERT", default="")
+    REDIS_SSL_KEY = env.str("REDIS_SSL_KEY", default="")
+    if REDIS_SSL_CERT and REDIS_SSL_KEY:
+        ssl_config.update({
+            'ssl_certfile': REDIS_SSL_CERT,  # 统一改为小写
+            'ssl_keyfile': REDIS_SSL_KEY     # 统一改为小写
+        })
+    CACHES["redis"]["OPTIONS"].update(ssl_config)
+
+# redis sentinel
+if REDIS_USE_SENTINEL:
+    # Enable the alternate connection factory.
+    DJANGO_REDIS_CONNECTION_FACTORY = "django_redis.pool.SentinelConnectionFactory"
+
+    CACHES["redis"] = {
+        "BACKEND": "django_redis.cache.RedisCache",
+        # The hostname in LOCATION is the primary (service / master) name
+        "LOCATION": f"redis{'s' if REDIS_USE_TLS else ''}://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
+        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
+        "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
+        "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
+        # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
+        "OPTIONS": {
+            # While the default client will work, this will check you
+            # have configured things correctly, and also create a
+            # primary and replica pool for the service specified by
+            # LOCATION rather than requiring two URLs.
+            "CLIENT_CLASS": "django_redis.client.SentinelClient",
+            "PASSWORD": REDIS_PASSWORD,
+            "SOCKET_CONNECT_TIMEOUT": 5,  # socket 建立连接超时设置，单位秒
+            "SOCKET_TIMEOUT": 5,  # 连接建立后的读写操作超时设置，单位秒
+            "IGNORE_EXCEPTIONS": True,  # redis 只作为缓存使用, 触发异常不能影响正常逻辑，可能只是稍微慢点而已
+            # Sentinels which are passed directly to redis Sentinel.
+            "SENTINELS": REDIS_SENTINEL_ADDR_LIST,
+            # kwargs for redis Sentinel (optional).
+            "SENTINEL_KWARGS": {
+                "password": REDIS_SENTINEL_PASSWORD,
+                "socket_timeout": 5,
+            },
+            # You can still override the connection pool (optional).
+            "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
+            # Redis 连接池配置
+            "CONNECTION_POOL_KWARGS": {
+                # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
+                "max_connections": REDIS_MAX_CONNECTIONS
             },
         },
     }
-
-    # redis sentinel (非TLS版本)
-    if REDIS_USE_SENTINEL:
-        # Enable the alternate connection factory.
-        DJANGO_REDIS_CONNECTION_FACTORY = "django_redis.pool.SentinelConnectionFactory"
-
-        CACHES["redis"] = {
-            "BACKEND": "django_redis.cache.RedisCache",
-            # The hostname in LOCATION is the primary (service / master) name
-            "LOCATION": f"redis://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
-            "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
-            "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
-            "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
-            # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
-            "OPTIONS": {
-                # While the default client will work, this will check you
-                # have configured things correctly, and also create a
-                # primary and replica pool for the service specified by
-                # LOCATION rather than requiring two URLs.
-                "CLIENT_CLASS": "django_redis.client.SentinelClient",
-                "PASSWORD": REDIS_PASSWORD,
-                "SOCKET_CONNECT_TIMEOUT": 5,  # socket 建立连接超时设置，单位秒
-                "SOCKET_TIMEOUT": 5,  # 连接建立后的读写操作超时设置，单位秒
-                "IGNORE_EXCEPTIONS": True,  # redis 只作为缓存使用, 触发异常不能影响正常逻辑，可能只是稍微慢点而已
-                # Sentinels which are passed directly to redis Sentinel.
-                "SENTINELS": REDIS_SENTINEL_ADDR_LIST,
-                # kwargs for redis Sentinel (optional).
-                "SENTINEL_KWARGS": {
-                    "password": REDIS_SENTINEL_PASSWORD,
-                    "socket_timeout": 5,
-                },
-                # You can still override the connection pool (optional).
-                "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
-                # Redis 连接池配置
-                "CONNECTION_POOL_KWARGS": {
-                    # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
-                    "max_connections": REDIS_MAX_CONNECTIONS,
-                },
-            },
+    if REDIS_USE_TLS:
+        sentinel_ssl = {
+            'ssl': True,
+            'ssl_ca_certs': REDIS_SSL_CA_CERTS,
+            'ssl_cert_reqs': 'required'
         }
-else:
-    # 原有TLS配置完全保持不变（包括所有注释）
-    CACHES = {
-        # 默认缓存是本地内存，使用最近最少使用（LRU）的淘汰策略，使用pickle 序列化数据
-        "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "",  # 多个本地内存缓存时才需要设置
-            "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
-            "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
-            # "VERSION": 1,  # 用于避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的，由于内存缓存每次部署都会重置，所以不需要设置
-            # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
-            # 内存缓存特有参数
-            "OPTIONS": {
-                "MAX_ENTRIES": 1000,  # 支持缓存的key最多数量，越大将会占用更多内存
-                "CULL_FREQUENCY": 3,  # 当达到 MAX_ENTRIES 时被淘汰的部分条目，淘汰率是 1 / CULL_FREQUENCY，默认淘汰 1/3的缓存key
-            },
-        },
-        "redis": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            # 若需要支持主从配置，则LOCATION为List[master_url, slave_url]
-            "LOCATION": f"rediss://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
-            "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
-            "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
-            "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
-            # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
-            "OPTIONS": {
-                # Sentinel模式 django_redis.client.SentinelClient (django-redis>=5.0.0)
-                # 集群模式 django_redis.client.HerdClient
-                # 单实例模式 django_redis.client.DefaultClient
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",  # 根据redis是单机还是集群模式, 修改Client class
-                "PASSWORD": REDIS_PASSWORD,
-                "SOCKET_CONNECT_TIMEOUT": 5,  # socket 建立连接超时设置，单位秒
-                "SOCKET_TIMEOUT": 5,  # 连接建立后的读写操作超时设置，单位秒
-                "IGNORE_EXCEPTIONS": True,  # redis 只作为缓存使用, 触发异常不能影响正常逻辑，可能只是稍微慢点而已
-                # 默认使用pickle 序列化数据，可选序列化方式有：pickle、json、msgpack
-                # "SERIALIZER": "django_redis.serializers.pickle.PickleSerializer"
-                # Redis 连接池配置
-                "CONNECTION_POOL_KWARGS": {
-                    # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
-                    "max_connections": REDIS_MAX_CONNECTIONS,
-                    'ssl_ca_certs': REDIS_SSL_CA_CERTS,
-                    'ssl_cert_reqs':'required',
-                    'ssl_validate_ocsp':False,
-                    'ssl_certfile': env.str("REDIS_SSL_CERT") if env.str("REDIS_SSL_CERT") else None,
-                    'ssl_keyfile': env.str("REDIS_SSL_KEY") if env.str("REDIS_SSL_KEY") else None,
-                },
-            },
-        },
-    }
-
-    # redis sentinel (原有TLS配置保持不变)
-    if REDIS_USE_SENTINEL:
-        # Enable the alternate connection factory.
-        DJANGO_REDIS_CONNECTION_FACTORY = "django_redis.pool.SentinelConnectionFactory"
-
-        CACHES["redis"] = {
-            "BACKEND": "django_redis.cache.RedisCache",
-            # The hostname in LOCATION is the primary (service / master) name
-            "LOCATION": f"rediss://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
-            "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
-            "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
-            "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
-            # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
-            "OPTIONS": {
-                # While the default client will work, this will check you
-                # have configured things correctly, and also create a
-                # primary and replica pool for the service specified by
-                # LOCATION rather than requiring two URLs.
-                "CLIENT_CLASS": "django_redis.client.SentinelClient",
-                "PASSWORD": REDIS_PASSWORD,
-                "SOCKET_CONNECT_TIMEOUT": 5,  # socket 建立连接超时设置，单位秒
-                "SOCKET_TIMEOUT": 5,  # 连接建立后的读写操作超时设置，单位秒
-                "IGNORE_EXCEPTIONS": True,  # redis 只作为缓存使用, 触发异常不能影响正常逻辑，可能只是稍微慢点而已
-                # Sentinels which are passed directly to redis Sentinel.
-                "SENTINELS": REDIS_SENTINEL_ADDR_LIST,
-                # kwargs for redis Sentinel (optional).
-                "SENTINEL_KWARGS": {
-                    "password": REDIS_SENTINEL_PASSWORD,
-                    "socket_timeout": 5,
-                    'ssl': True,
-                    'ssl_ca_certs': REDIS_SSL_CA_CERTS,
-                    'ssl_cert_reqs': 'required',
-                    'ssl_certfile': env.str("REDIS_SSL_CERT") if env.str("REDIS_SSL_CERT") else None,
-                    'ssl_keyfile': env.str("REDIS_SSL_KEY") if env.str("REDIS_SSL_KEY") else None,
-                },
-                # You can still override the connection pool (optional).
-                "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
-                # Redis 连接池配置
-                "CONNECTION_POOL_KWARGS": {
-                    # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
-                    "max_connections": REDIS_MAX_CONNECTIONS,
-                    'ssl': True,
-                    'ssl_ca_certs': REDIS_SSL_CA_CERTS,
-                    'ssl_cert_reqs': 'required',
-                    'ssl_certfile': env.str("REDIS_SSL_CERT") if env.str("REDIS_SSL_CERT") else None,
-                    'ssl_keyfile': env.str("REDIS_SSL_KEY") if env.str("REDIS_SSL_KEY") else None,
-                },
-            },
-        }
+        if 'ssl_certfile' in ssl_config:
+            sentinel_ssl.update({
+                'ssl_certfile': ssl_config['ssl_certfile'],
+                'ssl_keyfile': ssl_config['ssl_keyfile'],
+            })
+        CACHES["redis"]["OPTIONS"].setdefault("SENTINEL_KWARGS", {}).update(sentinel_ssl)
+        CACHES["redis"]["OPTIONS"].setdefault("CONNECTION_POOL_KWARGS", {}).update(sentinel_ssl)
 
     # celery broker
     # https://docs.celeryq.dev/en/v4.3.0/history/whatsnew-4.0.html?highlight=sentinel#redis-support-for-sentinel
@@ -285,7 +208,6 @@ else:
 
 # 当Redis Cache 使用IGNORE_EXCEPTIONS时，设置指定的 logger 输出异常
 DJANGO_REDIS_LOGGER = "app"
-
 
 # 判断是否为本地开发环境
 IS_LOCAL = not env.str("BKPAAS_ENVIRONMENT", default="")
