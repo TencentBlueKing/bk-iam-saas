@@ -28,6 +28,7 @@ DATABASES = {
         "PASSWORD": env.str("MYSQL_PASSWORD"),
         "HOST": env.str("MYSQL_HOST"),
         "PORT": env.int("MYSQL_PORT"),
+        "OPTIONS": {},
     },
     "audit": {
         "ENGINE": "django.db.backends.mysql",
@@ -36,8 +37,21 @@ DATABASES = {
         "PASSWORD": env.str("AUDIT_DB_PASSWORD", default=env.str("MYSQL_PASSWORD")),
         "HOST": env.str("AUDIT_DB_HOST", default=env.str("MYSQL_HOST")),
         "PORT": env.int("AUDIT_DB_PORT", default=env.int("MYSQL_PORT")),
+        "OPTIONS": {},
     },
 }
+MYSQL_USE_SSL = env.bool("MYSQL_USE_SSL", False)
+if MYSQL_USE_SSL:
+    default_ssl_options = {
+        "ca": env.str("MYSQL_SSL_CA_CERTS"),
+    }
+    MYSQL_SSL_CERT = env.str("MYSQL_SSL_CERT", default="")
+    MYSQL_SSL_KEY = env.str("MYSQL_SSL_KEY", default="")
+    if MYSQL_SSL_CERT and MYSQL_SSL_KEY:
+        default_ssl_options["cert"] = MYSQL_SSL_CERT
+        default_ssl_options["key"] = MYSQL_SSL_KEY
+    for db in DATABASES.values():
+        db["OPTIONS"]["ssl"] = default_ssl_options
 
 if env.str("BKCI_DB_NAME", default="") and env.str("BKCI_DB_USERNAME", default=""):
     DATABASES["bkci"] = {
@@ -55,6 +69,8 @@ REDIS_PORT = env.int("REDIS_PORT", 6379)
 REDIS_PASSWORD = env.str("REDIS_PASSWORD", "")
 REDIS_MAX_CONNECTIONS = env.int("REDIS_MAX_CONNECTIONS", 100)
 REDIS_DB = env.int("REDIS_DB", 0)
+REDIS_USE_TLS = env.bool("REDIS_USE_TLS", False)  # 是否使用ssl
+REDIS_SSL_CA_CERTS = env.str("REDIS_SSL_CA_CERTS", default="")
 # sentinel check
 REDIS_USE_SENTINEL = env.bool("REDIS_USE_SENTINEL", False)
 REDIS_SENTINEL_MASTER_NAME = env.str("REDIS_SENTINEL_MASTER_NAME", "mymaster")
@@ -85,7 +101,7 @@ CACHES = {
     "redis": {
         "BACKEND": "django_redis.cache.RedisCache",
         # 若需要支持主从配置，则LOCATION为List[master_url, slave_url]
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+        "LOCATION": f"redis{'s' if REDIS_USE_TLS else ''}://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
         "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
         "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
@@ -109,6 +125,16 @@ CACHES = {
         },
     },
 }
+if REDIS_USE_TLS:
+    ssl_config = {
+        "ssl_ca_certs": REDIS_SSL_CA_CERTS,
+        "ssl_cert_reqs": "required",
+    }
+    REDIS_SSL_CERT = env.str("REDIS_SSL_CERT", default="")
+    REDIS_SSL_KEY = env.str("REDIS_SSL_KEY", default="")
+    if REDIS_SSL_CERT and REDIS_SSL_KEY:
+        ssl_config.update({"ssl_certfile": REDIS_SSL_CERT, "ssl_keyfile": REDIS_SSL_KEY})  # 统一改为小写  # 统一改为小写
+    CACHES["redis"]["OPTIONS"].update(ssl_config)
 
 # redis sentinel
 if REDIS_USE_SENTINEL:
@@ -118,7 +144,7 @@ if REDIS_USE_SENTINEL:
     CACHES["redis"] = {
         "BACKEND": "django_redis.cache.RedisCache",
         # The hostname in LOCATION is the primary (service / master) name
-        "LOCATION": f"redis://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
+        "LOCATION": f"redis{'s' if REDIS_USE_TLS else ''}://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
         "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
         "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
@@ -149,6 +175,17 @@ if REDIS_USE_SENTINEL:
             },
         },
     }
+    if REDIS_USE_TLS:
+        sentinel_ssl = {"ssl": True, "ssl_ca_certs": REDIS_SSL_CA_CERTS, "ssl_cert_reqs": "required"}
+        if "ssl_certfile" in ssl_config:
+            sentinel_ssl.update(
+                {
+                    "ssl_certfile": ssl_config["ssl_certfile"],
+                    "ssl_keyfile": ssl_config["ssl_keyfile"],
+                }
+            )
+        CACHES["redis"]["OPTIONS"].setdefault("SENTINEL_KWARGS", {}).update(sentinel_ssl)
+        CACHES["redis"]["OPTIONS"].setdefault("CONNECTION_POOL_KWARGS", {}).update(sentinel_ssl)
 
     # celery broker
     # https://docs.celeryq.dev/en/v4.3.0/history/whatsnew-4.0.html?highlight=sentinel#redis-support-for-sentinel
@@ -166,7 +203,6 @@ if REDIS_USE_SENTINEL:
 
 # 当Redis Cache 使用IGNORE_EXCEPTIONS时，设置指定的 logger 输出异常
 DJANGO_REDIS_LOGGER = "app"
-
 
 # 判断是否为本地开发环境
 IS_LOCAL = not env.str("BKPAAS_ENVIRONMENT", default="")

@@ -10,6 +10,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import os
+import ssl
 
 import environ
 import pymysql
@@ -316,8 +317,31 @@ if "RABBITMQ_HOST" in env:
         vhost=env.str("RABBITMQ_VHOST"),
     )
 else:
-    BROKER_URL = env.str("BK_BROKER_URL", default="")
-
+    BROKER_URL = env.str("BROKER_URL", default="")
+    # 根据 URL 协议判断是否使用 SSL
+    if BROKER_URL.startswith("amqps://"):
+        # TLS/SSL 配置
+        RABBITMQ_SSL_CA_CERTS = env.str("RABBITMQ_SSL_CA_CERTS")
+        ssl_context = ssl.create_default_context(cafile=RABBITMQ_SSL_CA_CERTS)
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        RABBITMQ_SSL_CERT = env.str("RABBITMQ_SSL_CERT")
+        RABBITMQ_SSL_KEY = env.str("RABBITMQ_SSL_KEY")
+        if RABBITMQ_SSL_CERT and RABBITMQ_SSL_KEY:
+            ssl_context.load_cert_chain(certfile=RABBITMQ_SSL_CERT, keyfile=RABBITMQ_SSL_KEY)
+            BROKER_USE_SSL = {
+                "ca_certs": RABBITMQ_SSL_CA_CERTS,
+                "certfile": RABBITMQ_SSL_CERT,
+                "keyfile": RABBITMQ_SSL_KEY,
+                "cert_reqs": ssl.CERT_REQUIRED,
+            }
+        else:
+            BROKER_USE_SSL = {
+                "ca_certs": RABBITMQ_SSL_CA_CERTS,
+                "cert_reqs": ssl.CERT_NONE,
+            }
+    else:
+        BROKER_USE_SSL = None
 # tracing: sentry support
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
 # tracing: otel 相关配置
@@ -339,7 +363,6 @@ MAX_DEBUG_TRACE_COUNT = 1000
 # profile record
 ENABLE_PYINSTRUMENT = env.bool("BKAPP_ENABLE_PYINSTRUMENT", default=False)  # 需要开启时则配置环境变量
 PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
-
 
 # ---------------
 # app 自定义配置
@@ -447,7 +470,6 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 # disable display systems
 HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=["bk_iam", "bk_ci_rbac"])
 
-
 # role resource relation type 用于自定期权限申请的权限审批
 ROLE_RESOURCE_RELATION_TYPE = [
     {"system_id": "bk_cmdb", "type": "biz"},
@@ -460,7 +482,6 @@ ROLE_RESOURCE_RELATION_TYPE = [
 
 ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
 
-
 # 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置
 BK_IAM_SYSTEM_ID = "bk_iam"
 if BK_IAM_HOST_TYPE == "direct":
@@ -472,18 +493,14 @@ elif BK_IAM_HOST_TYPE == "apigateway":
 BK_IAM_MIGRATION_APP_NAME = "iam"
 BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 
-
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
-
 
 # BCS初始化ROLE网关api配置
 BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
 
-
 # BK BOT approval审批机器人通知
 BK_BOT_APPROVAL_APIGW_URL = env.str("BK_BOT_APPROVAL_APIGW_URL", default="")
-
 
 # BK BOT approval审批机器人通知
 BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL", default="")
@@ -493,7 +510,6 @@ BK_NOTIFICATION_EXEMPTION_USERS = env.list("BK_NOTIFICATION_EXEMPTION_USERS", de
 
 # 文档地址
 BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/")
-
 
 # 全局配置地址
 BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")
