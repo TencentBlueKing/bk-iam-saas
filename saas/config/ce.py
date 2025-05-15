@@ -81,7 +81,7 @@ if AUDIT_DB_TLS_ENABLED:
         ssl_options["cert"] = AUDIT_DB_TLS_CERT_FILE
         ssl_options["key"] = AUDIT_DB_TLS_CERT_KEY_FILE
 
-    if "OPTIONS" not in DATABASES["default"]:
+    if "OPTIONS" not in DATABASES["audit"]:
         DATABASES["audit"]["OPTIONS"] = {}
 
     DATABASES["audit"]["OPTIONS"]["ssl"] = ssl_options
