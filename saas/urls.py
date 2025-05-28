@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -18,7 +18,6 @@ from rest_framework import permissions
 
 # Monkey Patch: rest_framework.serializers.Serializer
 import backend.util.serializer_patch  # noqa
-from backend.common.views import login_exempt
 from backend.common.vue import LoginSuccessView, VueTemplateView
 
 schema_view = get_schema_view(
@@ -91,5 +90,5 @@ if settings.IS_LOCAL or settings.ENABLE_SWAGGER:
 # static file
 urlpatterns += [
     url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-    url(r"^.*$", never_cache(login_exempt(VueTemplateView.as_view()))),
+    url(r"^.*$", never_cache(VueTemplateView.as_view())),
 ]
