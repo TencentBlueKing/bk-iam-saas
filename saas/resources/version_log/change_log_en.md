@@ -1,3 +1,22 @@
+<!-- 2025-05-28 -->
+# V1.10.44 Version Update Log
+
+### Fixes
+* Fixed an issue where login authentication was executed after role identity authentication, potentially leading to security issues if the role identity session was leaked.
+
+---
+
+<!-- 2025-05-15 -->
+# V1.10.43 Version Update Log
+
+### Features
+* Added support for TLS encrypted connection configurations for MySQL, Redis, RabbitMQ, and other components.
+* Revised user group module interaction in the permission template editing to address the issue of being unable to fully submit user groups in the previous version.
+* Introduced debounce search for attribute condition search across the platform to address continuous triggering of searchLoading in the component library.
+* Differentiated the display format for system administrators and other types of administrators.
+
+---
+
 <!-- 2025-04-17 -->
 # V1.10.42 Version Update Log
 
