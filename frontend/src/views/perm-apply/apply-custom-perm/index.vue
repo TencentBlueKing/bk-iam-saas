@@ -655,6 +655,7 @@
   import { guid, formatCodeData } from '@/common/util';
   import { PERMANENT_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
   import { bus } from '@/common/bus';
+  import { buildURLParams } from '@/common/url';
   import RenderActionTag from '@/components/common-action';
   import ResourceInstanceTable from '../components/resource-instance-table';
   import Policy from '@/model/policy';
@@ -2710,6 +2711,9 @@
             this.isShowUserGroup = false;
           }
         };
+        window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
+          tab_key: key
+        }))}`);
         return tabMap[key]();
       },
 
