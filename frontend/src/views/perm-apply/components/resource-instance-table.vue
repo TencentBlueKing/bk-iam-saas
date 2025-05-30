@@ -25,7 +25,6 @@
           <div v-else
             :class="[
               'action-name-cell',
-              { 'action-name-empty': row.isEmpty },
               { 'recommend-action-name-empty': isNoPermPage }
             ]"
           >
