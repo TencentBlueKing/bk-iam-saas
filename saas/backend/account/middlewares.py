@@ -60,7 +60,7 @@ class LoginMiddleware:
             return False
 
         exempt_paths = ["/api/v1/open/", "/api/v1/iam/"]
-        if any([p in request.path for p in exempt_paths]):
+        if any(p in request.path for p in exempt_paths):
             return False
 
         return True
