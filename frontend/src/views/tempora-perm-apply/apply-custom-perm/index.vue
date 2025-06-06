@@ -358,6 +358,7 @@
           tipType: 'search'
         },
         isShowConfirmDialog: false,
+        isAllUnlimited: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
       };
     },
@@ -1162,6 +1163,51 @@
       handleAggregateActionChange (payload) {
         this.getFilterAggregateAction();
         this.handleAggregateAction(payload);
+        // 扩展无限制、无实例下聚合操作和单操作去重场景
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
+      },
+
+      handleUnlimitedActionChange (payload) {
+        const tableData = _.cloneDeep(this.tableData);
+        tableData.forEach((item, index) => {
+          if (!item.isAggregate) {
+            if (item.resource_groups && item.resource_groups.length) {
+              item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                  if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
+                    return;
+                  }
+                  types.condition = payload ? [] : ['none'];
+                  if (payload) {
+                    types.isError = false;
+                  }
+                });
+              });
+            } else {
+              item.name = item.name.split('，')[0];
+            }
+          }
+          if (item.instances && item.isAggregate) {
+            item.isNoLimited = false;
+            item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+            item.isNeedNoLimited = true;
+            if (!payload || item.instances.length) {
+              item.isNoLimited = false;
+              item.isError = false;
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item.isNoLimited = true;
+              item.isError = false;
+              item.instances = [];
+            }
+            return this.$set(
+              tableData,
+              index,
+              new AggregationPolicy(item)
+            );
+          }
+        });
+        this.tableData = _.cloneDeep(tableData);
       },
 
       handleRelatedChange (payload) {
