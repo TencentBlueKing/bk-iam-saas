@@ -1682,6 +1682,6 @@
   };
 </script>
 
-<style>
+<style scoped>
   @import './resource-instance-table.css';
 </style>
