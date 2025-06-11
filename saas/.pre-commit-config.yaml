@@ -57,7 +57,7 @@ repos:
       - id: poetry-export-dev
         name: poetry-export-dev
         description: run poetry export to sync lock file with requirements_dev.txt
-        entry: bash -c "cd saas && poetry export --dev -f requirements.txt --output requirements_dev.txt --without-hashes"
+        entry: bash -c "cd saas && poetry export --only=main,dev -f requirements.txt --output requirements_dev.txt --without-hashes"
         language: python
         language_version: python3
         pass_filenames: false
