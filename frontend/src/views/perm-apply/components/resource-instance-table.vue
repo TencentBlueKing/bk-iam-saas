@@ -10,7 +10,7 @@
       :cell-class-name="getCellClass"
       @select="handlerChange"
       @select-all="handlerAllChange">
-      <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
+      <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="50"></bk-table-column>
       <bk-table-column v-if="hasSystem && systemId" :resizable="false" :label="$t(`m.common['系统']`)">
         <span>
           {{ formatSystemLabel }}
@@ -776,7 +776,6 @@
       },
 
       handlerAggregateOnBatchPaste (payload, index) {
-        console.log(666, this.curCopyMode, this.curCopyData, payload, index);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -1453,7 +1452,6 @@
                     item.isNeedNoLimited = true;
                     this.$set(item, 'isNoLimited', false);
                     item.isError = false;
-                    console.log(556656, item);
                   }
                 });
                 this.$emit('on-select', item);
@@ -1506,7 +1504,6 @@
                 groupItem.related_resource_types
                   && groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
                     if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                      console.log(tempCurData);
                       subItem.condition = _.cloneDeep(tempCurData);
                       subItem.isError = false;
                     }
@@ -1827,13 +1824,9 @@
       handleResourceEffectTimeSubmit () {
         const environments = this.$refs.sidesliderRef.handleGetValue();
         if (!environments) return;
-        console.log(this.curIndex, this.curGroupIndex);
 
         const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex];
         resItem.environments = environments;
-        console.log(resItem);
-        console.log(environments);
-        console.log(this.tableList);
 
         window.changeAlert = false;
         this.resourceInstanceEffectTimeTitle = '';
