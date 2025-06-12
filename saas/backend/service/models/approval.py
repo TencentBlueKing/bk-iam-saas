@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List
 
 from pydantic import BaseModel
@@ -52,10 +53,7 @@ class ApprovalProcessNode(BaseModel):
             return True
 
         # 查看是否申请类型支持的节点处理者类型
-        if self.processor_type not in APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP[application_type]:
-            return False
-
-        return True
+        return self.processor_type in APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP[application_type]
 
     def is_iam_source(self) -> bool:
         return self.processor_source == ProcessorSource.IAM.value
@@ -69,10 +67,7 @@ class ApprovalProcessWithNode(ApprovalProcess):
     def is_match_application_type(self, application_type: ApplicationType) -> bool:
         """判断流程与审批类型是否匹配"""
         # 检查所有节点是否都支持当前的申请类型，只要有一个节点不支持，则表示整个流程都不能匹配该申请类型
-        for node in self.nodes:
-            if not node.is_application_type_supported(application_type):
-                return False
-        return True
+        return all(node.is_application_type_supported(application_type) for node in self.nodes)
 
 
 class DefaultApprovalProcess(BaseModel):
@@ -134,10 +129,7 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
         for node in self.nodes:
             if node.is_iam_source() and node.processor_type == ProcessorNodeType.INSTANCE_APPROVER.value:
                 # 判断节点审批人是否为空
-                if judge_empty and len(node.processors) == 0:
-                    return False
-
-                return True
+                return not (judge_empty and len(node.processors) == 0)
         return False
 
     def has_grade_manager_node(self) -> bool:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from copy import deepcopy
 
 from drf_yasg.utils import swagger_auto_schema
@@ -46,15 +47,15 @@ from backend.service.constants import PermissionCodeEnum
 
 
 class ApiViewSet(mixins.ListModelMixin, GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     permission_classes = [RolePermission]
     action_permission = {"list": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value}
 
     @swagger_auto_schema(
-        operation_description="API列表",
+        operation_description="API 列表",
         query_serializer=QueryApiSLZ(label="api"),
-        responses={status.HTTP_200_OK: ApiSLZ(label="API信息", many=True)},
+        responses={status.HTTP_200_OK: ApiSLZ(label="API 信息", many=True)},
         tags=["mgmt.api"],
     )
     def list(self, request, *args, **kwargs):
@@ -77,16 +78,16 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = AdminApiWhiteListSLZ
 
     @swagger_auto_schema(
-        operation_description="超级管理类API白名单列表",
-        responses={status.HTTP_200_OK: AdminApiWhiteListSLZ(label="超级管理类API白名单", many=True)},
+        operation_description="超级管理类 API 白名单列表",
+        responses={status.HTTP_200_OK: AdminApiWhiteListSLZ(label="超级管理类 API 白名单", many=True)},
         tags=["mgmt.white_list"],
     )
     def list(self, request, *args, **kwargs):
         return super().list(self, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="新增-超级管理类API白名单",
-        request_body=AdminApiAddWhiteListSLZ(label="超级管理类API白名单信息"),
+        operation_description="新增 - 超级管理类 API 白名单",
+        request_body=AdminApiAddWhiteListSLZ(label="超级管理类 API 白名单信息"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
@@ -110,7 +111,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response({}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
-        operation_description="删除-超级管理类API白名单",
+        operation_description="删除 - 超级管理类 API 白名单",
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
@@ -119,7 +120,8 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         conf = AdminAPIAllowListConfig.objects.filter(id=self.kwargs.get("id")).first()
         if not conf:
             return Response({})
-        # delete操作会导致conf.id的值被修改为0，那么记录审计信息时就无法确定被删除的具体对象ID，所以需要提前将conf的内容进行deepcopy
+        # delete 操作会导致 conf.id 的值被修改为 0，
+        # 那么记录审计信息时就无法确定被删除的具体对象 ID，所以需要提前将 conf 的内容进行 deepcopy
         copied_conf = deepcopy(conf)
         conf.delete()
 
@@ -141,16 +143,16 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     filterset_class = AuthorizationApiWhiteListFilter
 
     @swagger_auto_schema(
-        operation_description="授权类API白名单列表",
-        responses={status.HTTP_200_OK: AuthorizationApiWhiteListSchemaSLZ(label="授权类API白名单", many=True)},
+        operation_description="授权类 API 白名单列表",
+        responses={status.HTTP_200_OK: AuthorizationApiWhiteListSchemaSLZ(label="授权类 API 白名单", many=True)},
         tags=["mgmt.white_list"],
     )
     def list(self, request, *args, **kwargs):
         return super().list(self, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="新增-授权类API白名单",
-        request_body=AuthorizationApiAddWhiteListSLZ(label="授权类API白名单信息"),
+        operation_description="新增 - 授权类 API 白名单",
+        request_body=AuthorizationApiAddWhiteListSLZ(label="授权类 API 白名单信息"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
@@ -175,7 +177,7 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response({}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
-        operation_description="删除-授权类API白名单",
+        operation_description="删除 - 授权类 API 白名单",
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
@@ -185,7 +187,8 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         if not conf:
             return Response({})
 
-        # delete操作会导致conf.id的值被修改为0，那么记录审计信息时就无法确定被删除的具体对象ID，所以需要提前将conf的内容进行deepcopy
+        # delete 操作会导致 conf.id 的值被修改为 0，
+        # 那么记录审计信息时就无法确定被删除的具体对象 ID，所以需要提前将 conf 的内容进行 deepcopy
         copied_conf = deepcopy(conf)
         conf.delete()
 
@@ -207,16 +210,16 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = ManagementApiWhiteListSLZ
 
     @swagger_auto_schema(
-        operation_description="管理类API白名单列表",
-        responses={status.HTTP_200_OK: ManagementApiWhiteListSchemaSLZ(label="管理类API白名单", many=True)},
+        operation_description="管理类 API 白名单列表",
+        responses={status.HTTP_200_OK: ManagementApiWhiteListSchemaSLZ(label="管理类 API 白名单", many=True)},
         tags=["mgmt.white_list"],
     )
     def list(self, request, *args, **kwargs):
         return super().list(self, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="新增-管理类API白名单",
-        request_body=ManagementApiAddWhiteListSLZ(label="管理类API白名单信息"),
+        operation_description="新增 - 管理类 API 白名单",
+        request_body=ManagementApiAddWhiteListSLZ(label="管理类 API 白名单信息"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
@@ -240,7 +243,7 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response({}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
-        operation_description="删除-管理类API白名单",
+        operation_description="删除 - 管理类 API 白名单",
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
@@ -250,7 +253,8 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         if not conf:
             return Response({})
 
-        # delete操作会导致conf.id的值被修改为0，那么记录审计信息时就无法确定被删除的具体对象ID，所以需要提前将conf的内容进行deepcopy
+        # delete 操作会导致 conf.id 的值被修改为 0，
+        # 那么记录审计信息时就无法确定被删除的具体对象 ID，所以需要提前将 conf 的内容进行 deepcopy
         copied_conf = deepcopy(conf)
         conf.delete()
 

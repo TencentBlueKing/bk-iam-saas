@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework import serializers
@@ -50,7 +51,9 @@ class ManagementResourcePathsSLZ(serializers.Serializer):
     type = serializers.CharField(label="资源类型")
     paths = serializers.ListField(
         label="批量层级",
-        child=serializers.ListField(label="拓扑层级", child=ManagementResourcePathNodeSLZ(label="实例"), allow_empty=False),
+        child=serializers.ListField(
+            label="拓扑层级", child=ManagementResourcePathNodeSLZ(label="实例"), allow_empty=False
+        ),
         allow_empty=True,
     )
 
@@ -86,7 +89,9 @@ class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, GradeMangerBase
     authorization_scopes = serializers.ListField(
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
 
     class Meta:
         ref_name = "V1ManagementGradeManagerCreateSLZ"
@@ -222,7 +227,8 @@ class ManagementGroupMemberSLZ(serializers.Serializer):
 class ManagementGroupMemberDeleteSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
     ids = serializers.CharField(
-        label="成员IDs", help_text="成员IDs，多个以英文逗号分隔, 对于type=user，则ID为用户名，对于type=department，则为部门ID"
+        label="成员IDs",
+        help_text="成员IDs，多个以英文逗号分隔, 对于type=user，则ID为用户名，对于type=department，则为部门ID",
     )
 
     class Meta:

@@ -41,10 +41,7 @@ def is_in_blacklist(username: str) -> bool:
     except Exception:  # pylint: disable=broad-except
         logger.exception("failed to get blacklist, so the blacklist check will not working")
 
-    for subject in blacklist:
-        if subject.id == username and subject.type == SubjectType.USER.value:
-            return True
-    return False
+    return any(subject.id == username and subject.type == SubjectType.USER.value for subject in blacklist)
 
 
 class LoginMiddleware:
@@ -60,10 +57,7 @@ class LoginMiddleware:
             return False
 
         exempt_paths = ["/api/v1/open/", "/api/v1/iam/"]
-        if any(p in request.path for p in exempt_paths):
-            return False
-
-        return True
+        return not any(p in request.path for p in exempt_paths)
 
     def __call__(self, request):
         form = AuthenticationForm(request.COOKIES)
@@ -107,7 +101,7 @@ class RoleAuthenticationMiddleware(object):
         # 认证用户与角色关系
         role = role_auth.authenticate(request=request, role_id=role_id)
         # 设置当前登录角色
-        setattr(request, "role", role)
+        request.role = role
         return self.get_response(request)
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import functools
 import logging
 import time
@@ -101,7 +102,7 @@ class InstanceBean(Instance):
 
     def get_system_id_set(self) -> Set[str]:
         """
-        获取所有node相关的system_id集合
+        获取所有 node 相关的 system_id 集合
         """
         return {node.system_id for node in self.iter_path_node()}
 
@@ -138,7 +139,7 @@ class InstanceBean(Instance):
         self, resource_system_id: str, resource_type_id: str, selections: List[InstanceSelection]
     ) -> Optional["InstanceBean"]:
         """
-        筛选满足实例视图实例, 并clone一个新的instance
+        筛选满足实例视图实例，并 clone 一个新的 instance
         """
         new_paths = []
         for p in self.path:
@@ -182,7 +183,7 @@ class InstanceBean(Instance):
                 # 只会更新有重命名的资源
                 if new_name is not None and new_name != node.name:
                     node.name = new_name
-                    # 记录是否真的修改了数据，便于后续直接修改DB数据
+                    # 记录是否真的修改了数据，便于后续直接修改 DB 数据
                     is_changed = True
         return is_changed
 
@@ -227,7 +228,7 @@ class ConditionBean(Condition):
 
     def get_system_id_set(self) -> Set[str]:
         """
-        获取所有node相关的system_id集合
+        获取所有 node 相关的 system_id 集合
         """
         return set.union(*[instance.get_system_id_set() for instance in self.instances]) if self.instances else set()
 
@@ -248,7 +249,7 @@ class ConditionBean(Condition):
 
     def count_instance(self, resource_type_id: str) -> int:
         """
-        到叶子节点的实例数量, 不包含路径
+        到叶子节点的实例数量，不包含路径
         """
         return sum([one.count() for one in self.instances if one.type == resource_type_id])
 
@@ -261,17 +262,17 @@ class ConditionBeanList:
 
     def _merge(self, conditions: List[ConditionBean]) -> List[ConditionBean]:
         """
-        合并属性相同的condition
+        合并属性相同的 condition
         """
         if len(conditions) == 0:
             return conditions
 
-        # 筛选出只有属性的条件, 并去重
+        # 筛选出只有属性的条件，并去重
         empty_instance_conditions = {c.hash_attributes(): c for c in conditions if c.has_no_instances()}
 
         # 合并属性相同的实例
         condition_dict: Dict[Any, ConditionBean] = {}
-        # 排序可以使有id的排在前面
+        # 排序可以使有 id 的排在前面
         for c in sorted(conditions, key=lambda c: c.id, reverse=True):
             if c.has_no_instances():
                 continue
@@ -302,22 +303,21 @@ class ConditionBeanList:
         condition_dict = {c.hash_attributes(): c for c in self.conditions if not c.has_no_instances()}
 
         for c in condition_list.conditions:
-            # 如果申请的条件都为空, 不需要合并
+            # 如果申请的条件都为空，不需要合并
             if c.has_no_instances() and c.has_no_attributes():
                 continue
 
             _hash = c.hash_attributes()
             # 如果不带实例
             if c.has_no_instances():
-                # 如果计算的条件的属性hash值不在字典中, 需要新增
+                # 如果计算的条件的属性 hash 值不在字典中，需要新增
                 if _hash not in empty_instance_conditions:
                     empty_instance_conditions[_hash] = deepcopy(c)
+            # 带实例的条件如果 hash 不在字典中，需要新增，在字典中，合并实例
+            elif _hash not in condition_dict:
+                condition_dict[_hash] = deepcopy(c)
             else:
-                # 带实例的条件如果hash不在字典中, 需要新增, 在字典中, 合并实例
-                if _hash not in condition_dict:
-                    condition_dict[_hash] = deepcopy(c)
-                else:
-                    condition_dict[_hash].add_instances(c.instances)
+                condition_dict[_hash].add_instances(c.instances)
 
         conditions: List[ConditionBean] = []
         conditions.extend(chain(condition_dict.values(), empty_instance_conditions.values()))
@@ -331,7 +331,7 @@ class ConditionBeanList:
         """
         裁剪
         """
-        # 如果新旧条件都是任意, 相当于清空
+        # 如果新旧条件都是任意，相当于清空
         if self.is_any and condition_list.is_any:
             self.is_empty = True
             return self
@@ -354,7 +354,7 @@ class ConditionBeanList:
                 # 移除条件中需要删除的部分实例
                 condition_dict[_hash].remove_instances(c.instances)
 
-                # 如果条件的所有实例都删空了, 需要移除整组条件
+                # 如果条件的所有实例都删空了，需要移除整组条件
                 if condition_dict[_hash].has_no_instances():
                     condition_dict.pop(_hash)
 
@@ -362,13 +362,13 @@ class ConditionBeanList:
         conditions.extend(chain(condition_dict.values(), empty_instance_conditions.values()))
         self.conditions = conditions
 
-        self.is_empty = len(conditions) == 0  # 如果所有的条件都被删完了, 记录状态
+        self.is_empty = len(conditions) == 0  # 如果所有的条件都被删完了，记录状态
 
         return self
 
     def remove_by_ids(self, ids: List[str]):
         """
-        移除指定id的condition
+        移除指定 id 的 condition
         """
         if self.is_any:
             return
@@ -391,7 +391,7 @@ class RelatedResourceBean(RelatedResource):
 
     def fill_empty_fields(self, related_resource_type: RelatedResourceType, resource_type_dict: ResourceTypeDict):
         """
-        填充默认为空的fields
+        填充默认为空的 fields
         """
         self.selection_mode = related_resource_type.selection_mode
         self.name, self.name_en = resource_type_dict.get_name(self.system_id, self.type)
@@ -401,7 +401,7 @@ class RelatedResourceBean(RelatedResource):
 
     def get_system_id_set(self) -> Set[str]:
         """
-        获取所有node相关的system_id集合
+        获取所有 node 相关的 system_id 集合
         """
         system_id_set = (
             set.union(*[condition.get_system_id_set() for condition in self.condition]) if self.condition else set()
@@ -422,7 +422,7 @@ class RelatedResourceBean(RelatedResource):
 
     def count_instance(self) -> int:
         """
-        到叶子节点的实例数量, 不包含路径
+        到叶子节点的实例数量，不包含路径
         """
         return sum([one.count_instance(self.type) for one in self.condition])
 
@@ -430,9 +430,9 @@ class RelatedResourceBean(RelatedResource):
         self, selections: List[InstanceSelection], ignore_attribute: bool = False
     ) -> Optional["RelatedResourceBean"]:
         """
-        筛选出满足实例视图的实例, 并clone新的RelatedResourceBean
+        筛选出满足实例视图的实例，并 clone 新的 RelatedResourceBean
 
-        ignore_attribute: 是否忽略带属性的condition, 默认不忽略
+        ignore_attribute: 是否忽略带属性的 condition, 默认不忽略
         """
         new_conditions: List[ConditionBean] = []
         for c in self.condition:
@@ -459,7 +459,7 @@ class RelatedResourceBean(RelatedResource):
 
     def iter_path_list(self, ignore_attribute: bool = False) -> Iterable[PathNodeBeanList]:
         for condition in self.condition:
-            # 忽略有属性的condition
+            # 忽略有属性的 condition
             if ignore_attribute and not condition.has_no_attributes():
                 continue
 
@@ -471,7 +471,7 @@ class RelatedResourceBean(RelatedResource):
         is_changed = False
         for condition in self.condition:
             for instance in condition.instances:
-                # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
+                # 重命名，并记录是否真的修改了数据，便于后续直接修改 DB 数据
                 if instance.update_resource_name(renamed_resources):
                     is_changed = True
 
@@ -504,7 +504,7 @@ class RelatedResourceBeanList:
         return self
 
     def sub(self, resource_type_list: "RelatedResourceBeanList") -> "RelatedResourceBeanList":
-        empty_flags: List[bool] = []  # 记录related resource type 的删空标志
+        empty_flags: List[bool] = []  # 记录 related resource type 的删空标志
         for resource_type in self.related_resource_types:
             condition_list = deepcopy(self.get_condition_list(resource_type.system_id, resource_type.type))
             new_condition_list = resource_type_list.get_condition_list(resource_type.system_id, resource_type.type)
@@ -512,16 +512,16 @@ class RelatedResourceBeanList:
                 continue
 
             condition_list = condition_list.sub(new_condition_list)
-            # 如果没有被删空则更新原来的数据, 如果被删空了, 保持原始的数据不变
-            # 在有多个关联资源类型的情况下, 只有多个资源类型都删空了, 才会删除整个policy
-            # 如果第一个资源类型被删空, 而第二个没有, 则需要, 把第一个的条件保留, 只更新第二个
+            # 如果没有被删空则更新原来的数据，如果被删空了，保持原始的数据不变
+            # 在有多个关联资源类型的情况下，只有多个资源类型都删空了，才会删除整个 policy
+            # 如果第一个资源类型被删空，而第二个没有，则需要，把第一个的条件保留，只更新第二个
             if not condition_list.is_empty:
                 resource_type.condition = condition_list.conditions
                 self._condition_list_dict[(resource_type.system_id, resource_type.type)] = condition_list
 
             empty_flags.append(condition_list.is_empty)
 
-        self.is_empty = all(empty_flags)  # 多个资源类型情况下, 所有的资源类型都删空了, 才算空
+        self.is_empty = all(empty_flags)  # 多个资源类型情况下，所有的资源类型都删空了，才算空
 
         return self
 
@@ -532,7 +532,7 @@ class ResourceGroupBean(ResourceGroup):
 
     def fill_empty_fields(self, action: Action, resource_type_dict: ResourceTypeDict):
         """
-        填充默认为空的fields
+        填充默认为空的 fields
         """
         if self.id == "":
             self.id = gen_uuid()
@@ -547,7 +547,7 @@ class ResourceGroupBean(ResourceGroup):
 
     def get_system_id_set(self) -> Set[str]:
         """
-        获取所有node相关的system_id集合
+        获取所有 node 相关的 system_id 集合
         """
         return (
             set.union(*[one.get_system_id_set() for one in self.related_resource_types])
@@ -569,7 +569,7 @@ class ResourceGroupBean(ResourceGroup):
         """
         包含
 
-        新的Policy - 老的Policy = 空, 则老Policy包含新的
+        新的 Policy - 老的 Policy = 空，则老 Policy 包含新的
         """
         resource_type_list = RelatedResourceBeanList(deepcopy(related_resources))
         resource_type_list.sub(RelatedResourceBeanList(self.related_resource_types))
@@ -599,7 +599,7 @@ class ResourceGroupBean(ResourceGroup):
 
     def count_all_type_instance(self) -> int:
         """
-        这里是统计所有实例总数，Action关联多种资源类型是一起计算的
+        这里是统计所有实例总数，Action 关联多种资源类型是一起计算的
         """
         return sum([rrt.count_instance() for rrt in self.related_resource_types])
 
@@ -629,7 +629,7 @@ class ResourceGroupBean(ResourceGroup):
         """
         is_changed = False
         for rrt in self.related_resource_types:
-            # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
+            # 重命名，并记录是否真的修改了数据，便于后续直接修改 DB 数据
             if rrt.update_resource_name(renamed_resources):
                 is_changed = True
 
@@ -639,7 +639,7 @@ class ResourceGroupBean(ResourceGroup):
 class ResourceGroupBeanList(ResourceGroupList):
     __root__: List[ResourceGroupBean]
 
-    def __init__(__pydantic_self__, **data: Any) -> None:
+    def __init__(__pydantic_self__, **data: Any) -> None:  # noqa: N805
         super().__init__(**data)
         __pydantic_self__._drop_duplicates()
 
@@ -650,13 +650,13 @@ class ResourceGroupBeanList(ResourceGroupList):
         if len(self) <= 1:
             return self
 
-        # 关联单资源类型的操作, 环境属性相同的情况下, 需要合并资源实例
+        # 关联单资源类型的操作，环境属性相同的情况下，需要合并资源实例
         if len(self.get_thin_resource_types()) == 1:
             env_hash_rg = {}
             self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, self)
             return self
 
-        # 如果resource_group存在包含关系, 移除被包含的resource_group
+        # 如果 resource_group 存在包含关系，移除被包含的 resource_group
         for __ in range(len(self)):
             rg = self.pop(0)
             if rg not in self:
@@ -672,11 +672,7 @@ class ResourceGroupBeanList(ResourceGroupList):
         """
         是否完全包含
         """
-        for rg in resource_groups:
-            if rg not in self:
-                return False
-
-        return True
+        return all(rg in self for rg in resource_groups)
 
     def is_unrelated(self) -> bool:
         return len(self) == 0
@@ -702,7 +698,7 @@ class ResourceGroupBeanList(ResourceGroupList):
         self, env_hash_rg: Dict[int, ResourceGroupBean], resource_groups: "ResourceGroupBeanList"
     ) -> List[ResourceGroupBean]:
         """
-        合并相同env的resource_group
+        合并相同 env 的 resource_group
         """
         for rg in resource_groups:
             env_hash = rg.hash_environments()
@@ -717,8 +713,8 @@ class ResourceGroupBeanList(ResourceGroupList):
         """
         合并到本身
 
-        如果已有id相同的, 则直接合并id相同的
-        如果不存在id相同的, 判断范围是否已包含, 没有包含的合并
+        如果已有 id 相同的，则直接合并 id 相同的
+        如果不存在 id 相同的，判断范围是否已包含，没有包含的合并
         """
         # 处理单个资源类型的合并
         if len(self.get_thin_resource_types()) == 1:
@@ -746,11 +742,11 @@ class ResourceGroupBeanList(ResourceGroupList):
         """
         移除部分条件
 
-        1. 如果是只关联1个资源类型的操作, 直接移除
+        1. 如果是只关联 1 个资源类型的操作，直接移除
         2. 如果关联多个资源类型的操作
            - 完整包含的一组才能移除
         """
-        # 只关联1个资源类型的操作
+        # 只关联 1 个资源类型的操作
         if len(self.get_thin_resource_types()) == 1:
             new_resource_groups: List[ResourceGroupBean] = []
             for original_rg in self:
@@ -787,7 +783,7 @@ class ResourceGroupBeanList(ResourceGroupList):
 
     def get_system_id_set(self) -> Set[str]:
         """
-        获取所有node相关的system_id集合
+        获取所有 node 相关的 system_id 集合
         """
         return set.union(*[one.get_system_id_set() for one in self]) if self.__root__ else set()
 
@@ -800,7 +796,7 @@ class ResourceGroupBeanList(ResourceGroupList):
 
     def count_all_type_instance(self) -> int:
         """
-        这里是统计所有实例总数，Action关联多种资源类型是一起计算的
+        这里是统计所有实例总数，Action 关联多种资源类型是一起计算的
         """
         return sum([rg.count_all_type_instance() for rg in self])
 
@@ -831,7 +827,7 @@ class ResourceGroupBeanList(ResourceGroupList):
         """
         is_changed = False
         for rg in self:
-            # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
+            # 重命名，并记录是否真的修改了数据，便于后续直接修改 DB 数据
             if rg.update_resource_name(renamed_resources):
                 is_changed = True
 
@@ -861,7 +857,7 @@ class PolicyBean(Policy):
         if "expired_at" in data and (data["expired_at"] is not None) and ("expired_display" not in data):
             data["expired_display"] = expired_at_display(data["expired_at"])
 
-        # NOTE 兼容数据传None的情况
+        # NOTE 兼容数据传 None 的情况
         if "expired_at" in data and not isinstance(data["expired_at"], int):
             data.pop("expired_at")
         if "expired_display" in data and not isinstance(data["expired_display"], str):
@@ -869,13 +865,13 @@ class PolicyBean(Policy):
         if "type" in data and not isinstance(data["type"], str):
             data.pop("type")
 
-        # NOTE 兼容 role, group授权信息的旧版结构
+        # NOTE 兼容 role, group 授权信息的旧版结构
         if "resource_groups" not in data and "related_resource_types" in data:
             if not data["related_resource_types"]:
                 data["resource_groups"] = []
             else:
                 data["resource_groups"] = [
-                    # NOTE: 固定resource_group_id方便删除逻辑
+                    # NOTE: 固定 resource_group_id 方便删除逻辑
                     {
                         "id": DEFAULT_RESOURCE_GROUP_ID,
                         "related_resource_types": data.pop("related_resource_types"),
@@ -890,7 +886,7 @@ class PolicyBean(Policy):
 
     def fill_empty_fields(self, action: Action, resource_type_dict: ResourceTypeDict):
         """
-        填充默认为空的fields
+        填充默认为空的 fields
         """
         empty_fields = ["type", "name", "name_en", "description", "description_en"]
         for field in empty_fields:
@@ -900,7 +896,7 @@ class PolicyBean(Policy):
 
     def get_system_id_set(self) -> Set[str]:
         """
-        获取所有node相关的system_id集合
+        获取所有 node 相关的 system_id 集合
         """
         return self.resource_groups.get_system_id_set()
 
@@ -943,7 +939,7 @@ class PolicyBean(Policy):
 
     def count_all_type_instance(self) -> int:
         """
-        这里是统计所有实例总数，Action关联多种资源类型是一起计算的
+        这里是统计所有实例总数，Action 关联多种资源类型是一起计算的
         """
         return self.resource_groups.count_all_type_instance()
 
@@ -951,7 +947,7 @@ class PolicyBean(Policy):
         self, resource_group_id: str, system_id: str, resource_type_id: str
     ) -> Optional[RelatedResourceBean]:
         """
-        获取指定resource_group_id下指定的资源类型的条件
+        获取指定 resource_group_id 下指定的资源类型的条件
         """
         resource_group = self.resource_groups.get_by_id(resource_group_id)
         if resource_group is None:
@@ -1003,13 +999,13 @@ class PolicyBeanListMixin:
 
     def get_system_id_set(self) -> Set[str]:
         """
-        获取所有node相关的system_id集合
+        获取所有 node 相关的 system_id 集合
         """
         return set.union(*[one.get_system_id_set() for one in self.policies]) if self.policies else set()
 
     def fill_empty_fields(self):
         """
-        填充PolicyBean中默认为空的字段
+        填充 PolicyBean 中默认为空的字段
         """
         system_id_set = self.get_system_id_set()
         resource_type_dict = self.resource_type_svc.get_system_resource_type_dict(list(system_id_set))
@@ -1022,13 +1018,13 @@ class PolicyBeanListMixin:
                 continue
             policy.fill_empty_fields(action, resource_type_dict)
 
-            # 填充sensitivity_level
+            # 填充 sensitivity_level
             policy.sensitivity_level = action_sensitivity_level.get(policy.action_id, SensitivityLevel.L1.value)
 
     def check_instance_selection(self):
         """
         检查实例视图
-        如果视图需要忽略路径, 则修改路径
+        如果视图需要忽略路径，则修改路径
         """
         action_list = self.action_svc.new_action_list(self.system_id)
         for p in self.policies:
@@ -1041,12 +1037,12 @@ class PolicyBeanListMixin:
     def _list_path_node(self, is_ignore_big_policy=False) -> List[PathNodeBean]:
         """
         查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点
-        is_ignore_big_policy: 是否忽略大的策略，大策略是指策略里的实例数量大于1000，
-          主要是用于自动更新策略里的资源实例名称时避免大数量的请求接入系统（1000是权限中心的回调接口协议里规定的）
+        is_ignore_big_policy: 是否忽略大的策略，大策略是指策略里的实例数量大于 1000，
+          主要是用于自动更新策略里的资源实例名称时避免大数量的请求接入系统（1000 是权限中心的回调接口协议里规定的）
         """
         nodes = []
         for p in self.policies:
-            # 这里是定制逻辑：基于fetch_instance_info限制，避免出现大策略
+            # 这里是定制逻辑：基于 fetch_instance_info 限制，避免出现大策略
             if is_ignore_big_policy and p.count_all_type_instance() > FETCH_MAX_LIMIT:
                 continue
             nodes.extend(p.list_path_node())
@@ -1054,7 +1050,7 @@ class PolicyBeanListMixin:
 
     def check_resource_name(self):
         """
-        校验策略里包含资源实例名称与ID是否匹配，主要用于防止前端提交数据的错误
+        校验策略里包含资源实例名称与 ID 是否匹配，主要用于防止前端提交数据的错误
         特别注意：该函数只能用于校验新增的策略，不能校验老策略，因为老的资源实例可能被删除或重命名了
         """
         # 获取策略里的资源的所有节点
@@ -1069,7 +1065,7 @@ class PolicyBeanListMixin:
             if node.id == ANY_ID and real_name.lower() in node.name.lower():
                 continue
 
-            # NOTE: 如果查不到, 跳过, 避免报错
+            # NOTE: 如果查不到，跳过，避免报错
             if not real_name:
                 continue
 
@@ -1109,7 +1105,7 @@ class PolicyBeanListMixin:
             if node.id == ANY_ID:
                 continue
 
-            # 如果real_name 查询不到，则忽略，Note: 不可删除策略里的资源
+            # 如果 real_name 查询不到，则忽略，Note: 不可删除策略里的资源
             if not real_name:
                 continue
 
@@ -1122,7 +1118,7 @@ class PolicyBeanListMixin:
     def auto_update_resource_name(self) -> List[PolicyBean]:
         """
         策略里存储的资源名称可能已经变了，需要进行更新
-        Note: 该函数仅用于需要对外展示策略数据时调用，不会自动更新DB里数据
+        Note: 该函数仅用于需要对外展示策略数据时调用，不会自动更新 DB 里数据
         """
         # 由于自动更新并非核心功能，若接入系统查询有问题，也需要正常显示
         try:
@@ -1140,7 +1136,7 @@ class PolicyBeanListMixin:
         changed_policies = []
         for p in self.policies:
             is_changed = p.update_resource_name(renamed_resources)
-            # 若策略里有资源实例重名了，则记录起来，用于后续修改DB数据
+            # 若策略里有资源实例重名了，则记录起来，用于后续修改 DB 数据
             if is_changed:
                 changed_policies.append(p)
 
@@ -1156,10 +1152,10 @@ class PolicyBeanList(PolicyBeanListMixin):
         need_check_instance_selection: bool = False,
     ) -> None:
         """
-        system_id: policies的系统id
+        system_id: policies 的系统 id
         policies: 策略列表
-        need_fill_empty_fields: 是否需要填充空白字段, 默认否
-        need_check_instance_selection: 是否需要检查实例视图, 默认否
+        need_fill_empty_fields: 是否需要填充空白字段，默认否
+        need_check_instance_selection: 是否需要检查实例视图，默认否
         """
         self.system_id = system_id
         self.policies = policies
@@ -1178,7 +1174,7 @@ class PolicyBeanList(PolicyBeanListMixin):
     @staticmethod
     def _generate_expired_at(expired_at: int) -> int:
         """生成一个新策略的默认过期时间"""
-        # 如果传入设置的过期时间, 大于当前时间，且小于或等于永久，则使用它
+        # 如果传入设置的过期时间，大于当前时间，且小于或等于永久，则使用它
         if time.time() < expired_at <= PERMANENT_SECONDS:
             return expired_at
 
@@ -1189,14 +1185,14 @@ class PolicyBeanList(PolicyBeanListMixin):
         self, new_policy_list: "PolicyBeanList"
     ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
         """
-        授权时, 分离需要新增与更新的策略
+        授权时，分离需要新增与更新的策略
 
-        self: 原来已有的policy list
-        new_policy_list: 新增授权的policy list
+        self: 原来已有的 policy list
+        new_policy_list: 新增授权的 policy list
         """
         create_policies, update_policies = [], []
         for p in new_policy_list.policies:
-            # 已有的权限不存在, 则创建
+            # 已有的权限不存在，则创建
             old_policy = self.get(p.action_id)
             if not old_policy:
                 # 对于新策略，需要校验策略的过期时间是否合理，不合理则生成一个默认的过期时间
@@ -1206,7 +1202,7 @@ class PolicyBeanList(PolicyBeanListMixin):
 
             # 已有的权限包含新的权限
             if old_policy.has_resource_group_list(p.resource_groups):
-                # 只有过期时间变更, 也需要更新
+                # 只有过期时间变更，也需要更新
                 if p.expired_at > old_policy.expired_at:
                     old_policy.set_expired_at(p.expired_at)
                     update_policies.append(old_policy)
@@ -1224,10 +1220,10 @@ class PolicyBeanList(PolicyBeanListMixin):
         self, delete_policy_list: "PolicyBeanList"
     ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
         """
-        回收权限时, 分离出需要更新的策略与删除的策略
+        回收权限时，分离出需要更新的策略与删除的策略
 
-        self: 原来已有的policy list
-        delete_policy_list: 需要回收的policy list
+        self: 原来已有的 policy list
+        delete_policy_list: 需要回收的 policy list
         """
         update_policies, delete_policies = [], []
         for p in self.policies:
@@ -1332,7 +1328,7 @@ class ExpiredPolicy(BackendThinPolicy, ExcludeModel):
             data["expired_display"] = expired_at_display(data["expired_at"])
         super().__init__(**data)
 
-    def gen_resource_summary(self) -> str:
+    def gen_resource_summary(self) -> str:  # noqa: C901, PLR0912
         """
         生成资源组合概要信息
         """
@@ -1370,7 +1366,7 @@ class ExpiredPolicy(BackendThinPolicy, ExcludeModel):
                     elif attribute_count > 0 and resource_count == 0:
                         value = f"{resource_type_name}: {attribute_count}个属性"
                     else:
-                        value = f"{resource_type_name}: {resource_count}个实例({attribute_count}个属性)"
+                        value = f"{resource_type_name}: {resource_count}个实例 ({attribute_count}个属性)"
 
                 summary.append(value)
 
@@ -1388,13 +1384,13 @@ class PolicyQueryBiz:
         self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
     ) -> List[PolicyBean]:
         """
-        查询subject指定系统的策略
+        查询 subject 指定系统的策略
         """
         policy_list = self.new_policy_list(system_id, subject, action_ids)
         return policy_list.policies
 
     def list_temporary_by_subject(self, system_id: str, subject: Subject) -> List[PolicyBean]:
-        """查询subject指定系统的临时权限策略"""
+        """查询 subject 指定系统的临时权限策略"""
         policies = self.svc.list_temporary_by_subject(system_id, subject)
         pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
         return pl.policies
@@ -1403,24 +1399,22 @@ class PolicyQueryBiz:
         self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
     ) -> PolicyBeanList:
         policies = self.svc.list_by_subject(system_id, subject, action_ids)
-        policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
-        return policy_list
+        return PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
 
     def query_policy_list_by_policy_ids(
         self, system_id: str, subject: Subject, policy_ids: List[int]
     ) -> PolicyBeanList:
         """
-        通过policy_ids查询policy list
+        通过 policy_ids 查询 policy list
         """
         policies = self.svc.list_by_policy_ids(system_id, subject, policy_ids)
-        policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
-        return policy_list
+        return PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
 
     def list_temporary_by_policy_ids(
         self, system_id: str, subject: Subject, policy_ids: List[int]
     ) -> List[PolicyBean]:
         """
-        通过policy_ids查询临时权限
+        通过 policy_ids 查询临时权限
         """
         policies = self.svc.list_temporary_by_policy_ids(system_id, subject, policy_ids)
         pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
@@ -1428,7 +1422,7 @@ class PolicyQueryBiz:
 
     def list_system_counter_by_subject(self, subject: Subject, hidden: bool = True) -> List[SystemCounterBean]:
         """
-        查询subject有权限的系统-policy数量信息
+        查询 subject 有权限的系统-policy 数量信息
         """
         system_counts = self.svc.list_system_counter_by_subject(subject, hidden)
         return self._system_counter_to_system_counter_bean(system_counts)
@@ -1447,7 +1441,7 @@ class PolicyQueryBiz:
 
     def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
         """
-        查询subject有权限的系统-临时policy数量信息
+        查询 subject 有权限的系统 - 临时 policy 数量信息
         """
         system_counts = self.svc.list_temporary_system_counter_by_subject(subject)
         return self._system_counter_to_system_counter_bean(system_counts)
@@ -1456,7 +1450,7 @@ class PolicyQueryBiz:
         self, subject: Subject, policy_id: int, resource_group_id: str, resource_system: str, resource_type: str
     ):
         """
-        查询指定Policy的资源类型的condition
+        查询指定 Policy 的资源类型的 condition
         """
         policy = self.get_policy_by_id(subject, policy_id)
         related_resource_type = policy.get_related_resource_type(resource_group_id, resource_system, resource_type)
@@ -1470,12 +1464,12 @@ class PolicyQueryBiz:
         """
         backend_policies = self.svc.list_backend_policy_before_expired_at(expired_at, subject)
 
-        # 查询system, action的信息
+        # 查询 system, action 的信息
         system_id_set = {one.system for one in backend_policies}
         action_list_dict = {system_id: self.action_svc.new_action_list(system_id) for system_id in system_id_set}
         system_list = self.system_svc.new_system_list()
 
-        # 查询saas policy id
+        # 查询 saas policy id
         all_action_id = {p.action_id for p in backend_policies}
         action_id_dict = self.svc.get_action_id_dict(subject, list(all_action_id))
 
@@ -1489,7 +1483,7 @@ class PolicyQueryBiz:
             policy_list = self.query_policy_list_by_policy_ids(system_id, subject, ids)
             system_policy_list[system_id] = policy_list
 
-        # 填充action, system
+        # 填充 action, system
         expired_policies = []
         for p in backend_policies:
             if p.system == "bk_ci":
@@ -1520,7 +1514,7 @@ class PolicyQueryBiz:
 
     def get_policy_by_id(self, subject: Subject, policy_id: int) -> PolicyBean:
         """
-        获取指定的Policy
+        获取指定的 Policy
         """
         system_id, policy = self.svc.get_policy_by_id(policy_id, subject)
         policy_list = PolicyBeanList(system_id, [PolicyBean.parse_obj(policy)], need_fill_empty_fields=True)
@@ -1528,26 +1522,26 @@ class PolicyQueryBiz:
 
     def get_policy_system_by_id(self, subject: Subject, policy_id: int) -> str:
         """
-        获取指定策略的system
+        获取指定策略的 system
         """
         return self.svc.get_policy_system_by_id(policy_id, subject)
 
 
 def custom_policy_change_lock(func):
     """装饰器：策略变更的分布式全局锁，避免并发导致数据错误
-    Note: 若被添加于类的方法上，需要使用method_decorator，主要是为了不关注类的self/cls参数
+    Note: 若被添加于类的方法上，需要使用 method_decorator，主要是为了不关注类的 self/cls 参数
     from django.utils.decorators import method_decorator
     method_decorator(policy_change_lock)
     """
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # Note: 必须保证被装饰的函数有参数system_id和subject
+        # Note: 必须保证被装饰的函数有参数 system_id 和 subject
         system_id = kwargs["system_id"] if "system_id" in kwargs else args[0]
         subject = kwargs["subject"] if "subject" in kwargs else args[1]
 
         # 加 template_id + system + subject 锁
-        template_id = 0  # 自定义权限，TemplateID默认为0
+        template_id = 0  # 自定义权限，TemplateID 默认为 0
         with gen_policy_alter_lock(template_id, system_id, subject.type, subject.id):
             return func(*args, **kwargs)
 
@@ -1563,7 +1557,7 @@ class PolicyOperationBiz:
     @method_decorator(custom_policy_change_lock)
     def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
         """
-        删除policies
+        删除 policies
         """
         self.svc.delete_by_ids(system_id, subject, policy_ids)
 
@@ -1578,14 +1572,14 @@ class PolicyOperationBiz:
         self, system_id: str, subject: Subject, policy_id: int, resource_group_id: str
     ) -> PolicyBean:
         """
-        删除policy中指定resource_group_id的部分
+        删除 policy 中指定 resource_group_id 的部分
         """
         policy = self.query_biz.get_policy_by_id(subject, policy_id)
-        # 任意的policy不能删除
+        # 任意的 policy 不能删除
         if len(policy.resource_groups) == 0:
             raise error_codes.INVALID_ARGS.format(_("资源组不存在"))
 
-        # resource_group不存在不能删除
+        # resource_group 不存在不能删除
         resource_group = policy.resource_groups.pop_by_id(resource_group_id)
         if resource_group is None:
             raise error_codes.INVALID_ARGS.format(_("资源组不存在"))
@@ -1611,16 +1605,18 @@ class PolicyOperationBiz:
         conditions: List[ConditionBean],
     ) -> PolicyBean:
         """
-        Policy条件部分删除
-        返回更新后的Policy
+        Policy 条件部分删除
+        返回更新后的 Policy
         """
         policy = self.query_biz.get_policy_by_id(subject, policy_id)
         resource_type = policy.get_related_resource_type(resource_group_id, resource_system_id, resource_type_id)
         if not resource_type:
-            raise error_codes.VALIDATE_ERROR.format(_("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
+            raise error_codes.VALIDATE_ERROR.format(
+                _("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id)
+            )
 
         condition_list = ConditionBeanList(resource_type.condition)
-        # 删除condition id对应的condition
+        # 删除 condition id 对应的 condition
         condition_list.remove_by_ids(condition_ids)
         # 删除条件
         condition_list.sub(ConditionBeanList(conditions))
@@ -1633,7 +1629,7 @@ class PolicyOperationBiz:
         resource_group = policy.resource_groups.pop_by_id(resource_group_id)
         resource_group.set_related_resource_type(resource_type)  # type: ignore
 
-        # 如果policy中其它的resource_group能包含删减后的resource_group, 则整体删除
+        # 如果 policy 中其它的 resource_group 能包含删减后的 resource_group, 则整体删除
         policy.add_resource_group_list(ResourceGroupBeanList.parse_obj([resource_group]))
 
         self.svc.alter(system_id, subject, update_policies=[Policy.parse_obj(policy)])
@@ -1643,9 +1639,9 @@ class PolicyOperationBiz:
     @method_decorator(custom_policy_change_lock)
     def update(self, system_id: str, subject: Subject, policies: List[PolicyBean]) -> List[PolicyBean]:
         """
-        更新subject的权限策略
+        更新 subject 的权限策略
 
-        覆盖更新, 返回更新后的策略
+        覆盖更新，返回更新后的策略
         """
         old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in policies])
         update_policy_list = PolicyBeanList(system_id, policies, need_fill_empty_fields=True)
@@ -1671,7 +1667,7 @@ class PolicyOperationBiz:
     @method_decorator(custom_policy_change_lock)
     def alter(self, system_id: str, subject: Subject, policies: List[PolicyBean]):
         """
-        变更subject权限策略
+        变更 subject 权限策略
         """
         old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in policies])
         new_policy_list = PolicyBeanList(system_id, policies)
@@ -1695,7 +1691,7 @@ class PolicyOperationBiz:
     @method_decorator(custom_policy_change_lock)
     def revoke(self, system_id: str, subject: Subject, delete_policies: List[PolicyBean]) -> List[PolicyBean]:
         """
-        删除策略，这里diff可能进行部分删除，若完全一样，则整条策略删除
+        删除策略，这里 diff 可能进行部分删除，若完全一样，则整条策略删除
         返回受影响的策略
         """
         old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in delete_policies])
@@ -1727,7 +1723,7 @@ class PolicyOperationBiz:
         policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies))
         updated_policies = policy_list.auto_update_resource_name()
         if len(updated_policies) > 0:
-            # 只需要修改DB，且只修改有更新的策略
+            # 只需要修改 DB，且只修改有更新的策略
             self.svc.only_update_db_policies(system_id, subject, updated_policies)
 
         # 返回的是所有策略，包括未被更新的
@@ -1751,7 +1747,7 @@ def group_paths(paths: List[List[Dict]]) -> List[InstanceBean]:
     """
     instances: List[InstanceBean] = []
 
-    # 对拓扑路径分组, 如果拓扑最后的节点是任意, 则使用倒数第二个节点分组
+    # 对拓扑路径分组，如果拓扑最后的节点是任意，则使用倒数第二个节点分组
     def key_func(path: List[Dict]):
         node = path[-1]
         if node["id"] == ANY_ID and len(path) > 1:

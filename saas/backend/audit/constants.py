@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from aenum import LowerStrEnum, StrEnum, auto
 
 from backend.util.enum import ChoicesEnum
@@ -41,7 +42,7 @@ class AuditObjectType(ChoicesEnum, LowerStrEnum):
     ACTION = auto()
     WHITE_LIST = auto()
 
-    # 用户黑名单, 用于冻结/解冻用户使用
+    # 用户黑名单，用于冻结/解冻用户使用
     USER_BLACK_LIST = auto()
 
     # 用户权限清理
@@ -56,7 +57,7 @@ class AuditStatus(ChoicesEnum):
 
 
 class AuditType(ChoicesEnum, StrEnum):
-    def _generate_next_value_(name, start, count, last_values):
+    def _generate_next_value_(name, start, count, last_values):  # noqa: N805
         return name.lower().replace("_", ".")
 
     GROUP_CREATE = auto()

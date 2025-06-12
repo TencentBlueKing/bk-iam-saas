@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import copy
 import logging
 from collections import defaultdict
@@ -40,8 +41,7 @@ class GroupAttributeService:
         if data_type == GroupAttributeValueType.Integer.value:
             # 如果转换错误则直接异常
             try:
-                value = int(value_str, base=10)
-                return value
+                return int(value_str, base=10)
             except Exception:  # pylint: disable=broad-except
                 logger.exception(f"{error_message}")
                 raise error_codes.VALUE_ERROR.format(error_message, replace=True)

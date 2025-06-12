@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Dict, Iterable, List, Tuple
 
 from backend.component import iam
@@ -86,7 +87,9 @@ class UniversalPolicyChangedContentAnalyzer:
         return changed_policies
 
     def cal_for_updated(
-        self, system_id: str, update_policies: List[Tuple[Policy, Policy]]  # List[(new, old)]
+        self,
+        system_id: str,
+        update_policies: List[Tuple[Policy, Policy]],  # List[(new, old)]
     ) -> List[UniversalPolicyChangedContent]:
         """根据更新的策略，组装计算出要变更的策略内容"""
         if len(update_policies) == 0:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, List, Optional
@@ -37,7 +38,7 @@ class AbstractTagBean(ABC):
 
 class TagNoneMixin:
     """
-    兼容 tag 为None的情况
+    兼容 tag 为 None 的情况
     """
 
     def __init__(self, **data: Any) -> None:
@@ -56,7 +57,7 @@ class PathNodeTagBean(TagNoneMixin, PathNodeBean, AbstractTagBean):
 class PathNodeTagBeanList(PathNodeBeanList):
     __root__: List[PathNodeTagBean]
 
-    def __init__(__pydantic_self__, **data: Any) -> None:
+    def __init__(__pydantic_self__, **data: Any) -> None:  # noqa: N805
         super().__init__(**deepcopy(data))
 
     def set_tag(self, tag: str):
@@ -84,20 +85,20 @@ class InstanceTagBean(TagNoneMixin, InstanceBean, AbstractTagBean):
     def compare_and_tag(self, instance: "InstanceTagBean") -> "InstanceTagBean":
         tag_instance = InstanceTagBean(tag=ConditionTag.UNCHANGED.value, type=self.type, name=self.name, path=[])
 
-        # 生成path hash set
+        # 生成 path hash set
         new_path_set = self._get_path_set()
         old_path_dict = {translate_path(p.dict()): p for p in instance.path}
 
         for p in self.path:
             copied_p = p.copy()
-            # 标记新增的path
+            # 标记新增的 path
             if translate_path(copied_p.dict()) not in old_path_dict:
                 copied_p.set_tag(ConditionTag.ADD.value)
             else:
                 copied_p.set_tag(ConditionTag.UNCHANGED.value)
             tag_instance.path.append(copied_p)
 
-        # 标记删除的path
+        # 标记删除的 path
         for p in instance.path:
             copied_p = p.copy()
             if translate_path(copied_p.dict()) not in new_path_set:
@@ -171,16 +172,16 @@ class ConditionTagBean(TagNoneMixin, ConditionBean, AbstractTagBean):
 
         # 比较每一组实例
         for i in self.instances:
-            # 如果实例类型在老的实例中不存在, 则属于新增
+            # 如果实例类型在老的实例中不存在，则属于新增
             if i.type not in old_instance_type_set:
                 tag_instance = deepcopy(i)
                 tag_instance.set_tag(ConditionTag.ADD.value)
                 tag_condition.instances.append(tag_instance)
-            # 已存在, 需要继续对比
+            # 已存在，需要继续对比
             else:
                 tag_condition.instances.append(i.compare_and_tag(old_instance_type_dict[i.type]))
 
-        # 如果有老的不在新的实例中, 打上删除标签, 加入到实例数据后面
+        # 如果有老的不在新的实例中，打上删除标签，加入到实例数据后面
         if old_instance_type_set - new_instance_type_set:
             for i in condition.instances:
                 if i.type not in new_instance_type_set:
@@ -194,16 +195,16 @@ class ConditionTagBean(TagNoneMixin, ConditionBean, AbstractTagBean):
 
         # 比较每一组属性
         for a in self.attributes:
-            # 如果属性的key不在老的属性数据中, 则属于新增
+            # 如果属性的 key 不在老的属性数据中，则属于新增
             if a.id not in old_attribute_id_set:
                 tag_attribute = deepcopy(a)
                 tag_attribute.set_tag(ConditionTag.ADD.value)
                 tag_condition.attributes.append(tag_attribute)
-            # 如果在老的数据中, 则继续对比
+            # 如果在老的数据中，则继续对比
             else:
                 tag_condition.attributes.append(a.compare_and_tag(old_attribute_id_dict[a.id]))
 
-        # 如果有老的不在新的属性数据中, 打上删除标签, 加入到属性数据后面
+        # 如果有老的不在新的属性数据中，打上删除标签，加入到属性数据后面
         if old_attribute_id_set - new_attribute_id_set:
             for a in condition.attributes:
                 if a.id not in new_attribute_id_set:
@@ -265,23 +266,23 @@ class ConditionTagBiz:
         """
         对比申请条件与已有权限条件的差异
 
-        对比合并条件数据, 并对数据打上标签 新增/不变/删除
+        对比合并条件数据，并对数据打上标签 新增/不变/删除
         """
         delete_tag = ConditionTag.DELETE.value if is_template else ConditionTag.UNCHANGED.value
 
-        # 生成以属性的hash为key, 并且实例不为空的条件的字典
+        # 生成以属性的 hash 为 key, 并且实例不为空的条件的字典
         new_dict = {c.hash_attributes(): c for c in new_conditions if not c.has_no_instances()}
         old_dict = {c.hash_attributes(): c for c in old_conditions if not c.has_no_instances()}
 
-        # 实例不为空条件的属性hash set
+        # 实例不为空条件的属性 hash set
         new_set = set(new_dict.keys())
         old_set = set(old_dict.keys())
 
-        # 生成以属性的hash为key, 并且实例为空的条件的字典
+        # 生成以属性的 hash 为 key, 并且实例为空的条件的字典
         new_empty_dict = {c.hash_attributes(): c for c in new_conditions if c.has_no_instances()}
         old_empty_dict = {c.hash_attributes(): c for c in old_conditions if c.has_no_instances()}
 
-        # 实例为空的条件的属性hash set
+        # 实例为空的条件的属性 hash set
         new_empty_set = set(new_empty_dict.keys())
         old_empty_set = set(old_empty_dict.keys())
 

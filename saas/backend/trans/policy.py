@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 
 主要是将API请求里的操作或操作组合等权限数据，转换为PolicyBean或List[PolicyBean]，便于进行下一步处理
 """
+
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
@@ -143,7 +144,7 @@ class PolicyTrans:
                 system_policies_dict[a["system_id"]].append(policy)
 
         # 将List[PolicyBean] 转换为PolicyBeanList
-        system_policy_bean_list_dict = {
+        return {
             system_id: PolicyBeanList(
                 system_id,
                 list(policies),
@@ -153,8 +154,6 @@ class PolicyTrans:
             )
             for system_id, policies in system_policies_dict.items()
         }
-
-        return system_policy_bean_list_dict
 
     def from_actions(self, system_id: str, actions: List[Dict]) -> PolicyBeanList:
         """
@@ -206,15 +205,13 @@ class PolicyTrans:
             system_id, parse_obj_as(List[ActionResourceGroupForCheck], actions)
         )
         # 2. 转为PolicyBeanList
-        policy_list = PolicyBeanList(
+        return PolicyBeanList(
             system_id,
             parse_obj_as(List[PolicyBean], actions),
             need_fill_empty_fields=False,
             # 保证转换后的数据与权限模型是符合的
             need_check_instance_selection=True,
         )
-
-        return policy_list
 
     def from_aggregate_actions_and_actions(self, system_id: str, data: Dict[str, Any]) -> PolicyBeanList:
         """

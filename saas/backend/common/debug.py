@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,13 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 import logging
 import re
 import traceback
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from aenum import LowerStrEnum, auto
 from django.conf import settings
@@ -77,7 +78,7 @@ class DebugReceiver(Singleton):
 
     def __init__(self):
         # 观察者模式
-        self._observers: List[DebugObserver] = [RedisObserver()]
+        self._observers = [RedisObserver()]
         self._cleaner = SensitiveCleaner()
 
     def register(self, ob):
@@ -151,7 +152,7 @@ class RedisStorage:
     def set_task_data(self, data: Dict[str, Any]):
         self._set(data)
 
-        # 如果是task产生的数据, 建立时间的索引
+        # 如果是 task 产生的数据，建立时间的索引
         self._append_task(data["id"])
 
     def _set(self, data):
@@ -170,7 +171,7 @@ class RedisStorage:
         if cnt <= self.queue_size:
             return
 
-        # 保持队列长度, 删除多余的key
+        # 保持队列长度，删除多余的 key
         with self.cli.pipeline() as pipe:
             pipe.lrange(self.queue_key, self.queue_size, -1)
             pipe.ltrim(self.queue_key, 0, self.queue_size - 1)
@@ -207,9 +208,7 @@ class SensitiveCleaner:
         return data
 
     def _clean(self, data: Dict[str, Any]):
-        for key in data.keys():
-            value = data[key]
-
+        for key, value in data.items():
             if isinstance(value, dict):
                 self._clean(value)
             elif isinstance(value, list):
@@ -230,7 +229,7 @@ receiver = DebugReceiver()
 
 def log_api_error_trace(request, force=False):
     """
-    记录api的错误跟踪信息
+    记录 api 的错误跟踪信息
     """
     chain = stack.pop_all()
     if chain or force:
@@ -248,7 +247,7 @@ def log_api_error_trace(request, force=False):
 
 def log_task_error_trace(task, force=False):
     """
-    记录task的错误跟踪信息
+    记录 task 的错误跟踪信息
     """
     chain = stack.pop_all()
     if chain or force:

@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -329,7 +330,6 @@ class AnyAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
 
 class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
-
     resource_biz = ResourceBiz()
 
     def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
@@ -517,7 +517,6 @@ class ActionWithoutResourceAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
 
 class AuthScopeActionGenerator:
-
     handler_map: Dict[Tuple[str, str], Type[BaseAuthScopeActionHandler]] = {
         ("bk_nodeman", "cloud_view"): AnyAuthScopeActionHandler,
         ("bk_cmdb", "unassign_biz_host"): CmdbUnassignBizHostAuthScopeActionHandler,
@@ -538,7 +537,7 @@ class AuthScopeActionGenerator:
     def _get_handler(self) -> BaseAuthScopeActionHandler:
         if len(self._action.related_resource_types) == 0:
             return ActionWithoutResourceAuthScopeActionHandler()
-        elif self._system_id in ["bk_log_search", "bk_monitorv3"]:
+        if self._system_id in ["bk_log_search", "bk_monitorv3"]:
             return LogSpaceAuthScopeActionHandler()
 
         return self.handler_map.get((self._system_id, self._action.id), DefaultAuthScopeActionHandler)()

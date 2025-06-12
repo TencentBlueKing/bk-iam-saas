@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 import logging
 import random
@@ -36,39 +37,35 @@ class StepTask(metaclass=ABCMeta):
     步骤任务
     """
 
-    retry = 1  # 单步任务执行失败, 重试的次数
+    retry = 1  # 单步任务执行失败，重试的次数
     break_ = False  # 单步任务失败是否中断整个任务
 
     @abstractmethod
     def __init__(self, *args):
         """
-        重做: 由实现方自行定义重做, 如果是重做, kwargs中results表示上一次执行的所有结果
+        重做：由实现方自行定义重做，如果是重做，kwargs 中 results 表示上一次执行的所有结果
         """
-        pass
 
     @abstractmethod
     def get_params(self) -> List[Any]:
         """
         获取所有的步骤参数
         """
-        pass
 
     @abstractmethod
     def run(self, item: Any):
         """
         处理每次迭代的逻辑
         """
-        pass
 
     @abstractmethod
     def on_success(self, *args):
         """
-        执行完成后回调, 参数与init参数一致
+        执行完成后回调，参数与 init 参数一致
         """
-        pass
 
 
-# 任务类型与任务的处理的StepTask映射
+# 任务类型与任务的处理的 StepTask 映射
 task_type_mapping: Dict[str, Type[StepTask]] = {}
 
 
@@ -92,7 +89,8 @@ class Retry:
                 if not _tries:
                     raise
 
-                time.sleep(random.randint(0, 100) / 1000)  # 随机sleep 100毫秒
+                time.sleep(random.randint(0, 100) / 1000)  # 随机 sleep 100 毫秒
+        return None
 
 
 class ResultStore:
@@ -128,7 +126,7 @@ class SubTask(Task):
         # 查询任务
         task_detail = TaskDetail.objects.get(pk=id)
 
-        # 如果任务的状态不为running， 则保存结果， 退出任务
+        # 如果任务的状态不为 running，则保存结果，退出任务
         if task_detail.status != TaskStatus.RUNNING.value:  # type: ignore[attr-defined]
             self._update_status(task_detail, task_detail.status)
             return
@@ -162,7 +160,7 @@ class SubTask(Task):
 
                 logger.exception(f"long task {id} sub task item: {param} execute fail!")
 
-                # 子任务失败, 直接失败
+                # 子任务失败，直接失败
                 if handler.break_:
                     raise
 
@@ -174,7 +172,7 @@ class SubTask(Task):
         try:
             handler.on_success()
         except Exception:  # pylint: disable=broad-except
-            logger.warning("long task {} handler on_success fail".format(id), exc_info=sys.exc_info())
+            logger.warning(f"long task {id} handler on_success fail", exc_info=sys.exc_info())
         self._update_status(task_detail, TaskStatus.SUCCESS.value)  # type: ignore[attr-defined]
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
@@ -234,7 +232,7 @@ def register_handler(_type: str):
 @shared_task(ignore_result=True)
 def retry_long_task():
     """
-    重试30分钟以前一直 PENDING/RUNNING 的任务
+    重试 30 分钟以前一直 PENDING/RUNNING 的任务
     """
     day_before = timezone.now() - timedelta(minutes=30)
 

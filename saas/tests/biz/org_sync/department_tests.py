@@ -7,6 +7,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from collections import defaultdict
 
 import pytest
@@ -15,7 +16,7 @@ from backend.apps.organization.models import Department, DepartmentMember
 from backend.biz.org_sync.department import DBDepartmentSyncExactInfo
 
 
-@pytest.fixture()
+@pytest.fixture
 def department_list():
     return [
         Department(id=1, parent_id=None),
@@ -27,7 +28,7 @@ def department_list():
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def department_members():
     return [
         DepartmentMember(department_id=1, user_id="admin"),

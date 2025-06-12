@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from __future__ import unicode_literals
 
 import logging
@@ -51,15 +52,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         _("username"),
         max_length=64,
         unique=True,
-        help_text=_("Required. 64 characters or fewer. Letters, " "digits and underlined only."),
+        help_text=_("Required. 64 characters or fewer. Letters, digits and underlined only."),
         validators=[
             validators.RegexValidator(
                 r"^[a-zA-Z0-9_]+$",
-                _(
-                    "Enter a valid openid. "
-                    "This value may contain only letters, "
-                    "numbers and underlined characters."
-                ),
+                _("Enter a valid openid. This value may contain only letters, numbers and underlined characters."),
                 "invalid",
             ),
         ],
@@ -77,13 +74,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(
         _("staff status"),
         default=False,
-        help_text=_("Designates whether the user can log into this " "admin site."),
+        help_text=_("Designates whether the user can log into this admin site."),
     )
     is_active = models.BooleanField(
         _("active"),
         default=True,
         help_text=_(
-            "Designates whether this user should be treated as " "active. Unselect this instead of deleting accounts."
+            "Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
         ),
     )
     date_joined = models.DateTimeField(
@@ -142,11 +139,11 @@ class UserProperty(models.Model):
     )
     key = models.CharField(
         max_length=64,
-        help_text=_("Required. 64 characters or fewer. Letters, " "digits and underlined only."),
+        help_text=_("Required. 64 characters or fewer. Letters, digits and underlined only."),
         validators=[
             validators.RegexValidator(
                 r"^[a-zA-Z0-9_]+$",
-                _("Enter a valid key. " "This value may contain only letters, " "numbers and underlined characters."),
+                _("Enter a valid key. This value may contain only letters, numbers and underlined characters."),
                 "invalid",
             ),
         ],

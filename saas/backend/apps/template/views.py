@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, Dict, List, Set
 
 from django.shortcuts import get_object_or_404
@@ -98,7 +99,6 @@ class TemplatePermissionMixin:
 
 
 class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_TEMPLATE.value,
@@ -261,7 +261,6 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
 
 class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_TEMPLATE.value,
@@ -300,7 +299,7 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
         填充模板成员信息
         """
         subject_list = SubjectInfoList(parse_obj_as(List[Subject], data))
-        for d, subject in zip(data, subject_list.subjects):
+        for d, subject in zip(data, subject_list.subjects, strict=False):
             d.update(subject.dict())
         return data
 

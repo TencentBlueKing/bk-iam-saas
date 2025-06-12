@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -25,7 +26,6 @@ from .serializers import (
 
 
 class ResourceViewSet(ViewSet):
-
     biz = ResourceBiz()
 
     @swagger_auto_schema(
@@ -49,8 +49,9 @@ class ResourceViewSet(ViewSet):
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
-        # TODO：通过这个接口这样就把所有接入系统的资源拉取到？那么相当于用户访问iam saas就可以访问到接入系统所有资源，是否合理？如何鉴权？
-        # 是否有keyword，如果有，则是搜索
+        # TODO：通过这个接口这样就把所有接入系统的资源拉取到？
+        #  那么相当于用户访问 iam saas 就可以访问到接入系统所有资源，是否合理？如何鉴权？
+        # 是否有 keyword，如果有，则是搜索
         if keyword:
             count, results = self.biz.search_instance_for_topology(
                 system_id,
@@ -93,7 +94,7 @@ class ResourceViewSet(ViewSet):
         return Response({"count": count, "results": [i.dict() for i in results]})
 
     @swagger_auto_schema(
-        operation_description="资源属性Value列表",
+        operation_description="资源属性 Value 列表",
         query_serializer=ResourceAttributeValueQuerySLZ(),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
         force_page_response=True,
@@ -117,7 +118,6 @@ class ResourceViewSet(ViewSet):
 
 
 class ResourceListFilterByDisplayNameViewSet(ViewSet):
-
     biz = ResourceBiz()
 
     @swagger_auto_schema(

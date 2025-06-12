@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List
 
 from django.core.management.base import BaseCommand
@@ -35,7 +36,6 @@ class Command(BaseCommand):
 
         for i in paginator.page_range:
             for role in paginator.page(i):
-
                 # 遍历role创建每一个group
                 group_ids = list(
                     RoleRelatedObject.objects.filter(

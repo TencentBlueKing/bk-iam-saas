@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import time
 
 from django.conf import settings
@@ -123,7 +124,9 @@ class BatchResourceInstanceSLZ(serializers.Serializer):
 
 
 class AuthBatchInstanceSLZ(BaseAuthSLZ, AuthActionsSLZ):
-    resources = serializers.ListField(label="资源实例", child=BatchResourceInstanceSLZ(label="批量实例"), allow_empty=True)
+    resources = serializers.ListField(
+        label="资源实例", child=BatchResourceInstanceSLZ(label="批量实例"), allow_empty=True
+    )
 
     def validate(self, data):
         operate = data["operate"]
@@ -152,7 +155,9 @@ class BatchResourcePathSLZ(serializers.Serializer):
 
 class AuthBatchPathSLZ(BaseAuthSLZ, AuthActionsSLZ):
     # 如果action是与资源实例无关的，那么resources允许为空列表，但是字段还是要有，保持格式一致
-    resources = serializers.ListField(label="资源拓扑", child=BatchResourcePathSLZ(label="匹配资源拓扑"), allow_empty=True)
+    resources = serializers.ListField(
+        label="资源拓扑", child=BatchResourcePathSLZ(label="匹配资源拓扑"), allow_empty=True
+    )
 
     def validate(self, data):
         operate = data["operate"]
@@ -186,7 +191,9 @@ class AncestorSLZ(serializers.Serializer):
 class SingleInstanceSLZ(serializers.Serializer):
     id = serializers.CharField(label="资源ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(label="资源名称", trim_whitespace=False)
-    ancestors = serializers.ListField(label="祖先", child=AncestorSLZ(label="祖先层级"), allow_empty=True, required=False)
+    ancestors = serializers.ListField(
+        label="祖先", child=AncestorSLZ(label="祖先层级"), allow_empty=True, required=False
+    )
 
 
 class ResourceCreatorActionSLZ(ResourceCreatorActionBaseInfoSLZ, SingleInstanceSLZ):

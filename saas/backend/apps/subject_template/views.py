@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from functools import wraps
 from typing import List
@@ -65,10 +66,11 @@ def check_readonly_subject_template(func):
     def decorate(view, request, *args, **kwargs):
         subject_template = view.get_object()
         if subject_template.readonly:
-            raise error_codes.FORBIDDEN.format(message=_("只读人员模版({})禁止变更").format(subject_template.id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("只读人员模版({})禁止变更").format(subject_template.id), replace=True
+            )
 
-        response = func(view, request, *args, **kwargs)
-        return response
+        return func(view, request, *args, **kwargs)
 
     return decorate
 
@@ -80,7 +82,6 @@ class SubjectTemplateQueryMixin:
 
 
 class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
@@ -201,7 +202,6 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
 
 
 class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
@@ -289,7 +289,6 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
 
 
 class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericViewSet):
-
     permission_classes = [
         role_perm_class(
             PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
@@ -328,7 +327,9 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
         templates = self.get_queryset().filter(id__in=template_ids)
         for template in templates:
             if template.readonly:
-                raise error_codes.FORBIDDEN.format(message=_("只读人员模版({})禁止变更").format(template.id), replace=True)
+                raise error_codes.FORBIDDEN.format(
+                    message=_("只读人员模版({})禁止变更").format(template.id), replace=True
+                )
 
             try:
                 # 校验用户组数量是否超限
@@ -355,7 +356,6 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
 
 
 class SubjectTemplateGroupViewSet(SubjectTemplateQueryMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "destroy": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,

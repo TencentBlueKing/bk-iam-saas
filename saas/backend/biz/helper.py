@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, Dict, List, Tuple
 
 from django.db import transaction
@@ -58,7 +59,7 @@ class RoleWithPermGroupBiz:
 
     def delete_role_member(self, role: Role, username: str, operator: str = ADMIN_USER):
         """
-        删除成员, 同时删除相关的权限
+        删除成员，同时删除相关的权限
         """
         self.role_biz.delete_member(role.id, username)
 
@@ -69,7 +70,7 @@ class RoleWithPermGroupBiz:
         """
         批量增加分级管理员成员
         """
-        # 批量添加成员(添加时去重)
+        # 批量添加成员 (添加时去重)
         self.role_biz.add_grade_manager_members(role.id, usernames)
 
         # 同步权限用户组成员
@@ -89,7 +90,7 @@ class RoleWithPermGroupBiz:
 
 class RoleDeleteHelper:
     """
-    角色删除操作(只能操作分级管理员/子集管理员)
+    角色删除操作 (只能操作分级管理员/子集管理员)
 
     1. 删除分级管理员创建的所有用户组
     2. 删除分级管理员创建的权限模板
@@ -97,7 +98,7 @@ class RoleDeleteHelper:
     4. 删除分级管理员的系统权限
     5. 删除分级管理员的授权范围数据
     6. 删除分级管理员的所有成员
-    7. 删除分级管理员的role_source
+    7. 删除分级管理员的 role_source
     8. 删除分级管理员的人员模版
     """
 
@@ -118,7 +119,7 @@ class RoleDeleteHelper:
 
     def delete(self):
         """
-        删除role
+        删除 role
         """
         if self._role.type == RoleType.GRADE_MANAGER.value:
             self._delete_subset_manager()
@@ -186,7 +187,7 @@ class RoleDeleteHelper:
         删除分级管理员的系统权限
         删除分级管理员的授权范围数据
         删除分级管理员的所有成员
-        删除分级管理员的role_source
+        删除分级管理员的 role_source
         """
         with transaction.atomic():
             RoleCommonAction.objects.filter(role_id=self._role.id).delete()
@@ -201,7 +202,7 @@ class RoleDeleteHelper:
                 RoleRelation.objects.filter(role_id=self._role.id).delete()
 
 
-def get_role_expired_group_members(role: Role, expired_at_before: int, expired_at_after: int) -> List[Dict[str, Any]]:
+def get_role_expired_group_members(role: Role, expired_at_before: int, expired_at_after: int) -> List[Dict[str, Any]]:  # noqa: C901, PLR0912
     """
     获取角色已过期或即将过期的用户组成员
     """
@@ -304,7 +305,7 @@ def get_user_expired_groups_policies(
     username = user.username
     subject = Subject.from_username(username)
 
-    # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
+    # 注意：rbac 用户所属组很大，这里会变成多次查询，也变成多次 db io (单次 1000 个)
     groups = [
         group
         for group in group_biz.list_all_subject_group_before_expired_at(subject, expired_at_before)
@@ -317,7 +318,7 @@ def get_user_expired_groups_policies(
     if not groups and not policies:
         return groups, policies
 
-    # 查询当前用户未处理的续期单, 如果已经有相关数据, 过滤掉
+    # 查询当前用户未处理的续期单，如果已经有相关数据，过滤掉
     for application in Application.objects.filter(
         applicant=username,
         type__in=[ApplicationType.RENEW_ACTION.value, ApplicationType.RENEW_GROUP.value],

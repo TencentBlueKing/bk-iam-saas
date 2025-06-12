@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from copy import deepcopy
 
 import pytest
@@ -32,7 +33,7 @@ from backend.service.models.policy import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def path_node():
     return PathNode(
         id="id",
@@ -44,7 +45,7 @@ def path_node():
 
 class TestPathNode:
     def test_equals(self, path_node: PathNode):
-        assert path_node == path_node
+        assert path_node == path_node  # noqa: PLR0124
         copied_path_node = deepcopy(path_node)
         copied_path_node.type = "type1"
         assert path_node != copied_path_node
@@ -59,14 +60,14 @@ class TestPathNode:
         assert path_node.match_resource_type("system_id", "type")
 
 
-@pytest.fixture()
+@pytest.fixture
 def path_node_list(path_node):
     copied_path_node = deepcopy(path_node)
     copied_path_node.type = "type1"
     return PathNodeList(__root__=[path_node, copied_path_node])
 
 
-@pytest.fixture()
+@pytest.fixture
 def instance_selection():
     return InstanceSelection(
         id="id",
@@ -110,7 +111,7 @@ class TestInstance:
 class TestDataGenerator:
     @classmethod
     def gen_only_attr_related_resource_data(cls):
-        """生成只包含attribute的relatedResource数据"""
+        """生成只包含 attribute 的 relatedResource 数据"""
         return RelatedResource(
             system_id="s_id",
             type="rt_id",
@@ -133,7 +134,7 @@ class TestDataGenerator:
 
     @classmethod
     def gen_only_path_related_resource_data(cls):
-        """生成只包含资源路径的RelatedResource数据"""
+        """生成只包含资源路径的 RelatedResource 数据"""
         return RelatedResource(
             system_id="s_id",
             type="rt_id",
@@ -159,7 +160,7 @@ class TestUniversalPolicy:
     @pytest.mark.parametrize(
         "resource_groups,action_auth_type,expected",
         [
-            # Action类型为ABAC
+            # Action 类型为 ABAC
             (
                 # resource_groups
                 [],
@@ -219,7 +220,7 @@ class TestUniversalPolicy:
                 # expected
                 True,
             ),
-            # Any策略
+            # Any 策略
             (
                 # resource_groups
                 [
@@ -232,7 +233,7 @@ class TestUniversalPolicy:
                 # expected
                 True,
             ),
-            # RBAC策略
+            # RBAC 策略
             (
                 # resource_groups
                 [
@@ -326,7 +327,7 @@ class TestUniversalPolicy:
                     [],
                 ),
             ),
-            # 仅仅RBAC
+            # 仅仅 RBAC
             (
                 # related_resource
                 TestDataGenerator.gen_only_path_related_resource_data(),

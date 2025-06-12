@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 
 所有与ITSM单据的申请内容渲染相关
 """
+
 from aenum import LowerStrEnum, auto
 
 
@@ -102,7 +103,9 @@ FORM_SCHEMES = {
     },
     FormSchemeEnum.RESOURCE_ATTRIBUTE_TABLE.value: {
         "type": "table",
-        "attrs": {"column": [{"name": "属性条件", "key": "attributes", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value}]},
+        "attrs": {
+            "column": [{"name": "属性条件", "key": "attributes", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value}]
+        },
     },
     FormSchemeEnum.RESOURCE_BOTH_TABLE.value: {
         "type": "table",

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import time
 from typing import List
 
@@ -54,14 +55,15 @@ class ApplicationSLZ(ReasonSLZ):
     """
 
     system = SystemInfoSLZ(label="系统信息")
-    actions = serializers.ListField(label="操作策略", child=PolicyActionSLZ(label="策略"), required=False, default=list)
+    actions = serializers.ListField(
+        label="操作策略", child=PolicyActionSLZ(label="策略"), required=False, default=list
+    )
     aggregations = serializers.ListField(
         label="聚合操作", child=AggActionListSLZ(label="聚合操作"), required=False, default=list
     )
     usernames = serializers.ListField(label="权限获得者", child=serializers.CharField(), required=False, default=list)
 
     def validate(self, data):
-
         # 检查操作是否重复
         validate_action_repeat(data)
 
@@ -80,7 +82,7 @@ class ApplicationIdSLZ(serializers.Serializer):
     申请单结果
     """
 
-    id = serializers.IntegerField(label="申请单ID")
+    id = serializers.IntegerField(label="申请单 ID")
 
 
 class ConditionCompareSLZ(serializers.Serializer):
@@ -88,8 +90,8 @@ class ConditionCompareSLZ(serializers.Serializer):
     条件对比
     """
 
-    policy_id = serializers.IntegerField(label="策略ID")
-    resource_group_id = serializers.CharField(label="资源条件组ID")
+    policy_id = serializers.IntegerField(label="策略 ID")
+    resource_group_id = serializers.CharField(label="资源条件组 ID")
     related_resource_type = ResourceTypeSLZ(label="资源类型")
 
 
@@ -108,20 +110,20 @@ class InstanceTagSLZ(serializers.Serializer):
 
 class ValueTagSLZ(serializers.Serializer):
     tag = serializers.CharField(label="标签")
-    id = ValueFiled(label="属性VALUE")
-    name = serializers.CharField(label="属性VALUE名称")
+    id = ValueFiled(label="属性 VALUE")
+    name = serializers.CharField(label="属性 VALUE 名称")
 
 
 class AttributeTagSLZ(serializers.Serializer):
     tag = serializers.CharField(label="标签")
-    id = serializers.CharField(label="属性KEY")
-    name = serializers.CharField(label="属性KEY名称")
-    values = serializers.ListField(label="属性VALUE", child=ValueTagSLZ(label="值"), allow_empty=False)
+    id = serializers.CharField(label="属性 KEY")
+    name = serializers.CharField(label="属性 KEY 名称")
+    values = serializers.ListField(label="属性 VALUE", child=ValueTagSLZ(label="值"), allow_empty=False)
 
 
 class ConditionTagSLZ(serializers.Serializer):
     tag = serializers.CharField(label="标签")
-    id = serializers.CharField(label="条件id", allow_blank=True)
+    id = serializers.CharField(label="条件 id", allow_blank=True)
     instances = serializers.ListField(label="拓扑选择", child=InstanceTagSLZ(label="拓扑实例"))
     attributes = serializers.ListField(label="属性选择", child=AttributeTagSLZ(label="属性"))
 
@@ -138,7 +140,7 @@ class ApplicationListSLZ(serializers.ModelSerializer):
     def get_extra_info(self, obj):
         """额外信息：每种申请都可以需要给前端不同信息，便于提示"""
         extra_info = {}
-        # 自定义需要返回system_name、system_name_en
+        # 自定义需要返回 system_name、system_name_en
         if obj.type in [
             ApplicationType.GRANT_ACTION.value,
             ApplicationType.RENEW_ACTION.value,
@@ -178,24 +180,23 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             qs = User.objects.get(username=obj.applicant).departments
         except User.DoesNotExist:
             return []
-        data = [{"id": i.id, "name": i.name, "full_name": i.full_name} for i in qs]
-        return data
+        return [{"id": i.id, "name": i.name, "full_name": i.full_name} for i in qs]
 
     def get_data(self, obj):
         """
-        详细申请单信息, 补充过期时间显示
+        详细申请单信息，补充过期时间显示
         """
         data = obj.data
         # 对于自定义权限申请
         if obj.type in [ApplicationType.GRANT_ACTION.value, ApplicationType.RENEW_ACTION.value]:
-            # 兼容老数据，老数据只有expired_at，而没有expired_display
+            # 兼容老数据，老数据只有 expired_at，而没有 expired_display
             for p in data["actions"]:
                 if not p.get("expired_display"):
                     p["expired_display"] = expired_at_display(p["expired_at"], obj.created_timestamp)
 
         # 对于加入用户组权限申请
-        if obj.type == ApplicationType.JOIN_GROUP.value:
-            # 兼容老数据，老数据只有expired_at，而没有expired_display
+        if obj.type == ApplicationType.JOIN_GROUP.value:  # noqa: SIM102
+            # 兼容老数据，老数据只有 expired_at，而没有 expired_display
             if not data.get("expired_display"):
                 data["expired_display"] = expired_at_display(data["expired_at"], obj.created_timestamp)
 
@@ -204,10 +205,10 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             ApplicationType.CREATE_GRADE_MANAGER.value,
             ApplicationType.UPDATE_GRADE_MANAGER.value,
         ]:
-            # 兼容老数据，老数据只有system_id，而不是完整的system
+            # 兼容老数据，老数据只有 system_id，而不是完整的 system
             # 授权范围处理
             auth_scopes = data["authorization_scopes"]
-            # 填充system name
+            # 填充 system name
             system_dict = {s.id: s for s in SystemBiz().list()}
             for scope in auth_scopes:
                 if "system_id" in scope:
@@ -234,19 +235,21 @@ class ApplicationDetailSchemaSLZ(ApplicationDetailSLZ):
 
 
 class ApplicationGroupInfoSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="用户组ID")
+    id = serializers.IntegerField(label="用户组 ID")
 
 
 class ApplicantSLZ(serializers.Serializer):
     type = serializers.ChoiceField(
         label="申请者类型", choices=[one for one in SubjectType.get_choices() if one[0] in ["user", "department"]]
     )
-    id = serializers.CharField(label="申请者id")
+    id = serializers.CharField(label="申请者 id")
 
 
 class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
-    groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupInfoSLZ(label="用户组"), allow_empty=False)
-    source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
+    groups = serializers.ListField(
+        label="加入的用户组", child=ApplicationGroupInfoSLZ(label="用户组"), allow_empty=False
+    )
+    source_system_id = serializers.CharField(label="系统 ID", allow_blank=True, required=False, default="")
     applicants = serializers.ListField(label="权限获得者", child=ApplicantSLZ("获得者"), required=False, default=list)
 
 
@@ -255,7 +258,7 @@ class GradeManagerCreatedApplicationSLZ(GradeMangerCreateSLZ, ReasonSLZ):
 
 
 class GradeManagerUpdateApplicationSLZ(GradeManagerCreatedApplicationSLZ):
-    id = serializers.IntegerField(label="分级管理员ID")
+    id = serializers.IntegerField(label="分级管理员 ID")
 
 
 class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
@@ -263,8 +266,10 @@ class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
 
 
 class RenewGroupApplicationSLZ(ReasonSLZ):
-    groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupExpiredAtSLZ(label="用户组"), allow_empty=False)
-    source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
+    groups = serializers.ListField(
+        label="加入的用户组", child=ApplicationGroupExpiredAtSLZ(label="用户组"), allow_empty=False
+    )
+    source_system_id = serializers.CharField(label="系统 ID", allow_blank=True, required=False, default="")
 
 
 class IDExpiredAtSLZ(ExpiredAtSLZ):

@@ -8,6 +8,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
+# Monkey Patch: rest_framework.serializers.Serializer
+import backend.util.serializer_patch  # noqa
+from backend.common.vue import LoginSuccessView, VueTemplateView
 from bk_notice_sdk import config
 from django.conf import settings
 from django.urls import include, re_path
@@ -15,10 +19,6 @@ from django.views.decorators.cache import never_cache
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
-
-# Monkey Patch: rest_framework.serializers.Serializer
-import backend.util.serializer_patch  # noqa
-from backend.common.vue import LoginSuccessView, VueTemplateView
 
 schema_view = get_schema_view(
     openapi.Info(

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List
 
 from django.shortcuts import get_object_or_404
@@ -99,7 +100,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量创建用户组",
         request_body=ManagementGradeManagerGroupCreateSLZ(label="用户组"),
-        responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组ID"))},
+        responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组 ID"))},
         tags=["management.role.group"],
     )
     def create(self, request, *args, **kwargs):
@@ -142,7 +143,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             )
 
         # 添加审计信息
-        # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
+        # TODO: 后续其他地方也需要批量添加审计时再抽象出一个 batch_add_audit 方法，将 for 循环逻辑放到方法里
         for g in groups:
             add_audit(GroupCreateAuditProvider, request, group=g)
 
@@ -180,7 +181,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         """
         system_id = self.kwargs["system_id"]
 
-        # 使用操作, 资源实例筛选有权限的用户组
+        # 使用操作，资源实例筛选有权限的用户组
         action_id = request.query_params.get("action_id") or ""
         resource_type_system_id = request.query_params.get("resource_type_system_id")
         resource_type_id = request.query_params.get("resource_type_id")
@@ -188,11 +189,11 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         bk_iam_path = request.query_params.get("bk_iam_path") or ""
 
         if action_id and (not resource_type_system_id or not resource_type_id or not resource_id):
-            # 只使用action_id筛选
+            # 只使用 action_id 筛选
             return self._filter_by_action(queryset, system_id, action_id)
 
         if resource_type_system_id and resource_type_id and resource_id:
-            # 使用操作, 资源实例筛选
+            # 使用操作，资源实例筛选
             return self._filter_by_action_resource(
                 queryset, system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
             )
@@ -256,7 +257,7 @@ class ManagementSystemManagerGroupViewSet(ManagementGradeManagerGroupViewSet):
     @swagger_auto_schema(
         operation_description="系统管理员下批量创建用户组",
         request_body=ManagementGradeManagerGroupCreateSLZ(label="用户组"),
-        responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组ID"))},
+        responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组 ID"))},
         tags=["management.role.group"],
     )
     def create(self, request, *args, **kwargs):
@@ -386,7 +387,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
 
         members_data = data["members"]
         expired_at = data["expired_at"]
-        # 成员Dict结构转换为Subject结构，并去重
+        # 成员 Dict 结构转换为 Subject 结构，并去重
         members, subject_template_ids = split_members_to_subject_and_template(members_data)
         # 排除组织架构中不存在的成员
         members = remove_not_exist_subject(members)
@@ -396,7 +397,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         self.group_check_biz.check_role_subject_scope(role, members)
         self.group_check_biz.check_member_count(group.id, len(members))
 
-        # 检查人员模版是否在role的授权范围内
+        # 检查人员模版是否在 role 的授权范围内
         self.group_check_biz.check_subject_template(role, subject_template_ids)
 
         if members:
@@ -427,7 +428,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         data = serializer.validated_data
 
         members_data = [{"type": data["type"], "id": _id} for _id in data["ids"]]
-        # 成员Dict结构转换为Subject结构，并去重
+        # 成员 Dict 结构转换为 Subject 结构，并去重
         members, subject_template_ids = split_members_to_subject_and_template(members_data)
 
         if members:
@@ -583,7 +584,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     management_api_permission = {
         "list": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_LIST.value),
@@ -618,24 +619,25 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
 
-        # 将授权的权限数据转为PolicyBeanList
+        # 将授权的权限数据转为 PolicyBeanList
         policy_list = self.trans.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
 
         # 组装数据进行对用户组权限处理
         template = GroupTemplateGrantBean(
             system_id=system_id,
-            template_id=0,  # 自定义权限template_id为0
+            template_id=0,  # 自定义权限 template_id 为 0
             policies=policy_list.policies,
         )
         role = self.role_biz.get_role_by_group_id(group.id)
 
-        # 检查数据正确性：授权范围是否超限角色访问，这里不需要检查资源实例名称，因为授权时，接入系统可能使用同步方式，这时候资源可能还没创建
+        # 检查数据正确性：授权范围是否超限角色访问，这里不需要检查资源实例名称，
+        # 因为授权时，接入系统可能使用同步方式，这时候资源可能还没创建
         self.group_biz.check_before_grant(
             group, [template], role, need_check_action_not_exists=False, need_check_resource_name=False
         )
 
-        # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
-        # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
+        # Note: 这里不能使用 group_biz 封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
+        # 这里主要是针对自定义授权，直接使用 policy_biz 提供的方法即可
         self.policy_operation_biz.alter(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
@@ -661,11 +663,12 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
 
-        # 将授权的权限数据转为PolicyBeanList
+        # 将授权的权限数据转为 PolicyBeanList
         policy_list = self.trans.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
 
-        # Note: 这里不能使用 group_biz封装的"异步"变更权限（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
-        # 这里主要是针对自定义授权的回收，直接使用policy_biz提供的方法即可
+        # Note: 这里不能使用 group_biz 封装的"异步"变更权限（其是针对模板权限的），
+        # 否则会导致连续授权时，第二次调用会失败
+        # 这里主要是针对自定义授权的回收，直接使用 policy_biz 提供的方法即可
         self.policy_operation_biz.revoke(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
@@ -726,10 +729,10 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
 
-        # 查询将要被删除PolicyID列表
+        # 查询将要被删除 PolicyID 列表
         policies = self.policy_query_biz.list_by_subject(system_id, Subject.from_group_id(group.id), action_ids)
 
-        # 根据PolicyID删除策略
+        # 根据 PolicyID 删除策略
         policy_ids = [p.policy_id for p in policies]
         self.policy_operation_biz.delete_by_ids(system_id, Subject.from_group_id(group.id), policy_ids)
 
@@ -756,7 +759,7 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
     policy_query_biz = PolicyQueryBiz()
 
     @swagger_auto_schema(
-        operation_description="查询用户组有权限的Action列表",
+        operation_description="查询用户组有权限的 Action 列表",
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group.policy"],
     )
@@ -766,7 +769,7 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
         system_id = kwargs["system_id"]
         subject = Subject.from_group_id(group.id)
 
-        # 查询用户组Policy列表
+        # 查询用户组 Policy 列表
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         return Response([{"id": p.action_id} for p in policies])
@@ -778,7 +781,7 @@ class ManagementGroupPolicyTemplateViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     management_api_permission = {
         "create": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_GRANT.value),

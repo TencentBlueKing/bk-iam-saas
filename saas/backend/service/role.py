@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 from collections import defaultdict
 from typing import Any, List, Optional, Tuple
@@ -203,8 +204,7 @@ class RoleService:
             RoleType.GRADE_MANAGER.value,
             RoleType.SUBSET_MANAGER.value,
         ]
-        sorted_data = sorted(data, key=lambda r: sort_index.index(r.type))
-        return sorted_data
+        return sorted(data, key=lambda r: sort_index.index(r.type))
 
     def create(self, info: RoleInfo, creator: str, add_member=True) -> Role:
         """创建Role"""

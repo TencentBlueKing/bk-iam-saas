@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.conf import settings
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import TemplateView
@@ -54,8 +55,7 @@ class VueTemplateView(TemplateView):
             for feature, is_enabled in settings.ENABLE_FRONT_END_FEATURES.items():
                 context[feature.upper()] = is_enabled
 
-            response = super(VueTemplateView, self).get(request, **context)
-            return response
+            return super(VueTemplateView, self).get(request, **context)
         except Exception as error:  # pylint: disable=broad-except
             print(error)
 

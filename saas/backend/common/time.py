@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import datetime
 import math
 import time
@@ -148,7 +149,4 @@ def need_run_expired_remind(config: Dict[str, Any]) -> bool:
     schedule_time = timezone.localtime(timezone.now()).replace(hour=hour, minute=minute, second=0, microsecond=0)
 
     # 执行时间小于调度时间不执行, 当前时间超过调度时间10分钟不执行
-    if current_time < schedule_time or current_time - schedule_time > datetime.timedelta(minutes=5):
-        return False
-
-    return True
+    return not (current_time < schedule_time or current_time - schedule_time > datetime.timedelta(minutes=5))

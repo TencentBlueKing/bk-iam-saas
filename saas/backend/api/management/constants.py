@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from aenum import LowerStrEnum, auto, skip
 
 from backend.api.constants import BaseAPIEnum
@@ -15,7 +16,7 @@ from backend.util.enum import ChoicesEnum
 
 
 class ManagementAPIEnum(BaseAPIEnum):
-    """这里的枚举的是每个具体管理类API"""
+    """这里的枚举的是每个具体管理类 API"""
 
     # 分级管理员
     GRADE_MANAGER_LIST = auto()
@@ -121,52 +122,52 @@ class ManagementAPIEnum(BaseAPIEnum):
             (GROUP_APPLICATION_CREATE, "创建用户组申请单"),
             # V2
             # 用户组
-            (V2_GROUP_LIST, "[V2]用户组列表"),
-            (V2_GROUP_BATCH_CREATE, "[V2]批量创建用户组"),
-            (V2_GROUP_UPDATE, "[V2]更新用户组"),
-            (V2_GROUP_DELETE, "[V2]删除用户组"),
+            (V2_GROUP_LIST, "[V2] 用户组列表"),
+            (V2_GROUP_BATCH_CREATE, "[V2] 批量创建用户组"),
+            (V2_GROUP_UPDATE, "[V2] 更新用户组"),
+            (V2_GROUP_DELETE, "[V2] 删除用户组"),
             # 用户组成员
-            (V2_GROUP_MEMBER_LIST, "[V2]获取用户组成员列表"),
-            (V2_GROUP_MEMBER_ADD, "[V2]添加用户组成员"),
-            (V2_GROUP_MEMBER_DELETE, "[V2]删除用户组成员"),
-            (V2_GROUP_MEMBER_EXPIRED_AT_UPDATE, "[V2]用户组成员续期"),
-            (V2_GROUP_MEMBER_EXPIRED_AT_BATCH_UPDATE, "[V2]用户组成员批量续期"),
-            (V2_GROUP_SUBJECT_TEMPLATE_LIST, "[V2]获取用户组人员模板列表"),
+            (V2_GROUP_MEMBER_LIST, "[V2] 获取用户组成员列表"),
+            (V2_GROUP_MEMBER_ADD, "[V2] 添加用户组成员"),
+            (V2_GROUP_MEMBER_DELETE, "[V2] 删除用户组成员"),
+            (V2_GROUP_MEMBER_EXPIRED_AT_UPDATE, "[V2] 用户组成员续期"),
+            (V2_GROUP_MEMBER_EXPIRED_AT_BATCH_UPDATE, "[V2] 用户组成员批量续期"),
+            (V2_GROUP_SUBJECT_TEMPLATE_LIST, "[V2] 获取用户组人员模板列表"),
             # 用户组权限
-            (V2_GROUP_POLICY_GRANT, "[V2]授权用户组"),
-            (V2_GROUP_POLICY_REVOKE, "[V2]回收用户组权限"),
-            (V2_GROUP_POLICY_DELETE, "[V2]删除用户组策略"),
-            (V2_GROUP_POLICY_ACTION_LIST, "[V2]用户组策略对应操作列表"),
+            (V2_GROUP_POLICY_GRANT, "[V2] 授权用户组"),
+            (V2_GROUP_POLICY_REVOKE, "[V2] 回收用户组权限"),
+            (V2_GROUP_POLICY_DELETE, "[V2] 删除用户组策略"),
+            (V2_GROUP_POLICY_ACTION_LIST, "[V2] 用户组策略对应操作列表"),
             # 用户组申请单
-            (V2_GROUP_APPLICATION_CREATE, "[V2]创建用户组申请单"),
-            (V2_GROUP_APPLICATION_RENEW, "[V2]用户组续期申请单"),
-            (V2_GROUP_APPLICATION_BATCH_EXPIRED_AT_RENEW, "[V2]用户组批量续期申请单"),
+            (V2_GROUP_APPLICATION_CREATE, "[V2] 创建用户组申请单"),
+            (V2_GROUP_APPLICATION_RENEW, "[V2] 用户组续期申请单"),
+            (V2_GROUP_APPLICATION_BATCH_EXPIRED_AT_RENEW, "[V2] 用户组批量续期申请单"),
             # 用户组归属
-            (V2_USER_GROUPS_BELONG_CHECK, "[V2]判断用户与用户组归属"),
-            (V2_DEPARTMENT_GROUPS_BELONG_CHECK, "[V2]判断部门与用户组归属"),
-            (V2_MEMBER_GROUPS_DETAIL_LIST, "[V2]用户组成员在组内的详情"),
+            (V2_USER_GROUPS_BELONG_CHECK, "[V2] 判断用户与用户组归属"),
+            (V2_DEPARTMENT_GROUPS_BELONG_CHECK, "[V2] 判断部门与用户组归属"),
+            (V2_MEMBER_GROUPS_DETAIL_LIST, "[V2] 用户组成员在组内的详情"),
             # 分级管理员
-            (V2_GRADE_MANAGER_DETAIL, "[V2]分级管理员详情"),
-            (V2_GRADE_MANAGER_CREATE, "[V2]新建分级管理员"),
-            (V2_GRADE_MANAGER_UPDATE, "[V2]更新分级管理员"),
-            (V2_GRADE_MANAGER_APPLICATION_CREATE, "[V2]创建分级管理员创建申请单"),
-            (V2_GRADE_MANAGER_APPLICATION_UPDATE, "[V2]创建分级管理员更新申请单"),
+            (V2_GRADE_MANAGER_DETAIL, "[V2] 分级管理员详情"),
+            (V2_GRADE_MANAGER_CREATE, "[V2] 新建分级管理员"),
+            (V2_GRADE_MANAGER_UPDATE, "[V2] 更新分级管理员"),
+            (V2_GRADE_MANAGER_APPLICATION_CREATE, "[V2] 创建分级管理员创建申请单"),
+            (V2_GRADE_MANAGER_APPLICATION_UPDATE, "[V2] 创建分级管理员更新申请单"),
             # 子集管理员
-            (V2_SUBSET_MANAGER_CREATE, "[V2]创建子集管理员"),
-            (V2_SUBSET_MANAGER_LIST, "[V2]子集管理员列表"),
+            (V2_SUBSET_MANAGER_CREATE, "[V2] 创建子集管理员"),
+            (V2_SUBSET_MANAGER_LIST, "[V2] 子集管理员列表"),
             # 审批
-            (V2_APPLICATION_APPROVAL, "[V2]申请单审批通知"),
+            (V2_APPLICATION_APPROVAL, "[V2] 申请单审批通知"),
             # 申请单取消
-            (V2_APPLICATION_CANCEL, "[V2]申请单取消"),
+            (V2_APPLICATION_CANCEL, "[V2] 申请单取消"),
             # 权限模版
-            (V2_GRADE_MANAGER_TEMPLATE_LIST, "[V2]获取分级管理员权限模版列表"),
-            (V2_GRADE_MANAGER_TEMPLATE_CREATE, "[V2]创建分级管理员权限模版"),
+            (V2_GRADE_MANAGER_TEMPLATE_LIST, "[V2] 获取分级管理员权限模版列表"),
+            (V2_GRADE_MANAGER_TEMPLATE_CREATE, "[V2] 创建分级管理员权限模版"),
         )
     )
 
 
 class VerifyAPIObjectTypeEnum(ChoicesEnum, LowerStrEnum):
-    """API认证和鉴权时的角色对象类型"""
+    """API 认证和鉴权时的角色对象类型"""
 
     ROLE = auto()
     GROUP = auto()
@@ -184,14 +185,14 @@ class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
 
     _choices_labels = skip(
         (
-            (ROLE_IN_PATH, "在URL里的role id参数"),
-            (GROUP_IN_PATH, "在URL里的group id参数"),
-            (SYSTEM_IN_BODY, "在body data里的system参数"),
-            (SYSTEM_IN_QUERY, "在get请求query里的system参数"),
-            (GROUP_IDS_IN_BODY, "在body data里的groups_ids参数"),
-            (GROUPS_IN_BODY, "在body data里的groups参数"),
-            (SYSTEM_IN_PATH, "在路径里的system参数"),
-            (GROUP_IDS_IN_QUERY, "在get请求query里的groups_ids参数"),
+            (ROLE_IN_PATH, "在 URL 里的 role id 参数"),
+            (GROUP_IN_PATH, "在 URL 里的 group id 参数"),
+            (SYSTEM_IN_BODY, "在 body data 里的 system 参数"),
+            (SYSTEM_IN_QUERY, "在 get 请求 query 里的 system 参数"),
+            (GROUP_IDS_IN_BODY, "在 body data 里的 groups_ids 参数"),
+            (GROUPS_IN_BODY, "在 body data 里的 groups 参数"),
+            (SYSTEM_IN_PATH, "在路径里的 system 参数"),
+            (GROUP_IDS_IN_QUERY, "在 get 请求 query 里的 groups_ids 参数"),
         )
     )
 
@@ -201,5 +202,6 @@ VerifyAPIParamSourceToObjectTypeMap = {
     VerifyApiParamLocationEnum.GROUP_IN_PATH.value: VerifyAPIObjectTypeEnum.GROUP.value,
 }
 
-# 主要用于ViewSet里配置了ManagementAPIPermission，但是对于一些请求不需要对API鉴权的，可在management_api_permission里配置忽略鉴权
+# 主要用于 ViewSet 里配置了 ManagementAPIPermission，
+# 但是对于一些请求不需要对 API 鉴权的，可在 management_api_permission 里配置忽略鉴权
 IGNORE_VERIFY_API_CONFIG = ("ignore", "ignore")

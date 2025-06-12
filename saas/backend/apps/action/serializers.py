@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from rest_framework import serializers
 
 from backend.common.serializers import ActionQuerySLZ
@@ -63,7 +64,9 @@ class ActionSLZ(serializers.Serializer):
     description_en = serializers.CharField()
     type = serializers.CharField(label="操作类型")
     version = serializers.IntegerField()
-    related_resource_types = serializers.ListField(label="关联资源类型", child=RelatedResourceTypeSLZ(label="资源类型"))
+    related_resource_types = serializers.ListField(
+        label="关联资源类型", child=RelatedResourceTypeSLZ(label="资源类型")
+    )
     related_actions = serializers.ListField(child=serializers.CharField())
     related_environments = serializers.ListField(child=RelatedEnvironmentSLZ())
 

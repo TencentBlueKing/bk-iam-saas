@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Callable, Dict, List, Optional, Tuple
 
 from django.conf import settings
@@ -70,7 +71,7 @@ class ApplicationService:
 
         # 调用第三方插件进行单据创建
         ticket_sn = create_ticket_func(callback_url)
-        application = Application.objects.create(
+        return Application.objects.create(
             sn=ticket_sn,
             type=data.type,
             applicant=data.applicant_info.username,
@@ -80,7 +81,6 @@ class ApplicationService:
             source_system_id=source_system_id,
             hidden=source_system_id in settings.HIDDEN_SYSTEM_LIST if source_system_id else False,
         )
-        return application
 
     def create_for_policy(
         self,

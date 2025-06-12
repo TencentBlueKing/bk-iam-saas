@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List, Optional
 
 from backend.apps.group.models import Group
@@ -31,8 +32,8 @@ class SubjectInfoList:
     def get(self, subject: Subject) -> Optional[SubjectInfo]:
         return self._subject_dict.get(subject, None)
 
-    def _to_subject_infos(self, subjects: List[Subject]) -> List[SubjectInfo]:
-        """自动根据Type和ID填充Subject基本信息"""
+    def _to_subject_infos(self, subjects: List[Subject]) -> List[SubjectInfo]:  # noqa: C901
+        """自动根据 Type 和 ID 填充 Subject 基本信息"""
         # 分组查询
         usernames, department_ids, group_ids = [], [], []
         for subject in subjects:

@@ -36,8 +36,6 @@ class NoNeedAuditException(Exception):
     不需要的审计
     """
 
-    pass
-
 
 class DataProvider(ABC):
     type = ""  # 可以使用 property 覆盖
@@ -143,7 +141,7 @@ def audit_context_setter(**kwargs):
         return
 
     if not hasattr(request, "_audit_context"):
-        setattr(request, "_audit_context", {})
+        request._audit_context = {}
     request._audit_context.update(kwargs)
 
 
@@ -155,7 +153,7 @@ def audit_context_getter(request: Request, key: str):
     _request = request._request
 
     if not hasattr(_request, "_audit_context"):
-        setattr(_request, "_audit_context", {})
+        _request._audit_context = {}
     return _request._audit_context.get(key)
 
 
@@ -165,7 +163,7 @@ def add_audit(provider_cls: Type[DataProvider], request: Request, **kwargs):
     """
     # 设置审计对象和额外信息，直接覆盖，避免传递过来的request对象重复使用导致_audit_context存储了上次调用的信息
     # 这里使用的是Django Request，provider_cls获取相关内容时使用的audit_context_getter方法也是从Django Request里获取
-    setattr(request._request, "_audit_context", kwargs)
+    request._request._audit_context = kwargs
     # 实例化审计信息提供者
     provider = provider_cls(request)
     try:

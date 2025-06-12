@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import itertools
 import logging
 from typing import Dict, List, Optional
@@ -171,7 +172,7 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
 
         # 2. 填充后台PolicyID
         backend_policy_list = new_backend_policy_list_by_subject(system_id, subject)
-        for _, p in old_policies.items():
+        for p in old_policies.values():
             # 对于纯RBAC策略，不存在Backend PolicyID
             if not backend_policy_list.get(p.action_id):
                 continue
@@ -256,9 +257,7 @@ class ABACPolicyOperationService(PolicyCommonDBOperationService):
         ).only("id", "action_id")
 
         # 3. 计算出SaaS PolicyID 与 Backend PolicyID的映射
-        policy_id_map = {p.id: action_to_backend_policy_id_map[p.action_id] for p in db_policies}
-
-        return policy_id_map
+        return {p.id: action_to_backend_policy_id_map[p.action_id] for p in db_policies}
 
     def _alter_backend_policies(
         self,
@@ -317,7 +316,7 @@ class ABACPolicyOperationService(PolicyCommonDBOperationService):
         )
 
         # 写入后端policy_ids
-        for p, _id in zip(db_policies, data["ids"]):
+        for p, _id in zip(db_policies, data["ids"], strict=False):
             p.policy_id = _id
 
         # 创建db权限

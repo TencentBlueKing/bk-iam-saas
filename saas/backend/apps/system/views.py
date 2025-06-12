@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
@@ -24,7 +25,6 @@ from .serializers import QueryResourceTypeSLZ, SystemQuerySLZ, SystemResourceTyp
 
 
 class SystemViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = SystemBiz()
@@ -68,7 +68,6 @@ class SystemViewSet(GenericViewSet):
 
 
 class ResourceTypeViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = ResourceTypeBiz()

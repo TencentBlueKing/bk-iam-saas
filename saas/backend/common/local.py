@@ -43,10 +43,9 @@ class Local(Singleton):
     @property
     def request(self):
         """获取全局request对象"""
-        request = getattr(_local, "request", None)
+        return getattr(_local, "request", None)
         # if not request:
         #     raise RuntimeError("request object not in local")
-        return request
 
     @request.setter
     def request(self, value):

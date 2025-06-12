@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List
 
 from django.db import models
@@ -26,8 +27,7 @@ class PermTemplateManager(models.Manager):
 
     def query_template_ids(self, system_id: str, action_id: str):
         query_action_id = f'"{action_id}"'
-        template_ids = self.filter(system_id=system_id, _action_ids__contains=query_action_id).values_list("id")
-        return template_ids
+        return self.filter(system_id=system_id, _action_ids__contains=query_action_id).values_list("id")
 
 
 class PermTemplatePolicyAuthorizedManager(models.Manager):

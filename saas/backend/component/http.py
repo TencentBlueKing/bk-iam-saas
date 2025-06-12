@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -9,11 +9,11 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 
 
-请求登录的http基础方法
+请求登录的 http 基础方法
 Rules:
-1. POST/DELETE/PUT: json in - json out, 如果resp.json报错, 则是登录接口问题
-2. GET带参数 HEAD不带参数
-3. 以统一的header头发送请求
+1. POST/DELETE/PUT: json in - json out, 如果 resp.json 报错，则是登录接口问题
+2. GET 带参数 HEAD 不带参数
+3. 以统一的 header 头发送请求
 """  # noqa
 
 from __future__ import unicode_literals
@@ -34,10 +34,9 @@ logger = logging.getLogger("component")
 
 
 def _gen_header():
-    headers = {
+    return {
         "Content-Type": "application/json",
     }
-    return headers
 
 
 session = requests.Session()
@@ -98,10 +97,10 @@ def _http_request(
         ).observe(latency)
 
         # greater than 100ms
-        if latency > 100:
+        if latency > 100:  # noqa: PLR2004
             logger.warning("http slow request! method: %s, url: %s, latency: %dms", method, url, latency)
 
-        if resp.status_code != 200:
+        if resp.status_code != 200:  # noqa: PLR2004
             content = resp.content[:256] if resp.content else ""
             error_msg = (
                 "http request fail! %s %s, data: %s, request_id: %s, response.status_code: %s, response.body: %s"

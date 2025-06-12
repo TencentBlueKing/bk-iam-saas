@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from collections import defaultdict
 from typing import Dict, List
 
@@ -58,7 +59,9 @@ class ManagementCommonTrans(OpenCommonTrans):
         open_policies = parse_obj_as(List[OpenPolicy], actions)
 
         # 转换为策略列表(转换时会对action、实例视图等进行校验)
-        return self._to_policy_list(system_id, open_policies, expired_at=PERMANENT_SECONDS)  # 用户组授权默认过期时间为永久
+        return self._to_policy_list(
+            system_id, open_policies, expired_at=PERMANENT_SECONDS
+        )  # 用户组授权默认过期时间为永久
 
 
 class GradeManagerTrans(ManagementCommonTrans):
@@ -109,11 +112,10 @@ class GradeManagerTrans(ManagementCommonTrans):
             system_authorization_scope_dict[system_id].extend(policies)
 
         # 将按system分组的数据转为authorization_scopes
-        authorization_scopes = [
+        return [
             {"system_id": system_id, "actions": policies}
             for system_id, policies in system_authorization_scope_dict.items()
         ]
-        return authorization_scopes
 
     def to_role_info(
         self, data, _type: str = RoleType.GRADE_MANAGER.value, source_system_id: str = ""

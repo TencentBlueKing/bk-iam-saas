@@ -15,8 +15,8 @@ class ForceRoleAuthenticationMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        _force_role = getattr(request, "_force_role")
+        _force_role = request._force_role
         # 设置当前登录角色
         if _force_role:
-            setattr(request, "role", _force_role)
+            request.role = _force_role
         return self.get_response(request)

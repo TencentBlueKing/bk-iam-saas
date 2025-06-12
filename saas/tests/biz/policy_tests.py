@@ -7,6 +7,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from copy import deepcopy
 from typing import List
 
@@ -41,14 +42,14 @@ from backend.service.models.action import Action, RelatedResourceType
 from backend.service.models.instance_selection import InstanceSelection
 
 
-@pytest.fixture()
+@pytest.fixture
 def path_node_bean():
     return PathNodeBean(
         id="id", name="name", system_id="system_id", type="type", type_name="type_name", type_name_en="type_name_en"
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def resource_type_dict():
     return ResourceTypeDict(data={("system_id", "type"): {"name": "name_test", "name_en": "name_en_test"}})
 
@@ -56,7 +57,8 @@ def resource_type_dict():
 class TestPathNodeBean:
     def test_fill_empty_fields(self, path_node_bean: PathNodeBean, resource_type_dict: ResourceTypeDict):
         path_node_bean.fill_empty_fields(resource_type_dict)
-        assert path_node_bean.type_name == "name_test" and path_node_bean.type_name_en == "name_en_test"
+        assert path_node_bean.type_name == "name_test"
+        assert path_node_bean.type_name_en == "name_en_test"
 
     @pytest.mark.parametrize(
         "resource_system_id, resource_type_id, expected",
@@ -75,7 +77,7 @@ class TestPathNodeBean:
         )
 
 
-@pytest.fixture()
+@pytest.fixture
 def path_node_bean_list(path_node_bean: PathNodeBean):
     path_node_bean1 = path_node_bean.copy(deep=True)
     path_node_bean1.id = "id1"
@@ -172,7 +174,7 @@ class TestPathNodeBeanList:
         assert path_node_bean_list.ignore_path(instance_selection).__root__ == path_node_bean_list.__root__[start:end]
 
 
-@pytest.fixture()
+@pytest.fixture
 def instance_bean(path_node_bean: PathNodeBean):
     path_node_bean1 = path_node_bean.copy(deep=True)
     path_node_bean1.id = "id1"
@@ -271,7 +273,7 @@ class TestInstanceBean:
         if instance_bean1 is not None:
             assert len(instance_bean1.path) == length
         else:
-            assert 0 == length
+            assert length == 0
 
     @pytest.mark.parametrize(
         "instance_selection, raise_exception",
@@ -317,7 +319,7 @@ class TestInstanceBean:
             assert instance_bean.path[0][0].name == "test"
 
 
-@pytest.fixture()
+@pytest.fixture
 def instance_bean_list(instance_bean: InstanceBean):
     instance_bean1 = instance_bean.copy(deep=True)
     instance_bean1.type = "type1"
@@ -363,7 +365,7 @@ class TestInstanceBeanList:
         assert len(instance_bean_list.instances) == 0
 
 
-@pytest.fixture()
+@pytest.fixture
 def condition_bean(instance_bean: InstanceBean):
     return ConditionBean(instances=[instance_bean.copy(deep=True)], attributes=[])
 
@@ -393,7 +395,7 @@ class TestConditionBean:
         assert condition_bean.count_instance("type") == 1
 
 
-@pytest.fixture()
+@pytest.fixture
 def condition_bean_list(condition_bean: ConditionBean):
     return ConditionBeanList([condition_bean.copy(deep=True)])
 
@@ -425,7 +427,7 @@ class TestConditionBeanList:
         assert condition_bean_list.is_empty
 
 
-@pytest.fixture()
+@pytest.fixture
 def related_resource_bean(condition_bean: ConditionBean):
     return RelatedResourceBean(system_id="system_id", type="type", condition=[condition_bean.copy(deep=True)])
 
@@ -483,7 +485,7 @@ class TestRelatedResourceBean:
         if instance_bean1 is not None:
             assert len(related_resource_bean.condition[0].instances[0].path) == length
         else:
-            assert 0 == length
+            assert length == 0
 
     def test_iter_path_list(self, related_resource_bean: RelatedResourceBean):
         _list = list(related_resource_bean.iter_path_list())
@@ -514,7 +516,7 @@ class TestRelatedResourceBean:
             assert related_resource_bean.condition[0].instances[0].path[0][0].name == "test"
 
 
-@pytest.fixture()
+@pytest.fixture
 def related_resource_bean_list(related_resource_bean: RelatedResourceBean):
     return RelatedResourceBeanList([related_resource_bean.copy(deep=True)])
 
@@ -535,7 +537,7 @@ class TestRelatedResourceBeanList:
         assert related_resource_bean_list.is_empty
 
 
-@pytest.fixture()
+@pytest.fixture
 def policy_bean(related_resource_bean: RelatedResourceBean):
     return PolicyBean(action_id="action_id", related_resource_types=[related_resource_bean.copy(deep=True)])
 
@@ -688,7 +690,7 @@ class TestPolicyBean:
             )
 
 
-@pytest.fixture()
+@pytest.fixture
 def policy_bean_list(policy_bean: PolicyBean):
     return PolicyBeanList("system_id", [policy_bean])
 
@@ -946,7 +948,7 @@ class TestResourceGroupBeanList:
             assert True
 
 
-@pytest.fixture()
+@pytest.fixture
 def related_group_bean(related_resource_bean: RelatedResourceBean):
     return ResourceGroupBean(related_resource_types=[related_resource_bean.copy(deep=True)])
 
@@ -1015,7 +1017,7 @@ class TestResourceGroupBean:
             assert raise_exception
 
 
-@pytest.fixture()
+@pytest.fixture
 def policy_bean_list_mixin(policy_bean: PolicyBean):
     return PolicyBeanListMixin("system_id", [policy_bean.copy(deep=True)])
 

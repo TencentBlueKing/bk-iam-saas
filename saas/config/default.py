@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -9,6 +7,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
+from __future__ import absolute_import
+
 import os
 import ssl
 
@@ -37,8 +38,7 @@ class PatchFeatures:
     def minimum_database_version(self):
         if self.connection.mysql_is_mariadb:
             return 10, 4
-        else:
-            return 5, 7
+        return 5, 7
 
 
 # 将补丁应用到 DatabaseFeatures 中

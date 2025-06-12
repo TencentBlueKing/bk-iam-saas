@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from django.conf import settings
@@ -168,8 +169,7 @@ def delete_subjects(subjects: List[dict]) -> None:
     删除授权对象
     """
     url_path = "/api/v1/web/subjects"
-    result = _call_iam_api(http_delete, url_path, data=subjects)
-    return result
+    return _call_iam_api(http_delete, url_path, data=subjects)
 
 
 def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
@@ -400,8 +400,7 @@ def alter_policies(
         "update_policies": update_policies,
         "delete_policy_ids": delete_policy_ids,
     }
-    result = _call_iam_api(http_post, url_path, data=data)
-    return result
+    return _call_iam_api(http_post, url_path, data=data)
 
 
 def delete_policies(system_id: str, subject_type: str, subject_id: str, policy_ids: List[int]) -> None:
@@ -410,8 +409,7 @@ def delete_policies(system_id: str, subject_type: str, subject_id: str, policy_i
     """
     url_path = "/api/v1/web/policies"
     data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
-    result = _call_iam_api(http_delete, url_path, data=data)
-    return result
+    return _call_iam_api(http_delete, url_path, data=data)
 
 
 def create_subject_role(subjects: List[Dict[str, str]], role_type: str, system_id: str = "SUPER"):
@@ -557,8 +555,7 @@ def create_temporary_policies(
         "subject": {"type": subject_type, "id": subject_id},
         "policies": policies,
     }
-    result = _call_iam_api(http_post, url_path, data=data)
-    return result
+    return _call_iam_api(http_post, url_path, data=data)
 
 
 def delete_temporary_policies(system_id: str, subject_type: str, subject_id: str, policy_ids: List[int]) -> None:
@@ -567,8 +564,7 @@ def delete_temporary_policies(system_id: str, subject_type: str, subject_id: str
     """
     url_path = "/api/v1/web/temporary-policies"
     data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
-    result = _call_iam_api(http_delete, url_path, data=data)
-    return result
+    return _call_iam_api(http_delete, url_path, data=data)
 
 
 def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
@@ -694,8 +690,7 @@ def alter_group_policies_v2(
         "resource_actions": resource_actions,
         "group_auth_type": group_auth_type,
     }
-    result = _call_iam_api(http_post, url_path, data=data)
-    return result
+    return _call_iam_api(http_post, url_path, data=data)
 
 
 def query_rbac_group_by_resource(
@@ -719,8 +714,7 @@ def query_rbac_group_by_resource(
             "attribute": attribute or {},
         },
     }
-    result = _call_iam_api(http_post, url_path, data=data)
-    return result
+    return _call_iam_api(http_post, url_path, data=data)
 
 
 def add_subject_template_groups(subjects: List[Dict]) -> Dict[str, int]:
