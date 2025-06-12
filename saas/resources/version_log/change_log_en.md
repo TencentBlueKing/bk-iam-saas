@@ -3,6 +3,8 @@
 
 ### Fixes
 * Fixed an issue where login authentication was executed after role identity authentication, potentially leading to security issues if the role identity session was leaked.
+* Fixed an exception when deleting an administrator in the secondary management space of the Grade Manager.
+* Optimized the style of the no-permission application table and handled the deduplication issue of temporary permission application aggregation.
 
 ---
 
