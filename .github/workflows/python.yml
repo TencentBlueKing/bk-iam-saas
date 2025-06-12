@@ -31,13 +31,13 @@ jobs:
       run: |
           python -m pip install --upgrade pip
           pip install -r saas/requirements_dev.txt
-    - name: Lint with flake8
-      run: pflake8 --config=saas/pyproject.toml saas
+    - name: ruff lint
+      run: ruff check --config=saas/pyproject.toml --fix --no-cache saas
     - name: Lint with bandit
       run: bandit -c saas/pyproject.toml -r saas
     - name: Lint with mypy
       run:  mypy --config-file=saas/pyproject.toml saas
     - name: Import Linter
-      run: cd saas && lint-imports --config=./.importlinter && cd ..
+      run: cd saas && lint-imports --config ./pyproject.toml && cd ..
     - name: Test with pytest
       run: pytest -c saas/pyproject.toml saas

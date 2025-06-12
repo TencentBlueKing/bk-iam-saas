@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import time
 from collections import defaultdict
 
@@ -47,9 +48,8 @@ class RoleScopeSubjectSLZ(serializers.Serializer):
         if _id == SUBJECT_ALL and _type != SUBJECT_TYPE_ALL:
             raise serializers.ValidationError("type must be * when id is *")
         # 当type为部门时，id必须是数字字符串或*
-        if _type == RoleScopeSubjectType.DEPARTMENT.value and _id != SUBJECT_ALL:
-            if not _id.isdigit():
-                raise serializers.ValidationError("department id can only be a string consisting of numbers only")
+        if _type == RoleScopeSubjectType.DEPARTMENT.value and _id != SUBJECT_ALL and not _id.isdigit():
+            raise serializers.ValidationError("department id can only be a string consisting of numbers only")
 
         return attrs
 
@@ -132,7 +132,9 @@ class GradeMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", default=False)
 
     def validate(self, data):
@@ -186,7 +188,9 @@ class GradeMangerDetailSchemaSLZ(BaseGradeMangerSchemaSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSchemaSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
 
     class Meta:
         model = Role
@@ -405,7 +409,9 @@ class AuthorizedSubjectsSLZ(serializers.Serializer):
 
 
 class SubsetMangerCreateSLZ(GradeMangerCreateSLZ):
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True
+    )
     inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围")
 
     def validate(self, data):
@@ -483,6 +489,7 @@ class RoleGroupSubjectSLZ(serializers.Serializer):
             return self.user_name_dict.get(obj["subject_id"], "") if self.user_name_dict else ""
         if obj["subject_type"] == SubjectType.DEPARTMENT.value:
             return self.department_name_dict.get(obj["subject_id"], "") if self.department_name_dict else ""
+        return None
 
 
 class RoleGroupMemberSearchSLZ(GroupSearchSLZ):

@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from itertools import groupby
 from typing import Any, Dict, List
@@ -44,20 +45,19 @@ def fetch_auth_attributes(
         logging.info(f"fetch_resource_all_auth_attributes({system_id}, {resource_type_id}) list_attr error: {error}")
         # 判断是否忽略接口异常
         if raise_api_exception:
-            raise error
+            raise
 
     # 查询资源实例的属性
     try:
         resource_infos = rp.fetch_instance_info(ids, attrs)
     except APIError as error:
         logging.info(
-            f"fetch_resource_all_auth_attributes({system_id}, {resource_type_id}) "
-            f"fetch_instance_info error: {error}"
+            f"fetch_resource_all_auth_attributes({system_id}, {resource_type_id}) fetch_instance_info error: {error}"
         )
         # 不需要抛异常则直接返回
         if not raise_api_exception:
             return ResourceInfoDictBean(data={})
-        raise error
+        raise
 
     return ResourceInfoDictBean(data={i.id: ResourceInfoBean(**i.dict()) for i in resource_infos})
 

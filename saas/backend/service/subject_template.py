@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List, Optional
 
 from django.db import transaction
@@ -115,9 +116,7 @@ class SubjectTemplateService:
 
     def _list_subjects(self, template_id) -> List[Subject]:
         queryset = SubjectTemplateRelation.objects.filter(template_id=template_id)
-        subjects = [Subject(type=relation.subject_type, id=relation.subject_id) for relation in queryset]
-
-        return subjects
+        return [Subject(type=relation.subject_type, id=relation.subject_id) for relation in queryset]
 
     def add_members(self, template_id: int, members: List[Subject]) -> List[int]:
         # 排除存在的数据

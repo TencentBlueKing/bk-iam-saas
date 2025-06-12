@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from typing import Dict, List, Optional, Tuple
 
@@ -101,12 +102,11 @@ class PolicyQueryService:
         # 用户权限才有有效期，用户组与权限没有有效期的
         if subject.type == SubjectType.USER.value:
             backend_policy_list = new_backend_policy_list_by_subject(system_id, subject)
-            policies = [
+            return [
                 Policy.from_db_model(one, backend_policy_list.get(one.action_id).expired_at)  # type: ignore
                 for one in queryset
                 if backend_policy_list.get(one.action_id)
             ]
-            return policies
 
         return [Policy.from_db_model(one, PERMANENT_SECONDS) for one in queryset]
 

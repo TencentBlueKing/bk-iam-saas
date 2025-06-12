@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 from typing import Dict, List
 
@@ -86,7 +87,10 @@ class PermTemplatePolicyAuthorized(BaseModel):
     system_id = models.CharField("系统ID", max_length=32)
     _data = models.TextField("授权数据", db_column="data")  # 调研压缩的json字段
     _auth_types = models.TextField(
-        "模板授权策略的鉴权类型", db_column="auth_types", help_text="JSON存储 {'action_id': auth_type, ...}", default="{}"
+        "模板授权策略的鉴权类型",
+        db_column="auth_types",
+        help_text="JSON存储 {'action_id': auth_type, ...}",
+        default="{}",
     )
 
     objects = PermTemplatePolicyAuthorizedManager()

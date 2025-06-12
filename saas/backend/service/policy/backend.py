@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 from collections import Counter
 from typing import Any, Dict, Iterable, List, Tuple
@@ -105,7 +106,7 @@ class BackendPolicyOperationService:
                 resource_actions[r]["deleted_action_ids"].append(p.action_id)
 
         # 将resource_actions转化为调用后台接口所需数据格式
-        resource_action_data = [
+        return [
             {
                 "resource": r.dict(include={"system_id", "type", "id"}),
                 "created_action_ids": a["created_action_ids"],
@@ -113,8 +114,6 @@ class BackendPolicyOperationService:
             }
             for r, a in resource_actions.items()
         ]
-
-        return resource_action_data
 
     def generate_abac_data(
         self, changed_policies: List[UniversalPolicyChangedContent]

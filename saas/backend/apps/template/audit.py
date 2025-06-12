@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from backend.audit.audit import DataProvider, audit_context_getter
 from backend.audit.constants import AuditObjectType, AuditType
 
@@ -43,8 +44,7 @@ class TemplateUpdateAuditProvider(BaseTemplateDataProvider):
 
     @property
     def extra(self):
-        data = {key: value for key, value in self.request.data.items() if key in {"name", "description"}}
-        return data
+        return {key: value for key, value in self.request.data.items() if key in {"name", "description"}}
 
 
 class TemplateDeleteAuditProvider(BaseTemplateDataProvider):

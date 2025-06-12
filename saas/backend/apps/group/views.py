@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from functools import wraps
 from typing import List, Set
@@ -107,12 +108,10 @@ def check_readonly_group(operation):
 
             if readonly:
                 raise error_codes.FORBIDDEN.format(
-                    message=_("只读用户组({})无法进行({})操作！").format(group.id, operation), replace=True
+                    message=_("只读用户组 ({}) 无法进行 ({}) 操作！").format(group.id, operation), replace=True
                 )
 
-            response = func(view, request, *args, **kwargs)
-
-            return response
+            return func(view, request, *args, **kwargs)
 
         return wrapper
 
@@ -136,12 +135,11 @@ def split_members_to_subject_and_template(members):
     try:
         subject_template_ids = [int(one["id"]) for one in members if one["type"] == GroupMemberType.TEMPLATE.value]
     except ValueError:
-        raise error_codes.VALIDATE_ERROR.format(_("人员模板ID非法"))
+        raise error_codes.VALIDATE_ERROR.format(_("人员模板 ID 非法"))
     return subjects, subject_template_ids
 
 
 class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -163,7 +161,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
     @swagger_auto_schema(
         operation_description="创建用户组",
         request_body=GroupCreateSLZ(label="用户组"),
-        responses={status.HTTP_201_CREATED: GroupIdSLZ(label="用户组ID")},
+        responses={status.HTTP_201_CREATED: GroupIdSLZ(label="用户组 ID")},
         tags=["group"],
     )
     @view_audit_decorator(GroupCreateAuditProvider)
@@ -178,14 +176,14 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         data = serializer.validated_data
 
         # 用户组数量在角色内是否超限
-        number_of_new_group = 1  # 接口只支持创建一个用户组，不支持批量，所以新增用户组数量为1
+        number_of_new_group = 1  # 接口只支持创建一个用户组，不支持批量，所以新增用户组数量为 1
         self.group_check_biz.check_role_group_limit(request.role, number_of_new_group)
 
         # 检测成员是否满足管理的授权范围
         members, subject_template_ids = split_members_to_subject_and_template(data["members"])
         self.group_check_biz.check_role_subject_scope(request.role, members)
 
-        # 检查人员模版是否在role的授权范围内
+        # 检查人员模版是否在 role 的授权范围内
         self.group_check_biz.check_subject_template(request.role, subject_template_ids)
 
         with gen_group_upsert_lock(request.role.id):
@@ -223,7 +221,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         username = request.user.username
         filter_role_id = request.query_params.get("role_id")
 
-        # 如果当前角色是staff 并且 存在筛选的role_id
+        # 如果当前角色是 staff 并且 存在筛选的 role_id
         if role.type == RoleType.STAFF.value and filter_role_id:
             # 检查用户是否在角色的授权范围内
             filter_role = self.role_biz.get_role_scope_include_user(filter_role_id, username)
@@ -297,7 +295,6 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
 
 
 class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -325,7 +322,9 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         # 校验权限
         checker = RoleObjectRelationChecker(request.role)
         if not checker.check_group(group):
-            raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("用户组 ({}) 不在当前用户身份可访问的范围内").format(group.id), replace=True
+            )
 
         if request.query_params.get("keyword"):
             slz = SearchMemberSLZ(data=request.query_params)
@@ -361,16 +360,16 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         members_data = data["members"]
         expired_at = data["expired_at"]
 
-        # 成员Dict结构转换为Subject结构，并去重
+        # 成员 Dict 结构转换为 Subject 结构，并去重
         members, subject_template_ids = split_members_to_subject_and_template(members_data)
         # 检测成员是否满足管理的授权范围
         self.group_check_biz.check_role_subject_scope(request.role, members)
         self.group_check_biz.check_member_count(group.id, len(members))
 
-        # 检查人员模版是否在role的授权范围内
+        # 检查人员模版是否在 role 的授权范围内
         self.group_check_biz.check_subject_template(request.role, subject_template_ids)
 
-        # 如果是分级管理员在操作子集管理员的成员, 需要同步更新子集管理员的授权范围
+        # 如果是分级管理员在操作子集管理员的成员，需要同步更新子集管理员的授权范围
         group_role = self.role_biz.get_role_by_group_id(group.id)
         if group_role.id != request.role.id:
             self.role_biz.incr_update_subject_scope(group_role, members)
@@ -418,7 +417,6 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupsMemberViewSet(GenericViewSet):
-
     queryset = Group.objects.all()
     serializer_class = GroupsAddMemberSLZ
 
@@ -445,12 +443,12 @@ class GroupsMemberViewSet(GenericViewSet):
 
         # 添加成员 异常信息记录
         failed_info = {}
-        # 成员Dict结构转换为Subject结构，并去重
+        # 成员 Dict 结构转换为 Subject 结构，并去重
         members, subject_template_ids = split_members_to_subject_and_template(members_data)
         # 检测成员是否满足管理的授权范围
         self.group_check_biz.check_role_subject_scope(request.role, members)
 
-        # 检查人员模版是否在role的授权范围内
+        # 检查人员模版是否在 role 的授权范围内
         self.group_check_biz.check_subject_template(request.role, subject_template_ids)
 
         role_checker = RoleObjectRelationChecker(request.role)
@@ -467,8 +465,10 @@ class GroupsMemberViewSet(GenericViewSet):
                 # 只读用户组检测
                 readonly = group.readonly
                 if readonly:
-                    raise error_codes.FORBIDDEN.format(
-                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                    raise error_codes.FORBIDDEN.format(  # noqa: TRY301
+                        message=_("只读用户组 ({}) 无法进行 ({}) 操作！").format(
+                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label
+                        ),
                         replace=True,
                     )
                 if members:
@@ -479,7 +479,7 @@ class GroupsMemberViewSet(GenericViewSet):
                 for _id in subject_template_ids:
                     self.group_biz.grant_subject_template(group.id, _id, expired_at, request.user.username)
 
-                # 如果是分级管理员在操作, 自动扩张子集管理员的人员授权范围
+                # 如果是分级管理员在操作，自动扩张子集管理员的人员授权范围
                 group_role = self.role_biz.get_role_by_group_id(group.id)
                 if group_role.id != request.role.id and group_role.id not in exists_role_ids:
                     exists_role_ids.add(group_role.id)
@@ -518,7 +518,7 @@ class GroupsMemberViewSet(GenericViewSet):
 
         # 添加成员 异常信息记录
         failed_info = {}
-        # 成员Dict结构转换为Subject结构，并去重
+        # 成员 Dict 结构转换为 Subject 结构，并去重
         members, subject_template_ids = split_members_to_subject_and_template(members_data)
 
         role_checker = RoleObjectRelationChecker(request.role)
@@ -532,8 +532,10 @@ class GroupsMemberViewSet(GenericViewSet):
                 # 只读用户组检测
                 readonly = group.readonly
                 if readonly:
-                    raise error_codes.FORBIDDEN.format(
-                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                    raise error_codes.FORBIDDEN.format(  # noqa: TRY301
+                        message=_("只读用户组 ({}) 无法进行 ({}) 操作！").format(
+                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label
+                        ),
                         replace=True,
                     )
                 if members:
@@ -563,7 +565,6 @@ class GroupsMemberViewSet(GenericViewSet):
 
 
 class GroupsMemberRenewViewSet(GenericViewSet):
-
     group_biz = GroupBiz()
 
     @swagger_auto_schema(
@@ -606,7 +607,6 @@ class GroupsMemberRenewViewSet(GenericViewSet):
 
 
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GROUP.value)]
 
     queryset = Group.objects.all()
@@ -649,11 +649,10 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {"create": PermissionCodeEnum.MANAGE_GROUP.value}
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
     queryset = Group.objects.all()
     filterset_class = GroupTemplateSystemFilter
     filter_backends = [NoCheckModelFilterBackend]
@@ -710,7 +709,6 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -718,7 +716,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         "update": PermissionCodeEnum.MANAGE_GROUP.value,
     }
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
     queryset = Group.objects.all()
     lookup_field = "id"
 
@@ -748,7 +746,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         templates = self.group_trans.from_group_grant_data(data["templates"])
         self.group_biz.grant(request.role, group, templates)
 
-        # 如果是分级管理员在操作子集管理员的用户组授权, 需要同步更新子集管理员的授权范围
+        # 如果是分级管理员在操作子集管理员的用户组授权，需要同步更新子集管理员的授权范围
         group_role = self.role_biz.get_role_by_group_id(group.id)
         if group_role.id != request.role.id:
             self.role_biz.incr_update_auth_scope(
@@ -840,8 +838,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupSystemViewSet(GenericViewSet):
-
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
     queryset = Group.objects.all()
     lookup_field = "id"
 
@@ -918,7 +915,7 @@ class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
         related_resource_type = data["related_resource_type"]
 
         new_condition = parse_obj_as(List[ConditionTagBean], related_resource_type["condition"])
-        # 从模板数据中查找匹配的操作, 资源类型的条件
+        # 从模板数据中查找匹配的操作，资源类型的条件
         template_id = kwargs["template_id"]
 
         subject = Subject.from_group_id(group.id)
@@ -940,7 +937,7 @@ class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
 
                 return Response([c.dict() for c in conditions])
 
-        raise error_codes.VALIDATE_ERROR.format(_("模板: {} 没有操作: {} 的权限").format(template_id, action_id))
+        raise error_codes.VALIDATE_ERROR.format(_("模板：{} 没有操作：{} 的权限").format(template_id, action_id))
 
 
 class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet):
@@ -965,7 +962,7 @@ class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet
         group = self.get_object()
         subject = Subject.from_group_id(group.id)
 
-        # 1. 查询policy的condition
+        # 1. 查询 policy 的 condition
         related_resource_type = data["related_resource_type"]
         old_condition = self.policy_biz.get_policy_resource_type_conditions(
             subject,
@@ -1007,24 +1004,24 @@ class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
         group = self.get_object()  # 查询一下判断当前登录的角色是否能查询该用户组的模板信息
         group_id = group.id
 
-        # 查询用户组对应的role
+        # 查询用户组对应的 role
         role = self.role_biz.get_role_by_group_id(group_id)
 
         # 查询筛选角色对应的模板列表
         queryset = self.filter_queryset(RoleListQuery(role, request.user).query_template())
 
-        # 查询role的system-actions set
+        # 查询 role 的 system-actions set
         role_system_actions = RoleListQuery(role).get_scope_system_actions()
         page = self.paginate_queryset(queryset)
         if page is not None:
-            # 查询模板中对group_id中有授权的
+            # 查询模板中对 group_id 中有授权的
             exists_template_set = self._query_group_exists_template_set(group_id, page)
             serializer = TemplateListSLZ(
                 page, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
             )
             return self.get_paginated_response(serializer.data)
 
-        # 查询模板中对group_id中有授权的
+        # 查询模板中对 group_id 中有授权的
         exists_template_set = self._query_group_exists_template_set(group_id, queryset)
         serializer = TemplateListSLZ(
             queryset, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
@@ -1033,7 +1030,7 @@ class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
 
     def _query_group_exists_template_set(self, group_id: str, queryset) -> Set[int]:
         """
-        查询group已授权的模板集合
+        查询 group 已授权的模板集合
         """
         subject = Subject.from_group_id(group_id)
         exists_template_ids = PermTemplatePolicyAuthorized.objects.query_exists_template_auth(
@@ -1047,8 +1044,8 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
     分级管理员用户组转出到子集管理员
 
     1. 把用户组关系转移到子集管理员
-    2. 如果用户组授权的信息大于子集管理员的范围, 需要扩展子集管理员的授权范围
-    3. 如果用户组的授权人员大于子集管理员的范围, 需要扩展子集管理员的授权范围
+    2. 如果用户组授权的信息大于子集管理员的范围，需要扩展子集管理员的授权范围
+    3. 如果用户组的授权人员大于子集管理员的范围，需要扩展子集管理员的授权范围
     """
 
     permission_classes = [role_perm_class(PermissionCodeEnum.TRANSFER_GROUP_BY_GRADE_MANAGER.value)]
@@ -1081,13 +1078,13 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         ).update(role_id=subset_manager_id):
             return Response({})
 
-        # 2. 查询用户组所有授权信息, 并扩张子集管理员的授权范围
+        # 2. 查询用户组所有授权信息，并扩张子集管理员的授权范围
         auth_scope_systems = self._query_group_auth_scope(group)
 
         # 扩张授权范围
         self.role_biz.incr_update_auth_scope(subset_manager, auth_scope_systems)
 
-        # 3. 查询用户组所有的授权人员, 并扩张子集管理员的人员授权范围
+        # 3. 查询用户组所有的授权人员，并扩张子集管理员的人员授权范围
         members = self.group_biz.list_all_group_member(group.id)
         self.role_biz.incr_update_subject_scope(subset_manager, parse_obj_as(List[Subject], members))
 
@@ -1098,7 +1095,7 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
 
     def _query_group_auth_scope(self, group: Group) -> List[AuthScopeSystem]:
         """
-        查询用户组自定义权限, 模板权限转换为role授权范围
+        查询用户组自定义权限，模板权限转换为 role 授权范围
         """
 
         subject = Subject.from_group_id(group.id)
@@ -1126,7 +1123,6 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
 
 
 class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
-
     queryset = Group.objects.all()
     serializer_class = GroupSLZ
 
@@ -1181,7 +1177,6 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
-
     queryset = Group.objects.all()
     filterset_class = GroupSubjectTemplateFilter
     filter_backends = [NoCheckModelFilterBackend]
@@ -1217,7 +1212,6 @@ class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
 
 
 class GroupTemplateMemberViewSet(GroupPermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -1246,7 +1240,9 @@ class GroupTemplateMemberViewSet(GroupPermissionMixin, GenericViewSet):
         # 校验权限
         checker = RoleObjectRelationChecker(request.role)
         if not checker.check_group(group):
-            raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("用户组 ({}) 不在当前用户身份可访问的范围内").format(group.id), replace=True
+            )
 
         if keyword:
             group_members = self.group_biz.search_template_group_member_by_keyword(group.id, template_id, keyword)

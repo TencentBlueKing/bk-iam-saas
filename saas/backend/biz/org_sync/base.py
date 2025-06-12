@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from abc import ABCMeta, abstractmethod
 
 
@@ -17,7 +18,6 @@ class BaseSyncDBService(metaclass=ABCMeta):
     @abstractmethod
     def sync_to_db(self):
         """同步SaaS DB 相关变更"""
-        pass
 
 
 class BaseSyncIAMBackendService(metaclass=ABCMeta):
@@ -26,4 +26,3 @@ class BaseSyncIAMBackendService(metaclass=ABCMeta):
     @abstractmethod
     def sync_to_iam_backend(self):
         """同步IAM后台 相关变更"""
-        pass

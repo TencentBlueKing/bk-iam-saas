@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import pytest
 from blue_krill.web.std_error import APIError
 from mock import MagicMock, Mock, patch
@@ -48,11 +49,14 @@ class TestOpenCommonTrans:
         trans = OpenCommonTrans()
         trans.action_check_biz.check = Mock(return_value=None)
 
-        with patch.object(
-            PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_empty_fields, patch.object(
-            PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
-        ) as fake_check_instance_selection:
+        with (
+            patch.object(
+                PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_empty_fields,
+            patch.object(
+                PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
+            ) as fake_check_instance_selection,
+        ):
             policy_list = trans._to_policy_list(
                 "system",
                 [

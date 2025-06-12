@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 import traceback
 
@@ -34,12 +35,12 @@ class PermissionForbidden(Exception):
 class TokenBackend(ModelBackend):
     def authenticate(self, request=None, bk_token=None):
         logger.debug("Enter in TokenBackend")
-        # 判断是否传入验证所需的bk_token,没传入则返回None
+        # 判断是否传入验证所需的 bk_token，没传入则返回 None
         if not bk_token:
             return None
 
         verify_result, username = self.verify_bk_token(bk_token)
-        # 判断bk_token是否验证通过,不通过则返回None
+        # 判断 bk_token 是否验证通过，不通过则返回 None
         if not verify_result:
             return None
 
@@ -47,7 +48,7 @@ class TokenBackend(ModelBackend):
         try:
             user, _ = user_model.objects.get_or_create(username=username)
             get_user_info_result, user_info = self.get_user_info(bk_token)
-            # 判断是否获取到用户信息,获取不到则返回None
+            # 判断是否获取到用户信息，获取不到则返回 None
             if not get_user_info_result:
                 return None
             # user.set_property(key="qq", value=user_info.get("qq", ""))
@@ -62,14 +63,14 @@ class TokenBackend(ModelBackend):
             # 用户如果不是管理员，则需要判断是否存在平台权限，如果有则需要加上
             if not user.is_superuser and not user.is_staff:
                 role = user_info.get("role", "")
-                is_admin = True if str(role) == ROLE_TYPE_ADMIN else False
+                is_admin = str(role) == ROLE_TYPE_ADMIN
                 user.is_superuser = is_admin
                 user.is_staff = is_admin
                 user.save()
             return user
 
-        except PermissionForbidden as e:
-            raise e
+        except PermissionForbidden:
+            raise
         except IntegrityError:
             logger.exception(traceback.format_exc())
             logger.exception("get_or_create UserModel fail or update_or_create UserProperty")
@@ -81,7 +82,7 @@ class TokenBackend(ModelBackend):
 
     def get_user_info(self, bk_token):
         """
-        请求平台ESB接口获取用户信息
+        请求平台 ESB 接口获取用户信息
         @param bk_token: bk_token
         @type bk_token: str
         @return:True, {
@@ -106,12 +107,12 @@ class TokenBackend(ModelBackend):
         try:
             data = login.get_user_info(bk_token)
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception("Abnormal error in get_user_info...:%s" % e)
+            logger.exception("Abnormal error in get_user_info(%s)", bk_token)
             self._handle_exception(e)
             return False, {}
 
         user_info = {}
-        # v1,v2字段相同的部分
+        # v1,v2 字段相同的部分
         user_info["wx_userid"] = data.get("wx_userid", "")
         user_info["language"] = data.get("language", "")
         user_info["time_zone"] = data.get("time_zone", "")
@@ -125,7 +126,7 @@ class TokenBackend(ModelBackend):
 
     def verify_bk_token(self, bk_token):
         """
-        请求VERIFY_URL,认证bk_token是否正确
+        请求 VERIFY_URL，认证 bk_token 是否正确
         @param bk_token: "_FrcQiMNevOD05f8AY0tCynWmubZbWz86HslzmOqnhk"
         @type bk_token: str
         @return: False,None True,username
@@ -134,14 +135,14 @@ class TokenBackend(ModelBackend):
         try:
             data = login.verify_bk_token(bk_token)
         except Exception as e:  # pylint: disable=broad-except
-            logger.warn("Abnormal error in verify_bk_token...", exc_info=True)
+            logger.warning("Abnormal error in verify_bk_token...", exc_info=True)
             self._handle_exception(e)
             return False, None
 
         return True, data["bk_username"]
 
     def _handle_exception(self, e):
-        """处理登录特殊异常, 需要前端响应给用户"""
+        """处理登录特殊异常，需要前端响应给用户"""
         if isinstance(e, APIError) and "1302403" in e.message:
             msg_prefix = "message="
             idx = e.message.rfind(msg_prefix)

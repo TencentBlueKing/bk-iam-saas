@@ -22,14 +22,13 @@ init:
 	pre-commit install
 
 lint:
-	pflake8 --config=./pyproject.toml .
+	ruff check --config=./pyproject.toml --fix --no-cache .
 	bandit -c ./pyproject.toml -r .
 	mypy --config-file=./pyproject.toml .
-	lint-imports --config .importlinter
+	lint-imports --config ./pyproject.toml
 
 fmt:
-	isort --settings-path=./pyproject.toml .
-	black --config=./pyproject.toml .
+	ruff format --config=./pyproject.toml --no-cache .
 
 test:
 	pytest -c ./pyproject.toml .

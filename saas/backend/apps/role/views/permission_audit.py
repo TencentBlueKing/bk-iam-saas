@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -22,7 +23,6 @@ from backend.util.time import format_localtime
 
 
 class QueryAuthorizedSubjectsViewSet(GenericViewSet):
-
     permission_classes = [RolePermission]
     method_permission = {
         "post": PermissionCodeEnum.VIEW_AUTHORIZED_SUBJECTS.value,
@@ -62,7 +62,5 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
         if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != data["system_id"]:
             raise error_codes.FORBIDDEN
 
-        exported_file_name = f'{data["system_id"]}_{format_localtime()}'
-        response = QueryAuthorizedSubjects(data).export(exported_file_name)
-
-        return response
+        exported_file_name = f"{data['system_id']}_{format_localtime()}"
+        return QueryAuthorizedSubjects(data).export(exported_file_name)

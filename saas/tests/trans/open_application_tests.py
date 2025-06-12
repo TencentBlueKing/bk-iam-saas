@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import mock
 from mock import MagicMock, patch
 
@@ -22,15 +23,20 @@ class TestAccessSystemApplicationTrans:
 
         trans.action_check_biz.check = mock.Mock(return_value=None)
 
-        with patch.object(
-            PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_empty_fields, patch.object(
-            PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
-        ) as fake_check_instance_selection, patch.object(
-            OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_instance_system, patch.object(
-            OpenPolicy, "fill_instance_name", MagicMock(side_effect=lambda: None)
-        ) as fake_fill_instance_name:
+        with (
+            patch.object(
+                PolicyBeanList, "fill_empty_fields", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_empty_fields,
+            patch.object(
+                PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
+            ) as fake_check_instance_selection,
+            patch.object(
+                OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_instance_system,
+            patch.object(
+                OpenPolicy, "fill_instance_name", MagicMock(side_effect=lambda: None)
+            ) as fake_fill_instance_name,
+        ):
             policy_list = trans.to_policy_list(
                 {
                     "system": "system",

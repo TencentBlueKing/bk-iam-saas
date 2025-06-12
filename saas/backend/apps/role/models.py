@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 from textwrap import dedent
 from typing import Dict, List, Union
@@ -106,8 +107,7 @@ class RoleUserSystemPermission(BaseModel):
     @classmethod
     def get_enabled_detail(cls, role_id: int):
         enabled_content, _ = cls.objects.get_or_create(role_id=role_id)
-        enabled_detail = enabled_content.enabled_detail
-        return enabled_detail
+        return enabled_content.enabled_detail
 
     @classmethod
     def update_global_enabled(cls, role_id: int, global_enabled: bool):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import time
 from datetime import datetime
 from typing import List
@@ -42,10 +43,10 @@ class SearchMemberSLZ(serializers.Serializer):
 
 class GroupIdSLZ(serializers.Serializer):
     """
-    用户ID
+    用户 ID
     """
 
-    id = serializers.IntegerField(label="用户ID")
+    id = serializers.IntegerField(label="用户 ID")
 
 
 class GroupSLZ(serializers.ModelSerializer):
@@ -127,10 +128,10 @@ class GroupSLZ(serializers.ModelSerializer):
 
 class MemberSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
-    id = serializers.CharField(label="成员id")
+    id = serializers.CharField(label="成员 id")
     name = serializers.CharField(label="名称")
-    full_name = serializers.CharField(label="全名(仅部门有)")
-    member_count = serializers.IntegerField(label="成员数量(仅部门用)")
+    full_name = serializers.CharField(label="全名 (仅部门有)")
+    member_count = serializers.IntegerField(label="成员数量 (仅部门用)")
     created_time = serializers.DateTimeField(label="添加时间")
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     expired_at_display = serializers.CharField(label="过期时间显示")
@@ -146,12 +147,12 @@ class GroupAddMemberSLZ(serializers.Serializer):
         return value
 
     def validate_members(self, value):
-        # 屏蔽admin授权
+        # 屏蔽 admin 授权
         return [m for m in value if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER)]
 
 
 class GroupsAddMemberSLZ(GroupAddMemberSLZ):
-    group_ids = serializers.ListField(label="用户组ID列表")
+    group_ids = serializers.ListField(label="用户组 ID 列表")
 
 
 class GroupUpdateSLZ(serializers.Serializer):
@@ -163,9 +164,8 @@ class GroupUpdateSLZ(serializers.Serializer):
         """
         校验名称
         """
-        if self.instance:
-            if Group.objects.exclude(id=self.instance.id).filter(name=data["name"]).exists():
-                raise serializers.ValidationError({"name": [_("存在同名用户组")]})
+        if self.instance and Group.objects.exclude(id=self.instance.id).filter(name=data["name"]).exists():
+            raise serializers.ValidationError({"name": [_("存在同名用户组")]})
 
         return data
 
@@ -175,18 +175,18 @@ class GroupDeleteMemberSLZ(serializers.Serializer):
 
 
 class BatchGroupDeleteMemberSLZ(GroupDeleteMemberSLZ):
-    group_ids = serializers.ListField(label="用户组ID列表")
+    group_ids = serializers.ListField(label="用户组 ID 列表")
 
 
 class GroupTemplateSchemaSLZ(serializers.Serializer):
-    id = serializers.CharField(label="权限模板ID")
+    id = serializers.CharField(label="权限模板 ID")
     name = serializers.CharField(label="权限模板名称")
     system = SystemInfoSLZ(label="系统信息")
     updated_time = serializers.CharField(label="更新时间")
 
 
 class GroupTemplateSLZ(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(label="权限模板ID", source="template_id")
+    id = serializers.ReadOnlyField(label="权限模板 ID", source="template_id")
     system = serializers.SerializerMethodField(label="系统信息")
     name = serializers.SerializerMethodField(label="模板名称")
 
@@ -245,7 +245,7 @@ class GroupTemplateDetailSchemaSLZ(GroupTemplateDetailSLZ):
 
 
 class GroupTransferSLZ(serializers.Serializer):
-    group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(label="用户组ID"))
+    group_ids = serializers.ListField(label="用户组 ID 列表", child=serializers.IntegerField(label="用户组 ID"))
     role_id = serializers.IntegerField(label="角色唯一标识")
 
     def validate_role_id(self, value):
@@ -277,7 +277,7 @@ class GroupMemberUpdateExpiredAtSLZ(serializers.Serializer):
 
 
 class GroupMemberExpiredAtItemSLZ(GroupMemberExpiredAtSLZ):
-    group_id = serializers.IntegerField(label="用户组ID")
+    group_id = serializers.IntegerField(label="用户组 ID")
 
 
 class BatchGroupMemberUpdateExpiredAtSLZ(serializers.Serializer):
@@ -287,15 +287,17 @@ class BatchGroupMemberUpdateExpiredAtSLZ(serializers.Serializer):
 
 
 class GroupPolicyUpdateSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
-    template_id = serializers.IntegerField(label="模板ID", required=False, default=0)
+    system_id = serializers.CharField(label="系统 ID")
+    template_id = serializers.IntegerField(label="模板 ID", required=False, default=0)
     actions = serializers.ListField(label="操作策略", child=BasePolicyActionSLZ(label="策略"), allow_empty=False)
 
 
 class TemplateAuthorizationSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
-    template_id = serializers.IntegerField(label="模板ID", required=False, default=0)
-    actions = serializers.ListField(label="操作策略", child=BasePolicyActionSLZ(label="策略"), required=False, default=list)
+    system_id = serializers.CharField(label="系统 ID")
+    template_id = serializers.IntegerField(label="模板 ID", required=False, default=0)
+    actions = serializers.ListField(
+        label="操作策略", child=BasePolicyActionSLZ(label="策略"), required=False, default=list
+    )
     aggregations = serializers.ListField(
         label="聚合操作", child=BaseAggActionListSLZ(label="聚合操作"), required=False, default=list
     )
@@ -310,7 +312,9 @@ class TemplateAuthorizationSLZ(serializers.Serializer):
 
 
 class GroupAuthorizationSLZ(serializers.Serializer):
-    templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=False)
+    templates = serializers.ListField(
+        label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=False
+    )
 
     def validate(self, data):
         # 单次授权限制
@@ -318,7 +322,7 @@ class GroupAuthorizationSLZ(serializers.Serializer):
         return data
 
 
-# TODO: [重构] 所有与settings配置或需要复用的validate方法统一到biz.validation
+# TODO: [重构] 所有与 settings 配置或需要复用的 validate 方法统一到 biz.validation
 def validate_template_authorization(templates):
     template_ids = [t["template_id"] for t in templates if t["template_id"] != 0]
     if len(template_ids) != len(set(template_ids)):
@@ -342,33 +346,34 @@ class GroupCreateSLZ(serializers.Serializer):
     description = serializers.CharField(label="描述", allow_blank=True)
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"))
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
-    templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
+    templates = serializers.ListField(
+        label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True
+    )
     apply_disable = serializers.BooleanField(label="是否不可申请", default=False)
     sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
 
     def validate(self, data):
         """
-        如果有成员, 过期时间不能小于当前时间
+        如果有成员，过期时间不能小于当前时间
         """
         # 单次授权限制
         validate_template_authorization(data["templates"])
 
-        if data["members"]:
-            # 过期时间不能小于当前时间
-            if data["expired_at"] <= int(time.time()):
-                raise serializers.ValidationError({"expired_at": ["greater than now timestamp"]})
+        # 过期时间不能小于当前时间
+        if data["members"] and data["expired_at"] <= int(time.time()):
+            raise serializers.ValidationError({"expired_at": ["greater than now timestamp"]})
 
         return data
 
 
 class GroupAuthorizedConditionSLZ(serializers.Serializer):
-    action_id = serializers.CharField(label="操作ID")
-    resource_group_id = serializers.CharField(label="资源条件组ID")
+    action_id = serializers.CharField(label="操作 ID")
+    resource_group_id = serializers.CharField(label="资源条件组 ID")
     related_resource_type = ResourceTypeSLZ(label="资源类型")
 
 
 class GradeManagerGroupTransferSLZ(serializers.Serializer):
-    subset_manager_id = serializers.IntegerField(label="子集管理员id")
+    subset_manager_id = serializers.IntegerField(label="子集管理员 id")
 
     def validate_subset_manager_id(self, value):
         role = self.context["role"]
@@ -401,4 +406,4 @@ class GroupSubjectTemplateListSLZ(serializers.ModelSerializer):
 
 
 class SearchTemplateGroupMemberSLZ(SearchMemberSLZ):
-    template_id = serializers.IntegerField(label="模板ID", required=True)
+    template_id = serializers.IntegerField(label="模板 ID", required=True)

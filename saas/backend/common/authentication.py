@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.authentication import BasicAuthentication
@@ -36,5 +37,5 @@ class BasicAppCodeAuthentication(BasicAuthentication):
         user_auth_tuple = super().authenticate(request)
         if user_auth_tuple is not None:
             role = Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first() or AnonymousRole()
-            setattr(request, "role", role)
+            request.role = role
         return user_auth_tuple

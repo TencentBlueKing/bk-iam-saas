@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from collections import Counter
 from typing import Any, Dict, List, Union
 
@@ -60,10 +61,10 @@ class ApplicationSystem(BaseModel):
 
 
 class ApplicationResourceInstancePathNode(BaseModel):
-    # 实例ID
+    # 实例 ID
     id: str
     # 资源类型系统
-    system_id: str = ""  # NOTE 兼容一下, 早期的policy数据中可能没有system_id
+    system_id: str = ""  # NOTE 兼容一下，早期的 policy 数据中可能没有 system_id
     # 资源类型
     type: str
     # 资源实例名称
@@ -155,13 +156,14 @@ class ApplicationPolicyInfo(BaseModel):
     resource_groups: ApplicationResourceGroupList
     expired_at: int = 0
     expired_display: str = ""
-    # Action名称
+    # Action 名称
     name: str
     name_en: str = ""
     sensitivity_level: str = ""
 
     class Config:
-        # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
+        # 当字段设置别名时，初始化支持原名或别名传入，False 时，
+        # 则只能是别名传入，同时配合 dict(by_alias=True) 可控制字典数据时的 key 是否别名
         allow_population_by_field_name = True
 
 
@@ -173,7 +175,8 @@ class GrantActionApplicationContent(BaseModel):
     applicants: List[Applicant]
 
     class Config:
-        # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
+        # 当字段设置别名时，初始化支持原名或别名传入，False 时，
+        # 则只能是别名传入，同时配合 dict(by_alias=True) 可控制字典数据时的 key 是否别名
         allow_population_by_field_name = True
 
 
@@ -183,7 +186,7 @@ class GrantActionApplicationData(ApplicationDataBaseInfo):
     content: GrantActionApplicationContent
 
     def raw_content(self) -> Dict:
-        """返回原生申请内容，保存到DB里的"""
+        """返回原生申请内容，保存到 DB 里的"""
         data = self.content.dict(by_alias=True)
         data["action_sensitivity_level"] = self.get_action_sensitivity_level_field()
         return data
@@ -226,7 +229,7 @@ class ApplicationGroupInfo(BaseModel):
     # 申请加入用户组的有效期
     expired_at: int = 0
     expired_display: str = ""
-    # 用户组自身的权限信息(包含权限模板和自定义权限)
+    # 用户组自身的权限信息 (包含权限模板和自定义权限)
     templates: List[ApplicationGroupPermTemplate]
     # 管理员名称
     role_name: str = ""
@@ -255,10 +258,10 @@ class GroupApplicationData(ApplicationDataBaseInfo):
     content: GroupApplicationContent
 
     def raw_content(self) -> Dict:
-        """返回原生申请内容，保存到DB里的"""
+        """返回原生申请内容，保存到 DB 里的"""
         # 由于申请加入用户组至少要一个组，而且多个组的加入有效期是一样的，所以取第一个即可
         first_group = self.content.groups[0]
-        data = {
+        return {
             "expired_at": first_group.expired_at,
             "expired_display": first_group.expired_display,
             "groups": [
@@ -268,14 +271,15 @@ class GroupApplicationData(ApplicationDataBaseInfo):
             "applicants": [one.dict() for one in self.content.applicants],
             "action_sensitivity_level": self.get_action_sensitivity_level_field(),
         }
-        return data
 
     def get_action_sensitivity_level_field(self) -> str:
         comments = []
 
         level_count = Counter(obj.highest_sensitivity_level for obj in self.content.groups)
         for level in sorted(level_count.keys(), reverse=True):
-            comments.append("最高敏感等级 {} 的用户组{}个".format(SensitivityLevel.get_choice_label(level), level_count[level]))
+            comments.append(
+                "最高敏感等级 {} 的用户组{}个".format(SensitivityLevel.get_choice_label(level), level_count[level])
+            )
 
         return "包含" + ", ".join(comments)
 
@@ -306,7 +310,8 @@ class ApplicationAuthorizationScope(BaseModel):
     policies: List[ApplicationPolicyInfo] = Field(alias="actions")
 
     class Config:
-        # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
+        # 当字段设置别名时，初始化支持原名或别名传入，False 时，
+        # 则只能是别名传入，同时配合 dict(by_alias=True) 可控制字典数据时的 key 是否别名
         allow_population_by_field_name = True
 
 
@@ -329,8 +334,8 @@ class GradeManagerApplicationData(ApplicationDataBaseInfo):
     content: GradeManagerApplicationContent
 
     def raw_content(self) -> Dict:
-        """返回原生申请内容，保存到DB里的"""
-        data = {
+        """返回原生申请内容，保存到 DB 里的"""
+        return {
             "id": self.content.id,
             "name": self.content.name,
             "description": self.content.description,
@@ -341,11 +346,9 @@ class GradeManagerApplicationData(ApplicationDataBaseInfo):
             "group_name": self.content.group_name,
         }
 
-        return data
-
 
 # 申请创建/更新分级管理员数据结构 End #
 
 
-# 定义新类型，几种单据的联合, 这里不使用NewType，不然mypy检查过不了
+# 定义新类型，几种单据的联合，这里不使用 NewType，不然 mypy 检查过不了
 TypeUnionApplicationData = Union[GrantActionApplicationData, GroupApplicationData, GradeManagerApplicationData]

@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from rest_framework import serializers
 
 from backend.apps.model_builder.constants import (
@@ -45,9 +46,8 @@ class DeletePartSLZ(serializers.Serializer):
     id = serializers.CharField(label="ID(id)", required=False)
 
     def validate(self, data):
-        if data["type"] in ModelSectionTypeList:
-            if not data.get("id"):
-                raise serializers.ValidationError("id required")
+        if data["type"] in ModelSectionTypeList and not data.get("id"):
+            raise serializers.ValidationError("id required")
 
         # id required=False if data["type"] in ("common_actions", "action_groups"):
         return data
@@ -202,7 +202,9 @@ class ActionIDSLZ(serializers.Serializer):
 class ActionSubGroupSLZ(serializers.Serializer):
     name = serializers.CharField(label="名称(name)", allow_blank=False)
     name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
-    actions = serializers.ListField(label="操作列表(actions)", child=ActionIDSLZ(label="操作(action)"), allow_empty=False)
+    actions = serializers.ListField(
+        label="操作列表(actions)", child=ActionIDSLZ(label="操作(action)"), allow_empty=False
+    )
 
 
 class ActionGroupSLZ(serializers.Serializer):
@@ -212,7 +214,10 @@ class ActionGroupSLZ(serializers.Serializer):
         label="操作列表(actions)", child=ActionIDSLZ(label="操作()"), required=False, allow_empty=True
     )
     sub_groups = serializers.ListField(
-        label="二级操作组(sub_groups)", child=ActionSubGroupSLZ(label="二级分组(sub_group)"), required=False, allow_empty=True
+        label="二级操作组(sub_groups)",
+        child=ActionSubGroupSLZ(label="二级分组(sub_group)"),
+        required=False,
+        allow_empty=True,
     )
 
 
@@ -220,7 +225,9 @@ class ActionGroupSLZ(serializers.Serializer):
 class CommonActionSLZ(serializers.Serializer):
     name = serializers.CharField(label="名称(name)", allow_blank=False)
     name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
-    actions = serializers.ListField(label="操作列表(actions)", child=ActionIDSLZ(label="操作(action)"), allow_empty=False)
+    actions = serializers.ListField(
+        label="操作列表(actions)", child=ActionIDSLZ(label="操作(action)"), allow_empty=False
+    )
 
     def validate_actions(self, value):
         # id uniq in one common_action

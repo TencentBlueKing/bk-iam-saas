@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, Dict, List
 
 from pydantic import BaseModel
@@ -62,7 +63,9 @@ class EngineService:
             return []
 
         if len(query_data) > MAX_ENGINE_SEARCH_RESOURCE_COUNT:
-            raise error_codes.ENGINE_REQUEST_ERROR.format("查询的资源实例不能超过{}个".format(MAX_ENGINE_SEARCH_RESOURCE_COUNT))
+            raise error_codes.ENGINE_REQUEST_ERROR.format(
+                "查询的资源实例不能超过{}个".format(MAX_ENGINE_SEARCH_RESOURCE_COUNT)
+            )
 
         resp_data = batch_query_subjects(query_data)
         return resp_data["results"]
@@ -71,8 +74,7 @@ class EngineService:
         """
         使用资源实例信息查询相关有权限的subjects
         """
-        resp_data = query_subjects(query_data)
-        return resp_data
+        return query_subjects(query_data)
 
     def gen_search_policy_resources(self, policies: List[Policy]) -> List[PolicyResource]:
         """

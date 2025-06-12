@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 import logging
 import traceback
@@ -63,7 +64,7 @@ def _one_line_error(exc):
                 child_error = ValidationError(child)
                 child_error.serializer = field.child
                 return _one_line_error(child_error)
-            elif isinstance(field, Serializer):  # 处理嵌套的serializer
+            if isinstance(field, Serializer):  # 处理嵌套的serializer
                 child_error = ValidationError(error)
                 child_error.serializer = field
                 return _one_line_error(child_error)
@@ -150,7 +151,7 @@ def exception_handler(exc, context):
 
         # 如果是调试，异常交给Django 默认处理
         if settings.DEBUG:
-            return
+            return None
 
     # NOTE: v1 openapi 为了兼容调用方使用习惯, 除以下error外，其他error的status code 默认返回 200
     ignore_error_codes = {

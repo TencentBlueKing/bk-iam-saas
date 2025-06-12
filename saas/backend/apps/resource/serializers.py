@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.conf import settings
 from rest_framework import serializers
 
@@ -33,7 +34,9 @@ class ResourceQuerySLZ(serializers.Serializer):
     action_system_id = serializers.CharField(
         label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
     )
-    action_id = serializers.CharField(label="操作系统id", required=False, allow_blank=True, allow_null=True, default="")
+    action_id = serializers.CharField(
+        label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
+    )
 
 
 class BaseInfoSLZ(serializers.Serializer):
@@ -67,4 +70,6 @@ class ResourceQueryByDisplayNameSLZ(serializers.Serializer):
     action_system_id = serializers.CharField(
         label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
     )
-    action_id = serializers.CharField(label="操作系统id", required=False, allow_blank=True, allow_null=True, default="")
+    action_id = serializers.CharField(
+        label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
+    )

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,8 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-主要处理申请的内容数据转为标准结构，给到ApplicationBiz
+主要处理申请的内容数据转为标准结构，给到 ApplicationBiz
 """
+
 from typing import Dict
 
 from django.conf import settings
@@ -27,7 +28,7 @@ from .policy import PolicyTrans
 
 
 class ApplicationDataTrans:
-    """用于将申请请求里的Dict转换为调用ApplicationBiz模块创建申请单所需的数据结构"""
+    """用于将申请请求里的 Dict 转换为调用 ApplicationBiz 模块创建申请单所需的数据结构"""
 
     # 由于申请是更上层的业务逻辑，所以需要使用到策略的转换函数
     policy_trans = PolicyTrans()
@@ -49,17 +50,19 @@ class ApplicationDataTrans:
             Subject.from_username(applicant),
         )
 
-        # 2. 申请的策略里移除已有策略数据, 生成移除已有权限后的策略
+        # 2. 申请的策略里移除已有策略数据，生成移除已有权限后的策略
         diff_policy_list = policy_list.sub(old_policy_list)
 
-        # 3. 增量策略：校验新增的资源实例ID和Name是否匹配，检查逻辑不可放置于第4步后面，否则可能会出现将过期老策略进行校验
+        # 3. 增量策略：校验新增的资源实例 ID 和 Name 是否匹配，
+        # 检查逻辑不可放置于第 4 步后面，否则可能会出现将过期老策略进行校验
         diff_policy_list.check_resource_name()
 
         # 4. 检查每个操作新增的资源实例数量不超过限制
         # NOTE: 只需要检查新增的部分，已有的以及申请续期的都不需要检查
         self._check_application_policy_instance_count_limit(system_id, diff_policy_list)
 
-        # 5. 由于存在申请时，未修改权限，只是修改有效期的情况，所以需要单独判断，重新添加到申请单里，同时申请的策略需要使用已有策略的有效期
+        # 5. 由于存在申请时，未修改权限，只是修改有效期的情况，
+        # 所以需要单独判断，重新添加到申请单里，同时申请的策略需要使用已有策略的有效期
         application_policies = []
         for p in policy_list.policies:
             old_policy = old_policy_list.get(p.action_id)
@@ -102,14 +105,15 @@ class ApplicationDataTrans:
                         continue
 
                     raise error_codes.VALIDATE_ERROR.format(
-                        _("操作 [{}] 关联的资源类型 [{}] 单次申请限{}个实例，实例权限数过多不利于您后期维护，更多实例建议您申请范围权限。").format(
-                            policy.action_id, c.type, settings.APPLY_POLICY_ADD_INSTANCES_LIMIT
-                        )
+                        _(
+                            "操作 [{}] 关联的资源类型 [{}] 单次申请限{}个实例，"
+                            "实例权限数过多不利于您后期维护，更多实例建议您申请范围权限。"
+                        ).format(policy.action_id, c.type, settings.APPLY_POLICY_ADD_INSTANCES_LIMIT)
                     )
 
     def from_grant_policy_application(self, applicant: str, data: Dict) -> ActionApplicationDataBean:
         """来着自定义权限申请的数据转换
-        data来着 backend.apps.application.serializers.ApplicationSLZ
+        data 来着 backend.apps.application.serializers.ApplicationSLZ
         {
             reason,
             system: {id}
@@ -176,7 +180,7 @@ class ApplicationDataTrans:
             ]
         }
         """
-        # data数据有两种，操作聚合的和非聚合的
+        # data 数据有两种，操作聚合的和非聚合的
         system_id = data["system"]["id"]
 
         # 1. 转换数据结构
@@ -193,32 +197,30 @@ class ApplicationDataTrans:
             application_policy_list = self._gen_need_apply_policy_list(applicant, system_id, policy_list)
             usernames = [applicant]
 
-        # 3. 转换为ApplicationBiz创建申请单所需数据结构
+        # 3. 转换为 ApplicationBiz 创建申请单所需数据结构
         applicants = [
             Applicant(type=SubjectType.USER.value, id=u.username, display_name=u.display_name)
             for u in UserModel.objects.filter(username__in=usernames)
         ]
 
-        application_data = ActionApplicationDataBean(
+        return ActionApplicationDataBean(
             applicant=applicant,
             policy_list=application_policy_list,
             applicants=applicants,
             reason=data["reason"],
         )
 
-        return application_data
-
     def from_grant_temporary_policy_application(self, applicant: str, data: Dict) -> ActionApplicationDataBean:
         """来着临时权限申请的数据转换
-        data来着 backend.apps.application.serializers.ApplicationSLZ
+        data 来着 backend.apps.application.serializers.ApplicationSLZ
         """
-        # data数据有两种，操作聚合的和非聚合的
+        # data 数据有两种，操作聚合的和非聚合的
         system_id = data["system"]["id"]
 
         # 1. 转换数据结构
         policy_list = self.policy_trans.from_aggregate_actions_and_actions(system_id, data)
 
-        # 2. 校验每个操作用户已有的权限不能超过10条
+        # 2. 校验每个操作用户已有的权限不能超过 10 条
         self._check_temporary_policy(applicant, system_id, policy_list)
 
         # 3. 检查每个操作新增的资源实例数量不超过限制
@@ -229,18 +231,16 @@ class ApplicationDataTrans:
         else:
             usernames = [applicant]
 
-        # 4. 转换为ApplicationBiz创建申请单所需数据结构
+        # 4. 转换为 ApplicationBiz 创建申请单所需数据结构
         applicants = [
             Applicant(type=SubjectType.USER.value, id=u.username, display_name=u.display_name)
             for u in UserModel.objects.filter(username__in=usernames)
         ]
 
-        # 4. 转换为ApplicationBiz创建申请单所需数据结构
-        application_data = ActionApplicationDataBean(
+        # 4. 转换为 ApplicationBiz 创建申请单所需数据结构
+        return ActionApplicationDataBean(
             applicant=applicant, policy_list=policy_list, applicants=applicants, reason=data["reason"]
         )
-
-        return application_data
 
     def _check_temporary_policy(self, applicant: str, system_id: str, policy_list: PolicyBeanList):
         """检查临时权限"""
@@ -250,7 +250,7 @@ class ApplicationDataTrans:
         # 1. 校验资源名称
         policy_list.check_resource_name()
 
-        # 2. 获取某个系统的所有的临时权限, 包括过期的
+        # 2. 获取某个系统的所有的临时权限，包括过期的
         old_policies = self.policy_query_biz.list_temporary_by_subject(
             system_id,
             Subject.from_username(applicant),
@@ -260,7 +260,7 @@ class ApplicationDataTrans:
             count = len([one for one in old_policies if one.action_id == p.action_id]) + 1
             if count > settings.TEMPORARY_POLICY_LIMIT:
                 raise error_codes.VALIDATE_ERROR.format(
-                    _("临时权限操作 [{}] 申请限最大{}条，临时权限过多不利于您后期维护，建议您删除部分权限再申请。").format(
-                        p.action_id, settings.TEMPORARY_POLICY_LIMIT
-                    )
+                    _(
+                        "临时权限操作 [{}] 申请限最大{}条，临时权限过多不利于您后期维护，建议您删除部分权限再申请。"
+                    ).format(p.action_id, settings.TEMPORARY_POLICY_LIMIT)
                 )

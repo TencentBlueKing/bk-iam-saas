@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import datetime
 import time
 
@@ -57,5 +58,4 @@ def format_localtime(fmt="%Y%m%d%H%M%S"):
     """
     转换当前时间为指定格式
     """
-    t = time.strftime(fmt, time.localtime())
-    return t
+    return time.strftime(fmt, time.localtime())

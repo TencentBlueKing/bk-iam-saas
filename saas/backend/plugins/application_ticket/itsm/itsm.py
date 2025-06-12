@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Dict, List, Optional
 
 from rest_framework.request import Request
@@ -23,11 +24,11 @@ from backend.service.models import (
     TypeUnionApplicationData,
 )
 
-from ..base import ApplicationTicketProvider
 from .constants import TicketStatus
 from .serializers import ApprovalSLZ
 from .ticket_content import ActionTable, GradeManagerForm, GroupTable
 from .ticket_content_tpl import FORM_SCHEMES
+from ..base import ApplicationTicketProvider
 
 DEFAULT_TAG = "bk_iam"
 
@@ -36,13 +37,12 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     def list_by_sns(self, sns: List[str]) -> List[ApplicationTicket]:
         """批量根据单据号查询单据信息"""
         data = itsm.batch_query_ticket_result(sns)
-        tickets = [
+        return [
             ApplicationTicket(
                 sn=i["sn"], url=i["ticket_url"], status=self._convert_status(i["current_status"], i["approve_result"])
             )
             for i in data
         ]
-        return tickets
 
     def get_ticket(self, sn: str) -> ApplicationTicket:
         """获取单据信息"""
@@ -51,8 +51,8 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     def _generate_ticket_common_params(
         self, data: TypeUnionApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
     ) -> Dict:
-        """生成Ticket的通用参数"""
-        # 对于ITSM，只需要IAM角色相关的处理者
+        """生成 Ticket 的通用参数"""
+        # 对于 ITSM，只需要 IAM 角色相关的处理者
         node_processors_dict = {
             node.id: ",".join(node.processors)
             for node in process.nodes
@@ -98,12 +98,12 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 "form_data": [ActionTable.from_application(data.content).dict()],
             }  # 真正生成申请内容的核心入口点
 
-        # 如果审批流程中包含资源审批人, 并且资源审批人不为空
-        # 增加 has_instance_approver 字段, 用于itsm审批流程走分支
+        # 如果审批流程中包含资源审批人，并且资源审批人不为空
+        # 增加 has_instance_approver 字段，用于 itsm 审批流程走分支
         if process.has_instance_approver_node():
             params["has_instance_approver"] = int(process.has_instance_approver_node(judge_empty=True))
 
-        # 在params中加上权限获得者, 增加敏感等级提示语句
+        # 在 params 中加上权限获得者，增加敏感等级提示语句
         params["dynamic_fields"] = [
             {
                 "name": "操作敏感等级",
@@ -143,8 +143,10 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 if data.type == ApplicationType.JOIN_GROUP
                 else f"申请续期 {len(data.content.groups)} 个用户组"
             )
-        title = "{}：{}".format(title_prefix, "、".join([f"({one.role_name}){one.name}" for one in data.content.groups]))
-        if len(title) > 64:
+        title = "{}：{}".format(
+            title_prefix, "、".join([f"({one.role_name}){one.name}" for one in data.content.groups])
+        )
+        if len(title) > 64:  # noqa: PLR2004
             title = title[:64] + "..."
 
         params["title"] = title
@@ -157,7 +159,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 "form_data": [GroupTable.from_application(data.content).dict()],
             }
 
-        # 在params中加上权限获得者, 增加敏感等级提示语句
+        # 在 params 中加上权限获得者，增加敏感等级提示语句
         params["dynamic_fields"] = [
             {
                 "name": "操作敏感等级",
@@ -192,8 +194,10 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         if approval_title:
             params["title"] = approval_title
         else:
-            title_prefix = "申请创建管理空间" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑管理空间"
-            params["title"] = f"{title_prefix}：{data.content.name}"
+            title_prefix = (
+                "申请创建管理空间" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑管理空间"
+            )
+            params["title"] = f"{title_prefix}:{data.content.name}"
 
         if approval_content:
             params["content"] = approval_content
@@ -208,7 +212,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         return ticket["sn"]
 
     def _convert_status(self, ticket_status: TicketStatus, approve_result: bool) -> ApplicationStatus:
-        """将ITSM单据状态和结果转换为权限中心定义的单据状态"""
+        """将 ITSM 单据状态和结果转换为权限中心定义的单据状态"""
         status = ApplicationStatus.PENDING.value
         if ticket_status == TicketStatus.FINISHED.value:
             status = ApplicationStatus.PASS.value if approve_result else ApplicationStatus.REJECT.value

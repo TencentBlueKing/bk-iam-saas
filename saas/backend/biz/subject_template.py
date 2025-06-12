@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -214,7 +215,7 @@ class SubjectTemplateBiz:
 
         # 组合数据结构
         subject_template_member_beans = []
-        for subject, relation in zip(subjects, relations):
+        for subject, relation in zip(subjects, relations, strict=False):
             subject_info = subject_info_list.get(subject)
             if not subject_info:
                 continue
@@ -239,11 +240,7 @@ class SubjectTemplateBiz:
         """根据关键词 获取指定人员模版成员列表"""
         queryset = SubjectTemplateRelation.objects.filter(template_id=template_id)
         subject_template_members = self.convert_to_subject_template_members(queryset)
-        hit_members = list(
-            filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), subject_template_members)
-        )
-
-        return hit_members
+        return list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), subject_template_members))
 
     def get_group_template_count_dict(self, group_ids: List[int]) -> Dict[int, int]:
         q = (
@@ -308,8 +305,7 @@ class SubjectTemplateBiz:
             cursor.execute(sql_query, params)
             result = cursor.fetchone()
 
-        count = result[0] if result else 0
-        return count
+        return result[0] if result else 0
 
     def get_subject_department_template_group_count(
         self,
@@ -374,8 +370,7 @@ class SubjectTemplateBiz:
             cursor.execute(sql_query, params)
             result = cursor.fetchone()
 
-        count = result[0] if result else 0
-        return count
+        return result[0] if result else 0
 
     def list_paging_subject_template_group(
         self,
@@ -446,7 +441,7 @@ class SubjectTemplateBiz:
             # 获取结果
             result = cursor.fetchall()
 
-        beans = [
+        return [
             SubjectTemplateGroupBean(
                 id=one[0],
                 name=one[1],
@@ -460,8 +455,6 @@ class SubjectTemplateBiz:
             )
             for one in result
         ]
-
-        return beans
 
     def list_paging_subject_department_template_group(
         self,

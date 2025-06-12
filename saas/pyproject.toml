@@ -2,6 +2,13 @@
 package-mode = false
 requires-poetry = '>=2.0.0,<3.0.0'
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [project]
 name = "bk_iam_saas"
 version = "0.0.0"
@@ -76,69 +83,111 @@ dependencies = [
 ]
 
 [tool.poetry.group.dev.dependencies]
-django-dynamic-fixture = "^4.0.1"
-# For flake8 support pyproject.toml
-toml = "0.10.1"
-pyproject-flake8 = "6.1.0"
-flake8-comprehensions = "3.15.0"
+# python format and lint (instead of black/isort/flake8)
+ruff = "^0.11.13"
 # pytest
 pytest = "8.0.0"
 pytest-django = "4.1.0"
+django-dynamic-fixture = "^4.0.1"
 converge = "0.9.8"
 mock = "1.0.1"
-# black
-black = "25.1.0"
+pytest-cov = "^3.0.0"
 # mypy
-mypy = "0.910"
+mypy = "1.16.0"
 types-requests = "^2.25.0"
 types-pytz = "^2021.1.0"
 types-redis = "^3.5.4"
 types-six = "^0.1.7"
 types-mock = "^0.1.3"
-# isort
-isort = "^5.9.2"
-pytest-cov = "^3.0.0"
-flake8-bugbear = "24.2.6"
+# security checks
 bandit = "1.7.1"
+# module and laryer dependency constraint
 import-linter = "1.2.6"
 
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.black]
+[tool.ruff]
+# Same as Black.
 line-length = 119
-target-version = ['py311']
-exclude = '''
-(
-  /(
-      \.mypy_cache
-    | \.git
-    | migrations
-  )/
-)
-'''
+indent-width = 4
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "*/migrations/*",
+]
+target-version = "py311"
 
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = 'true'
-force_grid_wrap = 0
-use_parentheses = 'true'
-line_length = 119
-skip = [".mypy_cache", ".git", "*/migrations"]
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
 
-[tool.flake8]
-ignore = "C901,E203,W503,B010,B009,B031"
-max-line-length=119
-max-complexity=12
-format = "pylint"
-show_source = "true"
-statistics = "true"
-count = "true"
-exclude = "*migrations*,*.pyc,.git,__pycache__,node_modules/*,*/templates_module*,*/bin/*,*/settings/*,config,tests/unittest_settings.py"
+[tool.ruff.lint]
+# 每个规则集的具体内容请参考：https://docs.astral.sh/ruff/rules/
+select = ["E", "F", "W", "I", "C90", "PL", "RET", "N", "C4", "PT", "PERF", "G", "TRY", "SIM", "B", "PIE"]
+ignore = [
+    # Consider moving this statement to an else block
+    "TRY300",
+    # Avoid specifying long messages outside the exception class
+    "TRY003",
+    # Use contextlib.suppress({exception}) instead of try-except-pass
+    "SIM105",
+    # Use ternary operator {contents} instead of if-else-block
+    "SIM108",
+    # Avoid too many arguments
+    "PLR0913",
+    # Avoid too many return statements
+    "PLR0911",
+    # Exception should be named with `Error` suffix
+    "N818",
+    # raise-without-from-inside-except
+    "B904",
+    # perflint: 忽略后，不强制要求一定用推导式替代 for 循环，因为有时循环的可读性更好
+    "PERF401",
+    # flake8-logging-format: 忽略后，允许在打印日志时使用 f-string 表达式，更可读但可能降低性能
+    "G004",
+]
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**.py" = ["PLR2004", "PT006", "PT009"]
+"**/tests/unittest_settings.py" = ["E402", "F403", "F405"]
+"**/config/prod.py" = ["F405"]
+"**/backend/audit/audit.py" = ["N806"]
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 12
+
+[tool.ruff.lint.isort]
+# 总是显式制定 import section 的顺序
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+# 添加那些不能被默认识别的 first party 的模块名
+known-first-party = ["backend", "tests"]
+relative-imports-order = "closest-to-furthest"
 
 [tool.bandit]
 exclude_dirs = ["tests"]
@@ -153,22 +202,56 @@ follow_imports="skip"
 strict_optional=true
 pretty=true
 show_error_codes=true
-exclude='''(?x)(
-    ^.*/config/.*|
-    .*/settings\.py|
-    .*/tests/unittest_settings\.py|
-    .*/backend/tracing/.*
-)'''
+exclude = [
+    'config/.*$',
+    'tests/unittest_settings.py$',
+    'migrations/.*$',
+]
 
 [[tool.mypy.overrides]]
-module = [
-    "*.migrations.*",
-    "*.config.*",
-    "*.tests.unittest_settings",
-    "*.backend.tracing.*",
-    "*.settings"
-]
+module = "backend.service.constants"
 ignore_errors = true
+
+[tool.importlinter]
+root_package = "backend"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name="apps service biz component"
+type="layers"
+layers = [
+    "backend.apps",
+    "backend.trans",
+    "backend.biz",
+    "backend.service",
+    "backend.component",
+]
+ignore_imports = [
+    "backend.trans.* -> backend.apps.*.models",
+    "backend.biz.* -> backend.apps.*.models",
+    "backend.biz.*.* -> backend.apps.*.models",
+    "backend.service.* -> backend.apps.*.models",
+    "backend.service.*.* -> backend.apps.*.models",
+    "backend.biz.org_sync.syncer -> backend.apps.organization.tasks",
+    "backend.biz.application -> backend.apps.role.tasks",
+    "backend.biz.application -> backend.audit.audit",
+    "backend.audit.audit -> backend.apps.*.models",
+    "backend.audit.signals -> backend.audit.tasks",
+]
+
+[[tool.importlinter.contracts]]
+name="api service biz component"
+type="layers"
+layers =[
+    "backend.api",
+    "backend.trans",
+    "backend.biz",
+    "backend.service",
+    "backend.component",
+]
+ignore_imports = [
+    "backend.biz.model_event -> backend.api.authorization.models"
+]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.unittest_settings"

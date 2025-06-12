@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -40,7 +41,6 @@ from .serializers import QueryRoleSLZ, SubjectGroupSLZ, UserRelationSLZ
 
 
 class SubjectGroupViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = CustomPageNumberPagination
@@ -86,7 +86,6 @@ class SubjectGroupViewSet(GenericViewSet):
 
 
 class SubjectDepartmentGroupViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None
@@ -107,7 +106,6 @@ class SubjectDepartmentGroupViewSet(GenericViewSet):
 
 
 class SubjectSystemViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -128,7 +126,6 @@ class SubjectSystemViewSet(GenericViewSet):
 
 
 class SubjectPolicyViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -225,7 +222,6 @@ class SubjectPolicyViewSet(GenericViewSet):
 
 
 class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
-
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
 
@@ -253,7 +249,6 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
 
 
 class SubjectRoleViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = RoleBiz()
@@ -274,7 +269,6 @@ class SubjectRoleViewSet(GenericViewSet):
 
 
 class SubjectTemporaryPolicyViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -326,7 +320,6 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
 
 
 class SubjectTemporaryPolicySystemViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -357,8 +350,7 @@ class SubjectGroupSearchViewSet(SubjectGroupSearchMixin):
         return super().search(request, *args, **kwargs)
 
     def get_subject(self, request, kwargs):
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-        return subject
+        return Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
 
 class SubjectDepartmentGroupSearchViewSet(SubjectGroupSearchMixin):
@@ -372,8 +364,7 @@ class SubjectDepartmentGroupSearchViewSet(SubjectGroupSearchMixin):
         return super().search(request, *args, **kwargs)
 
     def get_subject(self, request, kwargs):
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-        return subject
+        return Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
     def get_group_dict(self, subject: Subject):
         groups = self.biz.list_all_user_department_group(subject)
@@ -394,8 +385,7 @@ class SubjectPolicySearchViewSet(UserPolicySearchViewSet):
         return super().search(request, *args, **kwargs)
 
     def get_subject(self, request, kwargs):
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-        return subject
+        return Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
 
 class SubjectTemplateGroupViewSet(UserSubjectTemplateGroupViewSet):
@@ -409,8 +399,7 @@ class SubjectTemplateGroupViewSet(UserSubjectTemplateGroupViewSet):
         return super().list(request, *args, **kwargs)
 
     def get_subject(self, request, kwargs):
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-        return subject
+        return Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
 
 class DepartmentSubjectTemplateGroupViewSet(UserDepartmentSubjectTemplateGroupViewSet):
@@ -424,5 +413,4 @@ class DepartmentSubjectTemplateGroupViewSet(UserDepartmentSubjectTemplateGroupVi
         return super().list(request, *args, **kwargs)
 
     def get_subject(self, request, kwargs):
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-        return subject
+        return Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])

@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 from typing import Any, List
 
@@ -33,7 +34,9 @@ class TaskDetail(BaseModel):
     _params = models.TextField("子任务参数集", db_column="params", default="")  # List[Dict]
     unique_sign = models.CharField("任务唯一标识", max_length=64, default="")  # 运行中的任务, 不允许重新创建
     status = models.IntegerField(
-        "任务状态", choices=TaskStatus.get_choices(), default=TaskStatus.PENDING.value  # type: ignore[attr-defined]
+        "任务状态",
+        choices=TaskStatus.get_choices(),
+        default=TaskStatus.PENDING.value,  # type: ignore[attr-defined]
     )
     celery_id = models.CharField("celery任务id", max_length=36, default="")
     _results = models.TextField("结果集", db_column="results", default="")
@@ -113,7 +116,9 @@ class SubTaskState(models.Model):
     celery_id = models.CharField("celery任务id", max_length=36)
     index = models.IntegerField("子任务索引")
     status = models.IntegerField(
-        "任务状态", choices=TaskStatus.get_choices(), default=TaskStatus.RUNNING.value  # type: ignore[attr-defined]
+        "任务状态",
+        choices=TaskStatus.get_choices(),
+        default=TaskStatus.RUNNING.value,  # type: ignore[attr-defined]
     )
     exception = models.TextField("任务异常", default="")
 

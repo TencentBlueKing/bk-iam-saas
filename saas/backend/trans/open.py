@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, List
 
 from pydantic import BaseModel, Field
@@ -35,7 +36,9 @@ class OpenRelatedResource(BaseModel):
     system_id: str = Field(alias="system")
     type: str
     paths: List[List[OpenResourcePathNode]] = []
-    attributes: List[Any] = []  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
+    attributes: List[
+        Any
+    ] = []  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段传 system 或 system_id
@@ -63,7 +66,7 @@ class OpenRelatedResource(BaseModel):
 
             # 获取到实例视图提供的系统列表, 填充到现有的path中
             system_ids = first_match_selection.list_match_path_system_id(path_resource_types)
-            for node, system_id in zip(path, system_ids):
+            for node, system_id in zip(path, system_ids, strict=False):
                 node.system_id = system_id
 
             # 如果有多个实例视图可以匹配, 所有实例视图返回的system_ids必须一致
@@ -186,11 +189,9 @@ class OpenCommonTrans:
             for p in policies:
                 p.set_expired_at(expired_at)
 
-        policy_list = PolicyBeanList(
+        return PolicyBeanList(
             system_id=system_id,
             policies=policies,
             need_fill_empty_fields=True,  # 填充相关字段
             need_check_instance_selection=True,  # 校验实例视图
         )
-
-        return policy_list

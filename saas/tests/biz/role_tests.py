@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from unittest import mock
 
 import pytest
@@ -67,17 +68,17 @@ class TestInstanceDiff(TestCase):
         self.assertFalse(ActionScopeDiffer(None, None)._diff_instances(template_instances, scope_instances))
 
 
-@pytest.fixture()
+@pytest.fixture
 def role_scope_system_action_system_all():
     return RoleScopeSystemActions(systems={SYSTEM_ALL: set()})
 
 
-@pytest.fixture()
+@pytest.fixture
 def role_scope_system_action_action_all():
     return RoleScopeSystemActions(systems={"system": {ACTION_ALL}})
 
 
-@pytest.fixture()
+@pytest.fixture
 def role_scope_system_action_normal():
     return RoleScopeSystemActions(systems={"system": {"action"}})
 

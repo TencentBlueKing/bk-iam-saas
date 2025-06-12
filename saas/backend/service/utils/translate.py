@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from collections import defaultdict
 from typing import Any, Dict, List, Type
 
@@ -108,7 +109,7 @@ class ResourceExpressionTranslator:
 
     def _translate_related_resource_types(self, related_resource_types: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        转换一个resource_group中的条件
+        转换一个 resource_group 中的条件
         """
         content = [self._translate_condition(r) for r in related_resource_types]
         if len(content) == 1:
@@ -116,20 +117,20 @@ class ResourceExpressionTranslator:
 
         return {"AND": {"content": content}}
 
-    def _translate_condition(self, resource: Dict) -> Dict:
+    def _translate_condition(self, resource: Dict) -> Dict:  # noqa: C901, PLR0912
         """
-        表达式转换, 转换SaaS的条件为后端的表达式
+        表达式转换，转换 SaaS 的条件为后端的表达式
         """
         system_id, _type = resource["system_id"], resource["type"]
 
-        # 条件为空, 表示任意
+        # 条件为空，表示任意
         if len(resource["condition"]) == 0:
             return {"Any": {self._gen_field_name(system_id, _type, "id"): []}}
 
         content = []
 
-        for c in resource["condition"]:  # 多个项之间是OR
-            # 转换实例选择, 每个path中的链路之间是OR
+        for c in resource["condition"]:  # 多个项之间是 OR
+            # 转换实例选择，每个 path 中的链路之间是 OR
             instance_content = []
             for i in c["instances"]:
                 instance_content.append(self._translate_instance(system_id, _type, i))
@@ -141,7 +142,7 @@ class ResourceExpressionTranslator:
             else:
                 instance = {"OR": {"content": instance_content}}
 
-            # 转换属性选择, 每个属性之间是AND
+            # 转换属性选择，每个属性之间是 AND
             attribute_content = []
             for a in c["attributes"]:
                 attribute_content.append(self._translate_attribute(system_id, _type, a))
@@ -171,7 +172,7 @@ class ResourceExpressionTranslator:
         if len(content) == 1:
             return content[0]
 
-        # 多组condition之间是OR
+        # 多组 condition 之间是 OR
         return {"OR": {"content": content}}
 
     def _gen_field_name(self, system_id: str, _type: str, _id: str):
@@ -179,7 +180,7 @@ class ResourceExpressionTranslator:
 
     def _translate_attribute(self, system_id: str, _type: str, attribute: Dict) -> Dict:
         """
-        转换单个attribute
+        转换单个 attribute
         """
         values = [one["id"] for one in attribute["values"]]
 
@@ -187,7 +188,7 @@ class ResourceExpressionTranslator:
             raise error_codes.INVALID_ARGS.format("values must not empty")
 
         if isinstance(values[0], bool):
-            # bool属性值只能有一个
+            # bool 属性值只能有一个
             if len(values) != 1:
                 raise error_codes.INVALID_ARGS.format("bool value must has one")
             return {"Bool": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
@@ -202,18 +203,18 @@ class ResourceExpressionTranslator:
 
     def _translate_instance(self, system_id: str, _type: str, instance: Dict) -> Dict[str, Any]:
         """
-        转换单个instance
+        转换单个 instance
         """
         content: List[Dict[str, Any]] = []
 
-        ids = []  # 合并只有id的条件
-        paths = []  # 合并最后一级为*的path
-        path_ids = defaultdict(list)  # 合并path相同的id
+        ids = []  # 合并只有 id 的条件
+        paths = []  # 合并最后一级为*的 path
+        path_ids = defaultdict(list)  # 合并 path 相同的 id
 
         for p in instance["path"]:
             # 最后一个节点是叶子节点
             if p[-1]["type"] == _type:
-                # 如果路径上只有一个节点, 且为叶子节点, 直接使用StringEquals
+                # 如果路径上只有一个节点，且为叶子节点，直接使用 StringEquals
                 if len(p) == 1:
                     ids.append(p[0]["id"])
                 else:
@@ -221,12 +222,12 @@ class ResourceExpressionTranslator:
 
                     path = translate_path(p[:-1])
 
-                    # 如果叶子节点是任意, 只是用路径StringPrefix
+                    # 如果叶子节点是任意，只是用路径 StringPrefix
                     if p[-1]["id"] == ANY_ID:
                         paths.append(path)
                         continue
 
-                    # 具有相同路径前缀的叶子节点, 聚合到一个AND的条件中
+                    # 具有相同路径前缀的叶子节点，聚合到一个 AND 的条件中
                     path_ids[path].append(p[-1]["id"])
             else:
                 valid_path_without_last_node(p)
@@ -262,7 +263,7 @@ class ResourceExpressionTranslator:
 
 def translate_path(path_nodes: List[Dict]) -> str:
     """
-    转换path层级到字符串表示
+    转换 path 层级到字符串表示
     """
     path = ["/"]
     for n in path_nodes:
@@ -272,7 +273,7 @@ def translate_path(path_nodes: List[Dict]) -> str:
 
 def valid_path_without_last_node(path_nodes: List[Dict]):
     """
-    校验路径数据, 必须排除路径最后的叶子节点 (叶子节点是可以为 * 的)
+    校验路径数据，必须排除路径最后的叶子节点 (叶子节点是可以为 * 的)
 
     1. 路径的中间节点不能为 *
     2. 路径中不能存在重复的节点

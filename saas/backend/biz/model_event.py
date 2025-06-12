@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List
 
 from django.db import transaction
@@ -27,8 +28,6 @@ from backend.service.policy.operation import PolicyOperationService
 
 class ModelEventBean(ModelEvent):
     """继承ModelEvent的数据属性"""
-
-    pass
 
 
 class BaseEventExecutor:

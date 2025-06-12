@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import mock
 from django.test import TestCase
 
@@ -24,17 +25,15 @@ class ActionGroupTests(TestCase):
         svc = ActionGroupBiz()
 
         action = ActionBean(
-            **{
-                "description": "",
-                "description_en": "",
-                "id": "view_host",
-                "name": "编辑主机",
-                "name_en": "edit_host",
-                "related_actions": [],
-                "related_resource_types": [],
-                "type": "delete",
-                "version": 0,
-            }
+            description="",
+            description_en="",
+            id="view_host",
+            name="编辑主机",
+            name_en="edit_host",
+            related_actions=[],
+            related_resource_types=[],
+            type="delete",
+            version=0,
         )
 
         ag = svc.list_by_actions("bk_cmdb", [action])
@@ -88,56 +87,48 @@ class ActionGroupTests(TestCase):
 
         actions = [
             ActionBean(
-                **{
-                    "description": "",
-                    "description_en": "",
-                    "id": "a",
-                    "name": "a",
-                    "name_en": "a",
-                    "related_actions": [],
-                    "related_resource_types": [],
-                    "type": "delete",
-                    "version": 0,
-                }
+                description="",
+                description_en="",
+                id="a",
+                name="a",
+                name_en="a",
+                related_actions=[],
+                related_resource_types=[],
+                type="delete",
+                version=0,
             ),
             ActionBean(
-                **{
-                    "description": "",
-                    "description_en": "",
-                    "id": "b",
-                    "name": "b",
-                    "name_en": "b",
-                    "related_actions": [],
-                    "related_resource_types": [],
-                    "type": "delete",
-                    "version": 0,
-                }
+                description="",
+                description_en="",
+                id="b",
+                name="b",
+                name_en="b",
+                related_actions=[],
+                related_resource_types=[],
+                type="delete",
+                version=0,
             ),
             ActionBean(
-                **{
-                    "description": "",
-                    "description_en": "",
-                    "id": "c",
-                    "name": "c",
-                    "name_en": "c",
-                    "related_actions": [],
-                    "related_resource_types": [],
-                    "type": "delete",
-                    "version": 0,
-                }
+                description="",
+                description_en="",
+                id="c",
+                name="c",
+                name_en="c",
+                related_actions=[],
+                related_resource_types=[],
+                type="delete",
+                version=0,
             ),
             ActionBean(
-                **{
-                    "description": "",
-                    "description_en": "",
-                    "id": "d",
-                    "name": "d",
-                    "name_en": "d",
-                    "related_actions": [],
-                    "related_resource_types": [],
-                    "type": "delete",
-                    "version": 0,
-                }
+                description="",
+                description_en="",
+                id="d",
+                name="d",
+                name_en="d",
+                related_actions=[],
+                related_resource_types=[],
+                type="delete",
+                version=0,
             ),
         ]
 

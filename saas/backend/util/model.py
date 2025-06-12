@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, Dict, List, Tuple
 
 from pydantic import BaseModel, PrivateAttr
@@ -25,27 +26,25 @@ class ExcludeModelMetaclass(ModelMetaclass):
 
 class ExcludeModel(BaseModel, metaclass=ExcludeModelMetaclass):
     """
-    带 __exclude__ 参数的Pydantic BaseModel基类
+    带 __exclude__ 参数的 Pydantic BaseModel 基类
 
-    继承了该类的子类会在继承已有的Pydantic field的同时移除 __exclude__ 配置的不需要的 field
+    继承了该类的子类会在继承已有的 Pydantic field 的同时移除 __exclude__ 配置的不需要的 field
     """
-
-    pass
 
 
 class ListModel(BaseModel):
     """
-    用于包装typing List, 不需要额外的结构来支持ModelList
+    用于包装 typing List, 不需要额外的结构来支持 ModelList
     """
 
     __root__: List[Any]
 
-    def __init__(__pydantic_self__, **data: Any) -> None:
+    def __init__(__pydantic_self__, **data: Any) -> None:  # noqa: N805
         """
-        兼容parse_obj的逻辑
+        兼容 parse_obj 的逻辑
 
-        pydantic 中使用parse_obj函数时自定义__root__的类会自动增加 __root__ = Object 的构建参数
-        为了兼容ListModel之间的转换，这里在init时结构 __root__ 参数指向 Object 的 __root__
+        pydantic 中使用 parse_obj 函数时自定义__root__的类会自动增加 __root__ = Object 的构建参数
+        为了兼容 ListModel 之间的转换，这里在 init 时结构 __root__ 参数指向 Object 的 __root__
         """
         if "__root__" in data and isinstance(data["__root__"], ListModel):
             data["__root__"] = data["__root__"].__root__
@@ -86,13 +85,13 @@ class ListModel(BaseModel):
 
 
 class PartialModel(BaseModel):
-
-    # 某些情况下，只需要用到数据类的部分字段，_partial_fields用于记录数据类对象的哪些字段是可用，配合from_partial_data一起使用
+    # 某些情况下，只需要用到数据类的部分字段，
+    # _partial_fields 用于记录数据类对象的哪些字段是可用，配合 from_partial_data 一起使用
     _partial_fields: List[str] = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
-        # __fields__ 只包含public字段，不包含private字段，即不会包含_partial_fields字段
+        # __fields__ 只包含 public 字段，不包含 private 字段，即不会包含_partial_fields 字段
         self._partial_fields = data["_partial_fields"] if "_partial_fields" in data else list(self.__fields__.keys())
 
     def get_partial_fields(self):
@@ -101,16 +100,16 @@ class PartialModel(BaseModel):
     @classmethod
     def from_partial_data(cls, partial_data: Dict):
         """
-        由于做ORM Update时，partial_data只包含了需要更新字段，所以需要使用该函数将不更新的字段填充空值
+        由于做 ORM Update 时，partial_data 只包含了需要更新字段，所以需要使用该函数将不更新的字段填充空值
         否则因为该数据类存在没有默认值的字段会导致转换失败
-        同时会设置私有字段_partial_fields来明确出partial_data里的字段
+        同时会设置私有字段_partial_fields 来明确出 partial_data 里的字段
         """
         config = cls.__config__
 
         # 遍历所有字段，将不存在的且必填字段设置为空值
         data = {}
         for name, field in cls.__fields__.items():
-            # 查找每个字段是否存在partial_data里，pydantic是支持别名的，而且优先使用别名
+            # 查找每个字段是否存在 partial_data 里，pydantic 是支持别名的，而且优先使用别名
             alias_found = field.alias in partial_data
             name_found = config.allow_population_by_field_name and field.alt_alias and field.name in partial_data
 
@@ -125,7 +124,7 @@ class PartialModel(BaseModel):
             # 设置空值
             data[name] = cls._get_empty_value(field.outer_type_)
 
-        # 将partial_data添加data里
+        # 将 partial_data 添加 data 里
         data.update(partial_data)
         # 可用字段列表
         data["_partial_fields"] = list(partial_data.keys())
@@ -153,13 +152,13 @@ class PartialModel(BaseModel):
                 return 0
             if issubclass(_type, bool):
                 return False
-            # 类似List[...]均可
+            # 类似 List[...] 均可
             if issubclass(_type, List):
                 return []
-            # 类似Tuple[...]均可
+            # 类似 Tuple[...] 均可
             if issubclass(_type, Tuple):
                 return ()
-            # 类似 Dict[...] 或 dict均可
+            # 类似 Dict[...] 或 dict 均可
             if issubclass(_type, Dict):
                 return {}
         except:  # noqa

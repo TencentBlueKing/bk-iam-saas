@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List
 
 from pydantic import BaseModel
@@ -71,7 +72,7 @@ class ResourceUnlimited(BaseModel):
 
     @classmethod
     def from_resource(cls, resource_type_name: str):
-        return cls(label=f"关联资源类型: {resource_type_name}")
+        return cls(label=f"关联资源类型：{resource_type_name}")
 
 
 class ResourceInstanceColumnValue(BaseModel):
@@ -104,7 +105,7 @@ class ResourceInstanceTable(BaseModel):
         for c in conditions:
             for i in c.instances:
                 values.append(ResourceInstanceColumnValue.from_instance(i))
-        return cls(label=f"关联资源类型: {resource_type_name}", value=values)
+        return cls(label=f"关联资源类型：{resource_type_name}", value=values)
 
 
 class ResourceAttributeColumnValue(BaseModel):
@@ -136,7 +137,7 @@ class ResourceAttributeTable(BaseModel):
     @classmethod
     def from_conditions(cls, resource_type_name: str, conditions: List[ApplicationResourceCondition]):
         return cls(
-            label=f"关联资源类型: {resource_type_name}",
+            label=f"关联资源类型：{resource_type_name}",
             value=[ResourceAttributeColumnValue.from_attributes(c.attributes) for c in conditions],
         )
 
@@ -164,7 +165,7 @@ class ResourceBothTable(BaseModel):
             for i in c.instances:
                 inst = ResourceInstanceColumnValue.from_instance(i)
                 values.append(ResourceBothColumnValue(type=inst.type, path=inst.path, attributes=attr.attributes))
-        return cls(label=f"关联资源类型: {resource_type_name}", value=values)
+        return cls(label=f"关联资源类型：{resource_type_name}", value=values)
 
 
 class ActionRelatedResourceTypeInfo(BaseModel):
@@ -176,7 +177,7 @@ class ActionRelatedResourceTypeInfo(BaseModel):
     children: List = []
 
     @classmethod
-    def from_resource_types(cls, related_resource_types: List[ApplicationRelatedResource]):
+    def from_resource_types(cls, related_resource_types: List[ApplicationRelatedResource]):  # noqa: C901
         # 1. 与资源实例无关
         if not related_resource_types:
             return cls(value=[BaseDictStrValue(value="无需关联实例")])
@@ -317,7 +318,7 @@ class ResourceGroupInfo(BaseModel):
         return ResourceGroupInfo(value=value, children=children)
 
     @staticmethod
-    def gen_resource_summary(resource_groups: ApplicationResourceGroupList) -> str:
+    def gen_resource_summary(resource_groups: ApplicationResourceGroupList) -> str:  # noqa: PLR0912
         """
         生成资源组合概要信息
         """
@@ -352,7 +353,7 @@ class ResourceGroupInfo(BaseModel):
                     elif attribute_count > 0 and resource_count == 0:
                         value = f"{resource_type_name}: {attribute_count}个属性"
                     else:
-                        value = f"{resource_type_name}: {resource_count}个实例({attribute_count}个属性)"
+                        value = f"{resource_type_name}: {resource_count}个实例 ({attribute_count}个属性)"
 
                 summary.append(value)
 
@@ -385,14 +386,14 @@ class ActionColumnValue(BaseModel):
 class ActionTable(BaseModel):
     """权限表格"""
 
-    label: str = "系统"  # 系统: xxx
+    label: str = "系统"  # 系统：xxx
     scheme: str = FormSchemeEnum.ACTION_TABLE.value
     value: List[ActionColumnValue]
 
     @classmethod
     def from_application(cls, content: GrantActionApplicationContent):
         values = [ActionColumnValue.from_policy(p) for p in content.policies]
-        return cls(label=f"系统: {content.system.name}", value=values)
+        return cls(label=f"系统：{content.system.name}", value=values)
 
 
 # ---------------------------- 加入用户组 ----------------------------
@@ -414,7 +415,7 @@ class GroupActionColumnValue(BaseModel):
 class GroupActionTable(BaseModel):
     """用户组权限表格"""
 
-    label: str = "权限模板(系统)"  # 系统: xxx
+    label: str = "权限模板 (系统)"  # 系统：xxx
     scheme: str = FormSchemeEnum.ACTION_TABLE_WITHOUT_EXP.value
     value: List[GroupActionColumnValue]
 
