@@ -521,7 +521,7 @@
             managerRef.isEditable = true;
             if (!payload.members.length) {
               setTimeout(() => {
-                this.$refs[`managerRef${index}`].$refs.selector.focus();
+                managerRef.$refs.selector.$el.querySelector('input').focus();
               }, 10);
             }
           }
@@ -536,7 +536,7 @@
             subManagerRef.isEditable = true;
             if (!payload.members.length) {
               setTimeout(() => {
-                subManagerRef.$refs.selector.focus();
+                subManagerRef.$refs.selector.$el.querySelector('input').focus();
               }, 10);
             }
           }

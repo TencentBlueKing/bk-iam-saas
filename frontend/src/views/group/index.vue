@@ -150,7 +150,7 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.userGroup['创建人']`)">
         <template slot-scope="{ row }">
-          <span>{{ row.creator || '--' }}</span>
+          <bk-user-display-name :user-id="row.creator || '--'" />
         </template>
       </bk-table-column>
       <!-- 先屏蔽 -->

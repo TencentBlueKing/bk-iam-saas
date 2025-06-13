@@ -3,7 +3,6 @@
     <div class="ghost-wrapper" :style="ghostStyle"></div>
     <div class="render-wrapper" ref="content">
       <div
-        v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
         v-for="item in renderData"
         :key="item.id"
         :style="getNodeStyle(item)"
@@ -51,8 +50,12 @@
           :style="nameStyle(item)"
           :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
         >
-          {{ item.type === 'user' ? item.username : item.name }}
-          <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
+          <IamUserDisplayName
+            :user-id="item.type === 'user' ? item.name !== ''
+              ? `${item.username} (${item.name})`
+              : item.username : item.name"
+            :display-value="[nameType(item)]"
+          />
         </span>
         <span class="red-dot" v-if="item.isNewMember"></span>
         <span

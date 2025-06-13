@@ -20,13 +20,11 @@
         </bk-select>
         <!-- 单独处理dbm系统业务个别属性id需要展示不同的组件 -->
         <template v-if="isMemberSelector(item)">
-          <BkUserSelector
+          <IamUserSelector
             ref="selector"
             class="sub-selector-content"
-            :api="userApi"
             :value="formatMemberValue(item)"
             :disabled="formatDisabled(item)"
-            :placeholder="$t(`m.verify['请输入']`)"
             :empty-text="$t(`m.common['无匹配人员']`)"
             @change="handleMemberChange(...arguments, item)"
           />
@@ -74,7 +72,6 @@
   import { debounce } from 'lodash';
   import { sleep } from '@/common/util';
   import Attribute from '@/model/attribute';
-  import BkUserSelector from '@blueking/user-selector';
 
   const ATTRIBUTE_ITEM = {
     id: '',
@@ -88,9 +85,6 @@
   };
     
   export default {
-    components: {
-      BkUserSelector
-    },
     props: {
       list: {
         type: Array,

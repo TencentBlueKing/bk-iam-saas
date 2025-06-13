@@ -4,7 +4,6 @@
     <div class="render-wrapper" ref="content">
       <div class="organization-content">
         <div
-          v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
           v-for="(item, index) in renderOrganizationList"
           :key="item.id"
           :class="[
@@ -33,7 +32,10 @@
             ]"
           />
           <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
-            {{ item.name }}
+            <IamUserDisplayName
+              :user-id="item.name"
+              :display-value="[nameType(item)]"
+            />
           </span>
           <span
             v-if="item.showCount && enableOrganizationCount"
@@ -45,7 +47,6 @@
       </div>
       <div class="user-content">
         <div
-          v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
           v-for="(item, index) in renderUserList"
           :key="item.id"
           :class="[
@@ -75,10 +76,10 @@
           <span
             :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]"
           >
-            {{ item.username }}
-            <template v-if="item.name !== ''">
-              ({{ item.name }})
-            </template>
+            <IamUserDisplayName
+              :user-id="item.name ? `${item.username} (${item.name})` : item.username"
+              :display-value="[nameType(item)]"
+            />
           </span>
         </div>
       </div>

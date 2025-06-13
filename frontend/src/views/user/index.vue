@@ -468,11 +468,11 @@
           });
           // 默认展开第一个目录下的节点且选中第一个子节点
           const firstIndex = 0;
-          const children = categories[firstIndex].children;
+          const children = categories[firstIndex] ? categories[firstIndex].children : [];
           children.forEach(item => {
             item.visiable = true;
           });
-          if (Object.keys(this.curSelectedData).length < 1) {
+          if (Object.keys(this.curSelectedData).length < 1 && children.length > 0) {
             children[0].isSelected = true;
             this.curSelectedData = _.cloneDeep(children[0]);
           }

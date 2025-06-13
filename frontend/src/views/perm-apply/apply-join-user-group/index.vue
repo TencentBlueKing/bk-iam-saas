@@ -419,7 +419,6 @@
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   import RenderCondition from '@/views/resource-permiss/components/render-condition';
   import RenderResource from '@/views/resource-permiss/components/render-resource';
-  // import BkUserSelector from '@blueking/user-selector';
 
   export default {
     name: '',
@@ -1752,7 +1751,7 @@
         color: #ff4d4d;
     }
     .is-member-empty-cls {
-        .user-selector-container {
+        .tags-container {
             border-color: #ff4d4d;
         }
     }

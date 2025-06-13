@@ -63,7 +63,7 @@
               :ref="`userOrg_${item.id}`"
               class="single-hide group-name"
             >
-              <span>{{ item.id }}</span>
+              <bk-user-display-name :user-id="item.id" />
               <span style="margin-left: 5px;">({{ item.name }})</span>
             </div>
             <div
@@ -72,7 +72,7 @@
               v-bk-tooltips="{ content: item.name, placements: ['right-start'], disabled: formatShowToolTip(item) }"
               class="single-hide group-name"
             >
-              {{ item.name }}
+              <bk-user-display-name :user-id="item.name" />
             </div>
           </div>
         </div>

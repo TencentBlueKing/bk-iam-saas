@@ -40,18 +40,17 @@
           >
             <bk-form :model="formData" form-type="vertical" ref="permTransferForm">
               <iam-form-item :label="$t(`m.permTransfer['交接人']`)" required>
-                <bk-user-selector
+                <IamUserSelector
+                  v-model="formData.members"
+                  style="width: 100%;"
                   :multiple="false"
-                  :value="formData.members"
-                  :api="userApi"
                   :placeholder="$t(`m.verify['请填写管理员']`)"
                   :empty-text="$t(`m.common['无匹配人员']`)"
-                  style="width: 100%;"
                   :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                   @focus="handleRtxFocus"
                   @blur="handleRtxBlur"
-                  @change="handleRtxChange">
-                </bk-user-selector>
+                  @change="handleRtxChange"
+                />
                 <p class="name-empty-error" v-if="isShowMemberError">
                   {{ $t(`m.verify['请填写管理员']`) }}
                 </p>
@@ -93,10 +92,8 @@
     </div>
   </div>
 </template>
-<script>
-    // import _ from 'lodash'
-  import BkUserSelector from '@blueking/user-selector';
 
+<script>
   import { bus } from '@/common/bus';
   import Group from './group.vue';
   import Custom from './custom.vue';
@@ -108,8 +105,7 @@
     components: {
       Group,
       Custom,
-      Manager,
-      BkUserSelector
+      Manager
     },
     data () {
       return {
@@ -121,7 +117,6 @@
         isShowMemberError: false,
         isShowReasonError: false,
         reasonValidateText: '',
-        userApi: window.BK_USER_API,
         pageContainer: null,
         submitLoading: false,
         enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
@@ -486,7 +481,7 @@
         color: #ff4d4d;
     }
     .is-member-empty-cls {
-        .user-selector-container {
+        .tags-container {
             border-color: #ff4d4d !important;
         }
     }

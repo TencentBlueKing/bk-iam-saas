@@ -1,5 +1,9 @@
 <template>
-  <div class="iam-edit-member" :style="styles">
+  <div
+    ref="iamEditMember"
+    class="iam-edit-member"
+    :style="styles"
+  >
     <template v-if="!isEditable">
       <div class="edit-wraper">
         <div class="edit-content">
@@ -7,12 +11,11 @@
             <span
               v-for="(item, index) in value"
               :key="index"
-              class="member-item">
-              {{ item.username }}
-              <Icon v-if="!isShowRole" type="close-small"
-                @click.stop="handleDelete(index)" />
-              <Icon v-else type="close-small"
-                @click.stop="handleDelete(index)" />
+              class="member-item"
+            >
+              <bk-user-display-name :user-id="item.username" />
+              <Icon v-if="!isShowRole" type="close-small" @click.stop="handleDelete(index)" />
+              <Icon v-else type="close-small" @click.stop="handleDelete(index)" />
             </span>
             <div class="edit-action-box">
               <span class="edit-action" v-if="!isLoading" @click.stop="handleEdit">
@@ -25,17 +28,14 @@
       </div>
     </template>
     <template v-else>
-      <bk-user-selector
+      <IamUserSelector
         v-model="newVal"
+        v-bk-clickoutside="handleClickOutSide"
         class="edit-input"
-        ref="input"
-        :api="userApi"
-        :placeholder="$t(`m.verify['请输入']`)"
-        :empty-text="$t(`m.common['无匹配人员']`)"
-        @keydown="handleEnter(...arguments)"
-        @blur="handleBlur"
-        @change="handleRtxChange">
-      </bk-user-selector>
+        ref="userSelector"
+        :required="true"
+        @change="handleChange"
+      />
     </template>
     <bk-dialog
       ext-cls="confirm-space-dialog"
@@ -56,12 +56,9 @@
 
 <script>
   import _ from 'lodash';
-  import BkUserSelector from '@blueking/user-selector';
+  import { mapGetters } from 'vuex';
   export default {
     name: 'iam-edit-member',
-    components: {
-      BkUserSelector
-    },
     props: {
       field: {
         type: String,
@@ -89,7 +86,7 @@
         newVal: this.value,
         isEditable: false,
         isLoading: false,
-        userApi: window.BK_USER_API,
+        apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
         userInfo: '',
         isShowRole: false,
         isShowDialog: false,
@@ -100,21 +97,28 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       styles () {
         return {
           width: this.width
         };
+      },
+      tenantId () {
+        return this.user.tenant_id;
       }
     },
     watch: {
-      value (newVal) {
-        this.newVal = [...newVal].map(e => e.username);
+      value: {
+        handler (newVal) {
+          this.newVal = [...newVal].map(e => e.username);
+        },
+        immediate: true
       }
     },
     mounted () {
-      document.body.addEventListener('click', this.hideEdit);
+      document.body.addEventListener('keydown', this.handleEnter);
       this.$once('hook:beforeDestroy', () => {
-        document.body.removeEventListener('click', this.hideEdit);
+        document.body.removeEventListener('keydown', this.handleEnter);
       });
     },
     async created () {
@@ -139,7 +143,7 @@
       handleReadOnly () {
         this.$nextTick(() => {
           if (this.isEditable) {
-            const selectedTag = this.$refs.input.$refs.selected;
+            const selectedTag = this.$refs.userSelector.$refs.selected;
             if (selectedTag && selectedTag.length === 1) {
               selectedTag.forEach(item => {
                 item.className = this.newVal.includes(item.innerText)
@@ -149,11 +153,18 @@
           }
         });
       },
+      handleClickOutSide (event) {
+        const parentNode = event.target.parentNode;
+        if (parentNode && parentNode.classList.contains('user-group')) {
+          return;
+        }
+        this.handleBlur();
+      },
       handleEdit () {
         document.body.click();
         this.isEditable = true;
         this.$nextTick(() => {
-          this.$refs.input.focus();
+          this.$refs.userSelector && this.$refs.userSelector.$el.querySelector('input').focus();
           this.handleReadOnly();
         });
       },
@@ -166,22 +177,22 @@
         }
         this.deleteList = [];
         const editValue = this.editNewValue();
-        if (JSON.stringify(editValue) !== JSON.stringify(this.value)) {
-          if (this.isShowRole) {
-            // this.newVal = [...this.value].map(e => e.username);
-            this.deleteList = this.value.filter(item =>
-              !this.newVal.includes(item.username) && !item.readonly).map(v => v.username);
-            this.newPayload = -1;
-            console.log(editValue, this.value, this.deleteList);
-            if (this.deleteList.length) {
-              // this.isShowDialog = true;
-              this.dropOut();
-            } else {
-              this.triggerChange();
-            }
+        if (_.isEqual(editValue, this.value)) {
+          return;
+        }
+        if (this.isShowRole) {
+          // this.newVal = [...this.value].map(e => e.username);
+          this.deleteList = this.value.filter(item =>
+            !this.newVal.includes(item.username) && !item.readonly).map(v => v.username);
+          this.newPayload = -1;
+          if (this.deleteList.length) {
+            // this.isShowDialog = true;
+            this.dropOut();
           } else {
             this.triggerChange();
           }
+        } else {
+          this.triggerChange();
         }
       },
       handleEnter (event) {
@@ -261,19 +272,11 @@
           }
         }
       },
-      hideEdit (event) {
+      handleChange (payload) {
         if (this.newVal.length < 1) {
           return;
         }
-        if (event.path && event.path.length > 0) {
-          for (let i = 0; i < event.path.length; i++) {
-            const target = event.path[i];
-            if (target.className === 'iam-edit-member') {
-              return;
-            }
-          }
-        }
-        // this.isEditable = false;
+        this.newVal = [...payload];
       },
       triggerChange () {
         this.isEditable = false;
@@ -293,13 +296,14 @@
         });
       },
       editNewValue () {
-        return this.newVal.reduce((p, v) => {
+        const result = this.newVal.reduce((p, v) => {
           p.push({
             username: v,
             readonly: false
           });
           return p;
         }, []);
+        return result;
       }
     }
   };

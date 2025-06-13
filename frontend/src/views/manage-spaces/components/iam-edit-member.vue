@@ -9,7 +9,7 @@
               :key="index"
               class="member-item"
               :class="item.readonly ? 'member-readonly' : ''">
-              {{ item.username }}
+              <bk-user-display-name :user-id="item.username" />
               <Icon v-if="!item.readonly && isEditMode" type="close-small"
                 @click.stop="handleDelete(index)" />
             </span>
@@ -29,18 +29,13 @@
       </div>
     </template>
     <template v-else>
-      <bk-user-selector
+      <IamUserSelector
         v-model="editValue"
-        :ext-cls="[
-          'user-selector'
-        ]"
-        ref="input"
-        :api="userApi"
-        :placeholder="$t(`m.verify['请输入']`)"
-        :empty-text="$t(`m.common['无匹配人员']`)"
+        ref="selector"
+        class="user-selector"
         @blur="handleRtxBlur"
-        @change="handleChange">
-      </bk-user-selector>
+        @change="handleChange"
+      />
     </template>
     <bk-dialog
       ext-cls="confirm-space-dialog"
@@ -59,14 +54,10 @@
     </bk-dialog>
   </div>
 </template>
-<script>
-  import BkUserSelector from '@blueking/user-selector';
 
+<script>
   export default {
     name: 'iam-edit-selector',
-    components: {
-      BkUserSelector
-    },
     props: {
       field: {
         type: String,
@@ -102,7 +93,6 @@
         isEditable: false,
         isLoading: false,
         isShowDialog: false,
-        userApi: window.BK_USER_API,
         newPayload: '',
         disabledValue: [],
         editValue: [],
@@ -161,9 +151,9 @@
         this.isEditable = true;
         this.$nextTick(() => {
           if (this.isEditable) {
-            this.$refs.input && this.$refs.input.focus();
+            this.$refs.selector && this.$refs.selector.$el.querySelector('input').focus();
             const disabledValue = [...this.disabledValue].map(item => item.username);
-            const selectedTag = this.$refs.input.$refs.selected;
+            const selectedTag = this.$refs.selector.$refs.selected;
             if (selectedTag && selectedTag.length) {
               if (disabledValue.length) {
                 selectedTag.forEach(item => {
@@ -197,7 +187,7 @@
         });
       },
 
-      handleEnter (value, event) {
+      handleEnter (event) {
         if (!this.isEditable) return;
         if (event.key === 'Enter' && event.keyCode === 13) {
           this.triggerChange();
@@ -236,8 +226,8 @@
         }
       },
 
-      handleChange () {
-        const editValue = this.editValue.reduce((p, v) => {
+      handleChange (payload) {
+        const editValue = payload.reduce((p, v) => {
           p.push({
             username: v,
             readonly: !!(this.disabledValue.length && this.disabledValue.map(e => e.username).includes(v))
