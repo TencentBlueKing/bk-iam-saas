@@ -5,12 +5,6 @@
       <span class="name">{{ title }}</span>
     </label>
     <div class="content">
-      <!-- <div v-for="(item, index) in data"
-                :key="index"
-                class="member-item"
-                :title="isDepartment ? (
-                    item.fullName ? item.fullName : `${item.name}`) :
-                    item.name !== '' ? `${item.username}(${item.name})` : item.username"> -->
       <div v-for="(item, index) in data"
         :key="index"
         class="member-item"
@@ -19,12 +13,12 @@
         <template>
           <template v-if="isCustomRoute">
             <span class="member-name">
-              {{ formatCustomTypeName(item) }}
+              <bk-user-display-name :user-id="formatCustomTypeName(item) " />
             </span>
           </template>
           <template v-else>
             <span class="member-name">
-              {{ isHasDepartCount ? item.name : item.username || item.id }}
+              <bk-user-display-name :user-id="isHasDepartCount ? item.name : item.username || item.id" />
             </span>
             <template v-if="isHasDepartCount && item.count">
               <span class="count">({{ item.count }})</span>

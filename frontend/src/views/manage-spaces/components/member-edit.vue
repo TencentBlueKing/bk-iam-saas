@@ -25,16 +25,14 @@
       </div>
     </template>
     <template v-else>
-      <bk-user-selector
+      <IamUserSelector
         v-model="newVal"
+        v-bk-clickoutside="handleClickOutSide"
         class="edit-input"
-        ref="input"
-        :api="userApi"
-        :placeholder="$t(`m.verify['请输入']`)"
-        :empty-text="$t(`m.common['无匹配人员']`)"
-        @blur="handleBlur"
-        @change="handleRtxChange">
-      </bk-user-selector>
+        ref="userSelector"
+        :required="true"
+        @change="handleChange"
+      />
     </template>
     <bk-dialog
       ext-cls="confirm-space-dialog"
@@ -50,13 +48,9 @@
 </template>
 <script>
   import _ from 'lodash';
-  import BkUserSelector from '@blueking/user-selector';
   import { language } from '@/language';
   export default {
     name: 'iam-edit-member',
-    components: {
-      BkUserSelector
-    },
     props: {
       field: {
         type: String,
@@ -84,7 +78,6 @@
         newVal: this.value,
         isEditable: false,
         isLoading: false,
-        userApi: window.BK_USER_API,
         userInfo: '',
         isShowRole: false,
         isShowDialog: false,
@@ -107,9 +100,9 @@
       }
     },
     mounted () {
-      document.body.addEventListener('click', this.hideEdit);
+      document.body.addEventListener('keydown', this.handleEnter);
       this.$once('hook:beforeDestroy', () => {
-        document.body.removeEventListener('click', this.hideEdit);
+        document.body.removeEventListener('keydown', this.handleEnter);
       });
     },
     async created () {
@@ -134,14 +127,20 @@
         document.body.click();
         this.isEditable = true;
         this.$nextTick(() => {
-          this.$refs.input.focus();
+          this.$refs.input && this.$refs.input.$el.querySelector('input').focus();
         });
       },
-      handleBlur () {
-        if (!this.isEditable || this.newVal.length < 1) return;
+      handleClickOutSide (event) {
+        const parentNode = event.target.parentNode;
+        if ((parentNode && parentNode.classList.contains('user-group'))
+          || !this.isEditable
+          || this.newVal.length < 1
+        ) {
+          return;
+        }
         this.triggerChange();
       },
-      handleEnter (value, event) {
+      handleEnter (event) {
         if (!this.isEditable) return;
         if (event.key === 'Enter' && event.keyCode === 13) {
           this.triggerChange();
@@ -202,20 +201,6 @@
           }
         }
       },
-      hideEdit (event) {
-        if (this.newVal.length < 1) {
-          return;
-        }
-        if (event.path && event.path.length > 0) {
-          for (let i = 0; i < event.path.length; i++) {
-            const target = event.path[i];
-            if (target.className === 'iam-edit-member') {
-              return;
-            }
-          }
-        }
-        this.isEditable = false;
-      },
       triggerChange () {
         this.isEditable = false;
         if (_.isEqual(this.newVal, this.value)) {
@@ -259,7 +244,7 @@
         }
         .edit-content {
             flex: 0 0 auto;
-            max-width: calc(100% - 25px);
+            /* max-width: calc(100% - 25px); */
             .member-item {
                 display: inline-block;
                 padding: 0 5px;

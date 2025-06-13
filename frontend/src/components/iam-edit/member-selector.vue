@@ -30,25 +30,22 @@
       </div>
     </template>
     <template v-else>
-      <bk-user-selector
+      <BkUserSelector
         v-model="displayValue"
-        :class="['edit-selector', isErrorClass]"
         ref="selector"
+        :class="['edit-selector', isErrorClass]"
         :api="userApi"
         :placeholder="$t(`m.verify['请输入']`)"
         :empty-text="$t(`m.common['无匹配人员']`)"
-        @keydown="handleEnter(...arguments)">
-      </bk-user-selector>
+        @keydown="handleEnter(...arguments)"
+      />
     </template>
   </div>
 </template>
+
 <script>
-  import BkUserSelector from '@blueking/user-selector';
   export default {
     name: 'iam-edit-selector',
-    components: {
-      BkUserSelector
-    },
     props: {
       field: {
         type: String,
@@ -76,7 +73,7 @@
         displayValue: [],
         isEditable: false,
         isLoading: false,
-        userApi: window.BK_USER_API,
+        apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
         newPayload: ''
       };
     },
@@ -118,7 +115,7 @@
         document.body.click();
         this.isEditable = true;
         this.$nextTick(() => {
-          this.$refs.selector.focus();
+          this.$refs.selector && this.$refs.selector.$el.querySelector('input').focus();
         });
       },
 
@@ -234,7 +231,7 @@
         }
 
         /deep/  .is-member-empty-cls {
-         .user-selector-container {
+         .tags-container {
             border-color: #ff4d4d;
         }
     }

@@ -44,6 +44,9 @@ import IamSpinLoading from './components/iam-spin-loading/index.vue';
 import RenderHorizontalBlock from './components/render-block/horizontal.vue';
 import RenderVerticalBlock from './components/render-block/vertical.vue';
 import RenderSearch from './components/render-search/index.vue';
+import IamUserSelector from './components/iam-user-selector/index.vue';
+import BkUserSelector from '@blueking/bk-user-selector/vue2/index.umd.min.js';
+import IamUserDisplayName from './components/iam-user-display-name/index.vue';
 import Icon from './components/icon';
 import VueI18n from 'vue-i18n';
 import magicbox from 'bk-magic-vue';
@@ -56,6 +59,8 @@ import './common/bkmagic';
 import './assets/iconfont/style.css';
 import '@icon-cool/bk-icon-bk-iam';
 import '@/directive';
+// 多租户人员选择器样式
+import '@blueking/bk-user-selector/vue2/vue2.css';
 
 Vue.component('app-exception', Exception);
 Vue.component('app-auth', AuthComponent);
@@ -68,6 +73,9 @@ Vue.component('RenderVerticalBlock', RenderVerticalBlock);
 Vue.component('RenderSearch', RenderSearch);
 Vue.component('Icon', Icon);
 Vue.component('ExceptionEmpty', ExceptionEmpty);
+Vue.component('BkUserSelector', BkUserSelector);
+Vue.component('IamUserSelector', IamUserSelector);
+Vue.component('IamUserDisplayName', IamUserDisplayName);
 
 Vue.prototype.scrollToLocation = function ($ref) {
   const distance = ($ref && $ref.getBoundingClientRect().top) || 0;

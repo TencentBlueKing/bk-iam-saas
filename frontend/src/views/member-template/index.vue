@@ -66,14 +66,17 @@
               new
             </bk-tag>
           </div>
-          <div v-if="['group_count'].includes(field.id)">
+          <template v-if="['group_count'].includes(field.id)">
             <span v-if="row.group_count >= 0" class="associate-group-count"
               @click="handleViewGroup(row, 'associate_groups')">
               {{ row.group_count }}
             </span>
             <span v-else>--</span>
-          </div>
-          <span v-if="!['name', 'group_count'].includes(field.id)">
+          </template>
+          <template v-if="['creator'].includes(field.id)">
+            <bk-user-display-name :user-id="row.creator || '--'" />
+          </template>
+          <span v-if="!['name', 'group_count', 'creator'].includes(field.id)">
             {{ row[field.id] || '--' }}
           </span>
         </template>

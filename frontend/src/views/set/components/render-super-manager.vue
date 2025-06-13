@@ -15,23 +15,22 @@
         <bk-table-column :label="$t(`m.set['名称']`)">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit">
-              <bk-user-selector
-                :value="row.user"
+              <IamUserSelector
+                v-model="row.user"
                 :ref="`superRef${$index}`"
-                :api="userApi"
                 style="width: 100%;"
                 :placeholder="$t(`m.verify['请输入']`)"
                 :empty-text="$t(`m.common['无匹配人员']`)"
                 @change="handleSuperRtxChange(...arguments, row)"
-                @keydown="handleSuperRtxEnter(...arguments, row)">
-              </bk-user-selector>
+                @keydown="handleSuperRtxEnter(...arguments, row)"
+              />
             </template>
             <template v-else>
               <div
                 :class="['user-wrapper', { 'is-hover': row.canEdit && row.user[0] !== 'admin' }]"
                 :title="row.user.join('；')"
               >
-                {{ row.user.join('；') }}
+                <bk-user-display-name :user-id="row.user || '--'" />
               </div>
             </template>
           </template>
@@ -107,14 +106,12 @@
   import { bus } from '@/common/bus';
   import { formatCodeData, getWindowHeight } from '@/common/util';
   import IamPopoverConfirm from '@/components/iam-popover-confirm';
-  import BkUserSelector from '@blueking/user-selector';
   import RenderItem from '../common/render-item';
   import RenderAction from '../common/render-action';
     
   export default {
     name: '',
     components: {
-      BkUserSelector,
       RenderItem,
       RenderAction,
       IamPopoverConfirm
@@ -132,7 +129,7 @@
         subTitle: this.$t(`m.set['超级管理员提示']`),
         saveDisableTip: '',
         superUserList: [],
-        userApi: window.BK_USER_API,
+        apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
         emptyData: {
           type: '',
           text: '',
@@ -145,22 +142,22 @@
     computed: {
       ...mapGetters(['user']),
       isDisabled () {
-      return (payload) => {
-          if (!payload.user.length) {
-            this.saveDisableTip = this.$t(`m.verify['管理员不能为空']`);
-            return true;
-          }
-          if (payload.user.length > 1) {
-            this.saveDisableTip = this.$t(`m.info['最多添加一个管理员']`);
-            return true;
-          }
-          if (this.superUserList.filter(item => item.user[0] === payload.user[0]).length > 1) {
-            this.saveDisableTip = this.$t(`m.info['管理员不可重复添加']`);
-            return true;
-          }
-          this.saveDisableTip = '';
-          return false;
-      };
+        return (payload) => {
+            if (!payload.user.length) {
+              this.saveDisableTip = this.$t(`m.verify['管理员不能为空']`);
+              return true;
+            }
+            if (payload.user.length > 1) {
+              this.saveDisableTip = this.$t(`m.info['最多添加一个管理员']`);
+              return true;
+            }
+            if (this.superUserList.filter(item => item.user[0] === payload.user[0]).length > 1) {
+              this.saveDisableTip = this.$t(`m.info['管理员不可重复添加']`);
+              return true;
+            }
+            this.saveDisableTip = '';
+            return false;
+        };
       }
     },
     created () {
@@ -178,8 +175,10 @@
           isEdit: true
         });
         const index = this.superUserList.length - 1;
+        const superRef = this.$refs[`superRef${index}`];
         this.$nextTick(() => {
-          this.$refs[`superRef${index}`].focus();
+          console.log(superRef);
+          superRef && superRef.$refs.selector.$el.querySelector('input').focus();
         });
       },
 
@@ -267,9 +266,12 @@
           return;
         }
         payload.isEdit = true;
-        this.$nextTick(() => {
-          this.$refs[`superRef${index}`].focus();
-        });
+        const superRef = this.$refs[`superRef${index}`];
+        if (superRef) {
+          this.$nextTick(() => {
+            superRef && superRef.$refs.selector.$el.querySelector('input').focus();
+          });
+        }
       },
 
       async handleDelete (e, payload, index) {
@@ -395,7 +397,7 @@
                 }
             }
             .is-member-empty-cls {
-                .user-selector-container {
+                .tags-container {
                     border-color: #ff4d4d;
                 }
             }

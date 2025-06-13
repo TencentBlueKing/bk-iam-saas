@@ -1,0 +1,1486 @@
+{
+  "data": [
+    {
+      "name": "项目",
+      "actions": [
+        {
+          "id": "project_create",
+          "name": "创建项目",
+          "description": "项目的新建",
+          "type": "create",
+          "hidden": false,
+          "related_resource_types": [],
+          "related_actions": [],
+          "related_environments": [],
+          "sensitivity": 0,
+          "expired_at": null,
+          "tag": "unchecked",
+          "sensitivity_level": "L4"
+        },
+        {
+          "id": "project_view",
+          "name": "项目查看",
+          "description": "查看项目的详情",
+          "type": "view",
+          "hidden": false,
+          "related_resource_types": [
+            {
+              "system_id": "bk_itsm",
+              "id": "project",
+              "selection_mode": "instance",
+              "name": "项目"
+            }
+          ],
+          "related_actions": [],
+          "related_environments": [],
+          "sensitivity": 0,
+          "expired_at": null,
+          "tag": "unchecked",
+          "sensitivity_level": "L2"
+        },
+        {
+          "id": "project_edit",
+          "name": "项目编辑",
+          "description": "编辑项目内容",
+          "type": "edit",
+          "hidden": false,
+          "related_resource_types": [
+            {
+              "system_id": "bk_itsm",
+              "id": "project",
+              "selection_mode": "instance",
+              "name": "项目"
+            }
+          ],
+          "related_actions": [
+            "project_view"
+          ],
+          "related_environments": [],
+          "sensitivity": 0,
+          "expired_at": null,
+          "tag": "unchecked",
+          "sensitivity_level": "L4"
+        },
+        {
+          "id": "system_settings_manage",
+          "name": "项目管理",
+          "description": "项目基础配置管理",
+          "type": "view",
+          "hidden": false,
+          "related_resource_types": [
+            {
+              "system_id": "bk_itsm",
+              "id": "project",
+              "selection_mode": "instance",
+              "name": "项目"
+            }
+          ],
+          "related_actions": [
+            "project_view"
+          ],
+          "related_environments": [],
+          "sensitivity": 0,
+          "expired_at": null,
+          "tag": "unchecked",
+          "sensitivity_level": "L4"
+        }
+      ],
+      "sub_groups": [
+        {
+          "name": "服务",
+          "actions": [
+            {
+              "id": "service_create",
+              "name": "服务创建",
+              "description": "服务的新建",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "service_manage",
+              "name": "服务管理",
+              "description": "对某个服务资源实例的查看、修改、删除",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "service",
+                  "selection_mode": "instance",
+                  "name": "服务"
+                }
+              ],
+              "related_actions": [
+                "project_view",
+                "service_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": 4102444800,
+              "tag": "readonly",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "service_view",
+              "name": "服务查看",
+              "description": "对某个服务资源实例的查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "service",
+                  "selection_mode": "instance",
+                  "name": "服务"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "ticket_management",
+              "name": "工单管理",
+              "description": "管理某个服务资源下工单的权限",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "service",
+                  "selection_mode": "instance",
+                  "name": "服务"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "ticket_view",
+              "name": "工单查看",
+              "description": "查看某个服务资源下工单的权限",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "service",
+                  "selection_mode": "instance",
+                  "name": "服务"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": 4102444800,
+              "tag": "readonly",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "catalog_create",
+              "name": "目录新建",
+              "description": "对应项目目录创建操作",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "catalog_edit",
+              "name": "目录编辑",
+              "description": "对应项目目录创建操作",
+              "type": "edit",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "catalog_delete",
+              "name": "目录删除",
+              "description": "对应项目目录创建操作",
+              "type": "delete",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "元素",
+          "actions": [
+            {
+              "id": "field_create",
+              "name": "字段新建",
+              "description": "对应项目字段创建操作",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "field_view",
+              "name": "字段查看",
+              "description": "对应项目字段创建操作",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "field",
+                  "selection_mode": "instance",
+                  "name": "字段"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "field_edit",
+              "name": "字段编辑",
+              "description": "对应项目字段编辑操作",
+              "type": "edit",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "field",
+                  "selection_mode": "instance",
+                  "name": "字段"
+                }
+              ],
+              "related_actions": [
+                "project_view",
+                "field_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "field_delete",
+              "name": "字段删除",
+              "description": "对应项目字段删除操作",
+              "type": "delete",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "field",
+                  "selection_mode": "instance",
+                  "name": "字段"
+                }
+              ],
+              "related_actions": [
+                "project_view",
+                "field_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "管理",
+          "actions": [
+            {
+              "id": "user_group_create",
+              "name": "用户组新建",
+              "description": "项目内用户组新建的权限",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "user_group_edit",
+              "name": "用户组编辑",
+              "description": "项目内用户组编辑的权限",
+              "type": "edit",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "user_group",
+                  "selection_mode": "instance",
+                  "name": "用户组"
+                }
+              ],
+              "related_actions": [
+                "project_view",
+                "user_group_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "user_group_delete",
+              "name": "用户组删除",
+              "description": "项目内用户组删除的权限",
+              "type": "delete",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "user_group",
+                  "selection_mode": "instance",
+                  "name": "用户组"
+                }
+              ],
+              "related_actions": [
+                "project_view",
+                "user_group_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "user_group_view",
+              "name": "用户组查看",
+              "description": "项目内用户组查看的权限",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "user_group",
+                  "selection_mode": "instance",
+                  "name": "用户组"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "triggers_create",
+              "name": "触发器新建",
+              "description": "对应项目触发器创建操作",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "triggers_view",
+              "name": "触发器查看",
+              "description": "对应项目触发器查看操作",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "trigger",
+                  "selection_mode": "instance",
+                  "name": "触发器"
+                }
+              ],
+              "related_actions": [
+                "project_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "triggers_manage",
+              "name": "触发器管理",
+              "description": "对应项目触发器管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "trigger",
+                  "selection_mode": "instance",
+                  "name": "触发器"
+                }
+              ],
+              "related_actions": [
+                "project_view",
+                "triggers_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        }
+      ]
+    },
+    {
+      "name": "平台",
+      "actions": [],
+      "sub_groups": [
+        {
+          "name": "菜单",
+          "actions": [
+            {
+              "id": "operational_data_view",
+              "name": "统计分析访问",
+              "description": "查看运营数据的权限",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "platform_manage_access",
+              "name": "平台管理访问",
+              "description": "平台管理访问",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "公共配置",
+          "actions": [
+            {
+              "id": "public_fields_manage",
+              "name": "公共字段管理",
+              "description": "公共字段管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L1"
+            },
+            {
+              "id": "public_apis_manage",
+              "name": "公共API管理",
+              "description": "公共API管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L1"
+            },
+            {
+              "id": "public_task_template_manage",
+              "name": "任务模板管理",
+              "description": "任务模板管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L1"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "通知配置",
+          "actions": [
+            {
+              "id": "notification_view",
+              "name": "通知配置查看",
+              "description": "通知配置查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "notification_manage",
+              "name": "通知配置管理",
+              "description": "通知配置管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "notification_view",
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "优先级",
+          "actions": [
+            {
+              "id": "sla_priority_view",
+              "name": "SLA 优先级查看",
+              "description": "Sla 优先级查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "sla_priority_manage",
+              "name": "SLA 优先级管理",
+              "description": "Sla 优先级管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access",
+                "sla_priority_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "单据状态",
+          "actions": [
+            {
+              "id": "ticket_state_view",
+              "name": "单据状态查看",
+              "description": "单据状态查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "ticket_state_manage",
+              "name": "单据状态管理",
+              "description": "单据状态管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access",
+                "ticket_state_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "全局设置",
+          "actions": [
+            {
+              "id": "global_settings_view",
+              "name": "全局设置查看",
+              "description": "全局设置查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "global_settings_manage",
+              "name": "全局设置管理",
+              "description": "全局设置管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access",
+                "global_settings_view"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        }
+      ]
+    },
+    {
+      "name": "已经弃用的权限(无需申请)",
+      "actions": [
+        {
+          "id": "knowledge_manage",
+          "name": "知识管理",
+          "description": "对知识库中所有文章进行编辑,删除和管理。",
+          "type": "manage",
+          "hidden": false,
+          "related_resource_types": [],
+          "related_actions": [],
+          "related_environments": [],
+          "sensitivity": 0,
+          "expired_at": null,
+          "tag": "unchecked",
+          "sensitivity_level": "L4"
+        },
+        {
+          "id": "sla_manage",
+          "name": "服务协议管理",
+          "description": "包含服务模式，服务协议，优先级，单据状态的管理（增删改查）",
+          "type": "manage",
+          "hidden": false,
+          "related_resource_types": [
+            {
+              "system_id": "bk_itsm",
+              "id": "project",
+              "selection_mode": "instance",
+              "name": "项目"
+            }
+          ],
+          "related_actions": [],
+          "related_environments": [],
+          "sensitivity": 0,
+          "expired_at": null,
+          "tag": "unchecked",
+          "sensitivity_level": "L4"
+        },
+        {
+          "id": "ticket_manage",
+          "name": "工单管理(已弃用)",
+          "description": "管理某个服务资源下工单的权限",
+          "type": "manage",
+          "hidden": false,
+          "related_resource_types": [
+            {
+              "system_id": "bk_itsm",
+              "id": "project",
+              "selection_mode": "instance",
+              "name": "项目"
+            }
+          ],
+          "related_actions": [],
+          "related_environments": [],
+          "sensitivity": 0,
+          "expired_at": null,
+          "tag": "unchecked",
+          "sensitivity_level": "L1"
+        }
+      ],
+      "sub_groups": [
+        {
+          "name": "流程",
+          "actions": [
+            {
+              "id": "workflow_create",
+              "name": "流程创建",
+              "description": "对应创建流程，版本还原，导入操作",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "workflow_manage",
+              "name": "流程管理",
+              "description": "流程的编辑，预览，导出，删除的权限",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "workflow",
+                  "selection_mode": "instance",
+                  "name": "流程"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "workflow_deploy",
+              "name": "流程部署",
+              "description": "流程部署版本权限",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "workflow",
+                  "selection_mode": "instance",
+                  "name": "流程"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "flow_version_restore",
+              "name": "流程版本还原",
+              "description": "还原指定流程版本资源实例到流程设计阶段",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "flow_version",
+                  "selection_mode": "instance",
+                  "name": "流程版本"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "flow_version_manage",
+              "name": "流程版本管理",
+              "description": "流程版本资源的删除和查看详情",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "flow_version",
+                  "selection_mode": "instance",
+                  "name": "流程版本"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "flow_element_manage",
+              "name": "流程元素管理",
+              "description": "对流程中用到的基础资源进行管理，如：API，基础模型，公共字段，任务模板，公共触发器，数据字典。",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "角色",
+          "actions": [
+            {
+              "id": "role_create",
+              "name": "角色创建",
+              "description": "创建通用角色",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "role_manage",
+              "name": "角色管理",
+              "description": "具体的用户角色的编辑，删除和查看",
+              "type": "delete",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "role",
+                  "selection_mode": "instance",
+                  "name": "通用角色"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "设置",
+          "actions": [
+            {
+              "id": "settings_view",
+              "name": "设置查看",
+              "description": "项目设置查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "settings_manage",
+              "name": "设置管理",
+              "description": "项目设置管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "公共字段",
+          "actions": [
+            {
+              "id": "public_field_edit",
+              "name": "公共字段编辑",
+              "description": "公共字段编辑",
+              "type": "edit",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "public_field",
+                  "selection_mode": "instance",
+                  "name": "公共字段"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "public_field_delete",
+              "name": "公共字段删除",
+              "description": "公共字段删除",
+              "type": "delete",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "public_field",
+                  "selection_mode": "instance",
+                  "name": "公共字段"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "public_field_view",
+              "name": "公共字段查看",
+              "description": "公共字段查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "public_field",
+                  "selection_mode": "instance",
+                  "name": "公共字段"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "公共API",
+          "actions": [
+            {
+              "id": "public_api_view",
+              "name": "公共API 查看",
+              "description": "公共API 查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "public_api",
+                  "selection_mode": "instance",
+                  "name": "公共API"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "public_api_create",
+              "name": "公共API 新建",
+              "description": "公共API 新建",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "public_api_manage",
+              "name": "公共API 管理（已弃用）",
+              "description": "公共API配置",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "public_api",
+                  "selection_mode": "instance",
+                  "name": "公共API"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "SLA",
+          "actions": [
+            {
+              "id": "sla_calendar_view",
+              "name": "SLA 服务模式查看",
+              "description": "Sla 服务模式查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "sla_calendar",
+                  "selection_mode": "instance",
+                  "name": "SLA 服务模式"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "sla_calendar_create",
+              "name": "SLA 服务模式新建",
+              "description": "Sla 服务模式新建",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "sla_calendar_edit",
+              "name": "SLA 服务模式编辑",
+              "description": "Sla 服务模式编辑",
+              "type": "edit",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "sla_calendar",
+                  "selection_mode": "instance",
+                  "name": "SLA 服务模式"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "sla_calendar_delete",
+              "name": "SLA 服务模式删除",
+              "description": "Sla 服务模式删除",
+              "type": "delete",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "sla_calendar",
+                  "selection_mode": "instance",
+                  "name": "SLA 服务模式"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "sla_agreement_view",
+              "name": "SLA 服务协议查看",
+              "description": "Sla 服务协议查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "sla_agreement",
+                  "selection_mode": "instance",
+                  "name": "SLA 服务协议"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "sla_agreement_create",
+              "name": "SLA 服务协议创建",
+              "description": "Sla 服务协议创建",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "project",
+                  "selection_mode": "instance",
+                  "name": "项目"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "sla_agreement_edit",
+              "name": "SLA 服务协议编辑",
+              "description": "SLA 服务协议编辑",
+              "type": "edit",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "sla_agreement",
+                  "selection_mode": "instance",
+                  "name": "SLA 服务协议"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "sla_agreement_delete",
+              "name": "SLA 服务协议删除",
+              "description": "Sla 服务协议删除",
+              "type": "delete",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "sla_agreement",
+                  "selection_mode": "instance",
+                  "name": "SLA 服务协议"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        },
+        {
+          "name": "任务模板",
+          "actions": [
+            {
+              "id": "task_template_view",
+              "name": "任务模板查看",
+              "description": "任务模板查看",
+              "type": "view",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "task_template",
+                  "selection_mode": "instance",
+                  "name": "任务模板"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L2"
+            },
+            {
+              "id": "task_template_create",
+              "name": "任务模板创建",
+              "description": "任务模板创建",
+              "type": "create",
+              "hidden": false,
+              "related_resource_types": [],
+              "related_actions": [
+                "platform_manage_access"
+              ],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            },
+            {
+              "id": "task_template_manage",
+              "name": "任务模板管理（已弃用）",
+              "description": "任务模板管理",
+              "type": "manage",
+              "hidden": false,
+              "related_resource_types": [
+                {
+                  "system_id": "bk_itsm",
+                  "id": "task_template",
+                  "selection_mode": "instance",
+                  "name": "任务模板"
+                }
+              ],
+              "related_actions": [],
+              "related_environments": [],
+              "sensitivity": 0,
+              "expired_at": null,
+              "tag": "unchecked",
+              "sensitivity_level": "L4"
+            }
+          ],
+          "sub_groups": []
+        }
+      ]
+    },
+    {
+      "name": "未分类",
+      "actions": [
+        {
+          "id": "public_field_create",
+          "name": "公共字段创建",
+          "description": "公共字段创建",
+          "type": "create",
+          "hidden": false,
+          "related_resource_types": [],
+          "related_actions": [
+            "platform_manage_access"
+          ],
+          "related_environments": [],
+          "sensitivity": 0,
+          "expired_at": null,
+          "tag": "unchecked",
+          "sensitivity_level": "L4"
+        }
+      ],
+      "sub_groups": []
+    }
+  ],
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}

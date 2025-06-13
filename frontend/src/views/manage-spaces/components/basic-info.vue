@@ -10,18 +10,16 @@
       </iam-form-item>
       <iam-form-item :label="$t(`m.levelSpace['管理员']`)" required>
         <div class="select-wrap">
-          <bk-user-selector
+          <IamUserSelector
             ref="userSelector"
-            :value="displayMembers"
-            :api="userApi"
+            v-model="displayMembers"
             :placeholder="$t(`m.verify['请填写管理员']`)"
-            :title="displayMembers.length ? displayMembers.join() : ''"
             :style="{ width: language === 'zh-cn' ? '75%' : '60%' }"
             :class="isShowMemberError ? 'is-member-empty-cls' : ''"
-            data-test-id="space_userSelector_member" @focus="handleRtxFocus"
+            @focus="handleRtxFocus"
             @blur="handleRtxBlur"
-            @change="handleRtxChange">
-          </bk-user-selector>
+            @change="handleRtxChange"
+          />
           <bk-checkbox
             :true-value="true"
             :false-value="false"
@@ -46,8 +44,7 @@
 </template>
 <script>
   import { language } from '@/language';
-  import BkUserSelector from '@blueking/user-selector';
-    
+
   const getDefaultData = () => ({
     name: '',
     description: '',
@@ -56,10 +53,6 @@
   });
 
   export default {
-    name: '',
-    components: {
-      BkUserSelector
-    },
     props: {
       data: {
         type: Object,
@@ -75,7 +68,6 @@
         isShowNameError: false,
         isShowMemberError: false,
         nameValidateText: '',
-        userApi: window.BK_USER_API,
         displayMembers: []
       };
     },
@@ -86,6 +78,7 @@
             const { name, description, sync_perm } = value;
             // this.displayMembers = value.members.filter(e => !e.readonly).map(e => e.username);
             this.displayMembers = value.members.map(e => e.username);
+            this.isShowMemberError = this.displayMembers.length < 1;
             const members = value.members.filter(e => !e.readonly).map(e => e.username);
             this.formData = Object.assign({}, {
               name,
@@ -237,7 +230,7 @@
     }
 
     .is-member-empty-cls {
-        .user-selector-container {
+        .tags-container {
             border-color: #ff4d4d;
         }
     }

@@ -75,7 +75,11 @@
           <template v-else> -- </template>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.permTemplate['创建人']`)" prop="creator"></bk-table-column>
+      <bk-table-column :label="$t(`m.permTemplate['创建人']`)" prop="creator">
+        <template slot-scope="{ row }">
+          <bk-user-display-name :user-id="row.creator || '--'" />
+        </template>
+      </bk-table-column>
       <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">
         <template slot-scope="{ row }">
           <span :title="row.created_time">{{ row.created_time }}</span>

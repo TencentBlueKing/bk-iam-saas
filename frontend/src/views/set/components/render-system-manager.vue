@@ -20,17 +20,6 @@
         <bk-table-column :label="$t(`m.set['成员列表']`)" width="600">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit || row.members.length">
-              <!-- <bk-user-selector
-                                :value="formatMemberName(row.members)"
-                                :ref="`sysRef${$index}`"
-                                :api="userApi"
-                                :class="row.isError ? 'is-member-empty-cls' : ''"
-                                :placeholder="$t(`m.verify['请输入']`)"
-                                style="width: 100%;"
-                                data-test-id="set_userSelector_editSystemManager"
-                                @blur="handleSystemRtxBlur(row)"
-                                @change="handleSystemRtxChange(...arguments, row)"
-                                @keydown="handleSystemRtxEnter(...arguments, row)" /> -->
               <iam-edit-member-selector
                 :ref="`sysRef${$index}`"
                 field="members"
@@ -165,11 +154,14 @@
         }
         this.$set(this.systemUserList[index], 'isEdit', true);
         this.$nextTick(() => {
-          this.$refs[`sysRef${index}`].isEditable = true;
-          if (!payload.members.length) {
-            setTimeout(() => {
-              this.$refs[`sysRef${index}`].$refs.selector.focus();
-            }, 10);
+          const sysRef = this.$refs[`sysRef${index}`];
+          if (sysRef) {
+            sysRef.isEditable = true;
+            if (!payload.members.length) {
+              setTimeout(() => {
+                sysRef.$refs.selector.$el.querySelector('input').focus();
+              }, 10);
+            }
           }
         });
       },
@@ -294,7 +286,7 @@
                 }
             }
             .is-member-empty-cls {
-                .user-selector-container {
+                .tags-container {
                     border-color: #ff4d4d;
                 }
             }

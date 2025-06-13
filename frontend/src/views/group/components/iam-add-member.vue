@@ -232,9 +232,7 @@
                         <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
                         <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
                           <template slot-scope="{ row }">
-                            <span :title="formatUserName(row)">
-                              {{ formatUserName(row) }}
-                            </span>
+                            <IamUserDisplayName :user-id="formatUserName(row)" />
                           </template>
                         </bk-table-column>
                         <template slot="empty">
@@ -326,9 +324,11 @@
                         :class="[
                           'organization-name'
                         ]"
-                        :title="nameType(item)"
                       >
-                        {{ item.name }}
+                        <IamUserDisplayName
+                          :user-id="item.name"
+                          :display-value="[nameType(item)]"
+                        />
                       </span>
                       <span
                         v-if="item.showCount && enableOrganizationCount"
@@ -351,8 +351,13 @@
                   >
                     <div class="user-item-left">
                       <Icon type="personal-user" class="user-icon" />
-                      <span class="user-name" :title="nameType(item)"
-                      >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
+                      <span class="user-name">
+                        <IamUserDisplayName
+                          :user-id="Boolean(item.name)
+                            ? `${item.username} (${ item.name })`
+                            : item.username "
+                          :display-value="[nameType(item)]"
+                        />
                       </span>
                     </div>
                     <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />

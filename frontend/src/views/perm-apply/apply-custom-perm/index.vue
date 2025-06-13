@@ -257,17 +257,16 @@
       </render-horizontal-block>
       <render-horizontal-block :label="$t(`m.permApply['选择权限获得者']`)" :required="false">
         <section ref="permRecipientRef">
-          <bk-user-selector
-            :value="permMembers"
-            :api="userApi"
+          <IamUserSelector
+            v-model="permMembers"
             :placeholder="$t(`m.permApply['请输入权限获得者']`)"
             :style="{ width: '60%' }"
             :class="isShowMemberError ? 'is-member-empty-cls' : ''"
             :empty-text="$t(`m.common['无匹配人员']`)"
-            data-test-id="grading_userSelector_member"
             @focus="handleRtxFocus"
             @blur="handleRtxBlur"
-            @change="handleRtxChange" />
+            change="handleRtxChange"
+          />
           <!-- <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p> -->
         </section>
       </render-horizontal-block>
@@ -663,7 +662,6 @@
   import Condition from '@/model/condition';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
-  import BkUserSelector from '@blueking/user-selector';
   import ConfirmDialog from '@/components/iam-confirm-dialog/index';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
@@ -673,14 +671,13 @@
       ResourceInstanceTable,
       IamDeadline,
       RenderPermSideslider,
-      BkUserSelector,
       ConfirmDialog,
       IamEditMemberSelector
     },
     data () {
       return {
         AGGREGATION_EDIT_ENUM,
-        userApi: window.BK_USER_API,
+        apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         systemValue: '',
         systemList: [],
@@ -827,6 +824,9 @@
               }
             });
             return allActionIds;
+        },
+        curTenantId () {
+          return this.user.tenant_id;
         }
     },
     watch: {

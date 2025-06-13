@@ -1,9 +1,13 @@
 <template>
-  <div class="iam-edit-selector" :style="styles">
+  <div
+    ref="iamEditSelector"
+    class="iam-edit-selector"
+    :style="styles"
+  >
     <template v-if="!isEditable">
       <div class="edit-wrapper">
         <template v-if="displayValue.length">
-          <div class="edit-content" v-bk-tooltips="{ content: displayValue.map(item => item.username) }">
+          <div class="edit-content">
             <slot>
               <span
                 v-for="(item, i) in displayValue"
@@ -11,7 +15,7 @@
                 class="member-item"
                 :class="item.readonly ? 'member-readonly' : ''"
               >
-                {{ item.username }}
+                <IamUserDisplayName :user-id="item.username" :display-value="displayValue" />
               </span>
             </slot>
           </div>
@@ -32,28 +36,28 @@
         </div>
       </div>
     </template>
-    <template v-else>
-      <bk-user-selector
+    <div v-if="isEditable">
+      <BkUserSelector
         v-model="editValue"
-        :class="['edit-selector', isErrorClass]"
         ref="selector"
-        :api="userApi"
+        :key="selectorKey"
+        :class="['edit-selector', isErrorClass]"
+        :api-base-url="apiBaseUrl"
+        :tenant-id="tenantId"
+        :multiple="multiple"
+        :required="!isEditAllowEmpty"
         :placeholder="$t(`m.verify['请输入']`)"
         :empty-text="$t(`m.common['无匹配人员']`)"
-        @keydown="handleEnter(...arguments)"
-        @blur="handleRtxBlur"
-        @change="handleChange">
-      </bk-user-selector>
-    </template>
+        @change="handleChange"
+      />
+    </div>
   </div>
 </template>
+
 <script>
-  import BkUserSelector from '@blueking/user-selector';
+  import { mapGetters } from 'vuex';
   export default {
     name: 'iam-edit-selector',
-    components: {
-      BkUserSelector
-    },
     props: {
       field: {
         type: String,
@@ -95,6 +99,11 @@
       isEditAllowEmpty: {
         type: Boolean,
         default: true
+      },
+      // 是否多选
+      multiple: {
+        type: Boolean,
+        default: true
       }
     },
     data () {
@@ -102,17 +111,22 @@
         displayValue: [],
         isEditable: false,
         isLoading: false,
-        userApi: window.BK_USER_API,
+        apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
         newPayload: '',
+        selectorKey: '',
         disabledValue: [],
         editValue: []
       };
     },
     computed: {
+      ...mapGetters(['user']),
       styles () {
         return {
           width: this.width
         };
+      },
+      tenantId () {
+        return this.user.tenant_id;
       },
       isEditMode () {
         return this.mode === 'edit';
@@ -137,8 +151,10 @@
     },
     mounted () {
       document.body.addEventListener('click', this.hideEdit);
+      document.body.addEventListener('keydown', this.handleEnter);
       this.$once('hook:beforeDestroy', () => {
         document.body.removeEventListener('click', this.hideEdit);
+        document.body.removeEventListener('keydown', this.handleEnter);
       });
     },
     methods: {
@@ -147,6 +163,7 @@
         this.$nextTick(() => {
           if (this.isEditable && this.$refs.selector) {
             const selectedTag = this.$refs.selector.$refs.selected;
+            console.log(selectedTag, 1566);
             if (selectedTag && selectedTag.length === 1) {
               selectedTag.forEach(item => {
                 item.className = this.displayValue.length === 1
@@ -168,8 +185,9 @@
       handleEdit () {
         document.body.click();
         this.isEditable = true;
+        this.selectorKey = new Date().getTime();
         this.$nextTick(() => {
-          this.$refs.selector && this.$refs.selector.focus();
+          this.$refs.selector && this.$refs.selector.$el.querySelector('input').focus();
           this.handleDefaultData(this.value);
           this.handleReadOnly();
         });
@@ -190,19 +208,10 @@
       },
 
       hideEdit (event) {
-        // this.isEditable = false;
-        if (this.displayValue.length < 1) {
+        if (this.$refs.iamEditSelector.contains(event.target)) {
           return;
         }
-        if (event.path && event.path.length > 0) {
-          for (let i = 0; i < event.path.length; i++) {
-            const target = event.path[i];
-            if (target.className && target.className === 'iam-edit-selector') {
-              return;
-            }
-          }
-          // this.triggerChange();
-        }
+        this.handleRtxBlur();
       },
             
       triggerChange () {
@@ -363,7 +372,7 @@
         }
 
         /deep/  .is-member-empty-cls {
-         .user-selector-container {
+         .tags-container {
             border-color: #ff4d4d;
         }
     }

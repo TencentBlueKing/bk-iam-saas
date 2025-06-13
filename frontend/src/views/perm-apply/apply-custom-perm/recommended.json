@@ -1,0 +1,69 @@
+{
+  "data": {
+    "actions": [
+      {
+        "id": "public_fields_manage",
+        "name": "公共字段管理",
+        "description": "公共字段管理",
+        "type": "manage",
+        "hidden": false,
+        "related_resource_types": [],
+        "related_actions": [
+          "platform_manage_access"
+        ],
+        "related_environments": [],
+        "sensitivity": 0,
+        "expired_at": null,
+        "tag": "unchecked",
+        "sensitivity_level": ""
+      },
+      {
+        "id": "public_task_template_manage",
+        "name": "任务模板管理",
+        "description": "任务模板管理",
+        "type": "manage",
+        "hidden": false,
+        "related_resource_types": [],
+        "related_actions": [
+          "platform_manage_access"
+        ],
+        "related_environments": [],
+        "sensitivity": 0,
+        "expired_at": null,
+        "tag": "unchecked",
+        "sensitivity_level": ""
+      }
+    ],
+    "policies": [
+      {
+        "id": "public_fields_manage",
+        "policy_id": 0,
+        "backend_policy_id": 0,
+        "expired_at": 0,
+        "resource_groups": [],
+        "auth_type": "abac",
+        "type": "manage",
+        "name": "公共字段管理",
+        "description": "公共字段管理",
+        "expired_display": "已过期",
+        "sensitivity_level": "L1"
+      },
+      {
+        "id": "public_task_template_manage",
+        "policy_id": 0,
+        "backend_policy_id": 0,
+        "expired_at": 0,
+        "resource_groups": [],
+        "auth_type": "abac",
+        "type": "manage",
+        "name": "任务模板管理",
+        "description": "任务模板管理",
+        "expired_display": "已过期",
+        "sensitivity_level": "L1"
+      }
+    ]
+  },
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}

@@ -19,19 +19,17 @@
       </iam-form-item>
       <iam-form-item :label="$t(`m.levelSpace['管理员']`)" required>
         <div class="select-wrap">
-          <bk-user-selector
-            :value="displayMembers"
-            :api="userApi"
+          <IamUserSelector
+            v-model="displayMembers"
             :placeholder="$t(`m.verify['请填写管理员']`)"
             :title="displayMembers.length ? displayMembers.join() : ''"
             :style="{ width: language === 'zh-cn' ? '75%' : '60%' }"
             :class="isShowMemberError ? 'is-member-empty-cls' : ''"
             :empty-text="$t(`m.common['无匹配人员']`)"
-            data-test-id="grading_userSelector_member"
             @focus="handleRtxFocus"
             @blur="handleRtxBlur"
-            @change="handleRtxChange">
-          </bk-user-selector>
+            @change="handleRtxChange"
+          />
           <bk-checkbox
             :true-value="true"
             :false-value="false"
@@ -60,7 +58,6 @@
 <script>
   import { mapGetters } from 'vuex';
   import { language } from '@/language';
-  import BkUserSelector from '@blueking/user-selector';
   const getDefaultData = () => ({
     name: '',
     description: '',
@@ -69,10 +66,6 @@
   });
 
   export default {
-    name: '',
-    components: {
-      BkUserSelector
-    },
     props: {
       data: {
         type: Object,
@@ -88,7 +81,6 @@
         isShowNameError: false,
         isShowMemberError: false,
         nameValidateText: '',
-        userApi: window.BK_USER_API,
         displayMembers: []
       };
     },
@@ -104,6 +96,7 @@
           if (Object.keys(value).length) {
             const { name, description, members, sync_perm } = value;
             this.displayMembers = members.map(e => e.username);
+            this.isShowMemberError = this.displayMembers.length < 1;
             this.formData = Object.assign({}, {
               name,
               description,
@@ -242,7 +235,7 @@
             }
         }
         .is-member-empty-cls {
-            .user-selector-container {
+            .tags-container {
                 border-color: #ff4d4d;
             }
         }
