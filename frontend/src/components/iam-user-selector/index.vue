@@ -7,7 +7,6 @@
       :tenant-id="tenantId"
       :multiple="true"
       :required="true"
-      :class="['iam-user-edit-selector', isErrorClass]"
       v-bind="$attrs"
       v-on="$listeners"
       @change="handleChange"

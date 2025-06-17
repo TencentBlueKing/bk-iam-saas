@@ -19,6 +19,7 @@
                 v-model="row.user"
                 :ref="`superRef${$index}`"
                 style="width: 100%;"
+                multiple="false"
                 @change="handleSuperRtxChange(...arguments, row)"
                 @keydown="handleSuperRtxEnter(...arguments, row)"
               />
@@ -387,15 +388,10 @@
                 height: 32px;
                 line-height: 32px;
                 border-radius: 2px;
-                &.is-hover {
+                /* &.is-hover {
                     background: #f0f1f5;
                     cursor: pointer;
-                }
-            }
-            .is-member-empty-cls {
-                .tags-container {
-                    border-color: #ff4d4d;
-                }
+                } */
             }
         }
     }

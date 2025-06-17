@@ -228,21 +228,21 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
         <template slot-scope="{ row , $index }">
-          <!-- <template v-if="row.isEdit || row.members.length > 0"> -->
-          <IamEditMemberSelector
-            field="members"
-            width="200"
-            :ref="`managerRef${$index}`"
-            :placeholder="$t(`m.verify['请输入']`)"
-            :allow-empty="true"
-            :is-edit-allow-empty="false"
-            :value="row.members"
-            :index="$index"
-            @on-change="handleUpdateMembers"
-            @on-empty-change="handleEmptyMemberChange(...arguments, row)"
-          />
-          <!-- </template> -->
-          <!-- <template v-else>
+          <template v-if="row.isEdit || row.members.length > 0">
+            <IamEditMemberSelector
+              field="members"
+              width="200"
+              :ref="`managerRef${$index}`"
+              :placeholder="$t(`m.verify['请输入']`)"
+              :allow-empty="true"
+              :is-edit-allow-empty="false"
+              :value="row.members"
+              :index="$index"
+              @on-change="handleUpdateMembers"
+              @on-empty-change="handleEmptyMemberChange(...arguments, row)"
+            />
+          </template>
+          <template v-else>
             <IamManagerEditInput
               field="members"
               style="width: 100%;"
@@ -251,7 +251,7 @@
               :value="getMemberFilter(row.members)"
               @handleShow="handleOpenManagerEdit(row, $index)"
             />
-          </template> -->
+          </template>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['描述']`)" prop="description" :min-width="200">
@@ -552,7 +552,7 @@
             if (!payload.members.length) {
               setTimeout(() => {
                 managerRef.$refs.selector.$el.querySelector('input').focus();
-              }, 10);
+              }, 0);
             }
           }
         });

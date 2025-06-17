@@ -39,11 +39,10 @@
         </div>
       </div>
     </template>
-    <template v-if="isEditable">
+    <template v-else>
       <BkUserSelector
         v-model="editValue"
         ref="selector"
-        :class="['edit-selector', isErrorClass]"
         :api-base-url="apiBaseUrl"
         :tenant-id="tenantId"
         :multiple="multiple"
@@ -108,11 +107,10 @@
     },
     data () {
       return {
-        displayValue: [],
         isEditable: false,
         isLoading: false,
         apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
-        newPayload: '',
+        displayValue: [],
         disabledValue: [],
         editValue: []
       };
@@ -164,7 +162,6 @@
         this.$nextTick(() => {
           this.$refs.selector && this.$refs.selector.$el.querySelector('input').focus();
           this.handleDefaultData(this.value);
-          this.isEditable = true;
         });
       },
 
@@ -190,7 +187,6 @@
       },
             
       triggerChange () {
-        console.log(this.isAllowTrigger, this.displayValue, '显示内容');
         // 单独处理初始化为空但编辑不能为空数据
         if (!this.displayValue.length && !this.isEditAllowEmpty) {
           this.displayValue = [...this.value];

@@ -511,4 +511,9 @@
         background-color: #ffffff;
       }
     }
+    
+    /* table嵌套多层组件， popover应用样式未穿透 */
+    .bk-user-selector-popover {
+      visibility: visible !important;
+    }
 </style>
