@@ -14,23 +14,23 @@
         @row-mouse-leave="handleSuperRowMouseLeave">
         <bk-table-column :label="$t(`m.set['名称']`)">
           <template slot-scope="{ row, $index }">
-            <template v-if="row.isEdit">
+            <div v-if="row.isEdit">
               <IamUserSelector
                 v-model="row.user"
                 :ref="`superRef${$index}`"
                 style="width: 100%;"
-                :placeholder="$t(`m.verify['请输入']`)"
-                :empty-text="$t(`m.common['无匹配人员']`)"
                 @change="handleSuperRtxChange(...arguments, row)"
                 @keydown="handleSuperRtxEnter(...arguments, row)"
               />
-            </template>
+            </div>
             <template v-else>
               <div
-                :class="['user-wrapper', { 'is-hover': row.canEdit && row.user[0] !== 'admin' }]"
-                :title="row.user.join('；')"
+                :class="[
+                  'user-wrapper',
+                  { 'is-hover': row.canEdit && row.user[0] !== 'admin' }
+                ]"
               >
-                <bk-user-display-name :user-id="row.user || '--'" />
+                <IamUserDisplayName :user-id="row.user" />
               </div>
             </template>
           </template>
@@ -129,7 +129,6 @@
         subTitle: this.$t(`m.set['超级管理员提示']`),
         saveDisableTip: '',
         superUserList: [],
-        apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
         emptyData: {
           type: '',
           text: '',
@@ -175,10 +174,9 @@
           isEdit: true
         });
         const index = this.superUserList.length - 1;
-        const superRef = this.$refs[`superRef${index}`];
         this.$nextTick(() => {
-          console.log(superRef);
-          superRef && superRef.$refs.selector.$el.querySelector('input').focus();
+          const superRef = this.$refs[`superRef${index}`];
+          superRef && superRef.handleSetAutoFocus();
         });
       },
 
@@ -266,12 +264,10 @@
           return;
         }
         payload.isEdit = true;
-        const superRef = this.$refs[`superRef${index}`];
-        if (superRef) {
-          this.$nextTick(() => {
-            superRef && superRef.$refs.selector.$el.querySelector('input').focus();
-          });
-        }
+        this.$nextTick(() => {
+          const superRef = this.$refs[`superRef${index}`];
+          superRef && superRef.handleSetAutoFocus();
+        });
       },
 
       async handleDelete (e, payload, index) {

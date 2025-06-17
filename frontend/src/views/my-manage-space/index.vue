@@ -125,9 +125,9 @@
               </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater">
-              <span v-bk-tooltips="{ content: child.row.updater }">
-                <bk-user-display-name :user-id="child.row.updater" />
-              </span>
+              <template slot-scope="child">
+                <IamUserDisplayName :user-id="child.row.updater" />
+              </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time" width="160">
               <template slot-scope="child">
@@ -228,21 +228,21 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
         <template slot-scope="{ row , $index }">
-          <template v-if="row.isEdit || row.members.length > 0">
-            <IamEditMemberSelector
-              field="members"
-              width="200"
-              :ref="`managerRef${$index}`"
-              :placeholder="$t(`m.verify['请输入']`)"
-              :allow-empty="true"
-              :is-edit-allow-empty="false"
-              :value="row.members"
-              :index="$index"
-              @on-change="handleUpdateMembers"
-              @on-empty-change="handleEmptyMemberChange(...arguments, row)"
-            />
-          </template>
-          <template v-else>
+          <!-- <template v-if="row.isEdit || row.members.length > 0"> -->
+          <IamEditMemberSelector
+            field="members"
+            width="200"
+            :ref="`managerRef${$index}`"
+            :placeholder="$t(`m.verify['请输入']`)"
+            :allow-empty="true"
+            :is-edit-allow-empty="false"
+            :value="row.members"
+            :index="$index"
+            @on-change="handleUpdateMembers"
+            @on-empty-change="handleEmptyMemberChange(...arguments, row)"
+          />
+          <!-- </template> -->
+          <!-- <template v-else>
             <IamManagerEditInput
               field="members"
               style="width: 100%;"
@@ -251,7 +251,7 @@
               :value="getMemberFilter(row.members)"
               @handleShow="handleOpenManagerEdit(row, $index)"
             />
-          </template>
+          </template> -->
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['描述']`)" prop="description" :min-width="200">
@@ -269,9 +269,7 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater">
         <template slot-scope="{ row }">
-          <span v-bk-tooltips="{ content: row.updater }">
-            <bk-user-display-name :user-id="row.updater" />
-          </span>
+          <IamUserDisplayName :user-id="row.updater" />
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time" width="160">
@@ -361,12 +359,12 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { getWindowHeight, formatCodeData, navDocCenterPath } from '@/common/util';
+  import { buildURLParams } from '@/common/url';
   import IamEditInput from './components/iam-edit/input';
   import IamEditMemberSelector from './components/iam-edit/member-selector';
   import IamEditTextarea from './components/iam-edit/textarea';
   import IamSearchSelect from '@/components/iam-search-select';
   import IamManagerEditInput from '@/components/iam-edit/input';
-  import { buildURLParams } from '@/common/url';
   import ManageInterviewDialog from '@/components/manage-interview-dialog';
 
   export default {

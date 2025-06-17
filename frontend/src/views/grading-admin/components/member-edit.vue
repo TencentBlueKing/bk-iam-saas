@@ -5,25 +5,28 @@
     :style="styles"
   >
     <template v-if="!isEditable">
-      <div class="edit-wraper">
+      <div class="edit-wrapper">
         <div class="edit-content">
           <slot>
-            <span
-              v-for="(item, index) in value"
-              :key="index"
-              class="member-item"
-            >
-              <bk-user-display-name :user-id="item.username" />
-              <Icon v-if="!isShowRole" type="close-small" @click.stop="handleDelete(index)" />
-              <Icon v-else type="close-small" @click.stop="handleDelete(index)" />
-            </span>
-            <div class="edit-action-box">
-              <span class="edit-action" v-if="!isLoading" @click.stop="handleEdit">
-                <Icon bk type="plus" />
-              </span>
-              <Icon type="loading-circle" class="edit-loading" v-if="isLoading" />
-            </div>
+            <IamUserDisplayName :display-value="value">
+              <div class="single-hide" slot="customDisplayName">
+                <span
+                  v-for="(item, i) in value"
+                  :key="i"
+                  :class="['member-item', { 'member-readonly': item.readonly }]"
+                >
+                  <bk-user-display-name :user-id="item.username" />
+                  <Icon type="close-small" @click.stop="handleDelete(index)" />
+                </span>
+              </div>
+            </IamUserDisplayName>
           </slot>
+        </div>
+        <div class="edit-action-box">
+          <span class="edit-action" v-if="!isLoading" @click.stop="handleEdit">
+            <Icon bk type="plus" />
+          </span>
+          <Icon type="loading-circle" class="edit-loading" v-if="isLoading" />
         </div>
       </div>
     </template>
@@ -139,20 +142,6 @@
           this.messageAdvancedError(e);
         }
       },
-      // 设置只读
-      handleReadOnly () {
-        this.$nextTick(() => {
-          if (this.isEditable) {
-            const selectedTag = this.$refs.userSelector.$refs.selected;
-            if (selectedTag && selectedTag.length === 1) {
-              selectedTag.forEach(item => {
-                item.className = this.newVal.includes(item.innerText)
-                  ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
-              });
-            }
-          }
-        });
-      },
       handleClickOutSide (event) {
         const parentNode = event.target.parentNode;
         if (parentNode && parentNode.classList.contains('user-group')) {
@@ -165,7 +154,6 @@
         this.isEditable = true;
         this.$nextTick(() => {
           this.$refs.userSelector && this.$refs.userSelector.$el.querySelector('input').focus();
-          this.handleReadOnly();
         });
       },
       handleBlur () {
@@ -318,7 +306,7 @@
 <style lang='postcss' scoped>
     .iam-edit-member {
         position: relative;
-        .edit-wraper {
+        .edit-wrapper {
             position: relative;
             display: flex;
             align-items: center;
@@ -332,7 +320,8 @@
         }
         .edit-content {
             flex: 0 0 auto;
-            max-width: calc(100% - 25px);
+            align-items: center;
+            max-width: calc(100vh - 125px);
             .member-item {
                 display: inline-block;
                 padding: 0 5px;
@@ -353,13 +342,19 @@
                     }
                 }
             }
+            .member-readonly {
+              background: #FFF1DB;
+              color: #FE9C00;
+            }
+            &-tenant {
+              max-width: 100%;
+            }
         }
         .edit-action-box {
-            /* display: flex;
-            align-items: center; */
+            display: flex;
+            align-items: center;
             width: 24px;
             height: 24px;
-            display: inline-block;
             width: 26px;
             height: 24px;
             margin-right: auto;

@@ -25,7 +25,6 @@
             class="sub-selector-content"
             :value="formatMemberValue(item)"
             :disabled="formatDisabled(item)"
-            :empty-text="$t(`m.common['无匹配人员']`)"
             @change="handleMemberChange(...arguments, item)"
           />
         </template>
@@ -112,7 +111,6 @@
     },
     data () {
       return {
-        userApi: window.BK_USER_API,
         attrValues: [],
         curOperateData: {},
         pagination: {

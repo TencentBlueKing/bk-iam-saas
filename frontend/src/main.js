@@ -44,8 +44,9 @@ import IamSpinLoading from './components/iam-spin-loading/index.vue';
 import RenderHorizontalBlock from './components/render-block/horizontal.vue';
 import RenderVerticalBlock from './components/render-block/vertical.vue';
 import RenderSearch from './components/render-search/index.vue';
-import IamUserSelector from './components/iam-user-selector/index.vue';
+import BkUserDisplayName from '@blueking/bk-user-display-name';
 import BkUserSelector from '@blueking/bk-user-selector/vue2/index.umd.min.js';
+import IamUserSelector from './components/iam-user-selector/index.vue';
 import IamUserDisplayName from './components/iam-user-display-name/index.vue';
 import Icon from './components/icon';
 import VueI18n from 'vue-i18n';
@@ -139,16 +140,16 @@ auth.requestCurrentUser().then(user => {
   if (!user.isAuthenticated) {
     auth.redirectToLogin();
   } else {
+    BkUserDisplayName.configure({
+      apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
+      tenantId: user.tenantId
+    });
     global.bus = bus;
     global.mainComponent = new Vue({
       el: '#app',
       i18n,
       router,
       store,
-      // components: {
-      //   App
-      // },
-      // template: '<App/>'
       render () {
         return subEnv ? <IframeEntry /> : <App />;
       }

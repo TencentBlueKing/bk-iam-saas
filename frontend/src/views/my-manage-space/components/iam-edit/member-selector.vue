@@ -9,14 +9,17 @@
         <template v-if="displayValue.length">
           <div class="edit-content">
             <slot>
-              <span
-                v-for="(item, i) in displayValue"
-                :key="i"
-                class="member-item"
-                :class="item.readonly ? 'member-readonly' : ''"
-              >
-                <IamUserDisplayName :user-id="item.username" :display-value="displayValue" />
-              </span>
+              <IamUserDisplayName :display-value="displayValue">
+                <div slot="customDisplayName" class="single-hide edit-content-tenant">
+                  <span
+                    v-for="(item, i) in displayValue"
+                    :key="i"
+                    :class="['member-item', { 'member-readonly': item.readonly }]"
+                  >
+                    <bk-user-display-name :user-id="item.username" />
+                  </span>
+                </div>
+              </IamUserDisplayName>
             </slot>
           </div>
         </template>
@@ -36,21 +39,18 @@
         </div>
       </div>
     </template>
-    <div v-if="isEditable">
+    <template v-if="isEditable">
       <BkUserSelector
         v-model="editValue"
         ref="selector"
-        :key="selectorKey"
         :class="['edit-selector', isErrorClass]"
         :api-base-url="apiBaseUrl"
         :tenant-id="tenantId"
         :multiple="multiple"
         :required="!isEditAllowEmpty"
-        :placeholder="$t(`m.verify['请输入']`)"
-        :empty-text="$t(`m.common['无匹配人员']`)"
         @change="handleChange"
       />
-    </div>
+    </template>
   </div>
 </template>
 
@@ -113,7 +113,6 @@
         isLoading: false,
         apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
         newPayload: '',
-        selectorKey: '',
         disabledValue: [],
         editValue: []
       };
@@ -141,12 +140,6 @@
           this.handleDefaultData(newVal);
         },
         immediate: true
-      },
-      editValue: {
-        handler () {
-          this.handleReadOnly();
-        },
-        immediate: true
       }
     },
     mounted () {
@@ -158,38 +151,20 @@
       });
     },
     methods: {
-      // 设置只读
-      handleReadOnly () {
-        this.$nextTick(() => {
-          if (this.isEditable && this.$refs.selector) {
-            const selectedTag = this.$refs.selector.$refs.selected;
-            console.log(selectedTag, 1566);
-            if (selectedTag && selectedTag.length === 1) {
-              selectedTag.forEach(item => {
-                item.className = this.displayValue.length === 1
-                  && this.displayValue.map(item => item.username).includes(item.innerText)
-                  ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
-              });
-            }
-          }
-        });
-      },
-
       // 设置默认值
       handleDefaultData (payload) {
-        this.disabledValue = [...payload].filter(e => e.readonly);
         this.displayValue = [...payload];
+        this.disabledValue = [...payload].filter(e => e.readonly);
         this.editValue = [...payload].filter(e => !e.readonly).map(e => e.username);
       },
 
       handleEdit () {
         document.body.click();
         this.isEditable = true;
-        this.selectorKey = new Date().getTime();
         this.$nextTick(() => {
           this.$refs.selector && this.$refs.selector.$el.querySelector('input').focus();
           this.handleDefaultData(this.value);
-          this.handleReadOnly();
+          this.isEditable = true;
         });
       },
 
@@ -317,9 +292,6 @@
         .edit-content {
             flex: 0 0 auto;
             max-width: calc(100% - 25px);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             .member-item {
                 display: inline-block;
                 padding: 0 10px;
@@ -345,6 +317,9 @@
             .member-readonly{
                 background: #FFF1DB;
                 color: #FE9C00;
+            }
+            &-tenant {
+              max-width: 100%;
             }
         }
         .edit-action-box {

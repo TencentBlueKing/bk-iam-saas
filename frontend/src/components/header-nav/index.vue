@@ -71,9 +71,8 @@
       <p
         class="user-name"
         @click.stop="handleSwitchIdentity"
-        data-test-id="header_btn_triggerSwitchRole"
       >
-        {{ user.username }}
+        <IamUserDisplayName :user-id="user.username" />
         <Icon
           type="down-angle"
           :class="['user-name-angle', { dropped: isShowUserDropdown }]"

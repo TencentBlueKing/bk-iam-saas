@@ -109,7 +109,6 @@
                     style="width: 100%;"
                     v-model="userTempMembers"
                     :placeholder="$t(`m.renewalNotice['请输入接收测试通知的用户（请确保账号正确）']`)"
-                    :empty-text="$t(`m.common['无匹配人员']`)"
                     @change="handleUserChange"
                   />
                   <bk-button
@@ -480,7 +479,7 @@
               const userTempRef = this.$refs.userTempTestConfirm;
               if (userTempRef && userTempRef.$refs) {
                 userTempRef.$refs.popover.showHandler();
-                this.$refs.userSelector && this.$refs.userSelector.focus();
+                this.$refs.userSelector && this.$refs.userSelector.handleSetAutoFocus();
               }
             });
           },
@@ -500,7 +499,7 @@
             const managerTempTestConfirm = this.$refs.managerTempTestConfirm;
             if (managerTempTestConfirm && managerTempTestConfirm.$refs) {
               managerTempTestConfirm.$refs.popover.showHandler();
-              this.$refs.managerSelector && this.$refs.managerSelector.focus();
+              this.$refs.managerSelector && this.$refs.managerSelector.handleSetAutoFocus();
             }
           },
           reset: () => {},

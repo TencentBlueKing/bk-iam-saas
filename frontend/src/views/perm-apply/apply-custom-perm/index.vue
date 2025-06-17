@@ -262,10 +262,9 @@
             :placeholder="$t(`m.permApply['请输入权限获得者']`)"
             :style="{ width: '60%' }"
             :class="isShowMemberError ? 'is-member-empty-cls' : ''"
-            :empty-text="$t(`m.common['无匹配人员']`)"
             @focus="handleRtxFocus"
             @blur="handleRtxBlur"
-            change="handleRtxChange"
+            @change="handleRtxChange"
           />
           <!-- <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p> -->
         </section>

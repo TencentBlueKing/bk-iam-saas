@@ -351,14 +351,12 @@
                   >
                     <div class="user-item-left">
                       <Icon type="personal-user" class="user-icon" />
-                      <span class="user-name">
+                      <div class="user-name">
                         <IamUserDisplayName
-                          :user-id="Boolean(item.name)
-                            ? `${item.username} (${ item.name })`
-                            : item.username "
+                          :user-id="item.username"
                           :display-value="[nameType(item)]"
                         />
-                      </span>
+                      </div>
                     </div>
                     <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />
                   </div>
@@ -741,8 +739,8 @@
         };
       },
       formatUserName () {
-        return (payload) => {
-          return ['depart', 'department'].includes(payload.type) ? payload.name : `${payload.username}(${payload.name})`;
+        return ({ type, name, username } = {}) => {
+          return ['depart', 'department'].includes(type) ? name : username;
         };
       },
       formatAllSelectedUsers () {
@@ -2519,6 +2517,11 @@
   }
   .bk-dialog-body {
     padding: 0 !important;
+  }
+  .tenant-display-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

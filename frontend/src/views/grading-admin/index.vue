@@ -98,7 +98,11 @@
                   :remote-hander="handleUpdateSubManageSpace" />
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater" />
+            <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater">
+              <template slot-scope="child">
+                <IamUserDisplayName :user-id="child.row.updater" />
+              </template>
+            </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time" width="160">
               <template slot-scope="child">
                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
@@ -214,7 +218,11 @@
             :remote-hander="handleUpdateManageSpace" />
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater" />
+      <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater">
+        <template slot-scope="{ row }">
+          <IamUserDisplayName :user-id="row.updater" />
+        </template>
+      </bk-table-column>
       <bk-table-column :label="$t(`m.grading['更新时间']`)" prop="updated_time" width="160">
         <template slot-scope="{ row }">
           <span :title="row.updated_time">{{ row.updated_time }}</span>

@@ -55,15 +55,14 @@
             />
             <div
               v-if="['user'].includes(item.type)"
-              v-bk-tooltips="{
-                content: `${item.id} (${item.name})`,
-                placements: ['right-start'],
-                disabled: formatShowToolTip(item)
-              }"
               :ref="`userOrg_${item.id}`"
               class="single-hide group-name"
             >
-              <bk-user-display-name :user-id="item.id" />
+              <IamUserDisplayName
+                :user-id="item.id"
+                :tooltip-config="{ disabled: formatShowToolTip(item), placements: 'right-start' }"
+                :placements="'right-start'"
+              />
               <span style="margin-left: 5px;">({{ item.name }})</span>
             </div>
             <div
@@ -72,7 +71,11 @@
               v-bk-tooltips="{ content: item.name, placements: ['right-start'], disabled: formatShowToolTip(item) }"
               class="single-hide group-name"
             >
-              <bk-user-display-name :user-id="item.name" />
+              <IamUserDisplayName
+                :user-id="item.name"
+                :tooltip-config="{ disabled: formatShowToolTip(item), placements: 'right-start' }"
+                :placements="'right-start'"
+              />
             </div>
           </div>
         </div>

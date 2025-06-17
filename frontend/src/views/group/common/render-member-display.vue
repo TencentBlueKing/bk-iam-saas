@@ -5,27 +5,31 @@
       <span class="name">{{ title }}</span>
     </label>
     <div class="content">
-      <div v-for="(item, index) in data"
+      <div
+        v-for="(item, index) in data"
         :key="index"
         class="member-item"
-        :title="nameType(item)">
+      >
         <!-- 单独处理没有username和count的页面业务 -->
         <template>
           <template v-if="isCustomRoute">
-            <span class="member-name">
-              <bk-user-display-name :user-id="formatCustomTypeName(item) " />
-            </span>
+            <div class="member-name">
+              <IamUserDisplayName :user-id="formatCustomTypeName(item)" :display-value="[nameType(item)]" />
+            </div>
           </template>
           <template v-else>
-            <span class="member-name">
-              <bk-user-display-name :user-id="isHasDepartCount ? item.name : item.username || item.id" />
-            </span>
+            <div class="member-name">
+              <IamUserDisplayName
+                :user-id="isHasDepartCount ? item.name : item.username || item.id"
+                :display-value="[nameType(item)]"
+              />
+            </div>
             <template v-if="isHasDepartCount && item.count">
               <span class="count">({{ item.count }})</span>
             </template>
-            <template v-if="!isHasDepartCount && !isTemplate && item.name !== ''">
+            <!-- <template v-if="!isHasDepartCount && !isTemplate && item.name !== ''">
               <span class="display_name">({{ item.name }})</span>
-            </template>
+            </template> -->
           </template>
         </template>
         <template v-if="isTemplate">
@@ -101,7 +105,8 @@
               }
             },
             department: () => {
-              return fullName || payload.fullName || (username ? `${username}(${name})` : name);
+              // return fullName || payload.fullName || (username ? `${username}(${name})` : name);
+              return fullName || username || name;
             },
             depart: () => {
               return fullName || payload.fullName || (username ? `${username}(${name})` : name);
@@ -118,10 +123,12 @@
           const { name, type, id } = payload;
           const typeMap = {
             user: () => {
-              return `${id} (${name})`;
+              // return `${id} (${name})`;
+              return id || name;
             },
             department: () => {
-              return `${name} (${id})`;
+              // return `${name} (${id})`;
+              return id || name;
             }
           };
           return typeMap[type] ? typeMap[type]() : typeMap['user']();

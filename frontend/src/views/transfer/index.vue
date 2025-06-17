@@ -45,7 +45,6 @@
                   style="width: 100%;"
                   :multiple="false"
                   :placeholder="$t(`m.verify['请填写管理员']`)"
-                  :empty-text="$t(`m.common['无匹配人员']`)"
                   :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                   @focus="handleRtxFocus"
                   @blur="handleRtxBlur"

@@ -32,11 +32,6 @@
                 @on-empty-change="handleEmptyChange" />
             </template>
             <template v-else>
-              <!-- <div
-                                :class="['user-wrapper', { 'is-hover': row.canEdit }]"
-                                @click.stop="handleOpenSysEdit(row, $index)">
-                                {{ formatMemberFilter(row.members) }}
-                            </div> -->
               <iam-edit-input
                 field="members"
                 style="width: 100%;"
@@ -73,7 +68,6 @@
 </template>
 <script>
   import _ from 'lodash';
-  // import BkUserSelector from '@blueking/user-selector';
   import IamEditInput from '@/components/iam-edit/input';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   import RenderItem from '../common/render-item';
@@ -82,7 +76,6 @@
   export default {
     name: '',
     components: {
-      // BkUserSelector,
       IamEditInput,
       IamEditMemberSelector,
       RenderItem
@@ -91,7 +84,6 @@
       return {
         subTitle: this.$t(`m.set['系统管理员提示']`),
         systemUserList: [],
-        userApi: window.BK_USER_API,
         emptyData: {
           type: '',
           text: '',

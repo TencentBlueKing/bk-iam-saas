@@ -74,7 +74,7 @@
             <span v-else>--</span>
           </template>
           <template v-if="['creator'].includes(field.id)">
-            <bk-user-display-name :user-id="row.creator || '--'" />
+            <IamUserDisplayName :user-id="row.creator" />
           </template>
           <span v-if="!['name', 'group_count', 'creator'].includes(field.id)">
             {{ row[field.id] || '--' }}

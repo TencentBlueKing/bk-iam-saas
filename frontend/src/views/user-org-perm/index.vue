@@ -59,24 +59,11 @@
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <!-- <bk-input
-                v-model="formData.username"
-                :clearable="true"
-                :show-clear-only-hover="true"
-                :placeholder="$t(`m.verify['请输入']`)"
-                :right-icon="'bk-icon icon-search'"
-                @right-icon-click="handleSearch"
-                @enter="handleSearch"
-                @clear="handleClearSearch"
-              /> -->
-              <bk-user-selector
+              <IamUserSelector
+                v-model="permMembers"
                 ref="userSelectorRef"
-                :value="permMembers"
-                :api="userApi"
-                :multiple="false"
                 style="width: 100%"
-                :placeholder="$t(`m.verify['请输入']`)"
-                :empty-text="$t(`m.common['无匹配人员']`)"
+                :multiple="false"
                 @change="handleMemberChange(...arguments, 'username')"
               />
             </iam-form-item>
@@ -169,28 +156,30 @@
                     @enter="handlePopoverChange"
                     @input="handleInputChange(tag.name, ...arguments)"
                   />
-                  <bk-user-selector
+                  <IamUserSelector
                     v-if="['username'].includes(tag.name)"
+                    v-model="permMembers"
                     ref="userSelectorRef"
                     style="width: 100%"
-                    :value="permMembers"
-                    :api="userApi"
                     :multiple="false"
-                    :placeholder="$t(`m.verify['请输入']`)"
-                    :empty-text="$t(`m.common['无匹配人员']`)"
                     @change="handleMemberChange(...arguments, tag.name)"
                   />
                 </div>
               </div>
               <template v-if="tag.value">
                 <bk-tag
-                  :closable="formatAllowClose(tag.name)"
                   class="tag-item"
+                  :closable="formatAllowClose(tag.name)"
                   :key="tag.name"
                   @close="handleCloseTag(tag)">
-                  <div @click.stop="handleShowPopover(tag)">
-                    <span>{{tag.label}}:</span>
-                    <span class="tag-item-value">{{ tag.value }}</span>
+                  <div class="flex-between" @click.stop="handleShowPopover(tag)">
+                    <div>{{tag.label}}:</div>
+                    <IamUserDisplayName
+                      v-if="['username'].includes(tag.name)"
+                      class="tag-item-value"
+                      :user-id=" tag.value"
+                    />
+                    <div v-else class="tag-item-value">{{ tag.value }}</div>
                   </div>
                 </bk-tag>
               </template>
@@ -297,7 +286,6 @@
   import Layout from './components/page-layout';
   import LeftLayout from './components/left-layout.vue';
   import RightLayout from './components/right-layout.vue';
-  import BkUserSelector from '@blueking/user-selector';
 
   const COM_MAP = new Map([
     [['user', 'department'], 'RightLayout']
@@ -309,8 +297,7 @@
       IamResourceCascadeSearch,
       Layout,
       LeftLayout,
-      RightLayout,
-      BkUserSelector
+      RightLayout
     },
 
     data () {
@@ -616,7 +603,17 @@
           ...searchParams,
           ...this.formData
         };
-        this.isSearchPerm = emptyData.tipType === 'search';
+        const filterData = cloneDeep(params);
+        delete filterData.offset;
+        delete filterData.limit;
+        function isObjectEmptyValues (obj) {
+          return Object.values(obj).every(v => {
+            const isEmptyString = typeof v === 'string' && v.trim() === '';
+            const isEmptyArray = Array.isArray(v) && v.length === 0;
+            return isEmptyString || isEmptyArray;
+          });
+        }
+        this.isSearchPerm = !isObjectEmptyValues(filterData);
         this.curSearchParams = cloneDeep(params);
         this.curSearchPagination = cloneDeep(pagination);
         this.curEmptyData = cloneDeep(emptyData);
@@ -748,7 +745,7 @@
             if (['username'].includes(payload.name)
               && this.$refs.userSelectorRef
               && this.$refs.userSelectorRef.length) {
-              this.$refs.userSelectorRef[0].focus();
+              this.$refs.userSelectorRef[0].handleSetAutoFocus();
             }
           }
         });
@@ -1032,8 +1029,8 @@
       },
 
       handleEmptyUserClear () {
-        this.curEmptyData.tipType = '';
-        this.emptyData.tipType = '';
+        this.curEmptyData = Object.assign(this.curEmptyData, { type: 'empty', tipType: '' });
+        this.emptyData = Object.assign(this.emptyData, { type: 'empty', tipType: '' });
         this.isSearchPerm = false;
         this.pageConf.current = 1;
         this.curSearchParams = {};

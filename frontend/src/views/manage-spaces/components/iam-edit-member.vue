@@ -1,19 +1,28 @@
 <template>
-  <div class="iam-edit-selector" :style="styles">
+  <div
+    ref="iamEditSelector"
+    class="iam-edit-selector"
+    :style="styles"
+  >
     <template v-if="!isEditable">
       <div class="edit-wrapper">
-        <div class="edit-content">
-          <slot>
-            <span
-              v-for="(item, index) in displayValue"
-              :key="index"
-              class="member-item"
-              :class="item.readonly ? 'member-readonly' : ''">
-              <bk-user-display-name :user-id="item.username" />
-              <Icon v-if="!item.readonly && isEditMode" type="close-small"
-                @click.stop="handleDelete(index)" />
-            </span>
-          </slot>
+        <div class="single-hide edit-content">
+          <IamUserDisplayName :display-value="displayValue">
+            <div class="single-hide" slot="customDisplayName">
+              <div
+                v-for="(item, i) in displayValue"
+                :key="i"
+                :class="['member-item', { 'member-readonly': item.readonly }]"
+              >
+                <bk-user-display-name :user-id="item.username" />
+                <Icon
+                  v-if="!item.readonly && isEditMode"
+                  type="close-small"
+                  @click.stop="handleDelete(i)"
+                />
+              </div>
+            </div>
+          </IamUserDisplayName>
         </div>
         <div class="edit-action-box" v-if="isEditMode">
           <Icon
@@ -119,41 +128,24 @@
         immediate: true
       }
     },
-    mounted () {
-      document.body.addEventListener('click', this.hideEdit);
-      this.$once('hook:beforeDestroy', () => {
-        document.body.removeEventListener('click', this.hideEdit);
-      });
-    },
-    async created () {
-      await this.fetchUser();
-    },
     methods: {
-      async fetchUser () {
-        try {
-          this.userInfo = await this.$store.dispatch('userInfo');
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        }
-      },
-
       // 设置默认值
       handleDefaultData (payload) {
         this.disabledValue = [...payload].filter(e => e.readonly);
         this.displayValue = [...payload];
         this.editValue = [...payload].filter(e => !e.readonly).map(e => e.username);
-        // this.editValue = [...payload].map(e => e.username);
       },
 
       handleEdit () {
         document.body.click();
         this.isEditable = true;
         this.$nextTick(() => {
-          if (this.isEditable) {
-            this.$refs.selector && this.$refs.selector.$el.querySelector('input').focus();
+          if (this.isEditable && this.$refs.selector) {
+            this.$refs.selector.$el.querySelector('input').focus();
             const disabledValue = [...this.disabledValue].map(item => item.username);
-            const selectedTag = this.$refs.selector.$refs.selected;
+            const aa = this.$refs.selector.$el.querySelector('.tags-container');
+            const selectedTag = this.$refs.selector.$el.querySelector('.tag-list');
+            console.log(disabledValue, selectedTag, aa.children);
             if (selectedTag && selectedTag.length) {
               if (disabledValue.length) {
                 selectedTag.forEach(item => {
@@ -194,24 +186,8 @@
         }
       },
 
-      hideEdit (event) {
-        // this.isEditable = false;
-        if (this.displayValue.length < 1) {
-          return;
-        }
-        if (event.path && event.path.length > 0) {
-          for (let i = 0; i < event.path.length; i++) {
-            const target = event.path[i];
-            if (target.className && target.className === 'iam-edit-selector') {
-              return;
-            }
-          }
-        }
-      },
-
       triggerChange () {
         this.isEditable = false;
-        console.log(this.displayValue);
         if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
           this.isLoading = true;
           this.remoteHandler({
@@ -290,9 +266,6 @@
         .edit-content {
             flex: 0 0 auto;
             max-width: calc(100vh - 25px);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             .member-item {
                 display: inline-block;
                 padding: 0 10px;
@@ -316,6 +289,9 @@
             .member-readonly{
                 background: #FFF1DB;
                 color: #FE9C00;
+            }
+            &-tenant {
+              max-width: 100%;
             }
         }
         .edit-action-box {

@@ -59,10 +59,10 @@
     },
     mounted () {
       document.body.addEventListener('click', this.handleTriggerClick);
-      document.body.addEventListener('keydown', this.handleTriggerClick);
+      document.body.addEventListener('keydown', this.handleEnter);
       this.$once('hook:beforeDestroy', () => {
         document.body.removeEventListener('click', this.handleTriggerClick);
-        document.body.addEventListener('keydown', this.handleTriggerClick);
+        document.body.removeEventListener('keydown', this.handleEnter);
       });
     },
     methods: {
@@ -76,12 +76,16 @@
         this.$emit('blur');
       },
 
-      handleEnter () {
-        this.$emit('keydown');
+      handleEnter (event) {
+        this.$emit('keydown', event);
       },
       
       handleChange (payload) {
         this.$emit('change', payload);
+      },
+
+      handleSetAutoFocus () {
+        this.$refs.iamUserSelectorRef && this.$refs.iamUserSelectorRef.$el.querySelector('input').focus();
       }
     }
   };

@@ -77,7 +77,7 @@
             :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]"
           >
             <IamUserDisplayName
-              :user-id="item.name ? `${item.username} (${item.name})` : item.username"
+              :user-id="item.username || item.name"
               :display-value="[nameType(item)]"
             />
           </span>

@@ -51,9 +51,7 @@
           :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
         >
           <IamUserDisplayName
-            :user-id="item.type === 'user' ? item.name !== ''
-              ? `${item.username} (${item.name})`
-              : item.username : item.name"
+            :user-id="item.username || item.name"
             :display-value="[nameType(item)]"
           />
         </span>

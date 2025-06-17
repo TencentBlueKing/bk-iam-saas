@@ -85,7 +85,6 @@
   import theNav from '@/components/nav/index.vue';
   import NoticeComponent from '@blueking/notice-component-vue2';
   import FunctionalDependency from '@blueking/functional-dependency/vue2/index.umd.min.js';
-  import BkUserDisplayName from '@blueking/bk-user-display-name';
   import '@blueking/functional-dependency/vue2/vue2.css';
   import '@blueking/notice-component-vue2/dist/style.css';
   // import IamGuide from '@/components/iam-guide/index.vue';
@@ -252,10 +251,6 @@
       });
       bus.$on('show-function-dependency', (payload = {}) => {
         this.getRouteInstanceSearch(payload);
-      });
-      BkUserDisplayName.configure({
-        tenantId: this.user.tenant_id,
-        apiBaseUrl: window.BK_USER_WEB_APIGW_URL
       });
     },
     methods: {
