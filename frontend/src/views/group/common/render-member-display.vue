@@ -97,19 +97,15 @@
           const { name, type, id, username, full_name: fullName } = payload;
           const typeMap = {
             user: () => {
-              if (fullName) {
-                return fullName;
-              } else {
-                const curName = username || id;
-                return name ? `${curName}(${name})` : curName;
-              }
+              const curName = username || id;
+              return fullName || curName;
             },
             department: () => {
               // return fullName || payload.fullName || (username ? `${username}(${name})` : name);
               return fullName || username || name;
             },
             depart: () => {
-              return fullName || payload.fullName || (username ? `${username}(${name})` : name);
+              return fullName || username || name;
             },
             template: () => {
               return name;

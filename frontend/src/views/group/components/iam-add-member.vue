@@ -29,7 +29,6 @@
                 })
               "
             >
-              <!-- {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }} -->
               {{
                 $t(`m.common['设置新用户加入用户组的有效期']`, {
                   value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}`
@@ -315,21 +314,22 @@
                   </template>
                 </div>
               </div>
+              <!-- fullName是完整组织架构链路，不需要调接口 -->
               <div class="content">
                 <div class="organization-content" v-if="isDepartSelectedEmpty">
                   <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
-                    <div class="organization-item-left">
+                    <div
+                      v-bk-tooltips="{ content: nameType(item), disabled: !item.full_name }"
+                      class="organization-item-left"
+                    >
                       <Icon type="file-close" class="folder-icon" />
-                      <span
-                        :class="[
-                          'organization-name'
-                        ]"
-                      >
+                      <div class="organization-name">
                         <IamUserDisplayName
                           :user-id="item.name"
                           :display-value="[nameType(item)]"
+                          :tooltip-config="{ disabled: !!item.full_name }"
                         />
-                      </span>
+                      </div>
                       <span
                         v-if="item.showCount && enableOrganizationCount"
                         class="user-count"
@@ -349,12 +349,16 @@
                     v-for="item in hasSelectedUsers"
                     :key="item.id"
                   >
-                    <div class="user-item-left">
+                    <div
+                      v-bk-tooltips="{ content: nameType(item), disabled: !item.full_name }"
+                      class="user-item-left"
+                    >
                       <Icon type="personal-user" class="user-icon" />
                       <div class="user-name">
                         <IamUserDisplayName
                           :user-id="item.username"
                           :display-value="[nameType(item)]"
+                          :tooltip-config="{ disabled: !!item.full_name }"
                         />
                       </div>
                     </div>
@@ -725,11 +729,11 @@
                 const result = fullName.indexOf(';') > -1 ? fullName.replace(/[，,;；]/g, '\n') : fullName;
                 return result;
               } else {
-                return name ? `${username}(${name})` : username;
+                return username || name;
               }
             },
             depart: () => {
-              return fullName || payload.fullName || name;
+              return fullName || name;
             },
             template: () => {
               return name;
@@ -740,6 +744,7 @@
       },
       formatUserName () {
         return ({ type, name, username } = {}) => {
+          console.log(type, name, username);
           return ['depart', 'department'].includes(type) ? name : username;
         };
       },

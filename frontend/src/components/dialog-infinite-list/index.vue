@@ -31,14 +31,29 @@
               { 'active': selectedNode(item) && !item.disabled }
             ]"
           />
-          <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
+          <div>
+          </div>
+          <div
+            v-bk-tooltips="getToolTip(
+              item,
+              {
+                disabled: !item.full_name && (item.showCount && enableOrganizationCount)
+              }
+            )"
+            :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
             <IamUserDisplayName
               :user-id="item.name"
-              :display-value="[nameType(item)]"
+              :tooltip-config="{ placement: 'right-start', disabled: !!item.full_name }"
             />
-          </span>
+          </div>
           <span
             v-if="item.showCount && enableOrganizationCount"
+            v-bk-tooltips="getToolTip(
+              item,
+              {
+                disabled: !item.full_name
+              }
+            )"
             class="node-user-count"
           >
             {{ '(' + item.count + ')' }}
@@ -73,14 +88,20 @@
               { 'active': selectedNode(item) && !item.disabled }
             ]"
           />
-          <span
+          <div
+            v-bk-tooltips="getToolTip(
+              item,
+              {
+                disabled: !item.full_name
+              }
+            )"
             :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]"
           >
             <IamUserDisplayName
               :user-id="item.username || item.name"
-              :display-value="[nameType(item)]"
+              :tooltip-config="{ placement: 'right-start', disabled: !!item.full_name }"
             />
-          </span>
+          </div>
         </div>
       </div>
     </div>
@@ -177,10 +198,7 @@
           }
           const typeMap = {
             user: () => {
-              if (fullName) {
-                return fullName;
-              }
-              return name ? `${username}(${name})` : username;
+              return fullName || username;
             },
             depart: () => {
               return fullName || name;
@@ -382,6 +400,14 @@
             && data.find(item => item.type === subjectType && item.id === String(subjectId));
           return result;
         }
+      },
+
+      getToolTip (payload, { disabled }) {
+        return {
+          content: this.nameType(payload),
+          placement: 'right-start',
+          disabled
+        };
       }
     }
   };
@@ -519,6 +545,11 @@
       }
       &-checkbox {
         margin-right: 5px;
+      }
+      .tenant-display-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
   }

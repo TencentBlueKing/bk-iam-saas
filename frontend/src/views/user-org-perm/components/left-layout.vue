@@ -63,12 +63,10 @@
                 :tooltip-config="{ disabled: formatShowToolTip(item), placements: 'right-start' }"
                 :placements="'right-start'"
               />
-              <span style="margin-left: 5px;">({{ item.name }})</span>
             </div>
             <div
               v-if="['department'].includes(item.type)"
               :ref="`userOrg_${item.id}`"
-              v-bk-tooltips="{ content: item.name, placements: ['right-start'], disabled: formatShowToolTip(item) }"
               class="single-hide group-name"
             >
               <IamUserDisplayName

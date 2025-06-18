@@ -142,19 +142,6 @@
         this.$nextTick(() => {
           if (this.isEditable && this.$refs.selector) {
             this.$refs.selector.$el.querySelector('input').focus();
-            const disabledValue = [...this.disabledValue].map(item => item.username);
-            const aa = this.$refs.selector.$el.querySelector('.tags-container');
-            const selectedTag = this.$refs.selector.$el.querySelector('.tag-list');
-            console.log(disabledValue, selectedTag, aa.children);
-            if (selectedTag && selectedTag.length) {
-              if (disabledValue.length) {
-                selectedTag.forEach(item => {
-                  if (disabledValue.includes(item.innerText)) {
-                    item.className = 'user-selector-selected user-selector-selected-readonly';
-                  }
-                });
-              }
-            }
           }
         });
       },
@@ -203,11 +190,16 @@
       },
 
       handleChange (payload) {
+        const disabledMembers = this.disabledValue.map(item => item.username);
+        // 从最新展示人员列表获取只读人员，避免重复添加
+        const readonlyMembers = this.displayValue.filter(item => item.readonly).map(v => v.username);
         const editValue = payload.reduce((p, v) => {
-          p.push({
-            username: v,
-            readonly: !!(this.disabledValue.length && this.disabledValue.map(e => e.username).includes(v))
-          });
+          if (!readonlyMembers.includes(v)) {
+            p.push({
+              username: v,
+              readonly: !!(this.disabledValue.length > 0 && disabledMembers.includes(v))
+            });
+          }
           return p;
         }, []);
         this.displayValue = [...this.disabledValue, ...editValue];

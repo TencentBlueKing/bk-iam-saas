@@ -46,18 +46,21 @@
           :class="['node-icon', { 'active': item.isSelected && !item.disabled }]"
         />
         <!-- eslint-disable max-len -->
-        <span
+        <div
+          v-bk-tooltips="getToolTipData(item, { disabled: !item.full_name && (item.showCount && enableOrganizationCount) })"
           :style="nameStyle(item)"
           :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
         >
           <IamUserDisplayName
+            style="width: 100%"
             :user-id="item.username || item.name"
-            :display-value="[nameType(item)]"
+            :tooltip-config="{ placement: 'right-start', disabled: !!item.full_name }"
           />
-        </span>
+        </div>
         <span class="red-dot" v-if="item.isNewMember"></span>
         <span
           v-if="item.showCount && enableOrganizationCount"
+          v-bk-tooltips="getToolTipData(item, { disabled: !item.full_name })"
           class="node-user-count"
         >
           {{ '(' + item.count + `)` }}
@@ -208,11 +211,7 @@
           }
           const typeMap = {
             user: () => {
-              if (fullName) {
-                return fullName;
-              } else {
-                return name ? `${username}(${name})` : username;
-              }
+              return fullName || username || name;
             },
             depart: () => {
               return fullName || name;
@@ -451,6 +450,14 @@
         });
       },
 
+      getToolTipData (payload, { disabled }) {
+        return {
+          content: this.nameType(payload),
+          placements: ['right-start'],
+          disabled
+        };
+      },
+
       handleEmptyRefresh () {
         this.$emit('on-refresh', {});
       }
@@ -563,6 +570,11 @@
           }
         }
       }
+    }
+    .tenant-display-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .arrow-icon {
       color: #c0c4cc;

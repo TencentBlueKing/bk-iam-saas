@@ -156,7 +156,6 @@
                 <div class="manual-input-alert">
                   <bk-alert
                     type="info"
-
                     :title="$t(`m.userGroupDetail['单次最多添加100个成员/组织，批量复制的内容不可随意编辑，如超过上限100个，可通过再次批量粘贴添加人员']`)"
                   />
                 </div>
@@ -228,9 +227,7 @@
                         <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
                         <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
                           <template slot-scope="{ row }">
-                            <span :title="formatUserName(row)">
-                              {{ formatUserName(row) }}
-                            </span>
+                            <IamUserDisplayName :user-id="formatUserName(row)" />
                           </template>
                         </bk-table-column>
                         <template slot="empty">
@@ -294,11 +291,18 @@
               <div class="content">
                 <div class="organization-content" v-if="isDepartSelectedEmpty">
                   <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
-                    <div class="organization-item-left">
+                    <div
+                      v-bk-tooltips="{ content: nameType(item), disabled: !item.full_name }"
+                      class="organization-item-left"
+                    >
                       <Icon type="file-close" class="folder-icon" />
-                      <span :class="['organization-name']" :title="nameType(item)">
-                        {{ item.name }}
-                      </span>
+                      <div class="organization-name">
+                        <IamUserDisplayName
+                          :user-id="item.name"
+                          :display-value="[nameType(item)]"
+                          :tooltip-config="{ disabled: !!item.full_name }"
+                        />
+                      </div>
                       <span class="user-count" v-if="item.showCount && enableOrganizationCount">
                         {{ '(' + item.count + `)` }}
                       </span>
@@ -309,9 +313,16 @@
                 <div class="user-content" v-if="isUserSelectedEmpty">
                   <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
                     <Icon type="personal-user" class="user-icon" />
-                    <span class="user-name" :title="nameType(item)"
-                    >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
-                    </span>
+                    <div
+                      v-bk-tooltips="{ content: nameType(item), disabled: !item.full_name }"
+                      class="user-name"
+                    >
+                      <IamUserDisplayName
+                        :user-id="item.username"
+                        :display-value="[nameType(item)]"
+                        :tooltip-config="{ disabled: !!item.full_name }"
+                      />
+                    </div>
                     <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />
                   </div>
                 </div>
@@ -568,7 +579,7 @@
                 const result = fullName.indexOf(';') > -1 ? fullName.replace(/[,;；]/g, '\n') : fullName;
                 return result;
               } else {
-                return name ? `${username}(${name})` : username;
+                return username || name;
               }
             },
             depart: () => {
@@ -579,8 +590,8 @@
         };
       },
       formatUserName () {
-        return (payload) => {
-          return ['depart', 'department'].includes(payload.type) ? payload.name : `${payload.username}(${payload.name})`;
+        return ({ type, name, username } = {}) => {
+          return ['depart', 'department'].includes(type) ? name : username;
         };
       },
       formatAllSelectedUsers () {
@@ -636,6 +647,9 @@
       window.addEventListener('message', this.fetchReceiveData);
       window.parent.postMessage({ type: 'IAM', code: 'load' }, '*');
     },
+    beforeDestroy () {
+      window.removeEventListener('message', this.fetchReceiveData);
+    },
     methods: {
       getDefaultSelect () {
         const list = [...this.hasSelectedManualDepartments, this.hasSelectedManualUsers];
@@ -667,6 +681,7 @@
       fetchReceiveData (payload) {
         const { data } = payload;
         console.log(data, '接受传递过来的数据');
+        if ([data.key].includes('__VUE_DEVTOOLS_VUE_DETECTED_EVENT__')) return;
         this.fetchResetData(data);
       },
 

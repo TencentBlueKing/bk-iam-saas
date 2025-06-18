@@ -4,10 +4,10 @@
       <bk-user-display-name :user-id="getDisplayTooltip" />
     </div>
     <template v-if="!$slots.customDisplayName">
-      <span class="tenant-display-name" v-bk-tooltips="htmlConfig">
+      <div class="tenant-display-name" v-bk-tooltips="htmlConfig">
         <template v-if="['--'].includes(userId) || !userId">--</template>
         <bk-user-display-name v-else :user-id="userId" />
-      </span>
+      </div>
     </template>
     <!-- 处理自定义样式的多租户人员数组 -->
     <template v-if="$slots.customDisplayName">
@@ -37,7 +37,7 @@
     data () {
       return {
         htmlConfig: {
-          allowHtml: true,
+          allowHTML: true,
           theme: 'dark',
           content: '.container-user-display-name',
           placement: 'top-start',
