@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -17,7 +18,7 @@ from ..constants import APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP, ApplicationType,
 
 
 class ApprovalProcess(BaseModel):
-    id: int
+    id: str
     name: str
 
 
@@ -30,7 +31,7 @@ class ApprovalProcessNode(BaseModel):
     2. 若来源非IAM,则可能是第三方审批系统定义的角色，比如Leader/指定审批人等
     """
 
-    id: int
+    id: str
     name: str
     processor_source: str
     processor_type: str

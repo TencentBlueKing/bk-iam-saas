@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -266,7 +267,7 @@ class ManagementApplicationCancelView(views.APIView):
         application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
 
         # 接入系统自行cancel itsm 单据
-        self.biz.cancel_application(application, application.applicant, need_cancel_ticket=False)
+        self.biz.cancel_application(application, need_cancel_ticket=False)
 
         return Response({})
 

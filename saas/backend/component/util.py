@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
@@ -108,7 +109,7 @@ def do_blueking_http_request(
         code = int(code)
     except Exception:  # pylint: disable=broad-except
         pass
-    if code in ("0", 0, "00"):
+    if code in ("0", 0, "00", 20000):
         return resp_data["data"]
 
     logger.error(

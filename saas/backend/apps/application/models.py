@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -33,6 +34,7 @@ class Application(BaseModel, BaseSystemHiddenModel):
     )
 
     callback_id = models.CharField("回调随机数ID", max_length=32, default="")
+    ticket_id = models.CharField(verbose_name="单据id", max_length=32, default="")
 
     class Meta:
         verbose_name = "权限申请"

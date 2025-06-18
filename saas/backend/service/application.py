@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -11,6 +12,7 @@ specific language governing permissions and limitations under the License.
 
 from typing import Callable, Dict, List, Optional, Tuple
 
+import jwt
 from django.conf import settings
 from rest_framework.request import Request
 
@@ -59,7 +61,7 @@ class ApplicationService:
     def _create(
         self,
         data: TypeUnionApplicationData,
-        create_ticket_func: Callable[[str], str],
+        create_ticket_func: Callable[[str, str], Tuple[str, str]],
         source_system_id: str = "",
         callback_id: str = "",
         callback_url: str = "",
@@ -69,10 +71,13 @@ class ApplicationService:
         if not callback_id or not callback_url:
             callback_id, callback_url = self._generate_callback_info()
 
+        callback_token = self._generate_callback_token(callback_id, applicant=data.applicant_info.username)
+
         # 调用第三方插件进行单据创建
-        ticket_sn = create_ticket_func(callback_url)
+        ticket_sn, ticket_id = create_ticket_func(callback_url, callback_token)
         return Application.objects.create(
             sn=ticket_sn,
+            ticket_id=ticket_id,
             type=data.type,
             applicant=data.applicant_info.username,
             reason=data.reason,
@@ -92,12 +97,13 @@ class ApplicationService:
         """创建或续期自定义权限申请单"""
         return self._create(
             data,
-            lambda callback_url: self.provider.create_for_policy(
+            lambda callback_url, callback_token: self.provider.create_for_policy(
                 data,
                 process,
                 callback_url,
                 approval_title_prefix=approval_title_prefix,
                 approval_content=approval_content,
+                callback_token=callback_token,
             ),
         )
 
@@ -112,13 +118,14 @@ class ApplicationService:
         """创建加入或续期用户组申请单"""
         return self._create(
             data,
-            lambda callback_url: self.provider.create_for_group(
+            lambda callback_url, callback_token: self.provider.create_for_group(
                 data,
                 process,
                 callback_url,
                 tag=source_system_id,
                 approval_title_prefix=approval_title_prefix,
                 approval_content=approval_content,
+                callback_token=callback_token,
             ),
             source_system_id=source_system_id,
         )
@@ -136,7 +143,7 @@ class ApplicationService:
         """创建变更分级管理员申请单"""
         return self._create(
             data,
-            lambda callback_url: self.provider.create_for_grade_manager(
+            lambda callback_url, callback_token: self.provider.create_for_grade_manager(
                 data,
                 process,
                 callback_url,
@@ -153,19 +160,28 @@ class ApplicationService:
         """处理审批回调请求的单据"""
         return self.provider.get_approval_ticket_from_callback_request(request)
 
-    def query_ticket_approval_status(self, sns: List[str]) -> List[ApplicationTicket]:
+    def query_ticket_approval_status(self, ticket_ids: List[str]) -> List[ApplicationTicket]:
         """查询单据审批状态"""
         # 容错处理
-        if len(sns) == 0:
+        if len(ticket_ids) == 0:
             return []
 
         # 使用单据号查询状态
-        return self.provider.list_by_sns(sns)
+        return self.provider.list_by_sns(ticket_ids)
 
-    def cancel_ticket(self, sn: str, operator: str):
+    def cancel_ticket(self, ticket_id: str):
         """撤销单据"""
-        self.provider.cancel_ticket(sn, operator)
+        self.provider.cancel_ticket(ticket_id)
 
-    def get_ticket(self, sn: str) -> ApplicationTicket:
+    def get_ticket(self, ticket_id: str) -> ApplicationTicket:
         """查询单据"""
-        return self.provider.get_ticket(sn)
+        return self.provider.get_ticket(ticket_id)
+
+    def _generate_callback_token(self, callback_id: str, applicant: str) -> str:
+        """生成回调token"""
+        payload = {
+            "callback_id": callback_id,
+            "applicant": applicant,
+            "iss": settings.APP_CODE,  # 签发者
+        }
+        return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")

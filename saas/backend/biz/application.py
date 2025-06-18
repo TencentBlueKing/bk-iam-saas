@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
@@ -16,7 +17,6 @@ from itertools import groupby
 from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.db import transaction
-from django.utils.translation import gettext as _
 from pydantic import BaseModel
 from pydantic.tools import parse_obj_as
 from rest_framework.request import Request
@@ -890,24 +890,24 @@ class ApplicationBiz:
 
     def query_application_approval_status(self, applications: List[Application]) -> ApplicationIDStatusDict:
         """查询申请单审批状态"""
-        sn_id_dict = {a.sn: a.id for a in applications}
-        tickets = self.svc.query_ticket_approval_status(list(sn_id_dict.keys()))
+        ticket_id_id_dict = {a.ticket_id: a.id for a in applications}
+        tickets = self.svc.query_ticket_approval_status(list(ticket_id_id_dict.keys()))
 
-        return ApplicationIDStatusDict(data={sn_id_dict[t.sn]: t.status for t in tickets})
+        return ApplicationIDStatusDict(data={ticket_id_id_dict[t.ticket_id]: t.status for t in tickets})
 
-    def cancel_application(self, application: Application, operator: str, need_cancel_ticket: bool = True):
+    def cancel_application(self, application: Application, need_cancel_ticket: bool = True):
         """撤销申请单"""
-        if application.applicant != operator:
-            raise error_codes.INVALID_ARGS.format(_("只有申请人能取消"))  # 只能取消自己的申请单
+        # if application.applicant != operator:
+        #     raise error_codes.INVALID_ARGS.format(_("只有申请人能取消"))  # 只能取消自己的申请单
 
         if need_cancel_ticket:
             # 撤销单据
-            self.svc.cancel_ticket(application.sn, application.applicant)
+            self.svc.cancel_ticket(application.ticket_id)
 
         # 更新状态
         self.handle_application_result(application, ApplicationStatus.CANCELLED.value)
 
     def get_approval_url(self, application: Application) -> str:
         """查询审批 URL"""
-        ticket = self.svc.get_ticket(application.sn)
+        ticket = self.svc.get_ticket(application.ticket_id)
         return ticket.url

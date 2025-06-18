@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -34,5 +35,5 @@ class ApprovalProcessProvider(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_process_nodes(self, process_id: int) -> List[ApprovalProcessNode]:
+    def get_process_nodes(self, process_id: str) -> List[ApprovalProcessNode]:
         """查询流程的节点"""

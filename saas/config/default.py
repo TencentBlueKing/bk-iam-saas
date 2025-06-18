@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -529,3 +530,12 @@ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED
 
 # 问题反馈地址
 BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
+
+# 在itsm v4中的系统id
+BK_ITSM_V4_SYSTEM_ID = env.str("BK_ITSM_V4_SYSTEM_ID", default="bk_iam")
+# 在itsm v4中的租户id
+BK_APP_TENANT_ID = env.str("BK_APP_TENANT_ID", default="")
+# 在itsm v4中注册系统时的token
+BK_ITSM_V4_SYSTEM_TOKEN = env.str("BK_ITSM_V4_SYSTEM_TOKEN", "bk_iam")
+# itsm v4 api网关地址
+BK_ITSM_V4_APIGW_URL = env.str("BK_ITSM_V4_APIGW_URL", "")

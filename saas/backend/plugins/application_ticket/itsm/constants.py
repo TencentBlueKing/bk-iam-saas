@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -17,7 +18,7 @@ from backend.util.enum import ChoicesEnum
 class TicketStatus(ChoicesEnum, StrEnum):
     RUNNING = auto()
     FINISHED = auto()
-    TERMINATED = auto()
+    TERMINATION = auto()
     SUSPENDED = auto()
     REVOKED = auto()
 
@@ -26,7 +27,7 @@ class TicketStatus(ChoicesEnum, StrEnum):
             (RUNNING, "处理中"),
             (SUSPENDED, "被挂起"),
             (FINISHED, "已结束"),
-            (TERMINATED, "被终止"),  # 处理人撤销
+            (TERMINATION, "被终止"),  # 处理人撤销
             (REVOKED, "被撤销"),  # 申请人撤销
         )
     )
