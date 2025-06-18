@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -14,7 +15,14 @@ from rest_framework import serializers
 from .constants import TicketStatus
 
 
-class ApprovalSLZ(serializers.Serializer):
+class TicketSLZ(serializers.Serializer):
     sn = serializers.CharField(label="申请的单据号")
-    current_status = serializers.ChoiceField(label="单据当前状态", choices=TicketStatus.get_choices())
+    status = serializers.ChoiceField(label="单据当前状态", choices=TicketStatus.get_choices())
     approve_result = serializers.BooleanField(label="审批结果")
+    id = serializers.CharField(label="申请的单据单据id")
+    end_at = serializers.CharField(label="单据结束时间", default=None)
+
+
+class ApprovalSLZ(serializers.Serializer):
+    callback_token = serializers.CharField(label="回调token")
+    ticket = TicketSLZ(label="单据信息")

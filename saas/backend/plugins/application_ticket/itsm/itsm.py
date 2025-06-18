@@ -12,9 +12,11 @@ specific language governing permissions and limitations under the License.
 
 from typing import Dict, List, Optional, Tuple
 
+import jwt
 from django.conf import settings
 from rest_framework.request import Request
 
+from backend.common.error_codes import error_codes
 from backend.component import itsm
 from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource
 from backend.service.models import (
@@ -216,18 +218,48 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
 
         return status
 
-    def get_approval_ticket_from_callback_request(self, request: Request) -> ApplicationTicket:
+    def get_approval_ticket_from_callback_request(self, request: Request) -> Tuple[ApplicationTicket, str]:
         """处理审批回调结果"""
         serializer = ApprovalSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         sn = serializer.validated_data["sn"]
-        ticket_status = serializer.validated_data["current_status"]
+        ticket_id = serializer.validated_data["id"]
+        ticket_status = serializer.validated_data["status"]
         approve_result = serializer.validated_data["approve_result"]
+        end_at = serializer.validated_data["end_at"]
+        callback_token = serializer.validated_data["callback_token"]
+        callback_id = self._decode_callback_token(callback_token)
 
-        status = self._convert_status(ticket_status, approve_result)
+        status = self._convert_status(ticket_status, approve_result, end_at=end_at)
 
-        return ApplicationTicket(sn=sn, status=status)
+        return ApplicationTicket(sn=sn, status=status, ticket_id=ticket_id), callback_id
+
+    def generate_callback_token(self, callback_id: str, applicant: str) -> str:
+        """生成回调Token"""
+        headers = {"alg": "HS256", "typ": "JWT"}
+        payload = {
+            "callback_id": callback_id,
+            "applicant": applicant,
+            "iss": settings.APP_CODE,  # 签发者
+        }
+        return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256", headers=headers)
+
+    def _decode_callback_token(self, callback_token: str, verify_issuer=True) -> str:
+        """获取回调ID"""
+        try:
+            payload = jwt.decode(
+                callback_token,
+                settings.SECRET_KEY,
+                algorithms=["HS256"],
+                options={
+                    "verify_iss": verify_issuer  # 是否验证签发者
+                },
+                issuer=settings.APP_CODE if verify_issuer else None,  # 预期的签发者
+            )
+        except jwt.InvalidIssuerError:
+            raise error_codes.INVALID_ARGS("callback_token 无效")
+        return payload.get("callback_id")
 
     def cancel_ticket(self, ticket_id: str):
         """撤销单据"""

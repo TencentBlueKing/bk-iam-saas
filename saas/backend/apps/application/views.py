@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
@@ -155,8 +156,7 @@ class ApplicationApprovalView(views.APIView):
 
     # Note: 这里会回调第三方处理，所以不定义参数
     def post(self, request, *args, **kwargs):
-        callback_id = kwargs["callback_id"]
-        self.biz.handle_approval_callback_request(callback_id, request)
+        self.biz.handle_approval_callback_request(request)
         return Response({})
 
 

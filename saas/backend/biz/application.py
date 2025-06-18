@@ -875,10 +875,10 @@ class ApplicationBiz:
             application.save(update_fields=["status", "updated_time"])
             raise
 
-    def handle_approval_callback_request(self, callback_id: str, request: Request):
+    def handle_approval_callback_request(self, request: Request):
         """处理审批回调请求"""
         # 获取审批回调处理的单据，包括单据号和单据状态
-        ticket = self.svc.get_approval_ticket_from_callback_request(request)
+        ticket, callback_id = self.svc.get_approval_ticket_from_callback_request(request)
 
         try:
             application = Application.objects.get(sn=ticket.sn, callback_id=callback_id)

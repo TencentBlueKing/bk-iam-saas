@@ -12,7 +12,6 @@ specific language governing permissions and limitations under the License.
 
 from typing import Callable, Dict, List, Optional, Tuple
 
-import jwt
 from django.conf import settings
 from rest_framework.request import Request
 
@@ -156,7 +155,7 @@ class ApplicationService:
             callback_url=callback_url,
         )
 
-    def get_approval_ticket_from_callback_request(self, request: Request) -> ApplicationTicket:
+    def get_approval_ticket_from_callback_request(self, request: Request) -> Tuple[ApplicationTicket, str]:
         """处理审批回调请求的单据"""
         return self.provider.get_approval_ticket_from_callback_request(request)
 
@@ -179,9 +178,4 @@ class ApplicationService:
 
     def _generate_callback_token(self, callback_id: str, applicant: str) -> str:
         """生成回调token"""
-        payload = {
-            "callback_id": callback_id,
-            "applicant": applicant,
-            "iss": settings.APP_CODE,  # 签发者
-        }
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+        return self.provider.generate_callback_token(callback_id, applicant)
