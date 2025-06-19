@@ -77,8 +77,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
 
         return {
             "workflow_key": process.id,
-            # "operator": data.applicant_info.username,
-            "operator": "kz0cq4zdcbttnlj7",
+            "operator": data.applicant_info.username,
             "callback_url": callback_url,
             "system_id": settings.BK_ITSM_V4_SYSTEM_ID,
             "callback_token": callback_token,
