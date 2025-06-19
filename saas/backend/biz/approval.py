@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -28,7 +29,7 @@ class ApprovalProcessWithNodeNamesBean(ApprovalProcess):
 
 class DefaultProcessBean(BaseModel):
     type: str
-    process_id: int
+    process_id: str
     process_name: str
 
 
