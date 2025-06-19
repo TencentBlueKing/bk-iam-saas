@@ -223,16 +223,6 @@
       });
     },
     mounted () {
-      // const self = this;
-      // bus.$on('show-login-modal', (payload) => {
-      //   self.$refs.bkAuth.showLoginModal(payload);
-      // });
-      // bus.$on('close-login-modal', () => {
-      //   self.$refs.bkAuth.hideLoginModal();
-      //   setTimeout(() => {
-      //     window.location.reload();
-      //   }, 0);
-      // });
       bus.$on('updatePoll', (payload) => {
         clearInterval(this.timer);
         if (payload && payload.isStop) {
@@ -520,5 +510,10 @@
         height: 100% !important;
         background-color: #ffffff;
       }
+    }
+    
+    /* table嵌套多层组件， popover应用样式未穿透 */
+    .bk-user-selector-popover {
+      visibility: visible !important;
     }
 </style>

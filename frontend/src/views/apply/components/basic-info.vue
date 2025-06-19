@@ -17,17 +17,14 @@
     </div>
     <div class="item">
       <label class="label">{{ $t(`m.myApply['申请人']`) }}{{$t(`m.common['：']`)}}</label>
-      <div class="content">{{ data.applicant }}</div>
+      <div class="content">
+        <IamUserDisplayName :user-id="data.applicant" :tool-tip-config="{ disabled: true }" />
+      </div>
     </div>
     <div class="item" v-if="!['create_rating_manager', 'update_rating_manager'].includes(data.type)">
       <label class="label">{{ $t(`m.myApply['权限获得者']`) }}{{$t(`m.common['：']`)}}</label>
       <div class="content">
-        {{
-          data.applicants && data.applicants.length > 0
-            ? data.applicants.map((item) => ['user'].includes(item.type) ?
-              `${item.id}(${item.display_name})`
-              : item.display_name).join(';') : ''
-        }}
+        <IamUserDisplayName :user-id="getPermManager" :tool-tip-config="{ disabled: true }" />
       </div>
     </div>
     <div class="item" v-if="isShowExpired">
@@ -84,6 +81,13 @@
        */
       isHasOrg () {
         return this.data.organizations && this.data.organizations.length > 0;
+      },
+      getPermManager () {
+        const { applicants = [] } = this.data;
+        return applicants.length > 0
+          ? applicants.map((item) => ['user'].includes(item.type)
+            ? `${item.id}(${item.display_name})`
+            : item.display_name).join(';') : '';
       }
     },
     methods: {

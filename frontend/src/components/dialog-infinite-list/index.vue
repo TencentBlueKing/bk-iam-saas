@@ -4,7 +4,6 @@
     <div class="render-wrapper" ref="content">
       <div class="organization-content">
         <div
-          v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
           v-for="(item, index) in renderOrganizationList"
           :key="item.id"
           :class="[
@@ -32,11 +31,29 @@
               { 'active': selectedNode(item) && !item.disabled }
             ]"
           />
-          <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
-            {{ item.name }}
-          </span>
+          <div>
+          </div>
+          <div
+            v-bk-tooltips="getToolTip(
+              item,
+              {
+                disabled: !item.full_name && (item.showCount && enableOrganizationCount)
+              }
+            )"
+            :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
+            <IamUserDisplayName
+              :user-id="item.name"
+              :tooltip-config="{ placement: 'right-start', disabled: !!item.full_name }"
+            />
+          </div>
           <span
             v-if="item.showCount && enableOrganizationCount"
+            v-bk-tooltips="getToolTip(
+              item,
+              {
+                disabled: !item.full_name
+              }
+            )"
             class="node-user-count"
           >
             {{ '(' + item.count + ')' }}
@@ -45,7 +62,6 @@
       </div>
       <div class="user-content">
         <div
-          v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
           v-for="(item, index) in renderUserList"
           :key="item.id"
           :class="[
@@ -72,14 +88,20 @@
               { 'active': selectedNode(item) && !item.disabled }
             ]"
           />
-          <span
+          <div
+            v-bk-tooltips="getToolTip(
+              item,
+              {
+                disabled: !item.full_name
+              }
+            )"
             :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]"
           >
-            {{ item.username }}
-            <template v-if="item.name !== ''">
-              ({{ item.name }})
-            </template>
-          </span>
+            <IamUserDisplayName
+              :user-id="item.username || item.name"
+              :tooltip-config="{ placement: 'right-start', disabled: !!item.full_name }"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -176,10 +198,7 @@
           }
           const typeMap = {
             user: () => {
-              if (fullName) {
-                return fullName;
-              }
-              return name ? `${username}(${name})` : username;
+              return fullName || username;
             },
             depart: () => {
               return fullName || name;
@@ -381,6 +400,14 @@
             && data.find(item => item.type === subjectType && item.id === String(subjectId));
           return result;
         }
+      },
+
+      getToolTip (payload, { disabled }) {
+        return {
+          content: this.nameType(payload),
+          placement: 'right-start',
+          disabled
+        };
       }
     }
   };
@@ -518,6 +545,11 @@
       }
       &-checkbox {
         margin-right: 5px;
+      }
+      .tenant-display-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
   }

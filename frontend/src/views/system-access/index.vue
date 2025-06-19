@@ -34,7 +34,7 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.access['创建者']`)">
         <template slot-scope="{ row }">
-          <span :title="row.owner">{{ row.owner }}</span>
+          <IamUserDisplayName :user-id="row.owner" />
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['创建时间']`)" width="240" :sortable="true" sort-by="created_time">

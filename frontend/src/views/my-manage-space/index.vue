@@ -124,7 +124,11 @@
                 />
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater" />
+            <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater">
+              <template slot-scope="child">
+                <IamUserDisplayName :user-id="child.row.updater" />
+              </template>
+            </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time" width="160">
               <template slot-scope="child">
                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
@@ -263,7 +267,11 @@
           />
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater" />
+      <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater">
+        <template slot-scope="{ row }">
+          <IamUserDisplayName :user-id="row.updater" />
+        </template>
+      </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time" width="160">
         <template slot-scope="{ row }">
           <span :title="row.updated_time">{{ row.updated_time }}</span>
@@ -351,15 +359,13 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { getWindowHeight, formatCodeData, navDocCenterPath } from '@/common/util';
+  import { buildURLParams } from '@/common/url';
   import IamEditInput from './components/iam-edit/input';
   import IamEditMemberSelector from './components/iam-edit/member-selector';
   import IamEditTextarea from './components/iam-edit/textarea';
   import IamSearchSelect from '@/components/iam-search-select';
   import IamManagerEditInput from '@/components/iam-edit/input';
-  import { buildURLParams } from '@/common/url';
   import ManageInterviewDialog from '@/components/manage-interview-dialog';
-  // import { bus } from '@/common/bus';
-  // import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 
   export default {
     name: 'myManageSpace',
@@ -545,8 +551,8 @@
             managerRef.isEditable = true;
             if (!payload.members.length) {
               setTimeout(() => {
-                this.$refs[`managerRef${index}`].$refs.selector.focus();
-              }, 10);
+                managerRef.$refs.selector.$el.querySelector('input').focus();
+              }, 0);
             }
           }
         });
@@ -560,7 +566,7 @@
             subManagerRef.isEditable = true;
             if (!payload.members.length) {
               setTimeout(() => {
-                subManagerRef.$refs.selector.focus();
+                subManagerRef.$refs.selector.$el.querySelector('input').focus();
               }, 10);
             }
           }

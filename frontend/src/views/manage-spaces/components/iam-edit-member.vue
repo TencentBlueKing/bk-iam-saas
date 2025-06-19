@@ -1,19 +1,28 @@
 <template>
-  <div class="iam-edit-selector" :style="styles">
+  <div
+    ref="iamEditSelector"
+    class="iam-edit-selector"
+    :style="styles"
+  >
     <template v-if="!isEditable">
       <div class="edit-wrapper">
-        <div class="edit-content">
-          <slot>
-            <span
-              v-for="(item, index) in displayValue"
-              :key="index"
-              class="member-item"
-              :class="item.readonly ? 'member-readonly' : ''">
-              {{ item.username }}
-              <Icon v-if="!item.readonly && isEditMode" type="close-small"
-                @click.stop="handleDelete(index)" />
-            </span>
-          </slot>
+        <div class="single-hide edit-content">
+          <IamUserDisplayName :display-value="displayValue">
+            <div class="single-hide" slot="customDisplayName">
+              <div
+                v-for="(item, i) in displayValue"
+                :key="i"
+                :class="['member-item', { 'member-readonly': item.readonly }]"
+              >
+                <bk-user-display-name :user-id="item.username" />
+                <Icon
+                  v-if="!item.readonly && isEditMode"
+                  type="close-small"
+                  @click.stop="handleDelete(i)"
+                />
+              </div>
+            </div>
+          </IamUserDisplayName>
         </div>
         <div class="edit-action-box" v-if="isEditMode">
           <Icon
@@ -29,18 +38,13 @@
       </div>
     </template>
     <template v-else>
-      <bk-user-selector
+      <IamUserSelector
         v-model="editValue"
-        :ext-cls="[
-          'user-selector'
-        ]"
-        ref="input"
-        :api="userApi"
-        :placeholder="$t(`m.verify['请输入']`)"
-        :empty-text="$t(`m.common['无匹配人员']`)"
+        ref="selector"
+        class="user-selector"
         @blur="handleRtxBlur"
-        @change="handleChange">
-      </bk-user-selector>
+        @change="handleChange"
+      />
     </template>
     <bk-dialog
       ext-cls="confirm-space-dialog"
@@ -59,14 +63,10 @@
     </bk-dialog>
   </div>
 </template>
-<script>
-  import BkUserSelector from '@blueking/user-selector';
 
+<script>
   export default {
     name: 'iam-edit-selector',
-    components: {
-      BkUserSelector
-    },
     props: {
       field: {
         type: String,
@@ -102,7 +102,6 @@
         isEditable: false,
         isLoading: false,
         isShowDialog: false,
-        userApi: window.BK_USER_API,
         newPayload: '',
         disabledValue: [],
         editValue: [],
@@ -129,50 +128,20 @@
         immediate: true
       }
     },
-    mounted () {
-      document.body.addEventListener('click', this.hideEdit);
-      this.$once('hook:beforeDestroy', () => {
-        document.body.removeEventListener('click', this.hideEdit);
-      });
-    },
-    async created () {
-      await this.fetchUser();
-    },
     methods: {
-      async fetchUser () {
-        try {
-          this.userInfo = await this.$store.dispatch('userInfo');
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        }
-      },
-
       // 设置默认值
       handleDefaultData (payload) {
         this.disabledValue = [...payload].filter(e => e.readonly);
         this.displayValue = [...payload];
         this.editValue = [...payload].filter(e => !e.readonly).map(e => e.username);
-        // this.editValue = [...payload].map(e => e.username);
       },
 
       handleEdit () {
         document.body.click();
         this.isEditable = true;
         this.$nextTick(() => {
-          if (this.isEditable) {
-            this.$refs.input && this.$refs.input.focus();
-            const disabledValue = [...this.disabledValue].map(item => item.username);
-            const selectedTag = this.$refs.input.$refs.selected;
-            if (selectedTag && selectedTag.length) {
-              if (disabledValue.length) {
-                selectedTag.forEach(item => {
-                  if (disabledValue.includes(item.innerText)) {
-                    item.className = 'user-selector-selected user-selector-selected-readonly';
-                  }
-                });
-              }
-            }
+          if (this.isEditable && this.$refs.selector) {
+            this.$refs.selector.$el.querySelector('input').focus();
           }
         });
       },
@@ -197,31 +166,15 @@
         });
       },
 
-      handleEnter (value, event) {
+      handleEnter (event) {
         if (!this.isEditable) return;
         if (event.key === 'Enter' && event.keyCode === 13) {
           this.triggerChange();
         }
       },
 
-      hideEdit (event) {
-        // this.isEditable = false;
-        if (this.displayValue.length < 1) {
-          return;
-        }
-        if (event.path && event.path.length > 0) {
-          for (let i = 0; i < event.path.length; i++) {
-            const target = event.path[i];
-            if (target.className && target.className === 'iam-edit-selector') {
-              return;
-            }
-          }
-        }
-      },
-
       triggerChange () {
         this.isEditable = false;
-        console.log(this.displayValue);
         if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
           this.isLoading = true;
           this.remoteHandler({
@@ -236,12 +189,17 @@
         }
       },
 
-      handleChange () {
-        const editValue = this.editValue.reduce((p, v) => {
-          p.push({
-            username: v,
-            readonly: !!(this.disabledValue.length && this.disabledValue.map(e => e.username).includes(v))
-          });
+      handleChange (payload) {
+        const disabledMembers = this.disabledValue.map(item => item.username);
+        // 从最新展示人员列表获取只读人员，避免重复添加
+        const readonlyMembers = this.displayValue.filter(item => item.readonly).map(v => v.username);
+        const editValue = payload.reduce((p, v) => {
+          if (!readonlyMembers.includes(v)) {
+            p.push({
+              username: v,
+              readonly: !!(this.disabledValue.length > 0 && disabledMembers.includes(v))
+            });
+          }
           return p;
         }, []);
         this.displayValue = [...this.disabledValue, ...editValue];
@@ -300,9 +258,6 @@
         .edit-content {
             flex: 0 0 auto;
             max-width: calc(100vh - 25px);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             .member-item {
                 display: inline-block;
                 padding: 0 10px;
@@ -326,6 +281,9 @@
             .member-readonly{
                 background: #FFF1DB;
                 color: #FE9C00;
+            }
+            &-tenant {
+              max-width: 100%;
             }
         }
         .edit-action-box {

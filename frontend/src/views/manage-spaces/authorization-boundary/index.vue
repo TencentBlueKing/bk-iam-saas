@@ -21,69 +21,6 @@
           :mode="['rating_manager'].includes(user.role.type) ? 'edit' : 'detail'"
           @on-change="handleBasicInfoChange" />
       </render-horizontal-block>
-
-      <!-- <div>
-                <render-perm
-                    mode="action"
-                    :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
-                    :expanded.sync="curExpanded"
-                    :perm-length="policyList.length"
-                    :user-length="users.length"
-                    :depart-length="departments.length"
-                    ext-cls="iam-grade-detail-panel-cls">
-                    <render-detail-table :actions="policyList" />
-                    <div class="members-boundary">
-                        <template v-if="isAll">
-                            <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
-                        </template>
-                        <template v-else>
-                            <p class="member-info">
-                                <template v-if="users.length > 0">
-                                    {{ $t(`m.common['共']`) }} <span class="count">
-                                        {{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
-                                </template>
-                                <template v-if="departments.length > 0">
-                                    <template v-if="users.length > 0">，</template>
-                                    <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
-                                </template>
-                            </p>
-                            <render-member-item :data="users" v-if="isHasUser" mode="view" />
-                            <render-member-item
-                            :data="departments"
-                             type="department"
-                             mode="view"
-                             v-if="isHasDepartment" />
-                        </template>
-                    </div>
-                </render-perm>
-
-                <render-perm
-                    mode="member"
-                    :title="$t(`m.levelSpace['最大可授权人员边界']`)"
-                    :user-length="users.length"
-                    :depart-length="departments.length"
-                >
-                    <template v-if="isAll">
-                        <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
-                    </template>
-                    <template v-else>
-                        <p class="member-info">
-                            <template v-if="users.length > 0">
-                                {{ $t(`m.common['共']`) }}
-                                <span class="count">{{ users.length }}</span>
-                                {{ $t(`m.common['个用户']`) }}
-                            </template>
-                            <template v-if="departments.length > 0">
-                                <template v-if="users.length > 0">，</template>
-                                <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
-                            </template>
-                        </p>
-                        <render-member-item :data="users" v-if="isHasUser" mode="view" />
-                        <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
-                    </template>
-                </render-perm>
-            </div> -->
-
       <RenderPermBoundary
         :title="$t(`m.nav['授权边界']`)"
         :modules="['resourcePerm', 'membersPerm']"
@@ -104,9 +41,6 @@
           slot="membersPerm"
           class="members-boundary-detail"
         >
-          <!-- <template v-if="isAll">
-                        <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
-                    </template> -->
           <template>
             <render-member-item
               :data="users"

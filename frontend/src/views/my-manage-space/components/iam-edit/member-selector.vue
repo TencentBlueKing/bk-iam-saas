@@ -1,18 +1,25 @@
 <template>
-  <div class="iam-edit-selector" :style="styles">
+  <div
+    ref="iamEditSelector"
+    class="iam-edit-selector"
+    :style="styles"
+  >
     <template v-if="!isEditable">
       <div class="edit-wrapper">
         <template v-if="displayValue.length">
-          <div class="edit-content" v-bk-tooltips="{ content: displayValue.map(item => item.username) }">
+          <div class="edit-content">
             <slot>
-              <span
-                v-for="(item, i) in displayValue"
-                :key="i"
-                class="member-item"
-                :class="item.readonly ? 'member-readonly' : ''"
-              >
-                {{ item.username }}
-              </span>
+              <IamUserDisplayName :display-value="displayValue">
+                <div slot="customDisplayName" class="single-hide edit-content-tenant">
+                  <span
+                    v-for="(item, i) in displayValue"
+                    :key="i"
+                    :class="['member-item', { 'member-readonly': item.readonly }]"
+                  >
+                    <bk-user-display-name :user-id="item.username" />
+                  </span>
+                </div>
+              </IamUserDisplayName>
             </slot>
           </div>
         </template>
@@ -33,27 +40,23 @@
       </div>
     </template>
     <template v-else>
-      <bk-user-selector
+      <BkUserSelector
         v-model="editValue"
-        :class="['edit-selector', isErrorClass]"
         ref="selector"
-        :api="userApi"
-        :placeholder="$t(`m.verify['请输入']`)"
-        :empty-text="$t(`m.common['无匹配人员']`)"
-        @keydown="handleEnter(...arguments)"
-        @blur="handleRtxBlur"
-        @change="handleChange">
-      </bk-user-selector>
+        :api-base-url="apiBaseUrl"
+        :tenant-id="tenantId"
+        :multiple="multiple"
+        :required="!isEditAllowEmpty"
+        @change="handleChange"
+      />
     </template>
   </div>
 </template>
+
 <script>
-  import BkUserSelector from '@blueking/user-selector';
+  import { mapGetters } from 'vuex';
   export default {
     name: 'iam-edit-selector',
-    components: {
-      BkUserSelector
-    },
     props: {
       field: {
         type: String,
@@ -95,24 +98,32 @@
       isEditAllowEmpty: {
         type: Boolean,
         default: true
+      },
+      // 是否多选
+      multiple: {
+        type: Boolean,
+        default: true
       }
     },
     data () {
       return {
-        displayValue: [],
         isEditable: false,
         isLoading: false,
-        userApi: window.BK_USER_API,
-        newPayload: '',
+        apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
+        displayValue: [],
         disabledValue: [],
         editValue: []
       };
     },
     computed: {
+      ...mapGetters(['user']),
       styles () {
         return {
           width: this.width
         };
+      },
+      tenantId () {
+        return this.user.tenant_id;
       },
       isEditMode () {
         return this.mode === 'edit';
@@ -127,41 +138,21 @@
           this.handleDefaultData(newVal);
         },
         immediate: true
-      },
-      editValue: {
-        handler () {
-          this.handleReadOnly();
-        },
-        immediate: true
       }
     },
     mounted () {
       document.body.addEventListener('click', this.hideEdit);
+      document.body.addEventListener('keydown', this.handleEnter);
       this.$once('hook:beforeDestroy', () => {
         document.body.removeEventListener('click', this.hideEdit);
+        document.body.removeEventListener('keydown', this.handleEnter);
       });
     },
     methods: {
-      // 设置只读
-      handleReadOnly () {
-        this.$nextTick(() => {
-          if (this.isEditable && this.$refs.selector) {
-            const selectedTag = this.$refs.selector.$refs.selected;
-            if (selectedTag && selectedTag.length === 1) {
-              selectedTag.forEach(item => {
-                item.className = this.displayValue.length === 1
-                  && this.displayValue.map(item => item.username).includes(item.innerText)
-                  ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
-              });
-            }
-          }
-        });
-      },
-
       // 设置默认值
       handleDefaultData (payload) {
-        this.disabledValue = [...payload].filter(e => e.readonly);
         this.displayValue = [...payload];
+        this.disabledValue = [...payload].filter(e => e.readonly);
         this.editValue = [...payload].filter(e => !e.readonly).map(e => e.username);
       },
 
@@ -169,9 +160,8 @@
         document.body.click();
         this.isEditable = true;
         this.$nextTick(() => {
-          this.$refs.selector && this.$refs.selector.focus();
+          this.$refs.selector && this.$refs.selector.$el.querySelector('input').focus();
           this.handleDefaultData(this.value);
-          this.handleReadOnly();
         });
       },
 
@@ -190,23 +180,13 @@
       },
 
       hideEdit (event) {
-        // this.isEditable = false;
-        if (this.displayValue.length < 1) {
+        if (this.$refs.iamEditSelector.contains(event.target)) {
           return;
         }
-        if (event.path && event.path.length > 0) {
-          for (let i = 0; i < event.path.length; i++) {
-            const target = event.path[i];
-            if (target.className && target.className === 'iam-edit-selector') {
-              return;
-            }
-          }
-          // this.triggerChange();
-        }
+        this.handleRtxBlur();
       },
             
       triggerChange () {
-        console.log(this.isAllowTrigger, this.displayValue, '显示内容');
         // 单独处理初始化为空但编辑不能为空数据
         if (!this.displayValue.length && !this.isEditAllowEmpty) {
           this.displayValue = [...this.value];
@@ -308,9 +288,6 @@
         .edit-content {
             flex: 0 0 auto;
             max-width: calc(100% - 25px);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             .member-item {
                 display: inline-block;
                 padding: 0 10px;
@@ -336,6 +313,9 @@
             .member-readonly{
                 background: #FFF1DB;
                 color: #FE9C00;
+            }
+            &-tenant {
+              max-width: 100%;
             }
         }
         .edit-action-box {
@@ -363,7 +343,7 @@
         }
 
         /deep/  .is-member-empty-cls {
-         .user-selector-container {
+         .tags-container {
             border-color: #ff4d4d;
         }
     }

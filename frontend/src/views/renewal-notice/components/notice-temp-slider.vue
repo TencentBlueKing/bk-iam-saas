@@ -103,13 +103,12 @@
             <div slot="content">
               <div class="popover-content">
                 <div class="flex-between popover-content-tip">
-                  <bk-user-selector
+      
+                  <IamUserSelector
                     ref="userSelector"
                     style="width: 100%;"
                     v-model="userTempMembers"
-                    :api="userApi"
                     :placeholder="$t(`m.renewalNotice['请输入接收测试通知的用户（请确保账号正确）']`)"
-                    :empty-text="$t(`m.common['无匹配人员']`)"
                     @change="handleUserChange"
                   />
                   <bk-button
@@ -269,11 +268,10 @@
               <div class="popover-content">
                 <div class="popover-content-tip">
                   <div class="flex-between">
-                    <bk-user-selector
+                    <IamUserSelector
                       ref="managerSelector"
                       v-model="managerTempMembers"
                       style="width: 100%;"
-                      :api="userApi"
                       :placeholder="$t(`m.renewalNotice['请输入接收测试通知的用户（请确保账号正确）']`)"
                       :empty-text="$t(`m.common['无匹配人员']`)"
                       @change="handleManagerChange"
@@ -343,11 +341,7 @@
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
   import { getDataBetweenBraces, getCopyValue } from '@/common/util';
-  import BkUserSelector from '@blueking/user-selector';
   export default {
-    components: {
-      BkUserSelector
-    },
     props: {
       active: {
         type: String
@@ -365,7 +359,6 @@
         isShowUserTempError: false,
         isShowManagerTitleError: false,
         isShowManagerTempError: false,
-        userApi: window.BK_USER_API,
         titlePlaceHolder: this.$t(`m.renewalNotice['请输入邮件主题']`),
         noticeTempData: {
           user_title: '',
@@ -486,7 +479,7 @@
               const userTempRef = this.$refs.userTempTestConfirm;
               if (userTempRef && userTempRef.$refs) {
                 userTempRef.$refs.popover.showHandler();
-                this.$refs.userSelector && this.$refs.userSelector.focus();
+                this.$refs.userSelector && this.$refs.userSelector.handleSetAutoFocus();
               }
             });
           },
@@ -506,7 +499,7 @@
             const managerTempTestConfirm = this.$refs.managerTempTestConfirm;
             if (managerTempTestConfirm && managerTempTestConfirm.$refs) {
               managerTempTestConfirm.$refs.popover.showHandler();
-              this.$refs.managerSelector && this.$refs.managerSelector.focus();
+              this.$refs.managerSelector && this.$refs.managerSelector.handleSetAutoFocus();
             }
           },
           reset: () => {},

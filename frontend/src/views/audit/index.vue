@@ -171,14 +171,12 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.audit['对象及类型']`)">
         <template slot-scope="{ row }">
-          <span :title="`${objectMap[row.object_type] || row.object_type}${$t(`m.common['：']`)}${row.object_name}`">
-            {{ objectMap[row.object_type] || row.object_type }}{{ $t(`m.common['：']`) }}{{ row.object_name }}
-          </span>
+          <IamUserDisplayName :user-id="`${objectMap[row.object_type] || row.object_type }${$t(`m.common['：']`)}${row.object_name}`" />
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.audit['操作者']`)">
         <template slot-scope="{ row }">
-          <span :title="row.username">{{ row.username }}</span>
+          <IamUserDisplayName :user-id="row.username" />
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.audit['操作来源']`)">

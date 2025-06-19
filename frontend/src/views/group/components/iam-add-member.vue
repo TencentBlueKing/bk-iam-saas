@@ -29,7 +29,6 @@
                 })
               "
             >
-              <!-- {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }} -->
               {{
                 $t(`m.common['设置新用户加入用户组的有效期']`, {
                   value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}`
@@ -232,9 +231,7 @@
                         <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
                         <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
                           <template slot-scope="{ row }">
-                            <span :title="formatUserName(row)">
-                              {{ formatUserName(row) }}
-                            </span>
+                            <IamUserDisplayName :user-id="formatUserName(row)" />
                           </template>
                         </bk-table-column>
                         <template slot="empty">
@@ -317,19 +314,22 @@
                   </template>
                 </div>
               </div>
+              <!-- fullName是完整组织架构链路，不需要调接口 -->
               <div class="content">
                 <div class="organization-content" v-if="isDepartSelectedEmpty">
                   <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
-                    <div class="organization-item-left">
+                    <div
+                      v-bk-tooltips="{ content: nameType(item), disabled: !item.full_name }"
+                      class="organization-item-left"
+                    >
                       <Icon type="file-close" class="folder-icon" />
-                      <span
-                        :class="[
-                          'organization-name'
-                        ]"
-                        :title="nameType(item)"
-                      >
-                        {{ item.name }}
-                      </span>
+                      <div class="organization-name">
+                        <IamUserDisplayName
+                          :user-id="item.name"
+                          :display-value="[nameType(item)]"
+                          :tooltip-config="{ disabled: !!item.full_name }"
+                        />
+                      </div>
                       <span
                         v-if="item.showCount && enableOrganizationCount"
                         class="user-count"
@@ -349,11 +349,18 @@
                     v-for="item in hasSelectedUsers"
                     :key="item.id"
                   >
-                    <div class="user-item-left">
+                    <div
+                      v-bk-tooltips="{ content: nameType(item), disabled: !item.full_name }"
+                      class="user-item-left"
+                    >
                       <Icon type="personal-user" class="user-icon" />
-                      <span class="user-name" :title="nameType(item)"
-                      >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
-                      </span>
+                      <div class="user-name">
+                        <IamUserDisplayName
+                          :user-id="item.username"
+                          :display-value="[nameType(item)]"
+                          :tooltip-config="{ disabled: !!item.full_name }"
+                        />
+                      </div>
                     </div>
                     <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />
                   </div>
@@ -722,11 +729,11 @@
                 const result = fullName.indexOf(';') > -1 ? fullName.replace(/[，,;；]/g, '\n') : fullName;
                 return result;
               } else {
-                return name ? `${username}(${name})` : username;
+                return username || name;
               }
             },
             depart: () => {
-              return fullName || payload.fullName || name;
+              return fullName || name;
             },
             template: () => {
               return name;
@@ -736,8 +743,9 @@
         };
       },
       formatUserName () {
-        return (payload) => {
-          return ['depart', 'department'].includes(payload.type) ? payload.name : `${payload.username}(${payload.name})`;
+        return ({ type, name, username } = {}) => {
+          console.log(type, name, username);
+          return ['depart', 'department'].includes(type) ? name : username;
         };
       },
       formatAllSelectedUsers () {
@@ -2514,6 +2522,11 @@
   }
   .bk-dialog-body {
     padding: 0 !important;
+  }
+  .tenant-display-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

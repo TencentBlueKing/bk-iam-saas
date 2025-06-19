@@ -20,17 +20,6 @@
         <bk-table-column :label="$t(`m.set['成员列表']`)" width="600">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit || row.members.length">
-              <!-- <bk-user-selector
-                                :value="formatMemberName(row.members)"
-                                :ref="`sysRef${$index}`"
-                                :api="userApi"
-                                :class="row.isError ? 'is-member-empty-cls' : ''"
-                                :placeholder="$t(`m.verify['请输入']`)"
-                                style="width: 100%;"
-                                data-test-id="set_userSelector_editSystemManager"
-                                @blur="handleSystemRtxBlur(row)"
-                                @change="handleSystemRtxChange(...arguments, row)"
-                                @keydown="handleSystemRtxEnter(...arguments, row)" /> -->
               <iam-edit-member-selector
                 :ref="`sysRef${$index}`"
                 field="members"
@@ -43,11 +32,6 @@
                 @on-empty-change="handleEmptyChange" />
             </template>
             <template v-else>
-              <!-- <div
-                                :class="['user-wrapper', { 'is-hover': row.canEdit }]"
-                                @click.stop="handleOpenSysEdit(row, $index)">
-                                {{ formatMemberFilter(row.members) }}
-                            </div> -->
               <iam-edit-input
                 field="members"
                 style="width: 100%;"
@@ -84,7 +68,6 @@
 </template>
 <script>
   import _ from 'lodash';
-  // import BkUserSelector from '@blueking/user-selector';
   import IamEditInput from '@/components/iam-edit/input';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   import RenderItem from '../common/render-item';
@@ -93,7 +76,6 @@
   export default {
     name: '',
     components: {
-      // BkUserSelector,
       IamEditInput,
       IamEditMemberSelector,
       RenderItem
@@ -102,7 +84,6 @@
       return {
         subTitle: this.$t(`m.set['系统管理员提示']`),
         systemUserList: [],
-        userApi: window.BK_USER_API,
         emptyData: {
           type: '',
           text: '',
@@ -165,11 +146,14 @@
         }
         this.$set(this.systemUserList[index], 'isEdit', true);
         this.$nextTick(() => {
-          this.$refs[`sysRef${index}`].isEditable = true;
-          if (!payload.members.length) {
-            setTimeout(() => {
-              this.$refs[`sysRef${index}`].$refs.selector.focus();
-            }, 10);
+          const sysRef = this.$refs[`sysRef${index}`];
+          if (sysRef) {
+            sysRef.isEditable = true;
+            if (!payload.members.length) {
+              setTimeout(() => {
+                sysRef.$refs.selector.$el.querySelector('input').focus();
+              }, 10);
+            }
           }
         });
       },
@@ -294,7 +278,7 @@
                 }
             }
             .is-member-empty-cls {
-                .user-selector-container {
+                .tags-container {
                     border-color: #ff4d4d;
                 }
             }

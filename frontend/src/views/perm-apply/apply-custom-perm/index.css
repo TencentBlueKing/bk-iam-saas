@@ -393,7 +393,7 @@
 }
 
 .is-member-empty-cls {
-    .user-selector-container {
+    .tags-container {
         border-color: #ff4d4d;
     }
 }
