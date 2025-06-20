@@ -222,11 +222,11 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         serializer = ApprovalSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        sn = serializer.validated_data["sn"]
-        ticket_id = serializer.validated_data["id"]
-        ticket_status = serializer.validated_data["status"]
-        approve_result = serializer.validated_data["approve_result"]
-        end_at = serializer.validated_data["end_at"]
+        sn = serializer.validated_data["ticket"]["sn"]
+        ticket_id = serializer.validated_data["ticket"]["id"]
+        ticket_status = serializer.validated_data["ticket"]["status"]
+        approve_result = serializer.validated_data["ticket"]["approve_result"]
+        end_at = serializer.validated_data["ticket"]["end_at"]
         callback_token = serializer.validated_data["callback_token"]
         callback_id = self._decode_callback_token(callback_token)
 

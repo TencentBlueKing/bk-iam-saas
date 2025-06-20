@@ -244,8 +244,7 @@ class ProcessorNodeType(LowerStrEnum):
     # TODO: 需要改成和新的审批流程中一一对应
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
-    # GRADE_MANAGER: enum = "rating_manager"
-    GRADE_MANAGER: enum = "greade_manager"
+    GRADE_MANAGER: enum = "rating_manager"
     INSTANCE_APPROVER = auto()
     INSTANCE_APPROVER_MERGE = auto()
     CREATOR = auto()  # 提单人上级审批

@@ -881,7 +881,8 @@ class ApplicationBiz:
         ticket, callback_id = self.svc.get_approval_ticket_from_callback_request(request)
 
         try:
-            application = Application.objects.get(sn=ticket.sn, callback_id=callback_id)
+            # 单据sn号提单时返回和回调返回sn不一致，使用ticket_id进行查询
+            application = Application.objects.get(ticket_id=ticket.ticket_id, callback_id=callback_id)
         except Application.DoesNotExist:
             raise error_codes.NOT_FOUND_ERROR
 
