@@ -73,7 +73,7 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         """创建 - 创建或更新分级管理员"""
 
     @abc.abstractmethod
-    def get_approval_ticket_from_callback_request(self, request: Request) -> Tuple[ApplicationTicket, str]:
+    def get_approval_ticket_from_callback_request(self, request: Request) -> ApplicationTicket:
         """处理审批回调结果"""
 
     @abc.abstractmethod
@@ -81,5 +81,5 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         """撤销单据"""
 
     @abc.abstractmethod
-    def generate_callback_token(self, callback_id: str, applicant: str) -> str:
+    def generate_callback_token(self) -> str:
         """生成回调token"""

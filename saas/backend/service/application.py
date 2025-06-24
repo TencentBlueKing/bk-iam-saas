@@ -69,7 +69,7 @@ class ApplicationService:
         if not callback_id or not callback_url:
             callback_id, callback_url = self._generate_callback_info()
 
-        callback_token = self._generate_callback_token(callback_id, applicant=data.applicant_info.username)
+        callback_token = self._generate_callback_token()
 
         # 调用第三方插件进行单据创建
         ticket_sn, ticket_id = create_ticket_func(callback_url, callback_token)
@@ -154,7 +154,7 @@ class ApplicationService:
             callback_url=callback_url,
         )
 
-    def get_approval_ticket_from_callback_request(self, request: Request) -> Tuple[ApplicationTicket, str]:
+    def get_approval_ticket_from_callback_request(self, request: Request) -> ApplicationTicket:
         """处理审批回调请求的单据"""
         return self.provider.get_approval_ticket_from_callback_request(request)
 
@@ -175,6 +175,6 @@ class ApplicationService:
         """查询单据"""
         return self.provider.get_ticket(ticket_id)
 
-    def _generate_callback_token(self, callback_id: str, applicant: str) -> str:
+    def _generate_callback_token(self) -> str:
         """生成回调token"""
-        return self.provider.generate_callback_token(callback_id, applicant)
+        return self.provider.generate_callback_token()

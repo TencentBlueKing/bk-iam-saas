@@ -48,15 +48,7 @@ session.mount("http://", adapter)
 
 
 def _http_request(
-    method,
-    url,
-    headers=None,
-    data=None,
-    timeout=None,
-    verify=False,
-    cert=None,
-    cookies=None,
-    request_session=None
+    method, url, headers=None, data=None, timeout=None, verify=False, cert=None, cookies=None, request_session=None
 ):
     trace_func = partial(http_trace, method=method, url=url, data=data)
 

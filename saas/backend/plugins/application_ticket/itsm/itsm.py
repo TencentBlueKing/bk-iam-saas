@@ -10,6 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 
 import json
+import random
+import string
 from copy import deepcopy
 from io import BytesIO
 from typing import Dict, List, Optional, Tuple
@@ -219,7 +221,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
 
         return status
 
-    def get_approval_ticket_from_callback_request(self, request: Request) -> Tuple[ApplicationTicket, str]:
+    def get_approval_ticket_from_callback_request(self, request: Request) -> ApplicationTicket:
         """处理审批回调结果"""
         serializer = ApprovalSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -229,22 +231,26 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         ticket_status = serializer.validated_data["ticket"]["status"]
         approve_result = serializer.validated_data["ticket"]["approve_result"]
         end_at = serializer.validated_data["ticket"]["end_at"]
-        callback_token = serializer.validated_data["callback_token"]
-        callback_id = self._decode_callback_token(callback_token)
 
         status = self._convert_status(ticket_status, approve_result, end_at=end_at)
 
-        return ApplicationTicket(sn=sn, status=status, ticket_id=ticket_id), callback_id
+        return ApplicationTicket(sn=sn, status=status, ticket_id=ticket_id)
 
-    def generate_callback_token(self, callback_id: str, applicant: str) -> str:
+    def __generate_random_string(
+        self, length: int = 10, include_digits: bool = True, include_special_chars: bool = False
+    ) -> str:
+        """生成随机字符串"""
+        characters = string.ascii_letters  # 包含所有字母
+        if include_digits:
+            characters += string.digits  # 加入数字
+        if include_special_chars:
+            characters += string.punctuation  # 加入特殊字符
+
+        return "".join(random.choice(characters) for _ in range(length))
+
+    def generate_callback_token(self) -> str:
         """生成回调Token"""
-        headers = {"alg": "HS256", "typ": "JWT"}
-        payload = {
-            "callback_id": callback_id,
-            "applicant": applicant,
-            "iss": settings.APP_CODE,  # 签发者
-        }
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256", headers=headers)
+        return self.__generate_random_string()
 
     def _decode_callback_token(self, callback_token: str, verify_issuer=True) -> str:
         """获取回调ID"""
