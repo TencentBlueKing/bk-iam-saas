@@ -16,11 +16,9 @@ from copy import deepcopy
 from io import BytesIO
 from typing import Dict, List, Optional, Tuple
 
-import jwt
 from django.conf import settings
 from rest_framework.request import Request
 
-from backend.common.error_codes import error_codes
 from backend.component import itsm
 from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource
 from backend.service.models import (
@@ -251,22 +249,6 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     def generate_callback_token(self) -> str:
         """生成回调Token"""
         return self.__generate_random_string()
-
-    def _decode_callback_token(self, callback_token: str, verify_issuer=True) -> str:
-        """获取回调ID"""
-        try:
-            payload = jwt.decode(
-                callback_token,
-                settings.SECRET_KEY,
-                algorithms=["HS256"],
-                options={
-                    "verify_iss": verify_issuer  # 是否验证签发者
-                },
-                issuer=settings.APP_CODE if verify_issuer else None,  # 预期的签发者
-            )
-        except jwt.InvalidIssuerError:
-            raise error_codes.INVALID_ARGS("callback_token 无效")
-        return payload.get("callback_id")
 
     def cancel_ticket(self, ticket_id: str):
         """撤销单据"""
