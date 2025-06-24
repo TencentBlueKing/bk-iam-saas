@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
@@ -82,7 +81,13 @@ def do_blueking_http_request(
     timeout: int | None = None,
     request_session=None,
 ):
-    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout, "request_session": request_session}
+    kwargs = {
+        "url": url,
+        "data": data,
+        "headers": headers,
+        "timeout": timeout,
+        "request_session": request_session,
+    }
 
     ok, resp_data = http_func(**kwargs)
     if not ok:

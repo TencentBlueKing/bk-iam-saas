@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
@@ -69,3 +68,18 @@ def withdraw_ticket(ticket_id: str):
     url_path = "/api/v1/tickets/revoked/"
     data = {"system_id": settings.BK_ITSM_V4_SYSTEM_ID, "ticket_id": ticket_id}
     return _call_apigw_api(http_post, url_path, data=data)
+
+
+def create_system(name: str, code: str, token: str, desc: str):
+    """创建系统"""
+    url_path = "/api/v1/system/create/"
+    data = {"name": name, "code": code, "token": token, "desc": desc}
+    return _call_apigw_api(http_post, url_path, data=data)
+
+
+# def migrate_system(file_path: str):
+#     """迁移系统"""
+#     url_path = "/api/v1/system/migrate/"
+#     with open(file_path, "rb") as file:
+#         files = {"file": file}
+#     return _call_apigw_api(http_post, url_path)
