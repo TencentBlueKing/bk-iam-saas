@@ -9,6 +9,9 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+import json
+from copy import deepcopy
+from io import BytesIO
 from typing import Dict, List, Optional, Tuple
 
 import jwt
@@ -262,3 +265,34 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     def cancel_ticket(self, ticket_id: str):
         """撤销单据"""
         itsm.withdraw_ticket(ticket_id)
+
+    def create_system(self, name: str, code: str, token: str, desc: str):
+        """创建系统"""
+        itsm.create_system(name=name, code=code, token=token, desc=desc)
+
+    def create_workflow(self, workflow_template_path: str, system_name, system_code, tenant_id="default"):
+        """创建工作流程"""
+        with open(workflow_template_path, "r") as f:
+            workflow_template = json.load(f)
+        result = deepcopy(workflow_template)
+        result["system"]["name"] = system_name
+        result["system"]["code"] = system_code
+        for key in workflow_template["key_mapping"]["form_models"]:
+            result["key_mapping"]["form_models"][f"{tenant_id}__{system_code}__{key}"] = result["key_mapping"][
+                "form_models"
+            ].pop(key)
+        for key in workflow_template["key_mapping"]["workflow_categories"]:
+            result["key_mapping"]["workflow_categories"][f"{tenant_id}__{system_code}__{key}"] = result["key_mapping"][
+                "workflow_categories"
+            ].pop(key)
+        for key in workflow_template["key_mapping"]["workflows"]:
+            result["key_mapping"]["workflows"][f"{tenant_id}__{system_code}__{key}"] = result["key_mapping"][
+                "workflows"
+            ].pop(key)
+        json_data = json.dumps(result, indent=2)
+        file_obj = BytesIO(json_data.encode("utf-8"))
+        filename = f"{system_code}__{tenant_id}.json"
+        files = {"file": (filename, file_obj.getvalue(), "application/json")}
+
+        itsm.migrate_system(files)
+        file_obj.close()

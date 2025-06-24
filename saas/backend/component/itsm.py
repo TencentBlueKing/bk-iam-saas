@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from django.conf import settings
 
@@ -77,9 +77,7 @@ def create_system(name: str, code: str, token: str, desc: str):
     return _call_apigw_api(http_post, url_path, data=data)
 
 
-# def migrate_system(file_path: str):
-#     """迁移系统"""
-#     url_path = "/api/v1/system/migrate/"
-#     with open(file_path, "rb") as file:
-#         files = {"file": file}
-#     return _call_apigw_api(http_post, url_path)
+def migrate_system(files: Dict[str, Tuple[str, bytes, str]]):
+    """迁移系统工作流程"""
+    url_path = "/api/v1/system/migrate/"
+    return _call_apigw_api(http_post, url_path, data=files)
