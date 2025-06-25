@@ -266,7 +266,7 @@ class ManagementApplicationCancelView(views.APIView):
         application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
 
         # 接入系统自行cancel itsm 单据
-        self.biz.cancel_application(application, need_cancel_ticket=False)
+        self.biz.cancel_application(application, application.applicant, need_cancel_ticket=False)
 
         return Response({})
 
