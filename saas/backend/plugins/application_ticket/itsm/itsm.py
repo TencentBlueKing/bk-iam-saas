@@ -198,10 +198,6 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 "data": GradeManagerForm.from_application(data.content).form_data,
             }
 
-        params["form_data"]["space_name"] = data.content.name
-        params["form_data"]["authorizable_personnel_Scope"] = ",".join([i.id for i in data.content.subject_scopes])
-
-        # params["tag"] = tag or DEFAULT_TAG
         ticket = itsm.create_ticket(**params)
         return ticket["sn"], ticket["id"]
 

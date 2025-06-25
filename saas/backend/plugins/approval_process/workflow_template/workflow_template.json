@@ -1722,7 +1722,7 @@
                 }
             },
             "version": {
-                "key": "20250620175400011402",
+                "key": "20250625165200013201",
                 "workflow_key": "$Workflow20250606152100002401",
                 "desc": null,
                 "workflows": {
@@ -2209,254 +2209,34 @@
                                 "type": "row"
                             }, {
                                 "list": [{
-                                        "key": "apply_content",
+                                        "key": "content",
                                         "desc": "",
-                                        "fold": false,
-                                        "list": [{
-                                                "list": [{
-                                                        "key": "space_name",
-                                                        "desc": "",
-                                                        "tips": "请输入",
-                                                        "type": "text",
-                                                        "class": [],
-                                                        "state": "readonly",
-                                                        "title": {
-                                                            "value": "管理空间名称",
-                                                            "isHide": false
-                                                        },
-                                                        "width": "COL_6",
-                                                        "columnId": "nUTG8PhV",
-                                                        "location": "form",
-                                                        "sceneKey": "space_name",
-                                                        "permission": {
-                                                            "readonly": ["title", "key", "tips", "desc"]
-                                                        },
-                                                        "defaultValue": "",
-                                                        "translations": {
-                                                            "title": {
-                                                                "name": "管理空间名称",
-                                                                "name_en": "管理空间名称",
-                                                                "name_zh_hans": "管理空间名称"
-                                                            }
-                                                        },
-                                                        "verification": {
-                                                            "required": {
-                                                                "value": false,
-                                                                "enabled": false
-                                                            },
-                                                            "wordLimit": {
-                                                                "value": {
-                                                                    "max": "",
-                                                                    "min": 0
-                                                                },
-                                                                "enabled": false
-                                                            },
-                                                            "formatLimit": {
-                                                                "value": {
-                                                                    "errorTips": "",
-                                                                    "expression": ""
-                                                                },
-                                                                "enabled": false
-                                                            }
-                                                        }
-                                                    }, {
-                                                        "key": "rating_manager",
-                                                        "desc": "",
-                                                        "tips": "请输入",
-                                                        "type": "multiUser",
-                                                        "class": [],
-                                                        "state": "readonly",
-                                                        "title": {
-                                                            "value": "分级管理员",
-                                                            "isHide": false
-                                                        },
-                                                        "width": "COL_6",
-                                                        "columnId": "yOzK9UVJ",
-                                                        "location": "form",
-                                                        "sceneKey": "rating_manager",
-                                                        "userScope": {
-                                                            "type": "custom",
-                                                            "value": {},
-                                                            "isRecursive": false
-                                                        },
-                                                        "permission": {
-                                                            "readonly": ["title", "key", "tips", "desc"]
-                                                        },
-                                                        "userConfig": {
-                                                            "setSelf": false,
-                                                            "multiple": true,
-                                                            "userInfo": [],
-                                                            "showStyle": "flat",
-                                                            "showVipIcon": true,
-                                                            "isShowUserInfo": false
-                                                        },
-                                                        "defaultValue": "",
-                                                        "translations": {
-                                                            "title": {
-                                                                "name": "分级管理员",
-                                                                "name_en": "分级管理员",
-                                                                "name_zh_hans": "分级管理员"
-                                                            }
-                                                        },
-                                                        "verification": {
-                                                            "required": {
-                                                                "value": false,
-                                                                "enabled": false
-                                                            }
-                                                        }
-                                                    }
-                                                ],
-                                                "type": "row"
-                                            }, {
-                                                "list": [{
-                                                        "key": "description",
-                                                        "desc": "",
-                                                        "rows": 4,
-                                                        "tips": "请输入",
-                                                        "type": "textarea",
-                                                        "class": [],
-                                                        "state": "readonly",
-                                                        "title": {
-                                                            "value": "描述",
-                                                            "isHide": false
-                                                        },
-                                                        "width": "COL_6",
-                                                        "columnId": "NJQPhiB4",
-                                                        "location": "form",
-                                                        "sceneKey": "description",
-                                                        "permission": {
-                                                            "readonly": ["title", "key", "tips", "desc"]
-                                                        },
-                                                        "defaultValue": "",
-                                                        "translations": {
-                                                            "title": {
-                                                                "name": "描述",
-                                                                "name_en": "描述",
-                                                                "name_zh_hans": "描述"
-                                                            }
-                                                        },
-                                                        "verification": {
-                                                            "required": {
-                                                                "value": false,
-                                                                "enabled": false
-                                                            },
-                                                            "wordLimit": {
-                                                                "value": {
-                                                                    "max": "",
-                                                                    "min": 0
-                                                                },
-                                                                "enabled": false
-                                                            },
-                                                            "formatLimit": {
-                                                                "value": "",
-                                                                "enabled": false
-                                                            }
-                                                        }
-                                                    }
-                                                ],
-                                                "type": "row"
-                                            }, {
-                                                "list": [{
-                                                        "key": "authorizable_personnel_Scope",
-                                                        "desc": "",
-                                                        "tips": "请输入",
-                                                        "type": "text",
-                                                        "class": [],
-                                                        "state": "readonly",
-                                                        "title": {
-                                                            "value": "可授权人员范围",
-                                                            "isHide": false
-                                                        },
-                                                        "width": "COL_6",
-                                                        "columnId": "QbC6ktUB",
-                                                        "location": "form",
-                                                        "sceneKey": "authorizable_personnel_Scope",
-                                                        "permission": {
-                                                            "readonly": ["title", "key", "tips", "desc"]
-                                                        },
-                                                        "defaultValue": "",
-                                                        "translations": {
-                                                            "title": {
-                                                                "name": "可授权人员范围",
-                                                                "name_en": "可授权人员范围",
-                                                                "name_zh_hans": "可授权人员范围"
-                                                            }
-                                                        },
-                                                        "verification": {
-                                                            "required": {
-                                                                "value": false,
-                                                                "enabled": false
-                                                            },
-                                                            "wordLimit": {
-                                                                "value": {
-                                                                    "max": "",
-                                                                    "min": 0
-                                                                },
-                                                                "enabled": false
-                                                            },
-                                                            "formatLimit": {
-                                                                "value": {
-                                                                    "errorTips": "",
-                                                                    "expression": ""
-                                                                },
-                                                                "enabled": false
-                                                            }
-                                                        }
-                                                    }
-                                                ],
-                                                "type": "row"
-                                            }, {
-                                                "list": [{
-                                                        "key": "content",
-                                                        "desc": "",
-                                                        "tips": "111",
-                                                        "type": "nestedTable",
-                                                        "state": "readonly",
-                                                        "title": {
-                                                            "value": "申请内容",
-                                                            "isHide": false
-                                                        },
-                                                        "width": "COL_12",
-                                                        "columnId": "IEWlUcke",
-                                                        "location": "form",
-                                                        "sceneKey": "content",
-                                                        "permission": {
-                                                            "readonly": ["title", "key", "tips", "desc"]
-                                                        },
-                                                        "readOnlyText": "readonly",
-                                                        "translations": {
-                                                            "title": {
-                                                                "name": "申请内容",
-                                                                "name_en": "申请内容",
-                                                                "name_zh_hans": "申请内容"
-                                                            }
-                                                        },
-                                                        "verification": {
-                                                            "required": {
-                                                                "value": false,
-                                                                "enabled": false
-                                                            }
-                                                        }
-                                                    }
-                                                ],
-                                                "type": "row"
-                                            }
-                                        ],
-                                        "type": "group",
-                                        "class": [],
-                                        "state": "default",
+                                        "tips": "111",
+                                        "type": "nestedTable",
+                                        "state": "readonly",
                                         "title": {
                                             "value": "申请内容",
                                             "isHide": false
                                         },
                                         "width": "COL_12",
-                                        "columnId": "Y0nFDnTE",
+                                        "columnId": "IEWlUcke",
                                         "location": "form",
+                                        "sceneKey": "content",
+                                        "permission": {
+                                            "readonly": ["title", "key", "tips", "desc"]
+                                        },
+                                        "readOnlyText": "readonly",
                                         "translations": {
                                             "title": {
                                                 "name": "申请内容",
-                                                "name_en": "Group",
+                                                "name_en": "申请内容",
                                                 "name_zh_hans": "申请内容"
+                                            }
+                                        },
+                                        "verification": {
+                                            "required": {
+                                                "value": false,
+                                                "enabled": false
                                             }
                                         }
                                     }
@@ -2732,48 +2512,6 @@
                                 },
                                 "items": null
                             },
-                            "space_name": {
-                                "translations": {
-                                    "title": "管理空间名称",
-                                    "title_en": "管理空间名称",
-                                    "title_zh_hans": "管理空间名称"
-                                },
-                                "type": "string",
-                                "title": "管理空间名称",
-                                "number_unit": "",
-                                "table_relation": null,
-                                "into_todo": [],
-                                "out_todo": [],
-                                "attr_relation": null,
-                                "itsm_jmespath": null,
-                                "itsm_options": null,
-                                "itsm_options_type": null,
-                                "format": null,
-                                "columns": null,
-                                "properties": null,
-                                "items": null
-                            },
-                            "description": {
-                                "translations": {
-                                    "title": "描述",
-                                    "title_en": "描述",
-                                    "title_zh_hans": "描述"
-                                },
-                                "type": "string",
-                                "title": "描述",
-                                "number_unit": "",
-                                "table_relation": null,
-                                "into_todo": [],
-                                "out_todo": [],
-                                "attr_relation": null,
-                                "itsm_jmespath": null,
-                                "itsm_options": null,
-                                "itsm_options_type": null,
-                                "format": null,
-                                "columns": null,
-                                "properties": null,
-                                "items": null
-                            },
                             "organization": {
                                 "translations": {
                                     "title": "所属组织",
@@ -2857,47 +2595,6 @@
                                 "properties": null,
                                 "items": null
                             },
-                            "rating_manager": {
-                                "translations": {
-                                    "title": "分级管理员",
-                                    "title_en": "分级管理员",
-                                    "title_zh_hans": "分级管理员"
-                                },
-                                "type": "array",
-                                "title": "分级管理员",
-                                "number_unit": "",
-                                "table_relation": null,
-                                "into_todo": [],
-                                "out_todo": [],
-                                "attr_relation": null,
-                                "itsm_jmespath": null,
-                                "itsm_options": null,
-                                "itsm_options_type": null,
-                                "format": null,
-                                "columns": null,
-                                "properties": null,
-                                "items": {
-                                    "translations": {
-                                        "title": "",
-                                        "title_en": "",
-                                        "title_zh_hans": ""
-                                    },
-                                    "type": "string",
-                                    "title": "",
-                                    "number_unit": "",
-                                    "table_relation": null,
-                                    "into_todo": [],
-                                    "out_todo": [],
-                                    "attr_relation": null,
-                                    "itsm_jmespath": null,
-                                    "itsm_options": null,
-                                    "itsm_options_type": null,
-                                    "format": "user",
-                                    "columns": null,
-                                    "properties": null,
-                                    "items": null
-                                }
-                            },
                             "application_type": {
                                 "translations": {
                                     "title": "申请类型",
@@ -2906,27 +2603,6 @@
                                 },
                                 "type": "string",
                                 "title": "申请类型",
-                                "number_unit": "",
-                                "table_relation": null,
-                                "into_todo": [],
-                                "out_todo": [],
-                                "attr_relation": null,
-                                "itsm_jmespath": null,
-                                "itsm_options": null,
-                                "itsm_options_type": null,
-                                "format": null,
-                                "columns": null,
-                                "properties": null,
-                                "items": null
-                            },
-                            "authorizable_personnel_Scope": {
-                                "translations": {
-                                    "title": "可授权人员范围",
-                                    "title_en": "可授权人员范围",
-                                    "title_zh_hans": "可授权人员范围"
-                                },
-                                "type": "string",
-                                "title": "可授权人员范围",
                                 "number_unit": "",
                                 "table_relation": null,
                                 "into_todo": [],
