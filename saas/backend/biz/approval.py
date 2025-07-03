@@ -28,7 +28,7 @@ class ApprovalProcessWithNodeNamesBean(ApprovalProcess):
 
 class DefaultProcessBean(BaseModel):
     type: str
-    process_id: int
+    process_id: str
     process_name: str
 
 
