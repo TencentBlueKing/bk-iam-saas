@@ -81,7 +81,13 @@ def do_blueking_http_request(
     timeout: int | None = None,
     request_session=None,
 ):
-    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout, "request_session": request_session}
+    kwargs = {
+        "url": url,
+        "data": data,
+        "headers": headers,
+        "timeout": timeout,
+        "request_session": request_session,
+    }
 
     ok, resp_data = http_func(**kwargs)
     if not ok:
@@ -108,7 +114,7 @@ def do_blueking_http_request(
         code = int(code)
     except Exception:  # pylint: disable=broad-except
         pass
-    if code in ("0", 0, "00"):
+    if code in ("0", 0, "00", 20000):
         return resp_data["data"]
 
     logger.error(

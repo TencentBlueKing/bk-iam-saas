@@ -43,7 +43,7 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
     def list(self) -> List[ApprovalProcess]:
         """查询审批流程列表，所有流程"""
         processes = itsm.list_process()
-        return [ApprovalProcess(**p) for p in processes]
+        return [ApprovalProcess(id=p["key"], name=p["name"]) for p in processes]
 
     @cachedmethod(timeout=60)  # 缓存1分钟
     def list_with_nodes(self, application_type: ApplicationType) -> List[ApprovalProcessWithNode]:
@@ -56,8 +56,8 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
         process_list = []
         # 遍历，并查询流程节点
         for p in processes:
-            nodes = self.get_process_nodes(p["id"])
-            process_list.append(ApprovalProcessWithNode(id=p["id"], name=p["name"], nodes=nodes))
+            nodes = self.get_process_nodes(p["key"])
+            process_list.append(ApprovalProcessWithNode(id=p["key"], name=p["name"], nodes=nodes))
 
         # 过滤出满足对应申请类型的流程
         return [p for p in process_list if p.is_match_application_type(application_type)]
@@ -81,23 +81,30 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
 
         raise error_codes.INVALID_ARGS.format(_("ITSM未内置[{}]").format(default_process_name), True)
 
-    def get_process_nodes(self, process_id: int) -> List[ApprovalProcessNode]:
+    def get_process_nodes(self, workflow_keys: str) -> List[ApprovalProcessNode]:
         """查询流程节点
         ITSM将自动将除IAM角色以外的归为其他审批人类型，同时检查来源IAM的角色是否真的是IAM支持的
         """
         process_nodes = []
-        nodes = itsm.get_process_nodes(process_id)
-        for node in nodes:
+        nodes = itsm.get_process_nodes(workflow_keys)
+        for node in nodes.values():
             # 转换为IAM规定的结构所需要流程处理者来源和类型
-            source, _type = ProcessorSource.OTHER.value, node["processors"]  # NOTE: other的节点iam无需处理
-            if node["processors_type"] == "IAM":
+            if node["type"] != "APPROVE_TASK":
+                continue
+            source, _type = (
+                ProcessorSource.OTHER.value,
+                node["meta"]["processors"][0]["path"],
+            )  # NOTE: other的节点iam无需处理
+            # activities中的type判断是否为审批节点，类型为"APPROVE_TASK"可设置source = ProcessorSource.IAM.value
+            # meta中的processors中的path可以对应IAM_SUPPORT_PROCESSOR_TYPES中的审批类型
+            if node["type"] == "APPROVE_TASK":
                 source = ProcessorSource.IAM.value
                 # 对于来源于IAM，需要检查角色是否满足
                 if _type not in IAM_SUPPORT_PROCESSOR_TYPES:
-                    raise error_codes.ITSM_PROCESSOR_NOT_SUPPORT.format(f"process_id: {process_id}, node:{node}")
+                    raise error_codes.ITSM_PROCESSOR_NOT_SUPPORT.format(f"workflow_keys: {workflow_keys}, node:{node}")
 
             process_nodes.append(
-                ApprovalProcessNode(id=node["id"], name=node["name"], processor_source=source, processor_type=_type)
+                ApprovalProcessNode(id=node["key"], name=node["name"], processor_source=source, processor_type=_type)
             )
 
         return process_nodes

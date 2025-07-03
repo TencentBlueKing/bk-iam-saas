@@ -34,5 +34,5 @@ class ApprovalProcessProvider(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_process_nodes(self, process_id: int) -> List[ApprovalProcessNode]:
+    def get_process_nodes(self, process_id: str) -> List[ApprovalProcessNode]:
         """查询流程的节点"""

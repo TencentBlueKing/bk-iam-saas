@@ -65,9 +65,15 @@ def _http_request(
         elif method == "HEAD":
             resp = request_session.head(url=url, headers=headers, verify=verify, cert=cert, cookies=cookies)
         elif method == "POST":
-            resp = request_session.post(
-                url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
-            )
+            if "file" in data:
+                headers.pop("Content-Type")
+                resp = request_session.post(
+                    url=url, headers=headers, files=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
+                )
+            else:
+                resp = request_session.post(
+                    url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
+                )
         elif method == "DELETE":
             resp = request_session.delete(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies

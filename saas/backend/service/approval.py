@@ -55,16 +55,16 @@ class ApprovalProcessService:
         """审批流程列表，查询指定申请类型的流程列表，并附带流程节点"""
         return self.provider.list_with_nodes(application_type)
 
-    def get_process_nodes(self, process_id: int) -> List[ApprovalProcessNode]:
+    def get_process_nodes(self, process_id: str) -> List[ApprovalProcessNode]:
         """获取审批流程节点"""
         return self.provider.get_process_nodes(process_id)
 
-    def _get_process_id_name_dict(self) -> Dict[int, str]:
+    def _get_process_id_name_dict(self) -> Dict[str, str]:
         """获取流程ID与Name的映射"""
         processes = self.provider.list()
         return {p.id: p.name for p in processes}
 
-    def get_process_name(self, process_id: int) -> str:
+    def get_process_name(self, process_id: str) -> str:
         """获取流程名称，如果没查询到，则默认返回流程id字符串
         这里虽然可能存在多次调用查询全部流程，但是由于短时间内存在缓存，所以不影响
         """

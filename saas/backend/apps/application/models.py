@@ -33,6 +33,7 @@ class Application(BaseModel, BaseSystemHiddenModel):
     )
 
     callback_id = models.CharField("回调随机数ID", max_length=32, default="")
+    ticket_id = models.CharField(verbose_name="单据id", max_length=32, default="")
 
     class Meta:
         verbose_name = "权限申请"

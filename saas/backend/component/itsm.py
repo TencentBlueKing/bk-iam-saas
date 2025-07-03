@@ -9,84 +9,75 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Tuple
 
-from .esb import _call_esb_api
+from django.conf import settings
+
+from .apigw import _call_apigw_api
 from .http import http_get, http_post
 
 
 def list_process() -> List[Dict]:
     """获取审批流程列表"""
-    url_path = "/api/c/compapi/v2/itsm/get_services/"
-    params = {"display_type": "API", "display_role": "BK_IAM"}
-    return _call_esb_api(http_get, url_path, data=params)
+    url_path = "/api/v1/system_workflow/list/"
+
+    params = {"system_id": settings.BK_ITSM_V4_SYSTEM_ID}
+    data = _call_apigw_api(http_get, url_path, data=params)
+    return data["results"]
 
 
-def get_process_nodes(process_id: int, ticket_creator: str = "") -> List[Dict]:
+def get_process_nodes(workflow_keys: str) -> Dict[Any, Any]:
     """获取审批流程，并根据单据创建者判断是否实例化审批节点"""
-    url_path = "/api/c/compapi/v2/itsm/get_service_roles/"
-    params: Dict = {"service_id": process_id}
-    if ticket_creator:
-        params["ticket_creator"] = ticket_creator
-    return _call_esb_api(http_get, url_path, data=params)
+    # workflow_keys可以通过","分割传递多个
+    url_path = "/api/v1/workflows/"
+    params: Dict = {"workflow_keys": workflow_keys}
+
+    data = _call_apigw_api(http_get, url_path, data=params)
+    return data["items"][0]["activities"]
 
 
 def create_ticket(
-    process_id: int,
-    creator: str,
-    callback_url: str,
-    node_processors: Dict[int, str],
-    title: str,
-    application_type_display: str,
-    organization_names: str,
-    reason: str,
-    content: Dict,
-    tag: str = "",
-    dynamic_fields: Optional[List] = None,
-    **kwargs,
+    workflow_key: str, form_data: Dict, operator: str, callback_url: str, callback_token: str, system_id: str
 ) -> Dict:
     """获取审批流程，并根据单据创建者判断是否实例化审批节点"""
-    url_path = "/api/c/compapi/v2/itsm/create_ticket/"
+    url_path = "/api/v1/ticket/create/"
     data = {
-        "service_id": process_id,
-        "creator": creator,
-        "meta": {"callback_url": callback_url, "state_processors": node_processors},
-        "fields": [
-            {"key": "title", "value": title, "meta": {"language": {"en": "title"}}},
-            {
-                "key": "application_type",
-                "value": application_type_display,
-                "meta": {"language": {"en": "application type"}},
-            },
-            {"key": "organization", "value": organization_names, "meta": {"language": {"en": "organization"}}},
-            {"key": "reason", "value": reason, "meta": {"language": {"en": "reason"}}},
-            {"key": "content", "value": content, "meta": {"language": {"en": "content"}}},
-        ],
+        "workflow_key": workflow_key,
+        "form_data": form_data,
+        "callback_url": callback_url,
+        "callback_token": callback_token,
+        "operator": operator,
+        "system_id": system_id,
     }
 
-    if dynamic_fields:
-        data["dynamic_fields"] = dynamic_fields
-
-    if tag:
-        data["tag"] = tag  # NOTE: 用于ITSM审批单列表api筛选过滤字段
-
-    # 填充额外的fields
-    for k, v in kwargs.items():
-        data["fields"].append({"key": k, "value": v})  # type: ignore
-    return _call_esb_api(http_post, url_path, data=data)
+    return _call_apigw_api(http_post, url_path, data=data)
 
 
-def batch_query_ticket_result(sns: List[str]) -> List[Dict]:
+def batch_query_ticket_result(ids: List[str]) -> List[Dict]:
     """
     批量查询单据结果
     """
-    url_path = "/api/c/compapi/v2/itsm/ticket_approval_result/"
-    data = {"sn": sns}
-    return _call_esb_api(http_post, url_path, data=data)
+    url_path = "/api/v1/system_ticket/list/"
+    params = {"system_id": settings.BK_ITSM_V4_SYSTEM_ID, "id__in": ",".join(ids)}
+    data = _call_apigw_api(http_get, url_path, data=params)
+    return data["results"]
 
 
-def withdraw_ticket(sn: str, operator: str):
+def withdraw_ticket(ticket_id: str):
     """撤销单据"""
-    url_path = "/api/c/compapi/v2/itsm/operate_ticket/"
-    data = {"sn": sn, "operator": operator, "action_type": "WITHDRAW", "action_message": "applicant withdraw ticket"}
-    return _call_esb_api(http_post, url_path, data=data)
+    url_path = "/api/v1/tickets/revoked/"
+    data = {"system_id": settings.BK_ITSM_V4_SYSTEM_ID, "ticket_id": ticket_id}
+    return _call_apigw_api(http_post, url_path, data=data)
+
+
+def create_system(name: str, code: str, token: str, desc: str):
+    """创建系统"""
+    url_path = "/api/v1/system/create/"
+    data = {"name": name, "code": code, "token": token, "desc": desc}
+    return _call_apigw_api(http_post, url_path, data=data)
+
+
+def migrate_system(files: Dict[str, Tuple[str, bytes, str]]):
+    """迁移系统工作流程"""
+    url_path = "/api/v1/system/migrate/"
+    return _call_apigw_api(http_post, url_path, data=files)

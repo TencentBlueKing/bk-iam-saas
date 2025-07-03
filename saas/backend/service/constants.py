@@ -240,11 +240,13 @@ class ApplicationType(ChoicesEnum, LowerStrEnum):
 
 # IAM支持的审批流程节点类型
 class ProcessorNodeType(LowerStrEnum):
+    # TODO: 需要改成和新的审批流程中一一对应
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
     GRADE_MANAGER: enum = "rating_manager"
     INSTANCE_APPROVER = auto()
     INSTANCE_APPROVER_MERGE = auto()
+    CREATOR = auto()  # 提单人上级审批
 
 
 # 每一种申请单据，对应的审批流程节点可以支持的ROLE
@@ -264,8 +266,14 @@ APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
         ProcessorNodeType.SUPER_MANAGER.value,
         ProcessorNodeType.GRADE_MANAGER.value,
     ),
-    ApplicationType.CREATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
-    ApplicationType.UPDATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
+    ApplicationType.CREATE_GRADE_MANAGER.value: (
+        ProcessorNodeType.SUPER_MANAGER.value,
+        ProcessorNodeType.CREATOR.value,
+    ),
+    ApplicationType.UPDATE_GRADE_MANAGER.value: (
+        ProcessorNodeType.SUPER_MANAGER.value,
+        ProcessorNodeType.CREATOR.value,
+    ),
 }
 
 
@@ -283,6 +291,7 @@ IAM_SUPPORT_PROCESSOR_TYPES = [
     ProcessorNodeType.GRADE_MANAGER.value,
     ProcessorNodeType.INSTANCE_APPROVER.value,
     ProcessorNodeType.INSTANCE_APPROVER_MERGE.value,
+    ProcessorNodeType.CREATOR.value,
 ]
 
 
