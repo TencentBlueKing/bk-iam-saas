@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -44,6 +44,7 @@ class UserViewSet(GenericViewSet):
                 "username": user.username,
                 "role": {"type": role.type, "id": role.id, "name": role.name, "code": role.code},
                 "timezone": user.get_property("time_zone"),
+                "tenant_id": user.get_property("tenant_id"),
                 "name": u.display_name if u else "",
             }
         )
@@ -63,11 +64,11 @@ class RoleViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         role_id = serializer.validated_data["id"]
 
-        # 切换为管理员时, 如果不存在对应的关系, 越权
+        # 切换为管理员时，如果不存在对应的关系，越权
         if role_id != 0 and not can_user_manage_role(request.user.username, role_id):
             raise error_codes.FORBIDDEN.format(_("您没有该角色权限，无法切换到该角色"), True)
 
-        # 修改session
+        # 修改 session
         request.session[ROLE_SESSION_KEY] = role_id
 
         return Response({})
