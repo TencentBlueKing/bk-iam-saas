@@ -48,6 +48,8 @@ class TokenBackend(ModelBackend):
         user.set_property(key="time_zone", value=user_info["time_zone"])
         user.set_property(key="tenant_id", value=user_info["tenant_id"])
         user.set_property(key="display_name", value=user_info["display_name"])
+        # 消息通知中心所需
+        user.tenant_id = user_info["tenant_id"]
 
         return user
 
