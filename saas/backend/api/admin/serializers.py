@@ -116,7 +116,7 @@ class AdminTemplateIdSLZ(TemplateIdSLZ):
     pass
 
 
-class ActionSLZ(serializers.Serializer):
+class SubjectActionSLZ(serializers.Serializer):
     name = serializers.CharField(label="操作名称")
     action_id = serializers.CharField(label="操作ID")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)", allow_null=True)
@@ -129,7 +129,7 @@ class SystemSLZ(serializers.Serializer):
 
 
 class SystemActionSLZ(SystemSLZ):
-    action = serializers.ListField(label="操作列表", child=ActionSLZ(label="操作"))
+    action = serializers.ListField(label="操作列表", child=SubjectActionSLZ(label="操作"))
 
 
 class GradeManagementSLZ(serializers.Serializer):
@@ -149,3 +149,7 @@ class GroupPermissionSLZ(serializers.Serializer):
 
 class SubjectGroupPermissionSLZ(serializers.Serializer):
     groups = serializers.ListField(label="用户组列表", child=GroupPermissionSLZ(label="用户组"))
+
+
+class SubjectCustomPermissionSLZ(serializers.Serializer):
+    systems = serializers.ListField(label="系统列表", child=SystemActionSLZ(label="系统"))

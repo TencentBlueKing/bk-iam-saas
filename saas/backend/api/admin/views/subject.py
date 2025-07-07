@@ -21,6 +21,7 @@ from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import (
     AdminSubjectGroupSLZ,
     FreezeSubjectResponseSLZ,
+    SubjectCustomPermissionSLZ,
     SubjectGroupPermissionSLZ,
     SubjectRoleSLZ,
     SubjectSLZ,
@@ -34,6 +35,7 @@ from backend.apps.user.tasks import user_permission_clean
 from backend.audit.audit import log_user_blacklist_event, log_user_permission_clean_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
+from backend.biz.policy import PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectBiz
 from backend.common.error_codes import error_codes
@@ -272,4 +274,21 @@ class AdminSubjectGroupPermissionViewSet(GenericViewSet):
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         count, data = self.biz.query_group_permissions_subject(subject, limit, offset)
         results = [one.dict() for one in data]
+        return Response({"count": count, "results": results})
+
+
+class AdminSubjectCustomViewSet(GenericViewSet):
+    biz = PolicyQueryBiz()
+
+    @swagger_auto_schema(
+        operation_description="Subject的自定义权限",
+        responses={status.HTTP_200_OK: SubjectCustomPermissionSLZ(many=True)},
+        tags=["admin.subject.custom.permission"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject.from_username(kwargs["subject_id"])
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        # 获取自定义权限数据
+        count, policies = self.biz.policy_by_subject(subject, limit=limit, offset=offset)
+        results = [one.dict() for one in policies]
         return Response({"count": count, "results": results})

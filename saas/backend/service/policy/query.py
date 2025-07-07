@@ -128,7 +128,9 @@ class PolicyQueryService:
         )
         return [Policy.from_db_model(one, one.expired_at) for one in qs]
 
-    def list_system_counter_by_subject(self, subject: Subject, hidden: bool = True) -> List[SystemCounter]:
+    def list_system_counter_by_subject(
+        self, subject: Subject, hidden: bool = True, limit: int = None, offset: int = None
+    ) -> List[SystemCounter]:
         """
         查询subject有权限的系统-policy数量信息
         """
@@ -137,6 +139,12 @@ class PolicyQueryService:
             .values("system_id")
             .annotate(count=Count("system_id"))
         )
+
+        # 支持分页
+        if limit is not None and offset is not None:
+            qs = qs[offset : offset + limit]
+        elif limit is not None:
+            qs = qs[:limit]
 
         if hidden:
             return [

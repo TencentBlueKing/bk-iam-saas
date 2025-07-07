@@ -988,6 +988,19 @@ class PolicyBean(Policy):
         return self.resource_groups.update_resource_name(renamed_resources)
 
 
+class ActionBean(BaseModel):
+    id: str
+    name: str
+    expired_at: int
+    expired_at_display: str
+
+
+class SystemPolicyBean(BaseModel):
+    name: str
+    system_id: str
+    actions: List[ActionBean]
+
+
 class PolicyBeanListMixin:
     action_svc = ActionService()
     resource_type_svc = ResourceTypeService()
@@ -1531,6 +1544,32 @@ class PolicyQueryBiz:
         获取指定策略的system
         """
         return self.svc.get_policy_system_by_id(policy_id, subject)
+
+    def policy_by_subject(
+        self, subject: Subject, hidden: bool = False, limit: int = 10, offset: int = 0
+    ) -> Tuple[int, List[SystemPolicyBean]]:
+        """
+        获取指定subject的policy
+        """
+        result = []
+        system_counters = self.svc.list_system_counter_by_subject(subject, hidden, limit, offset)
+        count = len(system_counters)
+        for system_counter in system_counters:
+            polices = self.svc.list_by_subject(system_counter.id, subject)
+            system = self.system_svc.get(system_counter.id)
+            actions = []
+            for policy in polices:
+                action = self.action_svc.get(system.id, policy.action_id)
+                actions.append(
+                    ActionBean(
+                        id=action.id,
+                        name=action.name,
+                        expired_at=policy.expired_at,
+                        expired_at_display=expired_at_display(policy.expired_at),
+                    )
+                )
+            result.append(SystemPolicyBean(system_id=system.id, name=system.name, actions=actions))
+        return count, result
 
 
 def custom_policy_change_lock(func):

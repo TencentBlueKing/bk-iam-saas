@@ -12,6 +12,7 @@ from .audit import AdminAuditEventViewSet
 from .group import AdminGroupInfoViewSet, AdminGroupMemberViewSet, AdminGroupPolicyViewSet, AdminGroupViewSet
 from .role import AdminSuperManagerMemberViewSet, AdminSystemManagerMemberViewSet
 from .subject import (
+    AdminSubjectCustomViewSet,
     AdminSubjectFreezeViewSet,
     AdminSubjectGroupPermissionViewSet,
     AdminSubjectGroupViewSet,
@@ -39,4 +40,5 @@ __all__ = [
     "AdminGroupPolicyViewSet",
     "AdminSystemProviderConfigViewSet",
     "AdminSubjectGroupPermissionViewSet",
+    "AdminSubjectCustomViewSet",
 ]

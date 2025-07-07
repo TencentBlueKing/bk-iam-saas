@@ -105,4 +105,10 @@ urlpatterns = [
         views.AdminSubjectGroupPermissionViewSet.as_view({"get": "list"}),
         name="admin.subject.group.permission",
     ),
+    # 用户组的自定义权限
+    path(
+        "subjects/user/<str:subject_id>/custom/permission/",
+        views.AdminSubjectCustomViewSet.as_view({"get": "list"}),
+        name="admin.subject.custom.permission",
+    ),
 ]
