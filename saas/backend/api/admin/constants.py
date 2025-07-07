@@ -59,6 +59,15 @@ class AdminAPIEnum(BaseAPIEnum):
     # 是否有权限数据
     SUBJECT_PERMISSION_EXISTS = auto()
 
+    # 用户组权限列表
+    SUBJECT_GROUP_PERMISSION = auto()
+
+    # 自定义权限列表
+    SUBJECT_CUSTOM_PERMISSION = auto()
+
+    # 管理权限查询
+    SUBJECT_MANAGEMENT_PERMISSION = auto()
+
     _choices_labels = skip(
         (
             (SYSTEM_LIST, "获取系统列表"),
@@ -80,6 +89,9 @@ class AdminAPIEnum(BaseAPIEnum):
             (SUBJECT_FREEZE_UNFREEZE, "冻结/解冻Subject"),
             (SUBJECT_PERMISSION_CLEANUP, "权限清理"),
             (SUBJECT_PERMISSION_EXISTS, "权限是否存在"),
+            (SUBJECT_GROUP_PERMISSION, "用户组权限列表"),
+            (SUBJECT_CUSTOM_PERMISSION, "自定义权限列表"),
+            (SUBJECT_MANAGEMENT_PERMISSION, "管理权限查询"),
         )
     )
 

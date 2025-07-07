@@ -108,13 +108,13 @@ urlpatterns = [
     # 用户的自定义权限
     path(
         "subjects/user/<str:subject_id>/custom/permission/",
-        views.AdminSubjectCustomViewSet.as_view({"get": "list"}),
+        views.AdminSubjectCustomPermissionViewSet.as_view({"get": "list"}),
         name="admin.subject.custom.permission",
     ),
     # 用户的管理权限
     path(
         "subjects/user/<str:subject_id>/management/permission/",
-        views.AdminSubjectManagementViewSet.as_view({"get": "list"}),
+        views.AdminSubjectManagementPermissionViewSet.as_view({"get": "list"}),
         name="admin.subject.manage.permission",
     ),
 ]

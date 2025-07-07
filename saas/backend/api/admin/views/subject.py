@@ -263,6 +263,11 @@ class AdminSubjectPermissionExistsViewSet(GenericViewSet):
 class AdminSubjectGroupPermissionViewSet(GenericViewSet):
     biz = GroupBiz()
 
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"list": AdminAPIEnum.SUBJECT_GROUP_PERMISSION.value}
+
     @swagger_auto_schema(
         operation_description="Subject的用户组权限",
         responses={status.HTTP_200_OK: SubjectGroupPermissionSLZ(label="用户组权限", many=True)},
@@ -278,8 +283,13 @@ class AdminSubjectGroupPermissionViewSet(GenericViewSet):
         return Response({"count": count, "results": results})
 
 
-class AdminSubjectCustomViewSet(GenericViewSet):
+class AdminSubjectCustomPermissionViewSet(GenericViewSet):
     biz = PolicyQueryBiz()
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"list": AdminAPIEnum.SUBJECT_CUSTOM_PERMISSION.value}
 
     @swagger_auto_schema(
         operation_description="Subject的自定义权限",
@@ -295,9 +305,14 @@ class AdminSubjectCustomViewSet(GenericViewSet):
         return Response({"count": count, "results": results})
 
 
-class AdminSubjectManagementViewSet(GenericViewSet):
+class AdminSubjectManagementPermissionViewSet(GenericViewSet):
     biz = RoleBiz()
     pagination_class = None
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"list": AdminAPIEnum.SUBJECT_MANAGEMENT_PERMISSION.value}
 
     @swagger_auto_schema(
         operation_description="Subject的管理权限",
