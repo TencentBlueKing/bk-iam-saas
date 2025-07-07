@@ -123,12 +123,12 @@ class SubjectActionSLZ(serializers.Serializer):
     expired_at_display = serializers.CharField(label="过期时间显示", allow_null=True)
 
 
-class SystemSLZ(serializers.Serializer):
+class SubjectSystemSLZ(serializers.Serializer):
     name = serializers.CharField(label="系统名称")
     system_id = serializers.CharField(label="系统ID")
 
 
-class SystemActionSLZ(SystemSLZ):
+class SystemActionSLZ(SubjectSystemSLZ):
     action = serializers.ListField(label="操作列表", child=SubjectActionSLZ(label="操作"))
 
 
@@ -153,3 +153,10 @@ class SubjectGroupPermissionSLZ(serializers.Serializer):
 
 class SubjectCustomPermissionSLZ(serializers.Serializer):
     systems = serializers.ListField(label="系统列表", child=SystemActionSLZ(label="系统"))
+
+
+class SubjectManagementPermissionSLZ(serializers.Serializer):
+    is_system_manager = serializers.BooleanField(label="是否系统管理员")
+    systems = serializers.ListField(label="系统列表", child=serializers.CharField(label="系统名称"))
+    is_grade_manager = serializers.BooleanField(label="是否分级管理员")
+    grade_managements = serializers.ListField(label="分级管理空间列表", child=serializers.CharField(label="分级管理空间名称"))

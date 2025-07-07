@@ -127,6 +127,17 @@ class RoleScopeSystemActions(BaseModel):
         return []
 
 
+class RoleSystemManagementBean(BaseModel):
+    """
+    系统管理员和分级管理空间管理员
+    """
+
+    is_system_manager: bool = False
+    systems: List[str]
+    is_grade_manager: bool = False
+    grade_managements: List[str]
+
+
 class RoleBiz:
     svc = RoleService()
     system_svc = SystemService()
@@ -428,6 +439,20 @@ class RoleBiz:
                 return common_action
 
         return None
+
+    def get_manager_by_subject_id(self, subject_id: str):
+        roles = self.list_user_role(subject_id)
+        role_system_management_bean = RoleSystemManagementBean(
+            is_system_manager=False, systems=[], is_grade_manager=False, grade_managements=[]
+        )
+        for role in roles:
+            if role.type == RoleType.SYSTEM_MANAGER.value:
+                role_system_management_bean.is_system_manager = True
+                role_system_management_bean.systems.append(role.name)
+            if role.type == RoleType.GRADE_MANAGER.value or role.type == RoleType.SUBSET_MANAGER.value:
+                role_system_management_bean.is_grade_manager = True
+                role_system_management_bean.grade_managements.append(role.name)
+        return role_system_management_bean
 
 
 class RoleCheckBiz:

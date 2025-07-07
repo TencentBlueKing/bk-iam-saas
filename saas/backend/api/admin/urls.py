@@ -99,16 +99,22 @@ urlpatterns = [
         views.AdminSubjectPermissionCleanupViewSet.as_view({"delete": "cleanup"}),
         name="open.admin.subject.cleanup",
     ),
-    # 用户的所有权限
+    # 用户所在用户组的所有权限
     path(
         "subjects/user/<str:subject_id>/group/permission/",
         views.AdminSubjectGroupPermissionViewSet.as_view({"get": "list"}),
         name="admin.subject.group.permission",
     ),
-    # 用户组的自定义权限
+    # 用户的自定义权限
     path(
         "subjects/user/<str:subject_id>/custom/permission/",
         views.AdminSubjectCustomViewSet.as_view({"get": "list"}),
         name="admin.subject.custom.permission",
+    ),
+    # 用户的管理权限
+    path(
+        "subjects/user/<str:subject_id>/management/permission/",
+        views.AdminSubjectManagementViewSet.as_view({"get": "list"}),
+        name="admin.subject.manage.permission",
     ),
 ]

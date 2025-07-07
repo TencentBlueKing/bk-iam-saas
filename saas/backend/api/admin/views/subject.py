@@ -23,6 +23,7 @@ from backend.api.admin.serializers import (
     FreezeSubjectResponseSLZ,
     SubjectCustomPermissionSLZ,
     SubjectGroupPermissionSLZ,
+    SubjectManagementPermissionSLZ,
     SubjectRoleSLZ,
     SubjectSLZ,
 )
@@ -292,3 +293,21 @@ class AdminSubjectCustomViewSet(GenericViewSet):
         count, policies = self.biz.policy_by_subject(subject, limit=limit, offset=offset)
         results = [one.dict() for one in policies]
         return Response({"count": count, "results": results})
+
+
+class AdminSubjectManagementViewSet(GenericViewSet):
+    biz = RoleBiz()
+    pagination_class = None
+
+    @swagger_auto_schema(
+        operation_description="Subject的管理权限",
+        responses={status.HTTP_200_OK: SubjectManagementPermissionSLZ()},
+        tags=["admin.subject.management.permission"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject_id = kwargs["subject_id"]
+
+        # 获取管理权限数据
+        data = self.biz.get_manager_by_subject_id(subject_id)
+
+        return Response(SubjectManagementPermissionSLZ(data).data)
