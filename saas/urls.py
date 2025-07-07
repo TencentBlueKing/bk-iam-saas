@@ -30,7 +30,7 @@ schema_view = get_schema_view(
         license=openapi.License(name="BSD License"),
     ),
     public=True,
-    permission_classes=(permissions.AllowAny,),
+    permission_classes=[permissions.AllowAny],
 )
 
 urlpatterns = [
@@ -39,6 +39,7 @@ urlpatterns = [
         r"^api/v1/",
         include(
             [
+                # Web API
                 re_path(r"^version_log/", include("backend.version_log.urls")),
                 re_path(r"^accounts/", include("backend.account.urls")),
                 re_path(r"^systems/", include("backend.apps.system.urls")),
@@ -52,7 +53,6 @@ urlpatterns = [
                 re_path(r"^subject_templates/", include("backend.apps.subject_template.urls")),
                 re_path(r"^templates/", include("backend.apps.template.urls")),
                 re_path(r"^organizations/", include("backend.apps.organization.urls")),
-                re_path(r"^open/", include("backend.api.urls_v1")),
                 re_path(r"^roles/", include("backend.apps.role.urls")),
                 re_path(r"^users/", include("backend.apps.user.urls")),
                 re_path(r"^modeling/", include("backend.apps.model_builder.urls")),
@@ -61,11 +61,13 @@ urlpatterns = [
                 re_path(r"^handover/", include("backend.apps.handover.urls")),
                 re_path(r"^mgmt/", include("backend.apps.mgmt.urls")),
                 re_path(r"^temporary_policies/", include("backend.apps.temporary_policy.urls")),
-                re_path(r"^iam/", include("backend.iam.urls")),
                 # notice
                 re_path(
                     r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")
                 ),
+                # 非 Web API
+                re_path(r"^open/", include("backend.api.urls_v1")),
+                re_path(r"^iam/", include("backend.iam.urls")),
             ]
         ),
     ),
