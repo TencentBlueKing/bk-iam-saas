@@ -18,7 +18,13 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import AdminSubjectGroupSLZ, FreezeSubjectResponseSLZ, SubjectRoleSLZ, SubjectSLZ
+from backend.api.admin.serializers import (
+    AdminSubjectGroupSLZ,
+    FreezeSubjectResponseSLZ,
+    SubjectGroupPermissionSLZ,
+    SubjectRoleSLZ,
+    SubjectSLZ,
+)
 from backend.api.authentication import ESBAuthentication
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import RoleUser
@@ -249,3 +255,21 @@ class AdminSubjectPermissionExistsViewSet(GenericViewSet):
             return Response(True)
 
         return Response(False)
+
+
+class AdminSubjectGroupPermissionViewSet(GenericViewSet):
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="Subject的用户组权限",
+        responses={status.HTTP_200_OK: SubjectGroupPermissionSLZ(label="用户组权限", many=True)},
+        tags=["admin.subject.group.permission"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject.from_username(kwargs["subject_id"])
+
+        # 获取用户组数据
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        count, data = self.biz.query_group_permissions_subject(subject, limit, offset)
+        results = [one.dict() for one in data]
+        return Response({"count": count, "results": results})

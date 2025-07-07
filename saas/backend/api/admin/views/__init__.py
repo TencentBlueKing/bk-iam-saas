@@ -13,6 +13,7 @@ from .group import AdminGroupInfoViewSet, AdminGroupMemberViewSet, AdminGroupPol
 from .role import AdminSuperManagerMemberViewSet, AdminSystemManagerMemberViewSet
 from .subject import (
     AdminSubjectFreezeViewSet,
+    AdminSubjectGroupPermissionViewSet,
     AdminSubjectGroupViewSet,
     AdminSubjectPermissionCleanupViewSet,
     AdminSubjectPermissionExistsViewSet,
@@ -37,4 +38,5 @@ __all__ = [
     "AdminTemplateViewSet",
     "AdminGroupPolicyViewSet",
     "AdminSystemProviderConfigViewSet",
+    "AdminSubjectGroupPermissionViewSet",
 ]

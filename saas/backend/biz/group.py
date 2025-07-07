@@ -24,7 +24,7 @@ from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject, RoleUser
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup
 from backend.apps.template.models import PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
-from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
+from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleSubjectScopeChecker
 from backend.biz.subject_template import SubjectTemplateBiz
@@ -127,6 +127,27 @@ class GroupTemplateGrantBean(BaseModel):
     policies: List[PolicyBean]
 
 
+class GroupActionBean(BaseModel):
+    name: str
+    action_id: str
+
+
+class GroupSystemBean(BaseModel):
+    system_id: str
+    name: str
+    actions: List[GroupActionBean]
+
+
+class GroupPermissionBean(BaseModel):
+    id: str
+    name: str
+    grade_management: Dict[str, str]
+    description: str
+    expired_at: int
+    expired_at_display: str
+    permissions: List[GroupSystemBean]
+
+
 class GroupBiz:
     policy_query_svc = PolicyQueryService()
     template_svc = TemplateService()
@@ -145,6 +166,7 @@ class GroupBiz:
     resource_biz = ResourceBiz()
     template_check_biz = TemplateCheckBiz()
     subject_template_biz = SubjectTemplateBiz()
+    policy_query_biz = PolicyQueryBiz()
 
     # 直通的方法
     check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
@@ -1036,6 +1058,46 @@ class GroupBiz:
         更新人员模版过期时间
         """
         self.subject_template_svc.update_expired_at(group_id, template_id, expired_at)
+
+    def _convert_to_group_permissions(
+        self, groups: List[SubjectGroupBean], subject: Subject, group_ids: List[int]
+    ) -> List[GroupPermissionBean]:
+        result = []
+        group_role_dict = self.get_group_role_dict_by_ids(group_ids)
+        for group in groups:
+            # 根据用户组id获取系统
+            role = group_role_dict.get(group.id)
+            if not role:
+                raise error_codes.NOT_FOUND_ERROR.format(_("用户组对应的分级管理空间不存在"))
+            group_permission_bean = GroupPermissionBean(
+                id=group.id,
+                name=group.name,
+                grade_management={"name": role.name, "id": role.id},  # noqa
+                description=group.description,
+                expired_at=group.expired_at,
+                expired_at_display=group.expired_at_display,
+                permissions=[],
+            )
+            systems = self.list_system_counter(group.id)
+            for system in systems:
+                group_permission_bean.permissions.append(
+                    GroupSystemBean(system_id=system.id, name=system.name, actions=[])
+                )
+                policies = self.policy_query_biz.list_by_subject(system.id, subject)
+                for policy in policies:
+                    group_permission_bean.permissions[-1].actions.append(
+                        GroupActionBean(action_id=policy.action_id, name=policy.name)
+                    )
+            result.append(group_permission_bean)
+        return result
+
+    def query_group_permissions_subject(
+        self, subject: Subject, limit: int = 10, offset: int = 0
+    ) -> Tuple[int, List[GroupPermissionBean]]:
+        count, groups = self.list_paging_subject_group(subject, limit=limit, offset=offset)
+        group_ids = [group.id for group in groups]
+
+        return count, self._convert_to_group_permissions(groups, subject, group_ids)
 
 
 class GroupCheckBiz:

@@ -114,3 +114,38 @@ class AdminTemplateCreateSLZ(TemplateCreateSLZ):
 
 class AdminTemplateIdSLZ(TemplateIdSLZ):
     pass
+
+
+class ActionSLZ(serializers.Serializer):
+    name = serializers.CharField(label="操作名称")
+    action_id = serializers.CharField(label="操作ID")
+    expired_at = serializers.IntegerField(label="过期时间戳(单位秒)", allow_null=True)
+    expired_at_display = serializers.CharField(label="过期时间显示", allow_null=True)
+
+
+class SystemSLZ(serializers.Serializer):
+    name = serializers.CharField(label="系统名称")
+    system_id = serializers.CharField(label="系统ID")
+
+
+class SystemActionSLZ(SystemSLZ):
+    action = serializers.ListField(label="操作列表", child=ActionSLZ(label="操作"))
+
+
+class GradeManagementSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="分级管理空间ID")
+    name = serializers.CharField(label="分级管理空间名称")
+
+
+class GroupPermissionSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="用户组ID")
+    name = serializers.CharField(label="用户组名称")
+    grade_management = GradeManagementSLZ(label="分级管理空间")
+    description = serializers.CharField(label="用户组描述", default="")
+    expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
+    expired_at_display = serializers.CharField(label="过期时间显示")
+    permissions = serializers.ListField(label="权限列表", child=SystemActionSLZ(label="系统"))
+
+
+class SubjectGroupPermissionSLZ(serializers.Serializer):
+    groups = serializers.ListField(label="用户组列表", child=GroupPermissionSLZ(label="用户组"))
