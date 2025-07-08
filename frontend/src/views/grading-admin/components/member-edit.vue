@@ -324,7 +324,7 @@
             max-width: calc(100vh - 125px);
             .member-item {
                 display: inline-block;
-                padding: 0 5px;
+                padding: 0 10px;
                 margin-right: 2px;
                 line-height: 22px;
                 border-radius: 2px;

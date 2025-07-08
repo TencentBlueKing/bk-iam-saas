@@ -613,9 +613,13 @@
         );
         this.setMagicBoxLocale(language);
         if (window.BK_COMPONENT_API_URL) {
-          const url = `${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/`;
+          const linkUrl = this.user.tenant_id
+            ? `/docs/api-docs/gateway/bk-user-web/`
+            : `/api/c/compapi/v2/usermanage/fe_update_user_language/`;
+          const apiName = 'update_current_user_language';
+          const url = `${window.BK_COMPONENT_API_URL}${linkUrl}`;
           try {
-            await jsonpRequest(url, { language });
+            await jsonpRequest(url, this.user.tenant_id ? { language, apiName } : { language });
           } finally {
             window.location.reload();
           }

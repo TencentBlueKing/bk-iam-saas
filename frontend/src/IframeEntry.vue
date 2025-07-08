@@ -252,20 +252,22 @@
         try {
           const res = await this.$store.dispatch('organization/getOrganizationsSyncTask');
           const status = res.data.status;
-          if (status === 'Succeed' || status === 'Failed') {
-            if (status === 'Succeed') {
+          if (['Succeed', 'Failed'].includes(status)) {
+            if (['Succeed'].includes(status)) {
               bus.$emit('sync-success');
+              this.messageSuccess(this.$t(`m.permTemplate['同步组织架构成功']`), 3000);
+            }
+            if (['Failed'].includes(status)) {
+              this.messageAdvancedError({
+                code: 0,
+                limit: 1,
+                theme: 'error',
+                message: this.$t(`m.permTemplate['同步组织架构失败']`)
+              });
             }
             window.localStorage.removeItem('isPoll');
             this.$store.commit('updateSync', false);
             clearInterval(this.timer);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: status === 'Succeed' ? 'success' : 'error',
-              message: status === 'Succeed'
-                ? this.$t(`m.permTemplate['同步组织架构成功']`)
-                : this.$t(`m.permTemplate['同步组织架构失败']`)
-            });
             bus.$emit('on-sync-record-status');
           }
         } catch (e) {

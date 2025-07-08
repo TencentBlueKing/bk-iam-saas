@@ -8,13 +8,16 @@
         :clearable="false"
         @change="handleDateChange">
       </bk-date-picker>
+      <!-- 单独处理搜索人员 -->
       <div class="audit-search-select">
         <iam-search-select
           ref="iamSearchSelect"
           style="width: 500px;"
           :data="searchData"
           :value="searchValue"
-          @on-change="handleSearch" />
+          @on-click-menu="handleClickSearchMenu"
+          @on-change="handleSearch"
+        />
       </div>
     </render-search>
     <bk-table
@@ -171,7 +174,10 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.audit['对象及类型']`)">
         <template slot-scope="{ row }">
-          <IamUserDisplayName :user-id="`${objectMap[row.object_type] || row.object_type }${$t(`m.common['：']`)}${row.object_name}`" />
+          <div class="flex-center">
+            {{`${objectMap[row.object_type] || row.object_type }${$t(`m.common['：']`)}`}}
+            <IamUserDisplayName :user-id="row.object_name" />
+          </div>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.audit['操作者']`)">
@@ -669,6 +675,16 @@
         this.resetPagination();
         this.currentMonth = this.getDate(this.getFormatDate(date));
         this.fetchAuditList(true);
+      },
+
+      handleClickSearchMenu (payload) {
+        // 单独对人员筛选相关的字段做处理
+        const searchSelectRef = this.$refs.iamSearchSelect.$refs.searchSelect;
+        const keywordValue = searchSelectRef.localValue.replace(`${this.$t(`m.audit['操作者']`)}${this.$t(`m.common['：']`)}`, '');
+        const isEmpty = ['username'].includes(payload.menu.id) && !keywordValue;
+        if (isEmpty) {
+          searchSelectRef.hidePopper();
+        }
       },
 
       handleSearch (payload, result) {

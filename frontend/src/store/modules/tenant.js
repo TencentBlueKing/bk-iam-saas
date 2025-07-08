@@ -22,21 +22,46 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
-import path from 'path';
-import fse from 'fs-extra';
-// import npm from 'npm';
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const manifestExist = fse.pathExistsSync(path.resolve(__dirname, '..', 'static', 'lib-manifest.json'));
-const bundleExist = fse.pathExistsSync(path.resolve(__dirname, '..', 'static', 'lib.bundle.js'));
+const { BK_USER_WEB_APIGW_URL } = window;
 
-if (!(manifestExist & bundleExist)) {
-  // npm.load({}, () => {
-  //   npm.run('dll', err => {
-  //     if (err) {
-  //       throw err;
-  //     }
-  //   });
-  // });
-}
+export default {
+  namespaced: true,
+  state: {},
+  mutations: {},
+  actions: {
+    /**
+       * 查询多租户版本人员选择器
+       *
+       * @param {Function} commit store commit mutation handler
+       * @param {Object} state store state
+       * @param {Function} dispatch store dispatch action handler
+       * @param {Object} params 请求参数
+       * @param {Object?} config http config
+       *
+       * @return {Promise} promise 对象
+       */
+    getTenantUserSelector ({ commit, state, dispatch }, params, config) {
+      return http.get(`${BK_USER_WEB_APIGW_URL}/api/v3/open-web/tenant/users/-/search/?${json2Query(params)}`, { globalError: false });
+    },
+
+    /**
+       * 查询多租户版本多个人员
+       *
+       * @param {Function} commit store commit mutation handler
+       * @param {Object} state store state
+       * @param {Function} dispatch store dispatch action handler
+       * @param {Object} params 请求参数
+       * @param {Object?} config http config
+       *
+       * @return {Promise} promise 对象
+       */
+    getTenantDisplayName ({ commit, state, dispatch }, params, config) {
+      return http.get(`${BK_USER_WEB_APIGW_URL}/api/v3/open-web/tenant/users/-/display_info/?${json2Query(params)}`, { globalError: false });
+    }
+  }
+};

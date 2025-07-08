@@ -100,6 +100,9 @@ import renewalNotice from './modules/renewal-notice';
 // 用户全局配置
 import userGlobalConfig from './modules/global-config';
 
+// 多租户相关接口
+import tenantConfig from './modules/tenant';
+
 Vue.use(Vuex);
 
 const SITE_URL = getRoutePath(window.SITE_URL);
@@ -360,7 +363,8 @@ const store = new Vuex.Store({
     memberTemplate,
     userOrOrg,
     renewalNotice,
-    userGlobalConfig
+    userGlobalConfig,
+    tenantConfig
   },
   state: {
     mainContentLoading: false,

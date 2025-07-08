@@ -67,11 +67,9 @@
     methods: {
       handleTriggerClick (event) {
         if (this.$refs.iamUserSelectorRef && this.$refs.iamUserSelectorRef.$el.contains(event.target)) {
-          console.log('聚焦了');
           this.$emit('focus');
           return;
         }
-        console.log('失焦了');
         this.$emit('blur');
       },
 

@@ -72,12 +72,15 @@
       <!-- 先屏蔽 -->
       <div slot="right">
         <iam-search-select
+          ref="iamSearchSelect"
           style="width: 420px;"
           :placeholder="$t(`m.userGroup['搜索用户组名、描述、管理空间、创建人']`)"
           :data="searchData"
           :value="searchValue"
           :quick-search-method="quickSearchMethod"
-          @on-change="handleSearch" />
+          @on-click-menu="handleClickSearchMenu"
+          @on-change="handleSearch"
+        />
       </div>
     </render-search>
     <bk-table
@@ -676,7 +679,6 @@
       },
 
       handleRemoteRtx (value) {
-        console.log('value', value);
         return fuzzyRtxSearch(value).then((data) => {
           return data.results;
         });
@@ -745,6 +747,16 @@
             showTotalCount: true
           }
         );
+      },
+
+      handleClickSearchMenu (payload) {
+        // 单独对人员筛选相关的字段做处理
+        const searchSelectRef = this.$refs.iamSearchSelect.$refs.searchSelect;
+        const keywordValue = searchSelectRef.localValue.replace(`${this.$t(`m.grading['创建人']`)}${this.$t(`m.common['：']`)}`, '');
+        const isEmpty = ['creator'].includes(payload.menu.id) && !keywordValue;
+        if (isEmpty) {
+          searchSelectRef.hidePopper();
+        }
       },
 
       handleSearch (payload, result) {
@@ -966,7 +978,6 @@
 
       handleSelect (value) {
         const { id, disabled, method } = value;
-        console.log(value);
         if (!disabled) {
           this.selectKeyword = id;
           this.$refs.userGroupSelect.close();

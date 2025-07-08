@@ -48,30 +48,19 @@
           :class="['group-list-item', { active: `${item.id}&${item.name}` === selectActive }]"
         >
           <bk-checkbox v-model="item.checked" @change="handleChecked(...arguments, item)" />
-          <div class="group-content" @click.stop="handleSelect(item)">
+          <div
+            class="group-content"
+            @click.stop="handleSelect(item)"
+          >
             <Icon
               :type="formatTypeIcon(item.type)"
               :class="['group-type-icon', { active: `${item.id}&${item.name}` === selectActive }]"
             />
-            <div
-              v-if="['user'].includes(item.type)"
-              :ref="`userOrg_${item.id}`"
-              class="single-hide group-name"
-            >
+            <div class="group-name">
               <IamUserDisplayName
-                :user-id="item.id"
-                :tooltip-config="{ disabled: formatShowToolTip(item), placements: 'right-start' }"
-                :placements="'right-start'"
-              />
-            </div>
-            <div
-              v-if="['department'].includes(item.type)"
-              :ref="`userOrg_${item.id}`"
-              class="single-hide group-name"
-            >
-              <IamUserDisplayName
-                :user-id="item.name"
-                :tooltip-config="{ disabled: formatShowToolTip(item), placements: 'right-start' }"
+                :ref="`userOrg_${item.id}`"
+                :user-id="['user'].includes(item.type) ? item.id : item.name"
+                :tooltip-config="{ disabled: formatShowToolTip(item), placement: 'right-start' }"
                 :placements="'right-start'"
               />
             </div>
@@ -360,10 +349,18 @@
       }
     },
     methods: {
+      getTextWidth (text, font = '13px Arial') {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.font = font;
+        return ctx.measureText(text).width;
+      },
+
       formatShowToolTip (payload) {
-        if (this.$refs[`userOrg_${payload.id}`] && this.$refs[`userOrg_${payload.id}`].length) {
-          const offsetWidth = this.$refs[`userOrg_${payload.id}`][0].offsetWidth;
-          return !(offsetWidth > 167);
+        const userOrgRef = this.$refs[`userOrg_${payload.id}`];
+        if (userOrgRef && userOrgRef.length > 0) {
+          const offsetWidth = this.getTextWidth(this.$refs[`userOrg_${payload.id}`][0].getDisplayTooltip);
+          return !(offsetWidth > 160);
         }
       },
 
@@ -457,7 +454,7 @@
     padding-left: 16px;
   }
 
-  .group-list {
+  /deep/ .group-list {
     /* padding-right: 16px; */
     position: relative;
     &-content {
@@ -503,6 +500,12 @@
         .group-name {
           max-width: 168px;
           word-break: break-all;
+
+          .tenant-display-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
         }
       }
 

@@ -20,7 +20,7 @@
           <template v-else>
             <div class="member-name">
               <IamUserDisplayName
-                :user-id="isHasDepartCount ? item.name : item.username || item.id"
+                :user-id="formatCustomTypeName(item)"
                 :display-value="[nameType(item)]"
               />
             </div>
@@ -116,15 +116,13 @@
       },
       formatCustomTypeName () {
         return (payload) => {
-          const { name, type, id } = payload;
+          const { name, type, username } = payload;
           const typeMap = {
             user: () => {
-              // return `${id} (${name})`;
-              return id || name;
+              return username || name;
             },
             department: () => {
-              // return `${name} (${id})`;
-              return id || name;
+              return username || name;
             }
           };
           return typeMap[type] ? typeMap[type]() : typeMap['user']();

@@ -155,11 +155,7 @@
       @page-limit-change="limitChange">
       <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
         <template slot-scope="{ row }">
-          <span :title="row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`">
-            <bk-user-display-name
-              :user-id="row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`"
-            />
-          </span>
+          <IamUserDisplayName :user-id="['user'].includes(row.type) ? row.id : row.name" />
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.resourcePermiss['用户类型']`)">
