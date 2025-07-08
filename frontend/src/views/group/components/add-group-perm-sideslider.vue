@@ -44,11 +44,12 @@
               </div>
               <iam-search-select
                 ref="iamSearchSelect"
-                @on-change="handleSearch"
+                style="width: 240px; display: inline-block;"
                 :data="searchData"
                 :value="searchValue"
                 :quick-search-method="quickSearchMethod"
-                style="width: 240px; display: inline-block;"
+                @on-click-menu="handleClickSearchMenu"
+                @on-change="handleSearch"
               />
               <!-- <div class="refresh-wrapper"
                 v-bk-tooltips="$t(`m.common['刷新']`)"
@@ -554,6 +555,16 @@
           this.messageAdvancedError(e);
         } finally {
           this.requestQueueBySys.shift();
+        }
+      },
+      
+      handleClickSearchMenu (payload) {
+        // 单独对人员筛选相关的字段做处理
+        const searchSelectRef = this.$refs.iamSearchSelect.$refs.searchSelect;
+        const keywordValue = searchSelectRef.localValue.replace(`${this.$t(`m.grading['创建人']`)}${this.$t(`m.common['：']`)}`, '');
+        const isEmpty = ['creator'].includes(payload.menu.id) && !keywordValue;
+        if (isEmpty) {
+          searchSelectRef.hidePopper();
         }
       },
 

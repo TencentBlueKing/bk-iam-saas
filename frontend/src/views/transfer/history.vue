@@ -16,7 +16,7 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.permTransfer['目标交接人']`)" :width="300">
         <template slot-scope="{ row }">
-          <span :title="row.handover_to">{{ row.handover_to }}</span>
+          <IamUserDisplayName :user-id="row.handover_to" />
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.permTransfer['交接状态']`)">
@@ -24,7 +24,7 @@
           <span class="status-icon" :class="row.statusCls"></span>{{row.statusStr}}
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="150">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="150">
         <template slot-scope="{ row }">
           <bk-button theme="primary" text @click="showDetail(row)">{{ $t(`m.common['详情']`) }}</bk-button>
         </template>

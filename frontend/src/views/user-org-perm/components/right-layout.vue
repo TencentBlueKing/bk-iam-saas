@@ -1,6 +1,12 @@
 <template>
   <div class="user-org-right-wrapper">
-    <div class="user-name">{{ formatUserName }}</div>
+    <div class="flex-center user-name">
+      <IamUserDisplayName
+        :user-id="formatUserName"
+        :tooltip-config="{ disabled: true }"
+      />
+      <div>{{ $t(`m.userOrOrg['的用户组']`)}}</div>
+    </div>
     <div class="header-operate">
       <div>
         <bk-button theme="primary" @click="handleAddGroup">
@@ -155,10 +161,10 @@
         const { id, name } = this.groupData;
         const typeMap = {
           user: () => {
-            return `${id}${this.$t(`m.common['（']`)}${name}${this.$t(`m.common['）']`)}${this.$t(`m.userOrOrg['的用户组']`)}`;
+            return id;
           },
           department: () => {
-            return `${name}${this.$t(`m.userOrOrg['的用户组']`)}`;
+            return name;
           }
         };
         if (typeMap[this.groupData.type]) {

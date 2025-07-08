@@ -37,7 +37,9 @@
             :popover-zindex="2999"
             :quick-search-method="quickSearchMethod"
             style="width: 420px;"
-            @on-change="handleSearch" />
+            @on-click-menu="handleClickSearchMenu"
+            @on-change="handleSearch"
+          />
         </div>
         <div class="right">
           <bk-button
@@ -415,6 +417,16 @@
 
       handleDeadlineChange (payload) {
         this.expiredAt = payload;
+      },
+
+      handleClickSearchMenu (payload) {
+        // 单独对人员筛选相关的字段做处理
+        const searchSelectRef = this.$refs.searchTemplateRef.$refs.searchSelect;
+        const keywordValue = searchSelectRef.localValue.replace(`${this.$t(`m.grading['创建人']`)}${this.$t(`m.common['：']`)}`, '');
+        const isEmpty = ['creator'].includes(payload.menu.id) && !keywordValue;
+        if (isEmpty) {
+          searchSelectRef.hidePopper();
+        }
       },
 
       handleSearch (payload) {

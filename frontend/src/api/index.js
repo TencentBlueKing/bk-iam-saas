@@ -297,3 +297,10 @@ export function injectCSRFTokenToHeaders () {
     console.warn(`Can not find ${CSRF_COOKIE_NAME} in document.cookie`);
   }
 }
+
+// 注入多租户id到headers
+export function injectTenantIdToHeaders (tenantId) {
+  if (tenantId) {
+    axiosInstance.defaults.headers.common['X-Bk-Tenant-Id'] = tenantId;
+  }
+}

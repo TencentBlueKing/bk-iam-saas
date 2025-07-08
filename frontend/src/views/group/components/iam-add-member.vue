@@ -13,6 +13,7 @@
     >
       <!-- eslint-disable max-len -->
       <div slot="header" class="title">
+        <bk-user-display-name :user-id="['dhya0ukshy1e4rhk', 'djd59ek54976oqw0']" />
         <template v-if="showExpiredAt">
           <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
           <div v-else>
@@ -200,7 +201,7 @@
                       >
                         {{ $t(`m.common['解析并添加']`) }}
                       </bk-button>
-                      <bk-button style="margin-left: 10px" @click="handleClearManualUser">
+                      <bk-button style="margin-left: 13px" @click="handleClearManualUser">
                         {{ $t(`m.common['清空']`) }}
                       </bk-button>
                     </div>
@@ -744,7 +745,6 @@
       },
       formatUserName () {
         return ({ type, name, username } = {}) => {
-          console.log(type, name, username);
           return ['depart', 'department'].includes(type) ? name : username;
         };
       },
@@ -1006,10 +1006,9 @@
             if (result && result.length) {
               const hasSelectedUsers = [...this.defaultUsers, ...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
               const userTemp = result.filter((item) => {
-                const isExistData = hasSelectedUsers.map((subItem) =>
-                  `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
+                const isExistData = hasSelectedUsers.map((subItem) => subItem.username).includes(item.username);
                 if (isExistData) {
-                  this.hasExistOrgData.push(`${item.username} (${item.name})`);
+                  this.hasExistOrgData.push(item.username);
                 }
                 return !isExistData;
               });
@@ -1118,7 +1117,7 @@
             this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
             const isExistName = [...defaultUsers, ...hasSelectedUsers].includes(item.username);
             if (isExistName) {
-              this.hasExistOrgData.push(`${item.username} (${item.name})`);
+              this.hasExistOrgData.push(item.username);
             }
             return !isExistName;
           });
@@ -1913,8 +1912,12 @@
       },
 
       handleGetUniqueName () {
+        // 通过bk_username反向查询display_name
         if (this.hasExistOrgData.length) {
-          this.messageWarn(this.$t(`m.info['组织架构重复添加多个相同用户名']`, { value: [...new Set(this.hasExistOrgData)].join() }));
+          this.$store.dispatch('tenantConfig/getTenantDisplayName', { bk_usernames: this.hasExistOrgData.join() }).then(res => {
+            const displayNames = (res.data || []).map(v => v.display_name);
+            this.messageWarn(this.$t(`m.info['组织架构重复添加多个相同用户名']`, { value: [...new Set(displayNames)].join() }));
+          });
         }
       },
       

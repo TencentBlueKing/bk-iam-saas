@@ -86,8 +86,7 @@
         const { applicants = [] } = this.data;
         return applicants.length > 0
           ? applicants.map((item) => ['user'].includes(item.type)
-            ? `${item.id}(${item.display_name})`
-            : item.display_name).join(';') : '';
+            ? item.id : item.display_name).join() : '';
       }
     },
     methods: {

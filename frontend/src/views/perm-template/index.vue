@@ -15,10 +15,12 @@
                 </bk-button> -->
       <div slot="right">
         <iam-search-select
+          ref="iamSearchSelect"
           style="width: 420px"
           :data="searchData"
           :value="searchValue"
           :quick-search-method="quickSearchMethod"
+          @on-click-menu="handleClickSearchMenu"
           @on-change="handleSearch"
         />
       </div>
@@ -477,6 +479,16 @@
           .then(({ data }) => {
             return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
           });
+      },
+
+      handleClickSearchMenu (payload) {
+        // 单独对人员筛选相关的字段做处理
+        const searchSelectRef = this.$refs.iamSearchSelect.$refs.searchSelect;
+        const keywordValue = searchSelectRef.localValue.replace(`${this.$t(`m.grading['创建人']`)}${this.$t(`m.common['：']`)}`, '');
+        const isEmpty = ['creator'].includes(payload.menu.id) && !keywordValue;
+        if (isEmpty) {
+          searchSelectRef.hidePopper();
+        }
       },
 
       handleSearch (payload, result) {

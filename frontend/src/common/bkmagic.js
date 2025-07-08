@@ -107,7 +107,7 @@ export const messageAdvancedError = (details, delay = 8000, ellipsisLine = 3, ex
   const { code, data, message, statusText, response } = details;
   let errCode = null;
   const errMsg = externalMsg || (message || data.msg || statusText);
-  if (code) {
+  if (![null, undefined].includes(code)) {
     errCode = code;
   }
   if (response && response.data) {

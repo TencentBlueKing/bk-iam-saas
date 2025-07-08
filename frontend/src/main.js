@@ -54,7 +54,7 @@ import magicbox from 'bk-magic-vue';
 import { subEnv } from '@blueking/sub-saas/dist/main.js';
 import { language, il8n as il8nNew } from './language';
 import { bus } from './common/bus';
-import { injectCSRFTokenToHeaders } from './api';
+import { injectCSRFTokenToHeaders, injectTenantIdToHeaders } from './api';
 import './common/bkmagic';
 // 全量引入自定义图标
 import './assets/iconfont/style.css';
@@ -144,6 +144,7 @@ auth.requestCurrentUser().then(user => {
       apiBaseUrl: window.BK_USER_WEB_APIGW_URL,
       tenantId: user.tenantId
     });
+    injectTenantIdToHeaders(user.tenantId);
     global.bus = bus;
     global.mainComponent = new Vue({
       el: '#app',
