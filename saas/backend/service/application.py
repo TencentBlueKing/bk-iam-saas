@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -37,17 +37,18 @@ class ApplicationService:
     2. 单据更新
     """
 
-    def __init__(self):
-        self._provider = None
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self._provider: ApplicationTicketProvider | None = None
 
     @property
     def provider(self) -> ApplicationTicketProvider:
         """初始化：单据提供者"""
-        # 避免多次读取（实际可以使用django的cache_property装饰器）
+        # 避免多次读取（实际可以使用 django 的 cache_property 装饰器）
         if self._provider is not None:
             return self._provider
-        # TODO：动态读取并加载配置文件设置的流程提供方，这里暂时默认读取ITSM的
-        self._provider = ITSMApplicationTicketProvider()
+        # TODO：动态读取并加载配置文件设置的流程提供方，这里暂时默认读取 ITSM 的
+        self._provider = ITSMApplicationTicketProvider(self.tenant_id)
         return self._provider
 
     def _generate_callback_info(self) -> Tuple[str, str]:
@@ -59,23 +60,24 @@ class ApplicationService:
     def _create(
         self,
         data: TypeUnionApplicationData,
-        create_ticket_func: Callable[[str, str], Tuple[str, str]],
+        create_ticket_func: Callable[[str, str], str],
         source_system_id: str = "",
         callback_id: str = "",
         callback_url: str = "",
     ) -> Application:
         """创建申请逻辑"""
-        # NOTE: 兼容申请自定义callback
+        # NOTE: 兼容申请自定义 callback
         if not callback_id or not callback_url:
             callback_id, callback_url = self._generate_callback_info()
 
-        callback_token = self._generate_callback_token()
+        # 使用 callback_id 作为回调 token
+        callback_token = callback_id
 
         # 调用第三方插件进行单据创建
-        ticket_sn, ticket_id = create_ticket_func(callback_url, callback_token)
+        sn = create_ticket_func(callback_url, callback_token)
         return Application.objects.create(
-            sn=ticket_sn,
-            ticket_id=ticket_id,
+            sn=sn,
+            tenant_id=self.tenant_id,
             type=data.type,
             applicant=data.applicant_info.username,
             reason=data.reason,
@@ -148,6 +150,7 @@ class ApplicationService:
                 approval_title=approval_title,
                 approval_content=approval_content,
                 tag=source_system_id,
+                callback_token=callback_token,
             ),
             source_system_id=source_system_id,
             callback_id=callback_id,
@@ -158,23 +161,19 @@ class ApplicationService:
         """处理审批回调请求的单据"""
         return self.provider.get_approval_ticket_from_callback_request(request)
 
-    def query_ticket_approval_status(self, ticket_ids: List[str]) -> List[ApplicationTicket]:
+    def query_ticket_approval_status(self, sns: List[str]) -> List[ApplicationTicket]:
         """查询单据审批状态"""
         # 容错处理
-        if len(ticket_ids) == 0:
+        if len(sns) == 0:
             return []
 
         # 使用单据号查询状态
-        return self.provider.list_by_sns(ticket_ids)
+        return self.provider.list_by_sns(sns)
 
-    def cancel_ticket(self, ticket_id: str):
+    def cancel_ticket(self, sn: str):
         """撤销单据"""
-        self.provider.cancel_ticket(ticket_id)
+        self.provider.cancel_ticket(sn)
 
-    def get_ticket(self, ticket_id: str) -> ApplicationTicket:
+    def get_ticket(self, sn: str) -> ApplicationTicket:
         """查询单据"""
-        return self.provider.get_ticket(ticket_id)
-
-    def _generate_callback_token(self) -> str:
-        """生成回调token"""
-        return self.provider.generate_callback_token()
+        return self.provider.get_ticket(sn)

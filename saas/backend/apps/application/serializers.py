@@ -227,7 +227,7 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
 
     def get_ticket_url(self, obj):
         """获取申请单的审批链接"""
-        return ApplicationBiz().get_approval_url(obj)
+        return ApplicationBiz(self.context["tenant_id"]).get_approval_url(obj)
 
 
 class ApplicationDetailSchemaSLZ(ApplicationDetailSLZ):

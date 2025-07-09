@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+from functools import cached_property
 from typing import List
 
 from django.shortcuts import get_object_or_404
@@ -59,13 +60,16 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         ),
     }
 
-    biz = ApplicationBiz()
     group_biz = GroupBiz()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="创建用户组申请单",
         request_body=ManagementGroupApplicationCreateSLZ(label="创建用户组申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据 ID 列表")},
         tags=["management.group.application"],
     )
     def create(self, request, *args, **kwargs):
@@ -79,7 +83,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.filter(username=user_id).first()
         if not user:
             raise error_codes.INVALID_ARGS.format(f"user: {user_id} not exists")
@@ -122,9 +126,12 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
         ),
     }
 
-    biz = ApplicationBiz()
     role_check_biz = RoleCheckBiz()
     trans = GradeManagerTrans()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="分级管理员创建申请单",
@@ -142,12 +149,12 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
 
         user_id = data["applicant"]
 
-        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+        # API 里数据鉴权：不可超过接入系统可管控的授权系统范围
         source_system_id = kwargs["system_id"]
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(source_system_id, auth_system_ids)
 
-        # 兼容member格式
+        # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
 
         # 结构转换
@@ -186,9 +193,12 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
 
     lookup_field = "id"
 
-    biz = ApplicationBiz()
     role_check_biz = RoleCheckBiz()
     trans = GradeManagerTrans()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="分级管理员更新申请单",
@@ -206,14 +216,14 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
 
         user_id = data["applicant"]
 
-        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+        # API 里数据鉴权：不可超过接入系统可管控的授权系统范围
         source_system_id = kwargs["system_id"]
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(source_system_id, auth_system_ids)
 
         role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
 
-        # 兼容member格式
+        # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
 
         info = self.trans.to_role_info(data, source_system_id=source_system_id)
@@ -255,17 +265,19 @@ class ManagementApplicationCancelView(views.APIView):
         ),
     }
 
-    biz = ApplicationBiz()
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     # Note: 这里会回调第三方处理，所以不定义参数
     def put(self, request, *args, **kwargs):
         source_system_id = kwargs["system_id"]
         callback_id = kwargs["callback_id"]
 
-        # 校验系统与callback_id对应的审批存在
+        # 校验系统与 callback_id 对应的审批存在
         application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
 
-        # 接入系统自行cancel itsm 单据
+        # 接入系统自行 cancel itsm 单据
         self.biz.cancel_application(application, application.applicant, need_cancel_ticket=False)
 
         return Response({})
@@ -283,13 +295,16 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         ),
     }
 
-    biz = ApplicationBiz()
     group_biz = GroupBiz()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组续期申请单",
         request_body=ManagementGroupApplicationCreateSLZ(label="用户组续期申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据 ID 列表")},
         tags=["management.group.application"],
     )
     def create(self, request, *args, **kwargs):
@@ -303,7 +318,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.filter(username=user_id).first()
         if not user:
             raise error_codes.INVALID_ARGS.format(f"user: {user_id} not exists")
@@ -343,13 +358,16 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
         ),
     }
 
-    biz = ApplicationBiz()
     group_biz = GroupBiz()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组批量续期申请单",
         request_body=ManagementGroupApplicationBatchSLZ(label="用户组批量续期申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据 ID 列表")},
         tags=["management.group.application"],
     )
     def create(self, request, *args, **kwargs):
@@ -364,7 +382,7 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.filter(username=user_id).first()
         if not user:
             raise (error_codes.INVALID_ARGS.format(f"user: {user_id} not exists"))

@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from functools import wraps
+from functools import cached_property, wraps
 from typing import List
 
 from django.utils.translation import gettext as _
@@ -77,7 +77,10 @@ class ApplicationViewSet(GenericViewSet):
     filterset_class = ApplicationFilter
 
     trans = ApplicationDataTrans()
-    biz = ApplicationBiz()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="提交权限申请",
@@ -125,7 +128,7 @@ class ApplicationViewSet(GenericViewSet):
         instance = self.get_object()
         if instance.applicant != request.user.username:
             raise exceptions.PermissionDenied
-        serializer = ApplicationDetailSLZ(instance)
+        serializer = ApplicationDetailSLZ(instance, context={"tenant_id": self.request.tenant_id})
         return Response(serializer.data)
 
     @swagger_auto_schema(
@@ -151,12 +154,15 @@ class ApplicationApprovalView(views.APIView):
     authentication_classes = ()
     permission_classes = ()
 
-    biz = ApplicationBiz()
-
     # Note: 这里会回调第三方处理，所以不定义参数
     def post(self, request, *args, **kwargs):
         callback_id = kwargs["callback_id"]
-        self.biz.handle_approval_callback_request(callback_id, request)
+        try:
+            application = Application.objects.get(callback_id=callback_id)
+        except Application.DoesNotExist:
+            raise error_codes.NOT_FOUND_ERROR
+
+        ApplicationBiz(application.tenant_id).handle_approval_callback_request(callback_id, request)
         return Response({})
 
 
@@ -204,8 +210,11 @@ class ApplicationByGroupView(views.APIView):
     申请加入用户组
     """
 
-    biz = ApplicationBiz()
     group_biz = GroupBiz()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="加入用户组申请",
@@ -250,9 +259,12 @@ class ApplicationByGradeManagerView(views.APIView):
     申请创建分级管理员
     """
 
-    biz = ApplicationBiz()
     role_check_biz = RoleCheckBiz()
     role_trans = RoleTrans()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="申请创建分级管理员",
@@ -287,10 +299,13 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
     申请修改分级管理员
     """
 
-    biz = ApplicationBiz()
     role_biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     role_trans = RoleTrans()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="申请修改分级管理员",
@@ -342,7 +357,9 @@ class ApplicationByRenewGroupView(views.APIView):
     申请续期用户组
     """
 
-    biz = ApplicationBiz()
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="续期用户组申请",
@@ -379,7 +396,9 @@ class ApplicationByRenewPolicyView(views.APIView):
     申请续期权限
     """
 
-    biz = ApplicationBiz()
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="申请续期权限",
@@ -405,7 +424,10 @@ class ApplicationByTemporaryPolicyView(views.APIView):
     """
 
     trans = ApplicationDataTrans()
-    biz = ApplicationBiz()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="提交临时权限申请",

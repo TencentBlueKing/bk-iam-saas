@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
+from functools import cached_property
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -37,13 +39,16 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         ),
     }
 
-    biz = ApplicationBiz()
     group_biz = GroupBiz()
+
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="创建用户组申请单",
         request_body=ManagementGroupApplicationCreateSLZ(label="创建用户组申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据 ID 列表")},
         tags=["management.group.application"],
     )
     def create(self, request, *args, **kwargs):
@@ -60,7 +65,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         # 检查用户组数量是否超限
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.get(username=user_id)
 
         # 创建申请

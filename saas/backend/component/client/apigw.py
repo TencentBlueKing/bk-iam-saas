@@ -9,23 +9,26 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from backend.util.enum import ChoicesEnum
+import json
+
+from django.conf import settings
+
+from backend.common.local import local
 
 
-class BKLanguageEnum(ChoicesEnum):
-    ZH_CN = "zh-cn"
-    EN = "en"
+class BkApigwBaseClient:
+    @property
+    def app_authorization_header(self):
+        return {
+            "X-Bkapi-Authorization": json.dumps(
+                {"bk_app_code": settings.APP_CODE, "bk_app_secret": settings.APP_SECRET}
+            )
+        }
 
+    @property
+    def request_id(self):
+        return local.request_id
 
-class DjangoLanguageEnum(ChoicesEnum):
-    ZH_HANS = "zh-hans"
-    EN = "en"
-
-
-DJANGO_LANG_TO_BK_LANG = {
-    DjangoLanguageEnum.ZH_HANS.value: BKLanguageEnum.ZH_CN.value,  # type: ignore[attr-defined]
-    DjangoLanguageEnum.EN.value: BKLanguageEnum.EN.value,  # type: ignore[attr-defined]
-}
-
-
-DEFAULT_TENANT_ID = "default"
+    @property
+    def request_id_headers(self):
+        return {"X-Request-Id": self.request_id}

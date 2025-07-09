@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -61,7 +61,7 @@ class GroupTemplateProvider(BaseProvider):
                 continue
             system = system_list.get(t["system_id"])
             name = system.name if system else t["system_id"]
-            data.append({"type": AuditObjectType.TEMPLATE.value, "id": t["template_id"], "name": f"自定义: {name}"})
+            data.append({"type": AuditObjectType.TEMPLATE.value, "id": t["template_id"], "name": f"自定义：{name}"})
 
         return data
 
@@ -101,7 +101,7 @@ class GroupUpdateProvider(BaseProvider):
     @property
     def description(self) -> str:
         extra = self.event.extra
-        return _("名称: {}, 描述: {}").format(extra["name"], extra["description"])
+        return _("名称：{}, 描述：{}").format(extra["name"], extra["description"])
 
 
 class GroupTransferProvider(BaseProvider):
@@ -163,7 +163,7 @@ class TemplateUpdateProvider(BaseProvider):
     @property
     def description(self) -> str:
         extra = self.event.extra
-        return _("名称: {}, 描述: {}").format(extra["name"], extra["description"])
+        return _("名称：{}, 描述：{}").format(extra["name"], extra["description"])
 
     @property
     def extra_info(self) -> Dict:
@@ -191,7 +191,7 @@ class RoleUpdateProvider(BaseProvider):
     @property
     def description(self) -> str:
         extra = self.event.extra
-        return _("名称: {}, 描述: {}").format(extra["name"], extra["description"])
+        return _("名称：{}, 描述：{}").format(extra["name"], extra["description"])
 
 
 class RoleMemberProvider(BaseProvider):
@@ -210,7 +210,7 @@ class RoleMemberPolicyProvider(BaseProvider):
         extra = self.event.extra
         desc = ""
         if "username" in extra:
-            desc += f"对用户: {extra['username']} "
+            desc += f"对用户：{extra['username']} "
 
         if self.event.type == AuditType.ROLE_MEMBER_POLICY_CREATE:
             desc = "授权"
@@ -261,7 +261,11 @@ class RoleConfigProvider(BaseProvider):
 
 
 class ApprovalNameMixin:
-    approval_svc = ApprovalProcessService()
+    event: Event
+
+    @property
+    def approval_svc(self):
+        return ApprovalProcessService(self.event.tenant_id)
 
     def get_process_name(self, process_id):
         return self.approval_svc.get_process_name(process_id)
@@ -274,7 +278,7 @@ class ApprovalGlobalProvider(ApprovalNameMixin, BaseProvider):
         type_name = dict(ApplicationType.get_choices()).get(type_)
         process_id = self.event.extra["process_id"]
         process_name = self.get_process_name(process_id)
-        return f"设置 [{type_name}] 类型全局审批流程: {process_name}(#{process_id})"
+        return f"设置 [{type_name}] 类型全局审批流程：{process_name}(#{process_id})"
 
 
 class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
@@ -287,7 +291,7 @@ class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
         system = self.system_biz.get(system_id)
         process_id = self.event.extra["process_id"]
         process_name = self.get_process_name(process_id)
-        return f"设置 [{system.name}] 系统操作审批流程: {process_name}(#{process_id})"
+        return f"设置 [{system.name}] 系统操作审批流程：{process_name}(#{process_id})"
 
     @property
     def sub_objects(self) -> List:
@@ -306,7 +310,7 @@ class ActionSensitivityLevelProvider(BaseProvider):
         system_id = self.event.extra["system_id"]
         system = self.system_biz.get(system_id)
         sensitivity_level = self.event.extra["sensitivity_level"]
-        return f"设置 [{system.name}] 系统操作敏感等级: {sensitivity_level}"
+        return f"设置 [{system.name}] 系统操作敏感等级：{sensitivity_level}"
 
     @property
     def sub_objects(self) -> List:
@@ -321,7 +325,7 @@ class ApprovalGroupProvider(ApprovalNameMixin, BaseProvider):
     def description(self) -> str:
         process_id = self.event.extra["process_id"]
         process_name = self.get_process_name(process_id)
-        return f"设置用户组审批流程: {process_name}(#{process_id})"
+        return f"设置用户组审批流程：{process_name}(#{process_id})"
 
     @property
     def sub_objects(self) -> List:
@@ -334,7 +338,7 @@ class SubjectTemplateUpdateProvider(BaseProvider):
     @property
     def description(self) -> str:
         extra = self.event.extra
-        return _("名称: {}, 描述: {}").format(extra["name"], extra["description"])
+        return _("名称：{}, 描述：{}").format(extra["name"], extra["description"])
 
 
 class SubjectTemplateMemberProvider(BaseProvider):

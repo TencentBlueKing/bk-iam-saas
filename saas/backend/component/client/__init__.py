@@ -8,24 +8,3 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
-from backend.util.enum import ChoicesEnum
-
-
-class BKLanguageEnum(ChoicesEnum):
-    ZH_CN = "zh-cn"
-    EN = "en"
-
-
-class DjangoLanguageEnum(ChoicesEnum):
-    ZH_HANS = "zh-hans"
-    EN = "en"
-
-
-DJANGO_LANG_TO_BK_LANG = {
-    DjangoLanguageEnum.ZH_HANS.value: BKLanguageEnum.ZH_CN.value,  # type: ignore[attr-defined]
-    DjangoLanguageEnum.EN.value: BKLanguageEnum.EN.value,  # type: ignore[attr-defined]
-}
-
-
-DEFAULT_TENANT_ID = "default"

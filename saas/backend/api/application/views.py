@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 
 import time
+from functools import cached_property
 from typing import List
 from urllib.parse import urlencode
 
@@ -64,7 +65,7 @@ class ApplicationView(views.APIView):
     @swagger_auto_schema(
         operation_description="接入系统权限申请",
         request_body=AccessSystemApplicationSLZ(label="接入系统申请数据"),
-        responses={status.HTTP_200_OK: AccessSystemApplicationUrlSLZ(label="重定向URL")},
+        responses={status.HTTP_200_OK: AccessSystemApplicationUrlSLZ(label="重定向 URL")},
         tags=["open"],
     )
     def post(self, request):
@@ -75,10 +76,10 @@ class ApplicationView(views.APIView):
         data = serializer.validated_data
         system_id = data["system"]
 
-        # 将申请的数据转换为PolicyBeanList数据结构，同时需要进行数据检查
+        # 将申请的数据转换为 PolicyBeanList 数据结构，同时需要进行数据检查
         policy_list = self.access_system_application_trans.to_policy_list(data)
 
-        # 保存到cache中
+        # 保存到 cache 中
         cache_id = self.application_policy_list_cache.set(policy_list)
 
         # 返回重定向地址
@@ -107,7 +108,7 @@ class ApplicationDetailView(GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = ApplicationDetailSLZ(instance)
+        serializer = ApplicationDetailSLZ(instance, context={"tenant_id": self.request.tenant_id})
         return Response(serializer.data)
 
 
@@ -120,7 +121,10 @@ class ApplicationCustomPolicyView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     access_system_application_trans = AccessSystemApplicationTrans()
-    application_biz = ApplicationBiz()
+
+    @cached_property
+    def application_biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="创建自定义权限申请单",
@@ -136,7 +140,7 @@ class ApplicationCustomPolicyView(views.APIView):
         data = serializer.validated_data
         username = data["applicant"]
 
-        # 将Dict数据转换为创建单据所需的数据结构
+        # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.access_system_application_trans.from_grant_policy_application(username, data)
         # 创建单据
         applications = self.application_biz.create_for_policy(ApplicationType.GRANT_ACTION.value, application_data)
@@ -152,7 +156,9 @@ class ApprovalBotUserCallbackView(views.APIView):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ApprovalBotPermission]
 
-    biz = ApplicationBiz()
+    @cached_property
+    def biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="审批机器人用户续期回调",
@@ -296,10 +302,13 @@ class ApplicationCustomPolicyWithCustomTicketView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     access_system_application_trans = AccessSystemApplicationTrans()
-    application_biz = ApplicationBiz()
+
+    @cached_property
+    def application_biz(self):
+        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
-        operation_description="创建自定义权限申请单-允许单据自定义审批内容",
+        operation_description="创建自定义权限申请单 - 允许单据自定义审批内容",
         request_body=ASApplicationCustomPolicyWithCustomTicketSLZ(),
         responses={status.HTTP_200_OK: AccessSystemApplicationCustomPolicyResultSLZ(label="申请单信息", many=True)},
         tags=["open"],
@@ -311,7 +320,7 @@ class ApplicationCustomPolicyWithCustomTicketView(views.APIView):
         data = serializer.validated_data
         username = data["applicant"]
 
-        # 将Dict数据转换为创建单据所需的数据结构
+        # 将 Dict 数据转换为创建单据所需的数据结构
         (
             application_data,
             policy_ticket_contents,

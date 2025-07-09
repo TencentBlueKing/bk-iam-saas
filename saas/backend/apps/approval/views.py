@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 
 from collections import Counter
+from functools import cached_property
 
 from django.db.models import Q
 from django.utils.translation import gettext as _
@@ -54,9 +55,11 @@ from .serializers import (
 class ApprovalProcessViewSet(GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value)]
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
-    biz = ApprovalProcessBiz()
+    @cached_property
+    def biz(self):
+        return ApprovalProcessBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="审批流程列表",
@@ -76,9 +79,11 @@ class ApprovalProcessViewSet(GenericViewSet):
 class ApprovalProcessGlobalConfigViewSet(mixins.ListModelMixin, GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GLOBAL_SETTING.value)]
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
-    biz = ApprovalProcessBiz()
+    @cached_property
+    def biz(self):
+        return ApprovalProcessBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="默认审批流程",
@@ -114,15 +119,18 @@ class ApprovalProcessGlobalConfigViewSet(mixins.ListModelMixin, GenericViewSet):
 class ActionApprovalProcessViewSet(GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value)]
 
-    biz = ApprovalProcessBiz()
     action_svc = ActionService()
 
     action_biz = ActionBiz()
 
+    @cached_property
+    def biz(self):
+        return ApprovalProcessBiz(self.request.tenant_id)
+
     @swagger_auto_schema(
-        operation_description="操作-审批流程列表",
+        operation_description="操作 - 审批流程列表",
         query_serializer=ActionApprovalProcessQuerySLZ(),
-        responses={status.HTTP_200_OK: ActionApprovalProcessSLZ(label="操作-审批流程列表", many=True)},
+        responses={status.HTTP_200_OK: ActionApprovalProcessSLZ(label="操作 - 审批流程列表", many=True)},
         tags=["approval"],
     )
     def list(self, request, *args, **kwargs):
@@ -188,7 +196,7 @@ class ActionApprovalProcessViewSet(GenericViewSet):
         actions = slz.validated_data["actions"]
         process_id = int(slz.validated_data["process_id"])
 
-        # 目前只支持同一系统的批量Action设置审批流程
+        # 目前只支持同一系统的批量 Action 设置审批流程
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
 
@@ -232,7 +240,9 @@ class SystemActionSensitivityLevelCountViewSet(GenericViewSet):
 class ActionSensitivityLevelViewSet(GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SENSITIVITY_LEVEL.value)]
 
-    biz = ApprovalProcessBiz()
+    @cached_property
+    def biz(self):
+        return ApprovalProcessBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="批量设置操作的敏感等级",
@@ -248,7 +258,7 @@ class ActionSensitivityLevelViewSet(GenericViewSet):
         actions = slz.validated_data["actions"]
         sensitivity_level = slz.validated_data["sensitivity_level"]
 
-        # 目前只支持同一系统的批量Action设置审批流程
+        # 目前只支持同一系统的批量 Action 设置审批流程
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
 
@@ -270,12 +280,14 @@ class ActionSensitivityLevelViewSet(GenericViewSet):
 class GroupApprovalProcessViewSet(GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GROUP.value)]
 
-    biz = ApprovalProcessBiz()
+    @cached_property
+    def biz(self):
+        return ApprovalProcessBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
-        operation_description="用户组-审批流程列表",
+        operation_description="用户组 - 审批流程列表",
         query_serializer=GroupApprovalProcessQuerySLZ(),
-        responses={status.HTTP_200_OK: GroupApprovalProcessSLZ(label="用户组-审批流程列表", many=True)},
+        responses={status.HTTP_200_OK: GroupApprovalProcessSLZ(label="用户组 - 审批流程列表", many=True)},
         tags=["approval"],
     )
     def list(self, request, *args, **kwargs):
@@ -332,7 +344,7 @@ class GroupApprovalProcessViewSet(GenericViewSet):
         # 校验角色是否能管理对应的用户组
         if not RoleObjectRelationChecker(request.role).check_group_ids(group_ids):
             raise error_codes.FORBIDDEN.format(
-                message=_("非分级管理员({})的用户组，无权限续期").format(request.role.name), replace=True
+                message=_("非分级管理员 ({}) 的用户组，无权限续期").format(request.role.name), replace=True
             )
 
         self.biz.batch_create_or_update_group_process(group_ids, process_id, request.user.username)

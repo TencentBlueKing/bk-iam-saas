@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -34,16 +34,17 @@ def check_or_update_application_status():
     # TODO: 是否需要过滤超过多久没处理才查询，但也有可能导致某些单据无法快速回调
     qs = Application.objects.filter(status=ApplicationStatus.PENDING.value)
 
-    # 分页处理，避免调用ITSM查询超时问题
+    # 分页处理，避免调用 ITSM 查询超时问题
     paginator = Paginator(qs, 20)
     if not paginator.count:
         return
 
+    # FIXME(tenant): 需要按照申请单的租户进行分组查询
     biz = ApplicationBiz()
     for i in paginator.page_range:
         applications = list(paginator.page(i))
 
-        # 查询ITSM可能出错，若出错，则记录日志，继续执行其他的
+        # 查询 ITSM 可能出错，若出错，则记录日志，继续执行其他的
         try:
             id_status_dict = biz.query_application_approval_status(applications)
         except Exception:  # pylint: disable=broad-except
@@ -67,8 +68,9 @@ def create_policies_renew_applications(data, username):
     """
     创建用户自定义权限续期申请
 
-    由于用户可能一次renew很多个权限, 并且单个操作有很多的资源实例, 查询资源审批人可能会很慢, 需要异步处理
+    由于用户可能一次 renew 很多个权限，并且单个操作有很多的资源实例，查询资源审批人可能会很慢，需要异步处理
     """
+    # FIXME(tenant): 需要按照用户的租户进行创建
     biz = ApplicationBiz()
     biz.create_for_renew_policy(
         parse_obj_as(List[ApplicationRenewPolicyInfoBean], data["policies"]), username, data["reason"]

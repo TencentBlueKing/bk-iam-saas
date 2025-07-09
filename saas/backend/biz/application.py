@@ -406,14 +406,17 @@ class ApprovedPassApplicationBiz:
 
 
 class ApplicationBiz:
-    svc = ApplicationService()
     system_svc = SystemService()
-    approval_process_svc = ApprovalProcessService()
     approval_processor_biz = ApprovalProcessorBiz()
     approved_pass_biz = ApprovedPassApplicationBiz()
 
     policy_biz = PolicyQueryBiz()
     template_biz = TemplateBiz()
+
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = ApplicationService(tenant_id)
+        self.approval_process_svc = ApprovalProcessService(tenant_id)
 
     def _get_approval_process_with_node_processor(
         self, process: ApprovalProcess, **kwargs
@@ -881,8 +884,7 @@ class ApplicationBiz:
         ticket = self.svc.get_approval_ticket_from_callback_request(request)
 
         try:
-            # 单据sn号提单时返回和回调返回sn不一致，使用ticket_id进行查询
-            application = Application.objects.get(ticket_id=ticket.ticket_id, callback_id=callback_id)
+            application = Application.objects.get(sn=ticket.sn, callback_id=callback_id)
         except Application.DoesNotExist:
             raise error_codes.NOT_FOUND_ERROR
 
@@ -891,10 +893,10 @@ class ApplicationBiz:
 
     def query_application_approval_status(self, applications: List[Application]) -> ApplicationIDStatusDict:
         """查询申请单审批状态"""
-        ticket_id_id_dict = {a.ticket_id: a.id for a in applications}
-        tickets = self.svc.query_ticket_approval_status(list(ticket_id_id_dict.keys()))
+        sn_id_dict = {a.sn: a.id for a in applications}
+        tickets = self.svc.query_ticket_approval_status(list(sn_id_dict.keys()))
 
-        return ApplicationIDStatusDict(data={ticket_id_id_dict[t.ticket_id]: t.status for t in tickets})
+        return ApplicationIDStatusDict(data={sn_id_dict[t.sn]: t.status for t in tickets})
 
     def cancel_application(self, application: Application, operator: str, need_cancel_ticket: bool = True):
         """撤销申请单"""
@@ -903,12 +905,12 @@ class ApplicationBiz:
 
         if need_cancel_ticket:
             # 撤销单据
-            self.svc.cancel_ticket(application.ticket_id)
+            self.svc.cancel_ticket(application.sn)
 
         # 更新状态
         self.handle_application_result(application, ApplicationStatus.CANCELLED.value)
 
     def get_approval_url(self, application: Application) -> str:
         """查询审批 URL"""
-        ticket = self.svc.get_ticket(application.ticket_id)
+        ticket = self.svc.get_ticket(application.sn)
         return ticket.url

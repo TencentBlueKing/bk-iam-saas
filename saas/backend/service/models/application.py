@@ -26,7 +26,6 @@ class ApplicationTicket(BaseModel):
     sn: str
     status: ApplicationStatus
     url: str = ""
-    ticket_id: str = ""
 
 
 class ApplicantDepartment(BaseModel):

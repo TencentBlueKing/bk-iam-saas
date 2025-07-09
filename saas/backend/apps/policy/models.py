@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,6 +13,7 @@ import json
 
 from django.db import models
 
+from backend.common.constants import DEFAULT_TENANT_ID
 from backend.common.models import BaseModel
 from backend.service.constants import AuthType
 from backend.util.json import json_dumps
@@ -20,8 +21,10 @@ from backend.util.json import json_dumps
 
 class Policy(BaseModel):
     """
-    subject-系统-操作-策略
+    subject-系统 - 操作 - 策略
     """
+
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
 
     # subject
     subject_type = models.CharField(max_length=32)
@@ -32,11 +35,11 @@ class Policy(BaseModel):
 
     # action
     action_type = models.CharField("操作类型", max_length=32, default="")
-    action_id = models.CharField("操作ID", max_length=64)
+    action_id = models.CharField("操作 ID", max_length=64)
 
     # policy
     _resources = models.TextField("资源策略", db_column="resources")  # json
-    # policy_id = models.BigIntegerField("后端policy_id", default=0)
+    # policy_id = models.BigIntegerField("后端 policy_id", default=0)
 
     # 策略的鉴权类型
     auth_type = models.CharField(

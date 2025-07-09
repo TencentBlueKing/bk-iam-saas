@@ -544,3 +544,5 @@ ITSM_SYSTEM_TOKEN = env.str("ITSM_SYSTEM_TOKEN", default="bk_iam")
 # ITSM API 网关名称和网关环境
 ITSM_APIGW_NAME = env.str("ITSM_APIGW_NAME", default="cw-aitsm")
 ITSM_APIGW_STAGE = env.str("ITSM_APIGW_STAGE", default="prod")
+# 流程模板文件（用于初始化每个租户的默认流程）
+ITSM_WORKERFLOW_TEMPLATE_FILE = os.path.join(BASE_DIR, "backend/plugins/approval_process/itsm/workflow_template.json")

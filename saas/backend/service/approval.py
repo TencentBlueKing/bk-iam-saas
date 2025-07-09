@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -38,17 +38,18 @@ class ApprovalProcessService:
     2. 提供流程设置功能
     """
 
-    def __init__(self):
-        self._provider = None
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self._provider: ApprovalProcessProvider | None = None
 
     @property
     def provider(self) -> ApprovalProcessProvider:
         """初始化：流程提供者"""
-        # 避免多次读取（实际可以使用django的cache_property装饰器）
+        # 避免多次读取（实际可以使用 django 的 cache_property 装饰器）
         if self._provider is not None:
             return self._provider
-        # TODO：动态读取并加载配置文件设置的流程提供方，这里暂时默认读取ITSM的
-        self._provider = ITSMApprovalProcessProvider()
+        # TODO：动态读取并加载配置文件设置的流程提供方，这里暂时默认读取 ITSM 的
+        self._provider = ITSMApprovalProcessProvider(self.tenant_id)
         return self._provider
 
     def list_with_nodes(self, application_type: ApplicationType) -> List[ApprovalProcessWithNode]:
@@ -60,12 +61,12 @@ class ApprovalProcessService:
         return self.provider.get_process_nodes(process_id)
 
     def _get_process_id_name_dict(self) -> Dict[str, str]:
-        """获取流程ID与Name的映射"""
+        """获取流程 ID 与 Name 的映射"""
         processes = self.provider.list()
         return {p.id: p.name for p in processes}
 
     def get_process_name(self, process_id: str) -> str:
-        """获取流程名称，如果没查询到，则默认返回流程id字符串
+        """获取流程名称，如果没查询到，则默认返回流程 id 字符串
         这里虽然可能存在多次调用查询全部流程，但是由于短时间内存在缓存，所以不影响
         """
         return self._get_process_id_name_dict().get(process_id) or str(process_id)
@@ -75,7 +76,7 @@ class ApprovalProcessService:
         # 检查是否该申请类型支持配置审批流程
         if application_type not in DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES:
             raise error_codes.INVALID_ARGS.format(
-                _("不支持申请类型为[{}]拥有默认审批流程").format(application_type), True
+                _("不支持申请类型为 [{}] 拥有默认审批流程").format(application_type), True
             )
 
         # 检查是否有默认审批流程
@@ -110,7 +111,7 @@ class ApprovalProcessService:
 
     def list_action_process(self, system_id: str, action_ids: List[str]) -> List[ActionApprovalProcess]:
         """获取某个系统下某些操作其对应的审批流程"""
-        # 获取所有已配置Action的审批流程
+        # 获取所有已配置 Action 的审批流程
         action_process_relations = ActionProcessRelation.objects.filter(system_id=system_id, action_id__in=action_ids)
         action_process_dict = {i.action_id: i.process_id for i in action_process_relations}
 

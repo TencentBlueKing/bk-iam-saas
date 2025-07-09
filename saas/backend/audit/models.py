@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -16,6 +16,7 @@ from typing import Any, Dict, Type
 from django.db import connections, models
 from django.utils import timezone
 
+from backend.common.constants import DEFAULT_TENANT_ID
 from backend.common.models import BaseModel
 from backend.service.constants import RoleType
 from backend.util.json import json_dumps
@@ -27,21 +28,23 @@ _audit_models: Dict[str, Type[Any]] = {}
 
 
 class Event(BaseModel):
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     source_type = models.CharField("事件来源类型", max_length=32, choices=AuditSourceType.get_choices())
-    source_data_request_id = models.CharField("事件来源请求ID", max_length=32, default="")
-    source_data_app_code = models.CharField("事件来源请求app code", max_length=128, default="")
-    source_data_task_id = models.CharField("事件来源任务ID", max_length=36, default="")
+    source_data_request_id = models.CharField("事件来源请求 ID", max_length=32, default="")
+    source_data_app_code = models.CharField("事件来源请求 app code", max_length=128, default="")
+    source_data_task_id = models.CharField("事件来源任务 ID", max_length=36, default="")
     time = models.DateTimeField(auto_now_add=True)
     type = models.CharField("事件类型", max_length=64, choices=AuditType.get_choices())
     username = models.CharField("用户名", max_length=64)
     role_type = models.CharField(
         "角色类型", max_length=32, default=RoleType.STAFF.value, choices=RoleType.get_choices()
     )
-    role_id = models.IntegerField("角色ID", default=0)
-    system_id = models.CharField("系统id", max_length=32, default="")  # 策略操作时记录
+    role_id = models.IntegerField("角色 ID", default=0)
+    system_id = models.CharField("系统 id", max_length=32, default="")  # 策略操作时记录
     object_type = models.CharField("对象类型", max_length=32, choices=AuditObjectType.get_choices())
-    object_id = models.CharField("对象ID", max_length=64)
+    object_id = models.CharField("对象 ID", max_length=64)
     object_name = models.CharField("对象名称", max_length=128)
     _extra = models.TextField("附加数据", default="{}", db_column="extra")  # json
     status = models.IntegerField(
@@ -64,7 +67,7 @@ class Event(BaseModel):
 
 class EventForMeta(Event):
     """
-    用于filter与serializer的Event Model
+    用于 filter 与 serializer 的 Event Model
     请勿用于其它场景
     """
 
@@ -114,7 +117,7 @@ def _get_model(name: str, suffix: str = ""):
     base_cls = globals()[name]
     cls = _get_sub_model(base_cls, suffix)
     if not cls.exists():
-        # NOTE 并发时, 可能会raise
+        # NOTE 并发时，可能会 raise
         with _get_connection().schema_editor() as schema_editor:
             schema_editor.create_model(cls)
 
