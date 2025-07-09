@@ -103,7 +103,7 @@
                   <span>{{$t(`m.common['系统']`)}}{{child.name}}</span>
                 </span>
                 <span v-else class="iam-menu-text single-hide" :title="child.name">{{ child.name }}</span>
-                <span v-if="['myManageSpace'].includes(child.rkey) && index === 0" @click.stop>
+                <span v-if="['myManageSpace'].includes(child.rkey) && index === 0 && !noviceGuide['grade_manager_upgrade']" @click.stop>
                   <iam-guide
                     ref="popconfirm"
                     type="grade_manager_upgrade"
@@ -211,7 +211,8 @@
           'roleCount',
           'navData',
           'index',
-          'navCurRoleId'
+          'navCurRoleId',
+          'noviceGuide'
       ]),
       unfold () {
           return this.navStick || !this.navFold;

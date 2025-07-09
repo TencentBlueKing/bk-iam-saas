@@ -13,7 +13,6 @@
     >
       <!-- eslint-disable max-len -->
       <div slot="header" class="title">
-        <bk-user-display-name :user-id="['dhya0ukshy1e4rhk', 'djd59ek54976oqw0']" />
         <template v-if="showExpiredAt">
           <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
           <div v-else>
