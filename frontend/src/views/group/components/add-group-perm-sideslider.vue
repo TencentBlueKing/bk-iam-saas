@@ -8,11 +8,27 @@
     @update:isShow="handleCancel">
     <div slot="content" class="content-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
       <section v-show="!isLoading">
+        <bk-alert type="info" class="space-info-tip" v-show="isRatingManager">
+          <div slot="title">
+            <span>
+              {{ $t(`m.info['空间管理员可为用户组分配的权限受限于当前空间的管控范围。如果找不到所需权限，您可以前往空间信息页申请新的权限管控范围。']`) }}
+            </span>
+            <bk-button
+              text
+              type="primary"
+              size="small"
+              style="padding: 0"
+              @click="handleNavSpace"
+            >
+              {{ $t(`m.common['前往申请']`) }}
+            </bk-button>
+          </div>
+        </bk-alert>
         <div class="template-content-wrapper">
           <render-search>
             <div class="search-title">
               {{ $t(`m.info['从权限模板选择添加：']`) }}{{ $t(`m.common['已选择']`) }}
-              <span style="color: #2dcb56;">{{ currentSelectList.length }}</span>
+              <span style="color: #3a84ff;">{{ currentSelectList.length }}</span>
               {{ $t(`m.common['条']`) }}
             </div>
             <div slot="right">
@@ -32,15 +48,17 @@
                 :data="searchData"
                 :value="searchValue"
                 :quick-search-method="quickSearchMethod"
-                style="width: 240px; display: inline-block;" />
-              <div class="refresh-wrapper"
+                style="width: 240px; display: inline-block;"
+              />
+              <!-- <div class="refresh-wrapper"
                 v-bk-tooltips="$t(`m.common['刷新']`)"
                 @click="handleRefresh">
                 <Icon type="refresh" />
-              </div>
+              </div> -->
             </div>
           </render-search>
           <!-- eslint-disable max-len -->
+          <bk-alert type="info" :title="$t(`m.info['最多选择权限模板数量']`, { value: maxSelectCount })" />
           <bk-table
             ref="permTemplateTableRef"
             :data="tableList"
@@ -54,7 +72,7 @@
             @page-limit-change="handleLimitChange"
             @select="handlerChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column type="selection" align="center" :selectable="getIsSelect"></bk-table-column>
+            <bk-table-column type="selection" align="center" :selectable="getDefaultSelect"></bk-table-column>
             <bk-table-column :label="$t(`m.permTemplate['模板名']`)">
               <template slot-scope="{ row }">
                 <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
@@ -195,6 +213,7 @@
         searchParams: {},
         sysCount: 0,
         actionCount: 0,
+        maxSelectCount: typeof window.GROUP_AUTH_TEMPLATE_ONCE_LIMIT === 'number' ? window.GROUP_AUTH_TEMPLATE_ONCE_LIMIT : 10,
         curSelectedSystem: [],
         curSelectedTemplate: [],
         tempalteDetailList: [],
@@ -219,6 +238,9 @@
             },
             isDisabled () {
                 return this.requestQueueBySys.length > 0 || this.requestQueueByTemplate.length > 0;
+            },
+            isRatingManager () {
+              return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             }
     },
     watch: {
@@ -338,8 +360,10 @@
         }
       },
 
-      getIsSelect (row, index) {
-        return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled;
+      getDefaultSelect (row) {
+        const index = this.currentSelectList.findIndex((v) => String(v) === String(row.id));
+        const isMax = this.currentSelectList.length >= this.maxSelectCount ? index !== -1 : true;
+        return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled && isMax;
       },
 
       handleEmptyClear () {
@@ -361,7 +385,6 @@
           showSelectionCount: false
         });
         this.currentBackup = 1;
-        this.currentSelectList = [];
         this.requestQueueBySys = [];
         this.requestQueueByTemplate = [];
         this.selection = [];
@@ -571,6 +594,12 @@
           name: 'permTemplateEdit',
           params: { id: data.id, systemId: data.system.id }
         });
+      },
+
+      handleNavSpace () {
+        this.$router.push({
+          name: 'authorBoundary'
+        });
       }
     }
   };
@@ -652,6 +681,17 @@
             position: absolute;
             left: -15px;
             top: -11px;
+        }
+        .iam-search-wrapper {
+          margin-bottom: 8px;
+        }
+        .space-info-tip {
+          display: flex;
+          line-height: 32px;
+          margin-bottom: 8px;
+          .bk-alert-wraper {
+            align-items: center;
+          }
         }
     }
 </style>

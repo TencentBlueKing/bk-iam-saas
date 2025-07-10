@@ -25,8 +25,9 @@
  */
 
 import il8n from '@/language';
+import { getRoutePath } from '@/common/util';
 
-const SITE_URL = window.SITE_URL;
+// const SITE_URL = window.SITE_URL;
 
 // 系统接入
 const SystemAccess = () => import(/* webpackChunkName: 'system-access' */ '../views/system-access');
@@ -113,23 +114,14 @@ const GradingAdmin = () => import(/* webpackChunkName: 'grading-admin' */ '../vi
 // 管理空间新建
 const GradingAdminCreate = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/create');
 
+// 管理空间克隆
+const GradingAdminClone = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/create');
+
 // 管理空间详情
 const GradingAdminDetail = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/detail');
 
 // 管理空间编辑
 const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/edit');
-
-// 管理空间更新权限模板
-const GradingAdminUpdateTemplate = () =>
-  import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
-
-// 管理空间
-// const FirstManageSpace = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space');
-
-// // 管理空间新建
-// const FirstManageSpaceCreate = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space/create');
 
 // 授权边界
 const AuthorizationBoundary = () =>
@@ -151,9 +143,13 @@ const SecondaryManageSpace = () =>
 const SecondaryManageSpaceCreate = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/create');
 
+// 二极管理空间克隆
+const SecondaryManageSpaceClone = () =>
+  import(/* webpackChunkName: 'secondaryManageSpaceClone' */ '../views/manage-spaces/secondary-manage-space/clone');
+
 // 二极管理空间编辑
 const SecondaryManageSpaceEdit = () =>
-  import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
+  import(/* webpackChunkName: 'secondaryManageSpaceEdit' */ '../views/manage-spaces/secondary-manage-space/edit');
 
 // 二极管理空间详情
 const SecondaryManageSpaceDetail = () =>
@@ -168,8 +164,8 @@ const Setting = () => import(/* webpackChunkName: 'set' */ '../views/set');
 // 审批流程设置
 const ApprovalProcess = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/approval-process');
 
-// 用户组设置
-const UserGroupSetting = () => import(/* webpackChunkName: 'userGroupSetting' */ '../views/user-group-setting');
+// 续期通知
+const RenewalNotice = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/renewal-notice');
 
 // 权限续期
 const PermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/perm-renewal');
@@ -188,6 +184,9 @@ const MemberTemplate = () => import(/* webpackChunkName: 'memberTemplate' */ '..
 
 // 系统管理员下的资源权限管理
 const ResourcePermManage = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
+
+// 用户/组织
+const userOrgPerm = () => import(/* webpackChunkName: 'userOrgPerm' */ '../views/user-org-perm/index.vue');
 
 const TemplatePermDetail = () =>
   import(/* webpackChunkName: 'my-perm-template-perm' */ '../views/perm/template-perm/detail');
@@ -209,6 +208,8 @@ const NotFound = () => import(/* webpackChunkName: 'none' */ '../views/404');
 
 // Main
 const MainEntry = () => import(/* webpackChunkName: 'index' */ '../views');
+
+const SITE_URL = getRoutePath(window.SITE_URL);
 
 export const routes = [
   {
@@ -303,6 +304,16 @@ export const routes = [
           backRouter: 'myManageSpace'
         },
         component: MyManageSpaceCreate
+      },
+      {
+        path: ':id/my-manage-space/clone',
+        name: 'myManageSpaceClone',
+        meta: {
+          headerTitle: il8n('nav', '克隆管理空间'),
+          backRouter: 'myManageSpace'
+        },
+        props: true,
+        component: GradingAdminCreate
       },
       {
         path: 'my-manage-space/sub-detail',
@@ -406,7 +417,7 @@ export const routes = [
         component: SecondaryManageSpace
       },
       {
-        path: ':id/manage-spaces/secondary-manage-space/create',
+        path: 'manage-spaces/secondary-manage-space/create',
         name: 'secondaryManageSpaceCreate',
         meta: {
           headerTitle: '',
@@ -414,6 +425,16 @@ export const routes = [
         },
         props: true,
         component: SecondaryManageSpaceCreate
+      },
+      {
+        path: ':id/manage-spaces/secondary-manage-space/clone',
+        name: 'secondaryManageSpaceClone',
+        meta: {
+          headerTitle: '',
+          backRouter: -1
+        },
+        props: true,
+        component: SecondaryManageSpaceClone
       },
       {
         path: ':id/manage-spaces/secondary-manage-space/edit',
@@ -433,10 +454,18 @@ export const routes = [
         component: SecondaryManageSpaceDetail
       },
       {
+        path: 'user-org-perm',
+        name: 'userOrgPerm',
+        meta: {
+          headerTitle: il8n('nav', '用户权限管理')
+        },
+        component: userOrgPerm
+      },
+      {
         path: 'user-group',
         name: 'userGroup',
         meta: {
-          headerTitle: il8n('nav', '用户组')
+          headerTitle: il8n('nav', '用户组管理')
         },
         component: UserGroup
       },
@@ -444,7 +473,7 @@ export const routes = [
         path: 'create-user-group',
         name: 'createUserGroup',
         meta: {
-          headerTitle: il8n('userGroup', '新建用户组'),
+          headerTitle: il8n('userGroup', '新建用户组管理'),
           backRouter: 'userGroup'
         },
         component: CreateUserGroup
@@ -453,7 +482,7 @@ export const routes = [
         path: 'clone-user-group',
         name: 'cloneUserGroup',
         meta: {
-          headerTitle: il8n('userGroup', '用户组克隆'),
+          headerTitle: il8n('userGroup', '用户组管理克隆'),
           backRouter: 'userGroup'
         },
         component: CloneUserGroup
@@ -598,7 +627,7 @@ export const routes = [
         component: GradingAdmin
       },
       {
-        path: ':id/rating-manager-create',
+        path: 'rating-manager-create',
         name: 'gradingAdminCreate',
         meta: {
           headerTitle: il8n('nav', '新建管理空间'),
@@ -606,6 +635,16 @@ export const routes = [
         },
         props: true,
         component: GradingAdminCreate
+      },
+      {
+        path: ':id/rating-manager-clone',
+        name: 'gradingAdminClone',
+        meta: {
+          headerTitle: il8n('nav', '克隆管理空间'),
+          backRouter: -1
+        },
+        props: true,
+        component: GradingAdminClone
       },
       {
         path: ':id/rating-manager-detail',
@@ -624,33 +663,6 @@ export const routes = [
         component: GradingAdminEdit
       },
       {
-        path: ':id/rating-manager-update-template',
-        name: 'gradingAdminUpdateTemplate',
-        meta: {
-          headerTitle: il8n('nav', '编辑管理空间'),
-          backRouter: 'gradingAdminEdit'
-        },
-        component: GradingAdminUpdateTemplate
-      },
-      // {
-      //     path: 'first-manage-space',
-      //     name: 'firstManageSpace',
-      //     meta: {
-      //         headerTitle: il8n('nav', '管理空间')
-      //     },
-      //     component: FirstManageSpace
-      // },
-      // {
-      //     path: ':id/first-manage-space-create',
-      //     name: 'firstManageSpaceCreate',
-      //     meta: {
-      //         headerTitle: il8n('levelSpace', '新建管理空间'),
-      //         backRouter: 'firstManageSpace'
-      //     },
-      //     props: true,
-      //     component: FirstManageSpaceCreate
-      // },
-      {
         path: 'resource-permiss',
         name: 'resourcePermiss',
         meta: {
@@ -667,6 +679,14 @@ export const routes = [
         component: SensitivityLevel
       },
       {
+        path: 'system-administrator',
+        name: 'systemAdministrator',
+        meta: {
+          headerTitle: il8n('common', '管理员')
+        },
+        component: Setting
+      },
+      {
         path: 'administrator',
         name: 'administrator',
         meta: {
@@ -678,17 +698,17 @@ export const routes = [
         path: 'approval-process',
         name: 'approvalProcess',
         meta: {
-          headerTitle: il8n('myApply', '审批流程')
+          headerTitle: il8n('myApply', '审批流程管理')
         },
         component: ApprovalProcess
       },
       {
-        path: 'user-group-setting',
-        name: 'userGroupSetting',
+        path: 'renewal-notice',
+        name: 'renewalNotice',
         meta: {
-          headerTitle: il8n('nav', '用户组设置')
+          headerTitle: il8n('nav', '续期通知')
         },
-        component: UserGroupSetting
+        component: RenewalNotice
       },
       {
         path: 'no-perm',
@@ -719,12 +739,12 @@ export const routes = [
     ]
   },
   {
-    path: '403',
+    path: getRoutePath('403'),
     name: '403',
     component: NotAccessPermPage
   },
   {
-    path: '*',
+    path: getRoutePath('*'),
     name: '404',
     component: NotFound
   }

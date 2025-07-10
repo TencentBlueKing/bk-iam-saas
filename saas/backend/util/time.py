@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import datetime
 import time
 
@@ -29,6 +30,17 @@ def utc_string_to_local(str_time):
     return utc_to_local(t)
 
 
+def utc_string_to_timestamp(str_time: str) -> int:
+    """
+    后端UTC时间转换为时间戳
+    """
+    # Note: 该转换后是 naive datetime，即不带时区
+    naive_t = string_to_datetime(str_time, fmt="%Y-%m-%dT%H:%M:%SZ")
+    # 由于 str_time 本身就是 utc 时间字符串，所以可以设置时区为 UTC，这样就得到 aware datetime
+    aware_t = naive_t.replace(tzinfo=datetime.timezone.utc)
+    return int(aware_t.timestamp())
+
+
 def utc_to_local(utc_time):
     tz = timezone.get_current_timezone()
     dt = datetime.datetime.utcnow()
@@ -46,5 +58,4 @@ def format_localtime(fmt="%Y%m%d%H%M%S"):
     """
     转换当前时间为指定格式
     """
-    t = time.strftime(fmt, time.localtime())
-    return t
+    return time.strftime(fmt, time.localtime())

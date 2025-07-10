@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.utils import translation
 from rest_framework.renderers import JSONRenderer
 
@@ -71,5 +72,4 @@ class BKAPIRenderer(JSONRenderer):
         if renderer_context and "message" in renderer_context:
             data["message"] = renderer_context["message"]
 
-        response = super().render(data, accepted_media_type, renderer_context)
-        return response
+        return super().render(data, accepted_media_type, renderer_context)

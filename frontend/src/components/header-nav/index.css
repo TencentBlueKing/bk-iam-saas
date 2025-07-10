@@ -56,7 +56,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             color: #3c96ff;
         }
 
-        .heaer-nav-title {
+        .header-nav-title {
             margin: 0;
             padding: 0 20px;
             display: inline-block;
@@ -82,7 +82,13 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         .help-flag {
             display: inline-flex;
             align-items: center;
+            .iamcenter-help-fill {
+                color: #979ba5;
+            }
             &:hover {
+                .iamcenter-help-fill {
+                    color:#ffffff;
+                }
                 .dropdown-panel {
                     opacity: 1;
                     visibility: visible;

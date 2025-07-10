@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,8 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from functools import wraps
-from typing import Any, Dict, List
+from typing import List
 
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
@@ -58,13 +59,13 @@ from .tasks import create_policies_renew_applications
 
 def admin_not_need_apply_check(func):
     """
-    admin用户不需要申请权限检查
+    admin 用户不需要申请权限检查
     """
 
     @wraps(func)
     def wrapper(view, request, *args, **kwargs):
         if request.user.username == ADMIN_USER:
-            raise error_codes.INVALID_ARGS.format(_("用户admin默认拥有任意权限, 无需申请"))
+            raise error_codes.INVALID_ARGS.format(_("用户 admin 默认拥有任意权限，无需申请"))
 
         return func(view, request, *args, **kwargs)
 
@@ -72,7 +73,6 @@ def admin_not_need_apply_check(func):
 
 
 class ApplicationViewSet(GenericViewSet):
-
     queryset = Application.objects.all()
     filterset_class = ApplicationFilter
 
@@ -93,7 +93,7 @@ class ApplicationViewSet(GenericViewSet):
         data = serializer.validated_data
         user_id = request.user.username
 
-        # 将Dict数据转换为创建单据所需的数据结构
+        # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.trans.from_grant_policy_application(user_id, data)
         # 创建单据
         self.biz.create_for_policy(ApplicationType.GRANT_ACTION.value, application_data)
@@ -147,7 +147,7 @@ class ApplicationApprovalView(views.APIView):
     第三方系统审批后回调权限中心
     """
 
-    # Note：目前回调接口暂时不进行API认证鉴权
+    # Note：目前回调接口暂时不进行 API 认证鉴权
     authentication_classes = ()
     permission_classes = ()
 
@@ -162,7 +162,7 @@ class ApplicationApprovalView(views.APIView):
 
 class ConditionView(views.APIView):
     """
-    条件对比, 对比申请的数据与已有数据的差异
+    条件对比，对比申请的数据与已有数据的差异
     """
 
     policy_biz = PolicyQueryBiz()
@@ -180,8 +180,8 @@ class ConditionView(views.APIView):
 
         data = serializer.validated_data
 
-        # 1. 查询用户已有的policy的condition
-        related_resource_type: Dict[str, Any] = data["related_resource_type"]
+        # 1. 查询用户已有的 policy 的 condition
+        related_resource_type = data["related_resource_type"]
         old_condition = self.policy_biz.get_policy_resource_type_conditions(
             Subject.from_username(request.user.username),
             data["policy_id"],
@@ -309,7 +309,9 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
 
         # 必须是分级管理员的成员才可以申请修改
         if not can_user_manage_role(user_id, role.id):
-            raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限申请修改").format(role.name), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("非分级管理员 ({}) 的成员，无权限申请修改").format(role.name), replace=True
+            )
 
         # 查询已有的策略范围
         old_scopes = self.role_biz.list_auth_scope(role.id)
@@ -354,7 +356,7 @@ class ApplicationByRenewGroupView(views.APIView):
 
         data = serializer.validated_data
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.get(username=request.user.username)
 
         # 创建申请
@@ -419,7 +421,7 @@ class ApplicationByTemporaryPolicyView(views.APIView):
         data = serializer.validated_data
         user_id = request.user.username
 
-        # 将Dict数据转换为创建单据所需的数据结构
+        # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.trans.from_grant_temporary_policy_application(user_id, data)
         # 创建单据
         self.biz.create_for_policy(ApplicationType.GRANT_TEMPORARY_ACTION.value, application_data)

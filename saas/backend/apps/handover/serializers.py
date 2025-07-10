@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 
 from rest_framework import serializers
@@ -32,7 +33,7 @@ class HandoverInfoSLZ(serializers.Serializer):
     )
 
     def validate(self, data):
-        if all([not value for value in data.values()]):
+        if all(not value for value in data.values()):
             raise serializers.ValidationError("交接的权限内容不可为空")
         return data
 

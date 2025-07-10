@@ -2,7 +2,11 @@
   <div>
     <div
       ref="selectTableRef"
-      class="iam-search-resource-form iam-search-resource-form-perm">
+      :class="[
+        'iam-search-resource-form',
+        'iam-search-resource-form-perm',
+        { [customClass]: customClass }
+      ]">
       <render-search v-if="enableGroupInstanceSearch">
         <div
           :class="[
@@ -12,10 +16,10 @@
           <div>
             <bk-form
               form-type="vertical"
-              class="pb30 resource-action-form">
+              class="resource-action-form">
               <iam-form-item
                 :label="$t(`m.common['系统']`)"
-                class="pr20 form-item-resource">
+                class="form-item-resource">
                 <bk-select
                   :style="{ width: contentWidth }"
                   v-model="applyGroupData.system_id"
@@ -37,7 +41,7 @@
               </iam-form-item>
               <iam-form-item
                 :label="$t(`m.common['操作']`)"
-                class="pr20"
+                class="form-item-resource"
               >
                 <bk-select
                   :style="{ width: contentWidth }"
@@ -64,41 +68,39 @@
                   v-for="(_, index) in resourceTypeData.resource_groups"
                   :key="_.id"
                   class="resource-group-container">
-                  <div>
-                    <iam-form-item
-                      :label="$t(`m.permApply['资源类型']`)"
-                      class="pr20 form-item-resource">
-                      <bk-select
-                        :style="{ width: contentWidth }"
-                        v-model="curResourceData.type"
-                        :clearable="false"
-                        :allow-enter="false"
-                        :placeholder="$t(`m.verify['请选择']`)"
-                        :disabled="!applyGroupData.action_id"
-                        :title="!applyGroupData.action_id ?
-                          $t(`m.verify['请选择操作']`) : ''"
-                        @change="handleResourceTypeChange(index)"
-                      >
-                        <bk-option
-                          v-for="related in _.related_resource_types_list"
-                          :key="related.type"
-                          :id="related.type"
-                          :name="related.name">
-                        </bk-option>
-                      </bk-select>
-                      <p class="error-tips" v-if="resourceTypeError">
-                        {{$t(`m.verify['请选择资源类型']`)}}
-                      </p>
-                    </iam-form-item>
-                  </div>
                   <iam-form-item
-                    :style="{ width: contentWidth }"
+                    :label="$t(`m.permApply['资源类型']`)"
+                    class="form-item-resource">
+                    <bk-select
+                      :style="{ width: contentWidth }"
+                      v-model="curResourceData.type"
+                      :clearable="false"
+                      :allow-enter="false"
+                      :placeholder="$t(`m.verify['请选择']`)"
+                      :disabled="!applyGroupData.action_id"
+                      :title="!applyGroupData.action_id ?
+                        $t(`m.verify['请选择操作']`) : ''"
+                      @change="handleResourceTypeChange(index)"
+                    >
+                      <bk-option
+                        v-for="related in _.related_resource_types_list"
+                        :key="related.type"
+                        :id="related.type"
+                        :name="related.name">
+                      </bk-option>
+                    </bk-select>
+                    <p class="error-tips" v-if="resourceTypeError">
+                      {{$t(`m.verify['请选择资源类型']`)}}
+                    </p>
+                  </iam-form-item>
+                  <iam-form-item
                     class="form-item-resource"
                     :label="$t(`m.common['资源实例']`)">
                     <div class="relation-content-item"
                       v-for="(content, contentIndex) in _.related_resource_types"
                       :key="contentIndex">
                       <div class="content"
+                        :style="{ width: contentWidth }"
                       >
                         <render-condition
                           :ref="`condition_${index}_${contentIndex}_ref`"
@@ -124,54 +126,66 @@
               </template>
             </bk-form>
           </div>
-          <div class="group-search-select pb20">
-            <iam-search-select
-              style="width: calc(100% - 20px)"
-              ref="searchSelectRef"
-              :data="searchData"
-              :value="searchValue"
-              :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
-              :quick-search-method="handleQuickSearchMethod"
-              @on-change="handleSearch"
-              @on-click-menu="handleClickMenu"
-              @on-input="handleSearchInput"
-            />
-            <bk-button
-              class="ml20"
-              theme="primary"
-              @click="handleSearchUserGroup(true, true)">
-              {{ $t(`m.common['查询']`) }}
-            </bk-button>
-            <bk-button
-              class="ml20"
-              theme="default"
-              @click="handleEmptyClear">
-              {{ $t(`m.common['重置']`) }}
-            </bk-button>
-          </div>
+          <template>
+            <div :class="['custom-slot-content']" v-if="isCustomSearch">
+              <slot name="custom-content" />
+            </div>
+            <div class="group-search-select" v-else>
+              <iam-search-select
+                style="width: calc(100% - 20px)"
+                ref="searchSelectRef"
+                :data="searchData"
+                :value="searchValue"
+                :placeholder="searchSelectPlaceHolder"
+                :quick-search-method="handleQuickSearchMethod"
+                @on-change="handleSearch"
+                @on-click-menu="handleClickMenu"
+                @on-input="handleSearchInput"
+              />
+              <bk-button
+                class="ml20"
+                theme="primary"
+                :outline="true"
+                @click="handleSearchUserGroup(true, true)">
+                {{ $t(`m.common['查询']`) }}
+              </bk-button>
+              <bk-button
+                class="ml20"
+                theme="default"
+                @click="handleEmptyClear">
+                {{ $t(`m.common['重置']`) }}
+              </bk-button>
+            </div>
+          </template>
         </div>
       </render-search>
       <div
         v-else
-        style="padding-bottom: 20px;">
-        <iam-search-select
-          ref="searchSelectRef"
-          @on-change="handleSearch"
-          :data="searchData"
-          :value="searchValue"
-          :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
-          :quick-search-method="handleQuickSearchMethod" />
+        class="no-resource-search-wrapper">
+        <template v-if="isCustomSearch">
+          <slot name="custom-content" />
+        </template>
+        <template v-else>
+          <iam-search-select
+            ref="searchSelectRef"
+            @on-change="handleSearch"
+            :data="searchData"
+            :value="searchValue"
+            :placeholder="searchSelectPlaceHolder"
+            :quick-search-method="handleQuickSearchMethod"
+          />
+        </template>
       </div>
     </div>
     
     <bk-sideslider
-      :is-show="isShowResourceInstanceSideslider"
+      :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
       :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel('mask')">
+      @update:isShow="handleResourceCancel">
       <div slot="content"
         class="sideslider-content">
         <render-resource
@@ -186,7 +200,7 @@
         <bk-button theme="primary" @click="handleResourceSubmit">
           {{ $t(`m.common['保存']`) }}
         </bk-button>
-        <bk-button style="margin-left: 10px;" @click="handleResourceCancel('cancel')">
+        <bk-button style="margin-left: 10px;" @click="handleResourceCancel">
           {{ $t(`m.common['取消']`) }}
         </bk-button>
       </div>
@@ -196,6 +210,7 @@
 
 <script>
   import _ from 'lodash';
+  import il8n from '@/language';
   import Policy from '@/model/policy';
   import RenderCondition from '@/views/resource-permiss/components/render-condition';
   import RenderResource from '@/views/resource-permiss/components/render-resource';
@@ -227,6 +242,30 @@
       maxSelectWidth: {
         type: String,
         default: '240px'
+      },
+      customClass: {
+        type: String,
+        default: ''
+      },
+      isFullScreen: {
+        type: Boolean,
+        default: false
+      },
+      searchSelectPlaceHolder: {
+        type: String,
+        default: il8n('applyEntrance', '申请加入用户组搜索提示')
+      },
+      isCustomSearch: {
+        type: Boolean,
+        default: false
+      },
+      gridCount: {
+        type: Number,
+        default: 4
+      },
+      curSearchData: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -296,17 +335,18 @@
             name: this.$t(`m.userGroup['用户组名']`),
             default: true
           },
-          {
-            id: 'id',
-            name: 'ID',
-            default: true
-          },
+          // {
+          //   id: 'id',
+          //   name: 'ID',
+          //   default: true
+          // },
           {
             id: 'description',
             name: this.$t(`m.common['描述']`),
             default: true
           }
         ],
+        searchData: [],
         curResourceData: {
           type: ''
         },
@@ -317,6 +357,7 @@
         systemSelectList: [],
         processesList: [],
         resourceInstances: [],
+        resourceActionData: [],
         isShowConfirmDialog: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
         systemIdError: false,
@@ -324,7 +365,7 @@
         searchTypeError: false,
         resourceTypeError: false,
         resourceInstanceError: false,
-        isShowResourceInstanceSideslider: false,
+        isShowResourceInstanceSideSlider: false,
         isSearchSystem: false,
         groupIndex: -1,
         curResIndex: -1,
@@ -343,7 +384,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemsLayout', 'externalSystemId']),
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'navStick']),
       condition () {
           if (this.curResIndex === -1 || this.groupIndex === -1) {
               return [];
@@ -353,7 +394,7 @@
           if (!this.curResourceData) {
               return [];
           }
-          if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
+          // if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
           return _.cloneDeep(this.curResourceData.condition);
       },
       curSelectionMode () {
@@ -387,13 +428,70 @@
           }
         },
         immediate: true
+      },
+      applyGroupData: {
+        handler (value) {
+          const params = {};
+          if (value.system_id) {
+            const curData = this.systemSelectList.find((item) => item.id === value.system_id);
+            if (curData) {
+              params.system_id = {
+                label: curData.name,
+                value: curData.id
+              };
+            }
+          }
+          if (value.action_id) {
+            const curData = this.processesList.find((item) => item.id === value.action_id);
+            if (curData) {
+              params.action_id = {
+                label: curData.name,
+                value: curData.id
+              };
+            }
+          }
+          // 用于判断自定义slot场景下，同步更新选中值
+          this.$emit('on-select-system', params);
+        },
+        deep: true
+      },
+      curResourceData: {
+        handler (value) {
+          // 用于判断自定义slot场景下，同步更新选中值
+          // 处理资源类型数据
+          let params = {};
+          const { type, condition } = value;
+          const { resource_groups: resourceGroups } = this.resourceTypeData;
+          if (resourceGroups && resourceGroups.length) {
+            if (type && resourceGroups[0].related_resource_types_list
+              && resourceGroups[0].related_resource_types_list.length
+            ) {
+              const curData = resourceGroups[0].related_resource_types_list.find((item) => item.type === type);
+              if (curData) {
+                params.resource_type = {
+                  label: curData.name,
+                  value: curData.type
+                };
+              }
+            }
+          }
+          // 处理资源实例数据
+          if (condition) {
+            params = Object.assign(params, {
+              condition
+            });
+          }
+          this.$emit('on-select-resource', params);
+        },
+        deep: true
+      },
+      navStick () {
+        this.formatFormItemWidth();
       }
     },
     async created () {
-      this.contentWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
-      this.searchData = this.enableGroupInstanceSearch
-        ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id))
-        : this.initSearchData;
+      this.formatFormItemWidth();
+      this.formatSearchData();
       await this.fetchPermData();
     },
     mounted () {
@@ -405,9 +503,20 @@
       });
     },
     methods: {
-      formatResourceSliderWidth () {
-        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
-          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      formatSearchData () {
+        // 处理不同页面自定义搜索字段
+        const isOtherRoute = ['userOrgPerm'].includes(this.$route.name);
+        const routeMap = {
+          true: () => {
+            this.searchData = [...this.curSearchData];
+          },
+          false: () => {
+            this.searchData = this.enableGroupInstanceSearch
+              ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id))
+              : _.cloneDeep(this.initSearchData);
+          }
+        };
+        return routeMap[isOtherRoute]();
       },
 
       async fetchPermData () {
@@ -440,9 +549,14 @@
         // isTagInput是处理未生成tag的内容
         this.systemIdError = false;
         this.handleManualInput(isTagInput);
-        const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
+        let isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         // 处理搜索框没有生成tag，下拉框也没有选择任务数据，但实际有输入内容情况
-        const isNoTag = isTagInput && this.searchList.length < 1 && !this.applyGroupData.system_id;
+        let isNoTag = isTagInput && this.searchList.length < 1 && !this.applyGroupData.system_id;
+        // 处理自定义搜索slot，searchList为空情况
+        if (this.isCustomSearch) {
+          isSearch = true;
+          isNoTag = false;
+        }
         if (isSearch) {
           // if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
           //   this.systemIdError = true;
@@ -469,11 +583,11 @@
               });
               return prev;
             }, []);
+            const hasResourceGroup = this.resourceTypeData.resource_groups[this.groupIndex];
             if (this.curResourceData.type
               && !resourceInstances.length
-              && this.resourceTypeData.resource_groups[this.groupIndex]
-              && this.resourceTypeData.resource_groups[this.groupIndex]
-                .related_resource_types.some(e => e.empty)) {
+              && hasResourceGroup
+              && hasResourceGroup.related_resource_types.some(e => e.empty)) {
               this.resourceInstanceError = true;
               return;
             }
@@ -761,7 +875,7 @@
         this.groupIndex = groupIndex;
         this.resourceInstanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
-        this.isShowResourceInstanceSideslider = true;
+        this.isShowResourceInstanceSideSlider = true;
       },
 
       handleResetResourceData () {
@@ -803,35 +917,39 @@
         }
         window.changeAlert = false;
         this.resourceInstanceSideSliderTitle = '';
-        this.isShowResourceInstanceSideslider = false;
+        this.isShowResourceInstanceSideSlider = false;
         this.curResIndex = -1;
         this.resourceInstanceError = false;
+        // 抛出选择后的实例数据处理自定义组件场景
+        if (this.isCustomSearch) {
+          this.$emit('on-select-instance', {
+            resourceInstances: this.resourceInstances,
+            resourceTypeData: this.resourceTypeData
+          });
+        }
       },
 
-      handleResourceCancel (payload) {
-        const typeMap = {
-          mask: () => {
-            const { data } = this.$refs.renderResourceRef.handleGetValue();
-            const { hasSelectedCondition } = this.$refs.renderResourceRef;
-            let cancelHandler = Promise.resolve();
-            if (JSON.stringify(data) !== JSON.stringify(hasSelectedCondition)) {
-              cancelHandler = leaveConfirm();
-            }
-            cancelHandler.then(() => {
-              this.isShowResourceInstanceSideslider = false;
-              this.resetDataAfterClose();
-            }, _ => _);
-          },
-          cancel: () => {
-            this.resetDataAfterClose();
-            this.isShowResourceInstanceSideslider = false;
-          }
-        };
-        return typeMap[payload]();
+      handleResourceCancel () {
+        let cancelHandler = Promise.resolve();
+        if (window.changeAlert) {
+          cancelHandler = leaveConfirm();
+        }
+        cancelHandler.then(() => {
+          this.isShowResourceInstanceSideSlider = false;
+          this.resetDataAfterClose();
+        }, _ => _);
+      },
+
+      formatResourceSliderWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
       formatFormItemWidth () {
-        this.contentWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
+        // 276代表菜单栏展开的宽度加16px内边距， 76代表菜单栏收缩的宽度加16px内边距
+        this.defaultWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
+        this.gridWidth = (window.innerWidth - (this.navStick ? 276 : 76) - this.gridCount * 16) / this.gridCount;
+        this.contentWidth = this.isFullScreen ? `${this.gridWidth}px` : this.defaultWidth;
       },
 
       handleQuickSearchMethod (value) {
@@ -857,7 +975,7 @@
 
       resetPagination () {
         this.pagination = Object.assign(
-          {},
+          this.pagination,
           {
             limit: 10,
             current: 1,
@@ -881,7 +999,6 @@
         this.resourceInstances = [];
         this.resetLocationHref();
       }
-
     }
   };
 
@@ -891,6 +1008,41 @@
  @import '@/css/mixins/apply-join-group-search.css';
  .iam-search-resource-form-perm {
     background-color: #ffffff;
-    padding: 20px 20px 0 20px;
+    padding: 20px;
+    .resource-action-form {
+      .form-item-resource {
+        margin-right: 16px !important;
+      }
+    }
+    /deep/ .resource-group-container {
+      .form-item-resource {
+        &:last-child {
+          margin-right: 0 !important;
+        }
+        .relation-content-item {
+          .iam-condition-input {
+            height: 30px !important;
+            line-height: 30px;
+          }
+        }
+      }
+    }
+    .group-search-select {
+      padding-top: 16px;
+    }
+    &.user-org-resource-perm {
+      padding: 16px;
+      padding-top: 12px;
+      .left {
+        .resource-action-form {
+          .error-tips {
+            position: absolute;
+            line-height: 16px;
+            font-size: 10px;
+            color: #ea3636;
+          }
+        }
+      }
+    }
   }
 </style>

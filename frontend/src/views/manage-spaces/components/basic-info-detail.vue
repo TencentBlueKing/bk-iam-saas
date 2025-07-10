@@ -123,17 +123,16 @@
           description,
           members,
           sync_perm,
-                    ...payload,
+          ...payload,
           id: this.id
         };
-        const url = ['subset_manager'].includes(type) ? 'spaceManage/updateSecondManagerManager' : 'role/updateRatingManager';
+        // 这里存在直接从分级管理员进入二级管理员详情，所以他当前身份还是分级管理员，详情接口没有类型区分，这里暂时通过判断路由处理
+        const isSubsetManager = ['subset_manager'].includes(type) || ['secondaryManageSpace', 'secondaryManageSpaceDetail'].includes(this.$route.name);
+        const url = isSubsetManager ? 'spaceManage/updateSecondManager' : 'role/updateRatingManager';
         return this.$store.dispatch(url, params)
           .then(async () => {
             this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
             const { name, description, members } = params;
-            // this.formData.name = params.name;
-            // this.formData.description = params.description;
-            // this.formData.members = [...params.members];
             this.formData = Object.assign(this.formData, {
               name,
               description,

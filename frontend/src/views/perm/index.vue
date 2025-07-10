@@ -87,6 +87,7 @@
             <IamResourceCascadeSearch
               ref="iamResourceSearchRef"
               :active="active"
+              :search-select-place-holder="$t(`m.perm['输入用户组名、描述等按回车键进行搜索']`)"
               @on-remote-table="handleRemoteTable"
               @on-refresh-table="handleRefreshTable"
               @on-input-value="handleInputValue"
@@ -147,10 +148,10 @@
       </template>
     </div>
     <div
-      v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
       :class="[
         'custom-footer-wrapper',
-        { 'custom-footer-wrapper-no-perm': isEmpty }
+        { 'custom-footer-wrapper-no-perm': isEmpty },
+        { 'hidden': isSubEnv || externalSystemsLayout.myPerm.hideApplyBtn }
       ]"
     >
       <the-footer />
@@ -372,12 +373,12 @@
             { code: teporarySystemCode, data: teporarySystemData },
             { code: departmentGroupCode, data: departmentGroupData }
           ] = await Promise.all(requestList);
-                    
+
           const personalGroupList = personalGroupData && personalGroupData.results ? personalGroupData.results : [];
           this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
           this.$set(this.panels[0], 'count', personalGroupData.count || 0);
           this.emptyData = formatCodeData(personalGroupCode, this.emptyData, this.personalGroupList.length === 0);
-                    
+
           const systemList = customData || [];
           this.systemList.splice(0, this.systemList.length, ...systemList);
           this.systemListStorage = _.cloneDeep(systemList);
@@ -438,19 +439,19 @@
             { code: memberTempByUserCode, data: memberTempByUserData },
             { code: memberTempByDepartCode, data: memberTempByDepartData }
           ] = await Promise.all(list);
-  
+
           const memberTempByUserCount = memberTempByUserData.count || 0;
           this.memberTempByUserList = memberTempByUserData.results || [];
-  
+
           const memberTempByDepartCount = memberTempByDepartData.count || 0;
           this.memberTempByDepartList = memberTempByDepartData.results || [];
-  
+
           this.panels[2] = Object.assign(this.panels[2], {
             userCount: memberTempByUserCount,
             departCount: memberTempByDepartCount,
             count: memberTempByUserCount + memberTempByDepartCount
           });
-  
+
           this.emptyDepartmentGroupData = formatCodeData(
             memberTempByUserCode || memberTempByDepartCode,
             this.emptyMemberTemplateData,
@@ -483,7 +484,7 @@
           }
         }
       },
-            
+
       // 获取搜索的个人用户组
       async fetchUserGroupSearch () {
         try {
@@ -767,7 +768,7 @@
         }
         return payload || [];
       },
-      
+
       formatCheckGroups () {
         const selectList = this.panels[0].selectList.map(item => item.id.toString());
         setTimeout(() => {
@@ -859,7 +860,7 @@
           name: 'applyProvisionPerm'
         });
       },
-      
+
       handleEmptyRefresh () {
         this.isSearchPerm = false;
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
@@ -964,12 +965,17 @@
         }
     }
 
-    .custom-footer-wrapper-no-perm {
-      .footer-content {
-        position: absolute;
-        left: 50%;
-        bottom: 30px;
-        transform: translate(-50%, 0px);
+    .custom-footer-wrapper {
+      &.custom-footer-wrapper-no-perm {
+        .footer-content {
+          position: absolute;
+          left: 50%;
+          bottom: 30px;
+          transform: translate(-50%, 0px);
+        }
+      }
+      &.hidden {
+        display: none;
       }
     }
 </style>

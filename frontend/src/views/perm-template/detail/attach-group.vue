@@ -7,6 +7,7 @@
       size="small"
       :class="{ 'set-border': tableLoading }"
       ext-cls="perm-template-attach-member-table"
+      :max-height="tableHeight"
       :pagination="pagination"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
@@ -21,7 +22,7 @@
           <span class="group-name" :title="row.name" @click.stop="handleView(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="200">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="200">
         <template slot-scope="{ row }">
           <bk-button theme="primary" text @click="handleRemove(row)">{{ $t(`m.perm['解除关联']`) }}</bk-button>
         </template>
@@ -54,10 +55,10 @@
 <script>
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import PermSideslider from '../components/render-group-perm-sideslider';
-  import { formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData } from '@/common/util';
 
   export default {
-    name: '',
+    inject: ['showNoticeAlert'],
     components: {
       DeleteDialog,
       PermSideslider
@@ -90,7 +91,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: 0
       };
     },
     watch: {
@@ -101,7 +103,18 @@
     created () {
       this.fetchData(true);
     },
+    mounted () {
+      this.getTableHeight();
+      window.addEventListener('resize', this.getTableHeight);
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.getTableHeight);
+      });
+    },
     methods: {
+      getTableHeight () {
+        const defaultHeight = getWindowHeight() - 185;
+        this.tableHeight = this.showNoticeAlert && this.showNoticeAlert() ? defaultHeight - 40 : defaultHeight;
+      },
       async fetchData (isTabLoading = false, isTableLoading = false) {
         this.tableLoading = isTableLoading;
         this.tabLoading = isTabLoading;

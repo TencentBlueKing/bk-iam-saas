@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,10 +8,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import copy
 import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
+
+from django.conf import settings
 
 from backend.common.error_codes import error_codes
 from backend.common.local import local
@@ -19,7 +22,7 @@ from backend.common.local import local
 logger = logging.getLogger("component")
 
 
-# TODO: 后续抽象成通用的公共函数，比如paging_func支持可变参数等，同时改成一个通用装饰器
+# TODO: 后续抽象成通用的公共函数，比如 paging_func 支持可变参数等，同时改成一个通用装饰器
 def list_all_data_by_paging(
     paging_func: Callable[[int, int], Tuple[int, List[Dict]]], page_size: int = 1000
 ) -> List[Dict]:
@@ -35,7 +38,7 @@ def list_all_data_by_paging(
     data = results
     # 最大循环次数，避免死循环
     maximum = int(total / page_size + 1)
-    # 返回数据数量等于page_size且已获取的总数小于total
+    # 返回数据数量等于 page_size 且已获取的总数小于 total
     while result_count == page_size and count < total and page <= maximum:
         page += 1
         _, results = paging_func(page, page_size)
@@ -73,9 +76,9 @@ def do_blueking_http_request(
     component: str,
     http_func,
     url: str,
-    data: Dict = None,
-    headers: Dict = None,
-    timeout: int = None,
+    data: Dict | None = None,
+    headers: Dict | None = None,
+    timeout: int | None = None,
     request_session=None,
 ):
     kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout, "request_session": request_session}
@@ -124,3 +127,14 @@ def do_blueking_http_request(
         f"Request=[{http_func.__name__} {urlparse(url).path} request_id={local.request_id}] "
         f"Response[code={code}, message={message}]"
     )
+
+
+def remove_notification_exemption_user(usernames: List[str]) -> List[str]:
+    """
+    从给定的用户列表里移除豁免通知的人员
+    :param usernames: 待处理的用户名列表
+    :return: 处理后的用户名列表
+    """
+    exemption_user_set = {u.strip().lower() for u in settings.BK_NOTIFICATION_EXEMPTION_USERS if u.strip()}
+
+    return [u for u in usernames if u.strip().lower() not in exemption_user_set]

@@ -16,7 +16,7 @@ from backend.service.role import AuthScopeAction, AuthScopeSystem
 from backend.util.uuid import gen_uuid
 
 
-@pytest.fixture()
+@pytest.fixture
 def old_action_auth_scope() -> AuthScopeAction:
     return AuthScopeAction.parse_obj(
         {
@@ -56,7 +56,7 @@ def old_action_auth_scope() -> AuthScopeAction:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def new_action_auth_scope() -> AuthScopeAction:
     return AuthScopeAction.parse_obj(
         {

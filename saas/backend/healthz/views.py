@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import copy
 from logging import getLogger
 
@@ -30,7 +31,7 @@ def healthz(request):
     checker = HealthChecker()
 
     data = {}
-    for name in ["mysql", "redis", "celery", "iam", "usermgr"]:
+    for name in ["mysql", "redis", "celery", "iam"]:
         ok, message = getattr(checker, name)()
         if not ok:
             return HttpResponseServerError(message)
@@ -107,11 +108,13 @@ class HealthChecker:
             new_app.conf.CELERY_BROKER_CONNECTION_TIMEOUT = 5
             new_app.conf.CELERY_BROKER_CONNECTION_MAX_RETRIES = 1
             new_app.conf.CELERY_BROKER_TRANSPORT_OPTIONS = {"max_retries": 1, "interval_step": 0, "interval_max": 0}
-            # 进行Ping测试
-            # Note: Celery的Ping命令也是异步执行的
-            # 这里仅仅是测试ping命令能否被发送的消息队列（上面代码已设置与消息队列通讯的相关配置），无法送达将raise exception
-            # 不对ping命令的返回结果进行检查，因为worker可能存在满负载情况，无法及时消费
-            # Limit=1表示只要有一个worker响应了就进行返回，没必要等待timeout再返回结果，Timeout表示最多等待多少秒返回结果
+            # 进行 Ping 测试
+            # Note: Celery 的 Ping 命令也是异步执行的
+            # 这里仅仅是测试 ping 命令能否被发送的消息队列（上面代码已设置与消息队列通讯的相关配置），
+            # 无法送达将 raise exception
+            # 不对 ping 命令的返回结果进行检查，因为 worker 可能存在满负载情况，无法及时消费
+            # Limit=1 表示只要有一个 worker 响应了就进行返回，
+            # 没必要等待 timeout 再返回结果，Timeout 表示最多等待多少秒返回结果
             new_app.control.inspect(limit=1, timeout=2).ping()
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("celery ping test fail")
@@ -138,8 +141,8 @@ class HealthChecker:
         Check User Manager
         """
         try:
-            # TODO: 暂时不引入JSON-Schema进行校验，待校验接入系统回调接口数据时再引入
-            # 校验查询目录返回的数据结构是否OK
+            # TODO: 暂时不引入 JSON-Schema 进行校验，待校验接入系统回调接口数据时再引入
+            # 校验查询目录返回的数据结构是否 OK
             class CategorySLZ(serializers.Serializer):
                 id = serializers.CharField()
                 display_name = serializers.CharField()

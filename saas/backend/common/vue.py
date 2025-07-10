@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.conf import settings
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import TemplateView
@@ -36,14 +37,25 @@ class VueTemplateView(TemplateView):
                 # BK_DOMAIN
                 "BK_DOMAIN": settings.BK_DOMAIN,
                 "BK_DOCS_URL_PREFIX": settings.BK_DOCS_URL_PREFIX.rstrip("/"),
+                # BK Res
+                "BK_SHARED_RES_URL": settings.BK_SHARED_RES_URL.rstrip("/"),
+                # App Code
+                "BK_APP_CODE": settings.APP_CODE,
+                # 不允许作为用户组成员的部门 ID,用英文逗号分割
+                "DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER": settings.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER,
+                # 问题反馈地址
+                "BK_CE_URL": settings.BK_CE_URL,
+                # 权限模板最大限制数量
+                "GROUP_AUTH_TEMPLATE_ONCE_LIMIT": settings.SUBJECT_AUTHORIZATION_LIMIT.get(
+                    "group_auth_template_once_limit"
+                ),
             }
 
             # 添加前端功能启用开关
             for feature, is_enabled in settings.ENABLE_FRONT_END_FEATURES.items():
                 context[feature.upper()] = is_enabled
 
-            response = super(VueTemplateView, self).get(request, **context)
-            return response
+            return super(VueTemplateView, self).get(request, **context)
         except Exception as error:  # pylint: disable=broad-except
             print(error)
 

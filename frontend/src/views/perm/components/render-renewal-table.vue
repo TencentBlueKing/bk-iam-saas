@@ -24,6 +24,7 @@
       size="small"
       ref="permTableRef"
       ext-cls="perm-renewal-table"
+      :key="tableKey"
       :outer-border="false"
       :header-border="false"
       :max-height="500"
@@ -31,11 +32,14 @@
       @page-change="pageChange"
       @page-limit-change="limitChange"
       @select="handlerChange"
-      @select-all="handlerAllChange">
+      @select-all="handlerAllChange"
+      @filter-change="handleFilterChange"
+    >
       <bk-table-column type="selection" align="center" :selectable="getIsSelect" />
       <template v-for="item in tableProps">
         <bk-table-column
           v-if="item.prop === 'system'"
+          column-key="filterTag"
           :filters="systemFilter"
           :filter-method="systemFilterMethod"
           :filter-multiple="false"
@@ -114,9 +118,10 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
+            :min-width="380"
           >
             <template slot-scope="{ row }">
-              <template v-if="row.policy.resource_groups && row.policy.resource_groups.length">
+              <template v-if="row.policy && row.policy.resource_groups && row.policy.resource_groups.length">
                 <div
                   v-for="(_, _index) in row.policy.resource_groups"
                   :key="_.id"
@@ -215,6 +220,7 @@
           :empty-text="emptyRenewalData.text"
           :tip-text="emptyRenewalData.tip"
           :tip-type="emptyRenewalData.tipType"
+          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
@@ -258,8 +264,9 @@
     />
   </div>
 </template>
+
 <script>
-  import _ from 'lodash';
+  import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { formatCodeData, existValue } from '@/common/util';
@@ -320,6 +327,7 @@
       return {
         tableList: [],
         allData: [],
+        allDataBack: [],
         currentSelectList: [],
         pagination: {
           current: 1,
@@ -346,6 +354,8 @@
         currentActionName: '',
         sideSliderTitle: '',
         curGroupName: '',
+        curFilterSystem: '',
+        tableKey: 0,
         curGroupId: -1,
         singleData: {},
         curCustomData: {},
@@ -390,6 +400,7 @@
         handler (newValue, oldValue) {
           this.tableProps = this.getTableProps(newValue);
           if (oldValue && oldValue !== newValue) {
+            this.curFilterSystem = '';
             this.pagination = Object.assign(this.pagination, {
               current: 1,
               limit: 10
@@ -440,10 +451,9 @@
       },
       data: {
         handler (value) {
-          this.allData = _.cloneDeep(value);
+          this.allData = cloneDeep(value);
+          this.allDataBack = cloneDeep(value);
           this.pagination = Object.assign(this.pagination, { count: this.count });
-          const data = this.getCurPageData(this.pagination.current);
-          this.tableList.splice(0, this.tableList.length, ...data);
           // this.currentSelectList = this.tableList.filter(item =>
           //     this.getDays(item.expired_at) < EXPIRED_DISTRICT);
           // if (this.type === 'custom') {
@@ -459,16 +469,20 @@
           this.$nextTick(() => {
             const tableItem = {
               group: () => {
+                this.tableList.splice(0, this.tableList.length, ...value);
                 this.currentSelectList = this.tableList.filter(item =>
                   this.getDays(item.expired_at) < EXPIRED_DISTRICT);
                 this.tableList.forEach(item => {
                   if (item.role_members && item.role_members.length) {
-                    item.role_members = item.role_members.map(v => {
-                      return {
-                        username: v,
-                        readonly: false
-                      };
-                    });
+                    const hasName = item.role_members.some((v) => v.username);
+                    if (!hasName) {
+                      item.role_members = item.role_members.map(v => {
+                        return {
+                          username: v,
+                          readonly: false
+                        };
+                      });
+                    }
                   }
                   if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
@@ -476,7 +490,9 @@
                   this.fetchCustomSelection();
                 });
               },
-              custom: () => {
+              custom: async () => {
+                const result = await this.getCurPageData(this.pagination.current);
+                this.tableList.splice(0, this.tableList.length, ...result);
                 this.currentSelectList = this.allData.filter(item =>
                   this.getDays(item.expired_at) < EXPIRED_DISTRICT);
                 this.allData.forEach(item => {
@@ -532,7 +548,7 @@
             { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
             { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
             { label: this.$t(`m.common['有效期']`), prop: 'expired_at' },
-            { label: this.$t(`m.common['操作']`), prop: 'operate' }
+            { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
           ];
         }
         return [
@@ -540,13 +556,24 @@
           { label: this.$t(`m.common['资源实例']`), prop: 'policy' },
           { label: this.$t(`m.common['所属系统']`), prop: 'system' },
           { label: this.$t(`m.common['有效期']`), prop: 'expired_at' },
-          { label: this.$t(`m.common['操作']`), prop: 'operate' }
+          { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
         ];
       },
 
       systemFilterMethod (value, row, column) {
         const property = column.property;
-        return row[property].id === value;
+        this.curFilterSystem = value;
+        if (row[property]) {
+          return row[property].id === value;
+        }
+      },
+
+      async handleFilterChange (payload) {
+        const { filterTag } = payload;
+        this.curFilterSystem = filterTag.length > 0 ? filterTag[0] : '';
+        this.emptyRenewalData.tipType = 'search';
+        await this.resetTableData();
+        this.$emit('on-filter-system', { list: this.allData });
       },
 
       pageChange (page = 1) {
@@ -574,7 +601,10 @@
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
           if (this.$refs.permTableRef && selectionCount && selectionCount.length && selectionCount[0].children) {
-            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+            const selectList = this.curFilterSystem && ['custom'].includes(this.type)
+              ? this.currentSelectList.filter((item) => item.system.id === this.curFilterSystem)
+              : cloneDeep(this.currentSelectList);
+            selectionCount[0].children[0].innerHTML = selectList.length;
           }
         });
       },
@@ -599,7 +629,7 @@
         //   }
         // };
         // return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
-        const tableList = this.type === 'custom' ? _.cloneDeep(this.allData) : _.cloneDeep(this.tableList);
+        const tableList = this.type === 'custom' ? cloneDeep(this.allData) : cloneDeep(this.tableList);
         const selectGroups = this.currentSelectList.filter(item =>
           !tableList.map(v => v.id.toString()).includes(item.id.toString()));
         this.currentSelectList = [...selectGroups, ...selection];
@@ -671,7 +701,7 @@
             });
           });
         }
-        this.previewData = _.cloneDeep(params);
+        this.previewData = cloneDeep(params);
         this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowSideSlider = true;
@@ -683,6 +713,9 @@
       },
 
       getCurPageData (page = 1) {
+        this.allData = this.curFilterSystem.length > 0
+          ? this.allDataBack.filter((item) => this.curFilterSystem === item.system.id)
+          : cloneDeep(this.allDataBack);
         let startIndex = (page - 1) * this.pagination.limit;
         let endIndex = page * this.pagination.limit;
         if (startIndex < 0) {
@@ -694,7 +727,6 @@
         if (page > Math.ceil(this.allData.length / this.pagination.limit)) {
           this.pagination = Object.assign(this.pagination, { current: 1 });
         }
-        console.log(page, startIndex, endIndex, this.allData.length);
         return this.allData.slice(startIndex, endIndex);
       },
 
@@ -739,6 +771,10 @@
             },
             custom: () => {
               this.tableList = this.getCurPageData(current);
+              if (!this.tableList.length && this.curFilterSystem) {
+                this.emptyRenewalData.tipType = 'search';
+                this.emptyRenewalData = formatCodeData(0, this.emptyRenewalData, true);
+              }
               this.$nextTick(() => {
                 this.allData.forEach(item => {
                   if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
@@ -751,9 +787,7 @@
           };
           return tabItem[this.type]();
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData);
+          this.emptyRenewalData = formatCodeData(e.code, this.emptyRenewalData);
           this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
@@ -807,15 +841,18 @@
               });
               this.allData = this.allData.filter((item) => !this.curDeleteIds.includes(item.policy.policy_id));
               this.tableList = this.tableList.filter((item) => !this.curDeleteIds.includes(item.policy.policy_id));
+              this.currentSelectList = this.currentSelectList.filter((item) =>
+                !this.curDeleteIds.includes(item.policy.policy_id)
+              );
+              this.allDataBack = cloneDeep(this.allData);
               this.pageChange(this.pagination.current);
               this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             } catch (e) {
+              this.messageAdvancedError(e);
             } finally {
               this.batchQuitLoading = false;
               this.isShowDeleteDialog = false;
-              this.currentSelectList = [];
               this.fetchCustomSelection();
-              this.$refs.permTableRef && this.$refs.permTableRef.clearSelection();
               this.$emit('on-change-count', this.allData.length, this.allData);
             }
           }
@@ -841,7 +878,7 @@
         }
         try {
           const res = await this.$store.dispatch('permApply/getActions', params);
-          this.originalCustomTmplList = _.cloneDeep(res.data);
+          this.originalCustomTmplList = cloneDeep(res.data);
           this.handleActionLinearData();
         } catch (e) {
           console.error(e);
@@ -919,7 +956,7 @@
             item => this.delActionList.map(action => action.id).includes(item.policy.id));
           policyIds = [policyId].concat(list.map(v => v.policy.policy_id));
         }
-        this.policyIdList = _.cloneDeep(policyIds);
+        this.policyIdList = cloneDeep(policyIds);
         const typeMap = {
           actions: () => {
             this.isShowDeleteDialog = true;
@@ -931,7 +968,7 @@
               }
             }
             this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
-            this.policyIdList = _.cloneDeep(this.curDeleteIds);
+            this.policyIdList = cloneDeep(this.curDeleteIds);
             this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, { value: this.$t(`m.dialog['删除操作权限']`) });
             this.delActionDialogTip = this.$t(`m.info['删除依赖操作产生的影响']`, { value: this.currentActionName });
           }
@@ -957,7 +994,7 @@
             });
           });
         });
-        this.linearActionList = _.cloneDeep(linearActions);
+        this.linearActionList = cloneDeep(linearActions);
       },
 
       handleCancelDelete () {
@@ -987,9 +1024,26 @@
         this.isShowPermSideSlider = false;
       },
 
+      async handleEmptyClear () {
+        this.curFilterSystem = '';
+        this.emptyRenewalData.tipType = '';
+        this.pagination.current = 1;
+        if (['custom'].includes(this.type)) {
+          this.tableKey = +new Date();
+          await this.resetTableData();
+          this.$emit('on-filter-system', { list: this.allData });
+        }
+      },
+
       handleEmptyRefresh () {
         this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
         this.fetchTableData();
+      },
+
+      async resetTableData () {
+        this.pagination.current = 1;
+        await this.fetchTableData();
+        this.fetchCustomSelection();
       }
     }
   };
@@ -1007,9 +1061,9 @@
         }
         .related-resource-perm {
             position: relative;
-            &-item {
+            /* &-item {
                 padding: 20px 0;
-            }
+            } */
             .view-icon {
                 display: none;
                 position: absolute;

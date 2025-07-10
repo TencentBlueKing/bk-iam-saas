@@ -8,3 +8,20 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
+from rest_framework import permissions
+
+
+class ApprovalBotPermission(permissions.BasePermission):
+    """
+    审批机器人回调鉴权
+    """
+
+    APP_CODE = "approvalbot"
+
+    def has_permission(self, request, view):
+        if not bool(request.user and request.user.is_authenticated):
+            return False
+
+        # 只有app_code为审批助手才能访问
+        return request.bk_app_code == self.APP_CODE

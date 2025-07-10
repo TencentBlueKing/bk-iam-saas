@@ -27,122 +27,134 @@
       ref="tableRef"
       row-key="id"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+      :cell-class-name="getCellClass"
       @page-change="pageChange"
       @page-limit-change="limitChange"
       @expand-change="handleExpandChange">
       <bk-table-column type="expand" width="30">
         <template slot-scope="{ row }">
           <section class="audit-detail-wrapper" v-bkloading="{ isLoading: row.loading, opacity: 1 }">
-            <template v-if="noDetailType.includes(row.type) || row.type === 'role.group.renew'">
-              <!-- <div class="empty-wrapper"> -->
-              <ExceptionEmpty />
+            <template v-if="row.emptyData && ['refresh'].includes(row.emptyData.tipType)">
+              <ExceptionEmpty
+                :type="row.emptyData.type"
+                :empty-text="row.emptyData.text"
+                :tip-text="row.emptyData.tip"
+                :tip-type="row.emptyData.tipType"
+                @on-refresh="handleChildEmptyRefresh(row)"
+              />
+            </template>
+            <template v-else>
+              <template v-if="noDetailType.includes(row.type) || row.type === 'role.group.renew'">
+                <!-- <div class="empty-wrapper"> -->
+                <ExceptionEmpty />
               <!-- </div> -->
-            </template>
-            <template v-if="onlyDescriptionType.includes(row.detail.type)">
-              <section v-if="!row.loading">
-                <p class="description single-hide" :title="row.detail.description">
-                  {{ row.detail.description || '--' }}
-                </p>
-              </section>
-            </template>
-            <template v-if="onlySubType.includes(row.detail.type)">
-              <bk-table
-                v-if="!row.loading"
-                :data="row.detail.sub_objects"
-                ext-cls="audit-detail-table"
-                :outer-border="false"
-                :header-border="false"
-                :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                <bk-table-column :label="$t(`m.common['类型']`)">
-                  <template slot-scope="props">
-                    <span>{{ objectMap[props.row.type] || props.row.type }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.audit['实例']`)">
-                  <template slot-scope="props">
-                    <span>{{ props.row.name }}</span>
-                  </template>
-                </bk-table-column>
-                <template slot="empty">
-                  <ExceptionEmpty />
-                </template>
-              </bk-table>
-            </template>
-            <template v-if="deType.includes(row.detail.type)">
-              <section v-if="!row.loading">
-                <p class="description">{{ row.detail.description }}</p>
-                <p>{{ $t(`m.audit['版本号']`) }}: {{ row.detail.extra_info.version }}</p>
-              </section>
-            </template>
-            <template v-if="dsType.includes(row.detail.type)">
-              <bk-table
-                v-if="!row.loading"
-                :data="row.detail.sub_objects"
-                ext-cls="audit-detail-table"
-                :outer-border="false"
-                :header-border="false"
-                :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                <bk-table-column prop="name" :label="$t(`m.audit['对象实例']`)">
-                  <template slot-scope="props">
-                    <span :title="objectMap[props.row.type] || props.row.type">
-                      {{ objectMap[props.row.type] || props.row.type }}
-                    </span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.audit['操作对象']`)">
-                  <template slot-scope="props">
-                    <span :title="props.row.name">{{ props.row.name }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.common['描述']`)">
-                  <template slot-scope="props">
-                    <span :title="props.row.description">{{ props.row.description || '--' }}</span>
-                  </template>
-                </bk-table-column>
-                <template slot="empty">
-                  <ExceptionEmpty />
-                </template>
-              </bk-table>
-            </template>
-            <template v-if="seType.includes(row.detail.type)">
-              <bk-table
-                v-if="!row.loading"
-                :data="row.detail.sub_objects"
-                ext-cls="audit-detail-table"
-                :outer-border="false"
-                :header-border="false"
-                :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                <bk-table-column prop="name" :label="$t(`m.common['类型']`)">>
-                  <template slot-scope="props">
-                    <span>{{ objectMap[props.row.type] || props.row.type }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.audit['实例']`)">
-                  <template slot-scope="props">
-                    <span :title="props.row.name">{{ props.row.name }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.audit['版本号']`)">
-                  <template slot-scope="props">
-                    <span>{{ props.row.version || '--' }}</span>
-                  </template>
-                </bk-table-column>
-                <template slot="empty">
-                  <ExceptionEmpty />
-                </template>
-              </bk-table>
-            </template>
-            <template v-if="onlyExtraInfoType.includes(row.detail.type)">
-              <!-- eslint-disable max-len -->
-              <template v-if="row.detail.type !== 'role.group.renew' && row.detail.type !== 'template.version.sync'">
-                <render-detail-table :actions="row.detail.extra_info.policies" />
               </template>
-              <template v-if="row.detail.type === 'template.version.sync'">
-                <p>{{ $t(`m.audit['版本号']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.extra_info.version }}</p>
+              <template v-if="onlyDescriptionType.includes(row.detail.type)">
+                <section v-if="!row.loading">
+                  <p class="description single-hide" :title="row.detail.description">
+                    {{ row.detail.description || '--' }}
+                  </p>
+                </section>
               </template>
-            </template>
-            <template v-if="onlyRoleType.includes(row.detail.type)">
-              <p>{{ $t(`m.audit['管理空间']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.role_name }}</p>
+              <template v-if="onlySubType.includes(row.detail.type)">
+                <bk-table
+                  v-if="!row.loading"
+                  :data="row.detail.sub_objects"
+                  ext-cls="audit-detail-table"
+                  :outer-border="false"
+                  :header-border="false"
+                  :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
+                  <bk-table-column :label="$t(`m.common['类型']`)">
+                    <template slot-scope="props">
+                      <span>{{ objectMap[props.row.type] || props.row.type }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.audit['实例']`)">
+                    <template slot-scope="props">
+                      <span>{{ props.row.name }}</span>
+                    </template>
+                  </bk-table-column>
+                  <template slot="empty">
+                    <ExceptionEmpty />
+                  </template>
+                </bk-table>
+              </template>
+              <template v-if="deType.includes(row.detail.type)">
+                <section v-if="!row.loading">
+                  <p class="description">{{ row.detail.description }}</p>
+                  <p>{{ $t(`m.audit['版本号']`) }}: {{ row.detail.extra_info.version }}</p>
+                </section>
+              </template>
+              <template v-if="dsType.includes(row.detail.type)">
+                <bk-table
+                  v-if="!row.loading"
+                  :data="row.detail.sub_objects"
+                  ext-cls="audit-detail-table"
+                  :outer-border="false"
+                  :header-border="false"
+                  :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
+                  <bk-table-column prop="name" :label="$t(`m.audit['对象实例']`)">
+                    <template slot-scope="props">
+                      <span :title="objectMap[props.row.type] || props.row.type">
+                        {{ objectMap[props.row.type] || props.row.type }}
+                      </span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.audit['操作对象']`)">
+                    <template slot-scope="props">
+                      <span :title="props.row.name">{{ props.row.name }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.common['描述']`)">
+                    <template slot-scope="props">
+                      <span :title="props.row.description">{{ props.row.description || '--' }}</span>
+                    </template>
+                  </bk-table-column>
+                  <template slot="empty">
+                    <ExceptionEmpty />
+                  </template>
+                </bk-table>
+              </template>
+              <template v-if="seType.includes(row.detail.type)">
+                <bk-table
+                  v-if="!row.loading"
+                  :data="row.detail.sub_objects"
+                  ext-cls="audit-detail-table"
+                  :outer-border="false"
+                  :header-border="false"
+                  :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
+                  <bk-table-column prop="name" :label="$t(`m.common['类型']`)">>
+                    <template slot-scope="props">
+                      <span>{{ objectMap[props.row.type] || props.row.type }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.audit['实例']`)">
+                    <template slot-scope="props">
+                      <span :title="props.row.name">{{ props.row.name }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.audit['版本号']`)">
+                    <template slot-scope="props">
+                      <span>{{ props.row.version || '--' }}</span>
+                    </template>
+                  </bk-table-column>
+                  <template slot="empty">
+                    <ExceptionEmpty />
+                  </template>
+                </bk-table>
+              </template>
+              <template v-if="onlyExtraInfoType.includes(row.detail.type)">
+                <!-- eslint-disable max-len -->
+                <template v-if="row.detail.type !== 'role.group.renew' && row.detail.type !== 'template.version.sync'">
+                  <render-detail-table :actions="row.detail.extra_info.policies" @on-refresh="handleChildEmptyRefresh(row)" />
+                </template>
+                <template v-if="row.detail.type === 'template.version.sync'">
+                  <p>{{ $t(`m.audit['版本号']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.extra_info.version }}</p>
+                </template>
+              </template>
+              <template v-if="onlyRoleType.includes(row.detail.type)">
+                <p>{{ $t(`m.audit['管理空间']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.role_name }}</p>
+              </template>
             </template>
           </section>
         </template>
@@ -196,105 +208,16 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import IamSearchSelect from '@/components/iam-search-select';
   import { fuzzyRtxSearch } from '@/common/rtx';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData, getWindowHeight } from '@/common/util';
+  import { NO_DETAIL_TYPE, ONLY_DESCRIPTION_TYPE, ONLY_EXTRA_INFO_TYPE, ONLY_SUB_TYPE, DE_TYPR, SE_TYPE, DS_TYPE, ONLY_ROLE_TYPE } from '@/common/constants';
   import RenderStatus from './components/render-status-item';
   import renderDetailTable from './components/render-instance-detail-table';
 
-  const getDate = payload => {
-    return payload.split('-').join('');
-  };
-
-  const getFormatDate = payload => {
-    const now = new Date(payload);
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    return `${year}-${month < 10 ? '0' + month.toString() : month}`;
-  };
-
-  // 只显示角色名称的审计类型
-  const ONLY_ROLE_TYPE = [
-    'template.create',
-    'subject.template.create',
-    'subject.template.delete'
-  ];
-
-  // 没有详情的审计类型
-  const NO_DETAIL_TYPE = [
-    'group.create',
-    'group.delete',
-    // 'template.create',
-    'template.update',
-    'role.create'
-  ];
-
-  // 只有描述字段的审计类型
-  const ONLY_DESCRIPTION_TYPE = [
-    'group.update',
-    'role.update',
-    'role.member.policy.create',
-    'role.member.policy.delete',
-    'approval.global.update'
-  ];
-
-  // 只有子对象的审计类型
-  const ONLY_SUB_TYPE = [
-    'action.sensitivity.level.update',
-    'group.template.create',
-    'group.member.create',
-    'group.member.delete',
-    'group.member.renew',
-    'group.transfer',
-    'user.group.delete',
-    'department.group.delete',
-    'user.role.delete',
-    'role.member.create',
-    'role.member.delete',
-    'role.member.update',
-    'role.commonaction.create',
-    'role.commonaction.delete',
-    'subject.template.group.delete',
-    'subject.template.member.create',
-    'subject.template.member.delete'
-  ];
-
-  // 只有附加信息的审计类型
-  const ONLY_EXTRA_INFO_TYPE = [
-    'group.policy.create',
-    'group.policy.delete',
-    'group.policy.update',
-    'user.policy.delete',
-    'user.policy.create',
-    'user.policy.update',
-    'user.temporary.policy.create',
-    'user.temporary.policy.delete',
-    'user.blacklist.member.create',
-    'user.blacklist.member.delete',
-    'user.permission.clean',
-    'role.group.renew',
-    'template.version.sync'
-  ];
-
-  // 既有 description 又有 extra_info
-  const DE_TYPR = ['template.update'];
-
-  // 既有 sub_objects 又有 extra_info
-  const SE_TYPE = [
-    'template.member.create',
-    'template.member.delete',
-    'template.version.update'
-  ];
-
-  // 既有 description 又有 sub_objects
-  const DS_TYPE = [
-    'approval.action.update',
-    'approval.group.update'
-  ];
-
   export default {
-    name: '',
     components: {
       IamSearchSelect,
       RenderStatus,
@@ -399,7 +322,8 @@
           'management.api.allow.list.config.create': this.$t(`m.audit['管理类API白名单创建']`),
           'management.api.allow.list.config.delete': this.$t(`m.audit['管理类API白名单删除']`),
           'group.transfer': this.$t(`m.audit['用户组权限交接']`),
-          'action.sensitivity.level.update': this.$t(`m.audit['操作敏感等级更新']`)
+          'action.sensitivity.level.update': this.$t(`m.audit['操作敏感等级更新']`),
+          'role.update.notification.config': this.$t(`m.audit['续期通知更新']`)
         },
         currentMonth: '',
         noDetailType: NO_DETAIL_TYPE,
@@ -419,6 +343,9 @@
         tableHeight: getWindowHeight() - 185
       };
     },
+    computed: {
+      ...mapGetters(['user'])
+    },
     watch: {
       'pagination.current' (value) {
         this.currentBackup = value;
@@ -428,7 +355,7 @@
       window.addEventListener('resize', () => {
         this.tableHeight = getWindowHeight() - 185;
       });
-      this.currentMonth = getDate(getFormatDate(this.initDateTime));
+      this.currentMonth = this.getDate(this.getFormatDate(this.initDateTime));
       this.searchData = [
         {
           id: 'username',
@@ -540,6 +467,24 @@
       async fetchPageData () {
         await this.fetchAuditList();
       },
+      
+      getDate (payload) {
+        return payload.split('-').join('');
+      },
+
+      getFormatDate (payload) {
+        const now = new Date(payload);
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        return `${year}-${month < 10 ? '0' + month.toString() : month}`;
+      },
+
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        if (columnIndex === 0 && ['role.update.notification.config'].includes(row.type)) {
+          return 'audit-renewal-notice-cell-cls';
+        }
+        return '';
+      },
 
       refreshCurrentQuery () {
         const { limit, current } = this.pagination;
@@ -548,7 +493,8 @@
           limit,
           current,
           month: this.currentMonth,
-                    ...this.searchParams
+          role_name: this.user.role.name,
+          ...this.searchParams
         };
         window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
         for (const key in this.searchParams) {
@@ -564,10 +510,10 @@
           }
         }
         return {
-                    ...params,
-                    limit,
-                    current,
-                    month: this.currentMonth
+          ...params,
+          limit,
+          current,
+          month: this.currentMonth
         };
       },
 
@@ -591,7 +537,7 @@
           object_type: '',
           object_id: '',
           status: '',
-                    ...this.searchParams
+          ...this.searchParams
         };
         try {
           const { code, data } = await this.$store.dispatch('audit/getAuditList', params);
@@ -704,7 +650,8 @@
           { id: 'authorization.api.allow.list.config.delete', name: this.$t(`m.audit['授权类API白名单删除']`) },
           { id: 'management.api.allow.list.config.create', name: this.$t(`m.audit['管理类API白名单创建']`) },
           { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) },
-          { id: 'action.sensitivity.level.update', name: this.$t(`m.audit['操作敏感等级更新']`) }
+          { id: 'action.sensitivity.level.update', name: this.$t(`m.audit['操作敏感等级更新']`) },
+          { id: 'role.update.notification.config', name: this.$t(`m.audit['续期通知更新']`) }
         ];
         if (value === '') {
           return Promise.resolve(list);
@@ -722,7 +669,7 @@
 
       handleDateChange (date, type) {
         this.resetPagination();
-        this.currentMonth = getDate(getFormatDate(date));
+        this.currentMonth = this.getDate(this.getFormatDate(date));
         this.fetchAuditList(true);
       },
 
@@ -747,6 +694,11 @@
         this.fetchAuditList(true);
       },
 
+      handleChildEmptyRefresh (payload) {
+        payload.expanded = false;
+        this.handleExpandChange(payload);
+      },
+
       pageChange (page) {
         if (this.currentBackup === page) {
           return;
@@ -764,6 +716,7 @@
 
       async handleExpandChange (row, expandedRows) {
         row.expanded = !row.expanded;
+        this.$set(row, 'emptyData', {});
         if (this.noDetailType.includes(row.type)) {
           return;
         }
@@ -786,7 +739,7 @@
               });
             }
             if (this.onlyExtraInfoType.includes(row.detail.type)) {
-              if (row.detail.type !== 'role.group.renew' && row.detail.type !== 'template.version.sync') {
+              if (!['role.group.renew', 'template.version.sync'].includes(row.detail.type)) {
                 row.detail.extra_info.policies.forEach(item => {
                   item.system_id = row.detail.extra_info.system.id;
                   item.system_name = row.detail.extra_info.system.name;
@@ -795,6 +748,7 @@
             }
           } catch (e) {
             console.error(e);
+            row.emptyData = formatCodeData(e.code, { ...row.emptyData, ...{ tipType: 'refresh' } });
             this.messageAdvancedError(e);
           } finally {
             row.loading = false;
@@ -804,48 +758,54 @@
     }
   };
 </script>
-<style lang="postcss">
-    .iam-audit-wrapper {
-        .audit-search-select {
-            margin-left: 10px;
-            float: right;
-        }
-        .audit-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            .bk-table-expanded-cell {
-                padding: 0 30px 0 45px !important;
-            }
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .audit-detail-wrapper {
-                position: relative;
-                padding: 16px 50px 16px 165px;
-                min-height: 60px;
-                p {
-                    line-height: 24px;
-                }
-                .empty-wrapper {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    img {
-                        width: 60px;
-                    }
-                }
-            }
-            .audit-detail-table {
-                border: none;
-                .bk-table-row-last {
-                    td {
-                        border-bottom: 1px solid #dfe0e5 !important;
-                    }
-                }
-            }
-        }
+
+<style lang="postcss" scoped>
+.iam-audit-wrapper {
+  .audit-search-select {
+    margin-left: 10px;
+    float: right;
+  }
+  .audit-table {
+    margin-top: 16px;
+    border-right: none;
+    border-bottom: none;
+    .bk-table-expanded-cell {
+      padding: 0 30px 0 45px !important;
     }
+    &.set-border {
+      border-right: 1px solid #dfe0e5;
+      border-bottom: 1px solid #dfe0e5;
+    }
+    .audit-detail-wrapper {
+      position: relative;
+      padding: 16px 50px 16px 165px;
+      min-height: 60px;
+      p {
+        line-height: 24px;
+      }
+      .empty-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        img {
+          width: 60px;
+        }
+      }
+    }
+    .audit-detail-table {
+      border: none;
+      .bk-table-row-last {
+        td {
+          border-bottom: 1px solid #dfe0e5 !important;
+        }
+      }
+    }
+    /deep/ .audit-renewal-notice-cell-cls {
+      .cell {
+        display: none;
+      }
+    }
+  }
+}
 </style>

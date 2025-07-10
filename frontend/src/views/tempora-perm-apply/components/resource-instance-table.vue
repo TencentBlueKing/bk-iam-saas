@@ -884,7 +884,8 @@
         }
 
         );
-        const curData = _.cloneDeep(this.tableList[this.curIndex]);
+        const tableList = _.cloneDeep(this.tableList);
+        const curData = _.cloneDeep(tableList[this.curIndex]);
         // eslint-disable-next-line max-len
         curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex]];
@@ -912,13 +913,13 @@
             && groupItem.related_resource_types[0].condition[0] === 'none');
         });
 
-        const relatedList = _.cloneDeep(this.tableList.filter(item => {
+        const relatedList = tableList.filter(item => {
           return !item.isAggregate
             && relatedActions.includes(item.id)
             // && item.resource_groups[this.curGroupIndex]
             // && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
             && item.resource_groups.map(item => !item.related_resource_types.every(sub => sub.empty))[0];
-        }));
+        });
 
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
@@ -1172,27 +1173,6 @@
       handlerOnPaste (payload, row, content) {
         let tempCurData = ['none'];
         if (this.curCopyMode === 'normal') {
-          // if (this.curCopyData.length < 1) {
-          //     tempCurData = []
-          // } else {
-          //     if (this.curCopyData[0] !== 'none') {
-          //         tempCurData = this.curCopyData.map(item => {
-          //             delete item.id
-          //             return item
-          //         })
-          //         tempCurData.forEach((item, index) => {
-          //             if (content.condition[index]) {
-          //                 if (content.condition[index].id) {
-          //                     item.id = content.condition[index].id
-          //                 } else {
-          //                     item.id = ''
-          //                 }
-          //             } else {
-          //                 item.id = ''
-          //             }
-          //         })
-          //     }
-          // }
           if (!payload.flag) {
             return;
           }
@@ -1234,11 +1214,11 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
+          if (tempCurData[0] === 'none') {
+            return;
+          }
+          content.condition = _.cloneDeep(tempCurData);
         }
-        if (tempCurData[0] === 'none') {
-          return;
-        }
-        content.condition = _.cloneDeep(tempCurData);
         content.isError = false;
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
@@ -1702,6 +1682,6 @@
   };
 </script>
 
-<style>
+<style scoped>
   @import './resource-instance-table.css';
 </style>

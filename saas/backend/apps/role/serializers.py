@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import time
 from collections import defaultdict
 
@@ -18,6 +19,7 @@ from rest_framework import serializers
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 from backend.apps.organization.models import Department, User
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
+from backend.apps.role.constants import NotificationTypeEnum
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelation, RoleUser
 from backend.biz.constants import PermissionTypeEnum
 from backend.biz.role import RoleBiz
@@ -46,9 +48,8 @@ class RoleScopeSubjectSLZ(serializers.Serializer):
         if _id == SUBJECT_ALL and _type != SUBJECT_TYPE_ALL:
             raise serializers.ValidationError("type must be * when id is *")
         # 当type为部门时，id必须是数字字符串或*
-        if _type == RoleScopeSubjectType.DEPARTMENT.value and _id != SUBJECT_ALL:
-            if not _id.isdigit():
-                raise serializers.ValidationError("department id can only be a string consisting of numbers only")
+        if _type == RoleScopeSubjectType.DEPARTMENT.value and _id != SUBJECT_ALL and not _id.isdigit():
+            raise serializers.ValidationError("department id can only be a string consisting of numbers only")
 
         return attrs
 
@@ -131,7 +132,9 @@ class GradeMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", default=False)
 
     def validate(self, data):
@@ -185,7 +188,9 @@ class GradeMangerDetailSchemaSLZ(BaseGradeMangerSchemaSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSchemaSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False
+    )
 
     class Meta:
         model = Role
@@ -404,7 +409,9 @@ class AuthorizedSubjectsSLZ(serializers.Serializer):
 
 
 class SubsetMangerCreateSLZ(GradeMangerCreateSLZ):
-    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
+    subject_scopes = serializers.ListField(
+        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True
+    )
     inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围")
 
     def validate(self, data):
@@ -482,6 +489,7 @@ class RoleGroupSubjectSLZ(serializers.Serializer):
             return self.user_name_dict.get(obj["subject_id"], "") if self.user_name_dict else ""
         if obj["subject_type"] == SubjectType.DEPARTMENT.value:
             return self.department_name_dict.get(obj["subject_id"], "") if self.department_name_dict else ""
+        return None
 
 
 class RoleGroupMemberSearchSLZ(GroupSearchSLZ):
@@ -491,3 +499,30 @@ class RoleGroupMemberSearchSLZ(GroupSearchSLZ):
 
 class RoleGroupMemberCleanSLZ(serializers.Serializer):
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), allow_empty=False)
+
+
+class NotificationConfigSerializer(serializers.Serializer):
+    enable = serializers.BooleanField(default=True)
+    notification_types = serializers.ListField(
+        label="通知类型",
+        child=serializers.ChoiceField(choices=NotificationTypeEnum.get_choices()),
+        allow_empty=False,
+    )
+    send_time = serializers.RegexField(r"^\d{2}:\d{2}$")
+    expire_days_before = serializers.IntegerField(min_value=0, max_value=15)
+    expire_days_after = serializers.IntegerField(min_value=0, max_value=15)
+    send_days = serializers.ListField(
+        label="发送日期",
+        child=serializers.ChoiceField(
+            choices=[
+                ("monday", "Monday"),
+                ("tuesday", "Tuesday"),
+                ("wednesday", "Wednesday"),
+                ("thursday", "Thursday"),
+                ("friday", "Friday"),
+                ("saturday", "Saturday"),
+                ("sunday", "Sunday"),
+            ]
+        ),
+        allow_empty=True,
+    )

@@ -17,6 +17,7 @@
         :custom-select-width="customSelectWidth"
         :min-select-width="'165px'"
         :max-select-width="'200px'"
+        :search-select-place-holder="$t(`m.perm['输入用户组名、描述等按回车键进行搜索']`)"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
         @on-input-value="handleInputValue"
@@ -34,7 +35,7 @@
           <template slot="label">
             <span class="panel-name">
               <span>{{ panel.label }}</span>
-              <span style="color: ##3a84ff" v-if="curSearchParams && Object.keys(curSearchParams).length">
+              <span style="color: #3a84ff" v-if="curSearchParams && Object.keys(curSearchParams).length">
                 ({{ panel.count }})
               </span>
             </span>

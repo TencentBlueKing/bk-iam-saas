@@ -24,6 +24,10 @@
  * IN THE SOFTWARE.
 */
 
+import il8n from '@/language';
+import { messageWarn, messageSuccess } from '@/common/bkmagic';
+import { rootPath } from '@blueking/sub-saas/dist/main.js';
+
 /**
  * 函数柯里化
  *
@@ -553,22 +557,26 @@ export function formatCodeData (type, payload, isEmpty = true) {
 }
 
 /**
- * 递归查询匹配角色id
+ * 查找tree匹配条件的字段
  *
- * @param {number} id
- * @param {Array} list
+ * @param {string} key  匹配的字段key
+ * @param {string} value 匹配的字段value
+ * @param {string} childKey 动态子集children字段
+ * @param {Array} list 源数组
  */
-export function getTreeNode (id, list) {
-  for (let i = 0; i < list.length; i++) {
-    if (list[i].id === id) {
-      return list[i];
-    } else if (list[i].sub_roles && list[i].sub_roles.length) {
-      const result = getTreeNode(id, list[i].sub_roles);
-      if (result) {
-        return result;
-      }
+export function getTreeNode (list, key, value, childKey) {
+  const treeData = [...list];
+  let node = treeData.shift();
+  while (node) {
+    if (node[key] === value) {
+      return node;
     }
+    if (node[childKey] && Array.isArray(node[childKey])) {
+      treeData.push(...node[childKey]);
+    }
+    node = treeData.shift();
   }
+  return node;
 }
 
 /**
@@ -623,20 +631,58 @@ export function formatI18nKey () {
  * @param {callback} str 回调名
  *
  */
-export function jsonpRequest (url, params, callbackName) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    if (callbackName) {
-      callbackName = callbackName + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+// export function jsonpRequest (url, params, callbackName) {
+//   return new Promise((resolve, reject) => {
+//     const script = document.createElement('script');
+//     if (callbackName) {
+//       callbackName = callbackName + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+//     }
+//     Object.assign(params, callbackName ? { callback: callbackName } : {});
+//     const arr = Object.keys(params).map(key => `${key}=${params[key]}`);
+//     script.src = `${url}?${arr.join('&')}`;
+//     document.body.appendChild(script);
+//     if (callbackName) {
+//       window[callbackName] = (data) => {
+//         resolve(data);
+//       };
+//     }
+//   });
+// }
+export function jsonpRequest (url, data) {
+  if (!url) throw new Error('invalid URL');
+  const callback = `CALLBACK${Math.random().toString().slice(9, 18)}`;
+  const JSONP = document.createElement('script');
+  JSONP.setAttribute('type', 'text/javascript');
+  const headEle = document.getElementsByTagName('head')[0];
+  let query = '';
+  if (data) {
+    if (typeof data === 'string') {
+      query = `&${data}`;
+    } else if (typeof data === 'object') {
+      for (const [key, value] of Object.entries(data)) {
+        query += `&${key}=${encodeURIComponent(value)}`;
+      }
     }
-    Object.assign(params, callbackName ? { callback: callbackName } : {});
-    const arr = Object.keys(params).map(key => `${key}=${params[key]}`);
-    script.src = `${url}?${arr.join('&')}`;
-    document.body.appendChild(script);
-    if (callbackName) {
-      window[callbackName] = (data) => {
-        resolve(data);
+    query += `&_time=${Date.now()}`;
+  }
+  let promiseRejecter = null;
+  JSONP.src = `${url}?callback=${callback}${query}`;
+  JSONP.onerror = function (event) {
+    if (promiseRejecter) {
+      promiseRejecter = event;
+    }
+  };
+  return new Promise((resolve, reject) => {
+    promiseRejecter = reject;
+    try {
+      window[callback] = (result) => {
+        resolve(result);
+        headEle.removeChild(JSONP);
+        delete window[callback];
       };
+      headEle.appendChild(JSONP);
+    } catch (err) {
+      reject(err);
     }
   });
 }
@@ -709,3 +755,103 @@ export function isEmojiCharacter (str) {
     }
   }
 }
+
+/**
+ *  获取当前unix时间戳
+ */
+export function getNowTimeExpired () {
+  const nowTimestamp = +new Date() / 1000;
+  const timeList = String(nowTimestamp).split('');
+  const timeIndex = timeList.findIndex((item) => item === '.');
+  const timestamp = parseInt(timeList.splice(0, timeIndex).join(''), 10);
+  return timestamp;
+}
+
+/**
+ *  查找当前管理员最大身份划分导航栏下菜单
+ *
+ * @param {payload} payload 传入的数组数据
+ *
+ */
+export function getManagerMenuPerm (payload) {
+  const isSystemManager = payload.find((item) => ['system_manager'].includes(item.type));
+  const isSuperManager = payload.find((item) => ['super_manager'].includes(item.type));
+  // 最大为系统管理员
+  if (isSystemManager && !isSuperManager) {
+    return 'hasSystemNoSuperManager';
+  }
+  return '';
+}
+
+/**
+ * 获取特定字符之间的数据
+ * @param {str} str 传入的源数据
+ * @param {reg} reg 传入的正则
+ * @return {values} 返回结果
+ */
+export function getDataBetweenBraces (str, reg) {
+  let match = [];
+  const values = [];
+  while ((match = reg.exec(str))) {
+    values.push(match[1]);
+  }
+  return values;
+}
+
+/**
+ * 复制传入的字符集
+ * @param {value} value 传入的字符集
+ */
+export function getCopyValue (value) {
+  if (!value) {
+    messageWarn(il8n('common', '暂无可复制数据'));
+    return;
+  }
+  const el = document.createElement('textarea');
+  el.value = value;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  const selected = document.getSelection().rangeCount > 0 ? document.getSelection().getRangeAt(0) : false;
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  if (selected) {
+    document.getSelection().removeAllRanges();
+    document.getSelection().addRange(selected);
+  }
+  messageSuccess(il8n('common', '复制成功'));
+}
+
+/**
+ * 复制传入的字符集
+ * @param {subPath} value 传入的路径
+ * @return {values} 返回根路径拼接当前路径
+ */
+export const getRoutePath = (subPath) => {
+  const path = subPath.startsWith('/') ? subPath.slice(1) : subPath;
+  return rootPath ? `${rootPath}${path}` : subPath;
+};
+
+/**
+ * 跳转不同页面的文档中心
+ * @param {versionLog} versionLog 传入的版本列表
+ * @param {path} path 传入的文档路径
+ * @param {autoOpen} autoOpen 是否自动跳转到文档中心
+ */
+export const navDocCenterPath = (versionLog, path, autoOpen = true) => {
+  let curVersion = '1.16';
+  const curLang = formatI18nKey().toLowerCase().indexOf('en') > -1 ? 'EN' : 'ZH';
+  if (versionLog.length) {
+    const { version } = versionLog[0];
+    const lastIndex = version.lastIndexOf('.');
+    curVersion = version.substring(1, lastIndex !== -1 ? lastIndex : version.length);
+  }
+  const curPath = `/${curLang}/IAM/${curVersion}${path}`;
+  if (autoOpen) {
+    window.open(`${window.BK_DOCS_URL_PREFIX}${curPath}`);
+  } else {
+    return curPath;
+  }
+};

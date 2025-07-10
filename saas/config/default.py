@@ -1,7 +1,5 @@
-from __future__ import absolute_import
-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -9,10 +7,20 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
+from __future__ import absolute_import
+
 import os
+import ssl
 
 import environ
+import pymysql
 from celery.schedules import crontab
+from django.db.backends.mysql.features import DatabaseFeatures
+from django.utils.functional import cached_property
+
+# connect mysql
+pymysql.install_as_MySQLdb()
 
 # environ
 env = environ.Env()
@@ -22,6 +30,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # load environment variables from .env file
 environ.Env.read_env()
+
+
+# 定义一个补丁来兼容 MySQL 5.7
+class PatchFeatures:
+    @cached_property
+    def minimum_database_version(self):
+        if self.connection.mysql_is_mariadb:
+            return 10, 4
+        return 5, 7
+
+
+# 将补丁应用到 DatabaseFeatures 中
+DatabaseFeatures.minimum_database_version = PatchFeatures.minimum_database_version
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -148,7 +169,7 @@ WHITENOISE_STATIC_PREFIX = "/staticfiles/"
 
 # cookie
 SESSION_COOKIE_NAME = "bkiam_sessionid"
-SESSION_COOKIE_AGE = 60 * 60 * 24  # 1天
+SESSION_COOKIE_AGE = 60 * 60 * 24  # 1 天
 
 # bk_language domain
 BK_DOMAIN = env.str("BK_DOMAIN", default="")
@@ -176,13 +197,13 @@ SWAGGER_SETTINGS = {
 
 ENABLE_SWAGGER = env.bool("BKAPP_ENABLE_SWAGGER", default=False)
 
-# CELERY 开关，使用时请改为 True，否则请保持为False。启动方式为以下两行命令：
+# CELERY 开关，使用时请改为 True，否则请保持为 False。启动方式为以下两行命令：
 # worker: python manage.py celery worker -l info
 # beat: python manage.py celery beat -l info
 IS_USE_CELERY = True
 # 连接 BROKER 超时时间
 BROKER_CONNECTION_TIMEOUT = 1  # 单位秒
-# CELERY与RabbitMQ增加60秒心跳设置项
+# CELERY 与 RabbitMQ 增加 60 秒心跳设置项
 BROKER_HEARTBEAT = 60
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
 CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
@@ -190,9 +211,9 @@ CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
 CELERY_ENABLE_UTC = False
 CELERY_TIMEZONE = "Asia/Shanghai"
 DJANGO_CELERY_BEAT_TZ_AWARE = False
-# 周期任务beat生产者来源
+# 周期任务 beat 生产者来源
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-# Celery队列名称
+# Celery 队列名称
 CELERY_DEFAULT_QUEUE = "bk_iam"
 # close celery hijack root logger
 CELERYD_HIJACK_ROOT_LOGGER = False
@@ -215,47 +236,40 @@ CELERY_IMPORTS = (
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
     "backend.api.bkci.tasks",
+    "backend.apps.handover.tasks",
 )
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
         "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
     },
-    "periodic_sync_organization": {
+    "periodic_clean_subject_to_delete": {
         "task": "backend.apps.organization.tasks.clean_subject_to_delete",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨 2 时执行
     },
     "periodic_sync_new_users": {
         "task": "backend.apps.organization.tasks.sync_new_users",
-        "schedule": crontab(),  # 每1分钟执行一次
+        "schedule": crontab(),  # 每 1 分钟执行一次
     },
     "periodic_sync_system_manager": {
         "task": "backend.apps.role.tasks.sync_system_manager",
-        "schedule": crontab(minute="*/5"),  # 每5分钟执行一次
+        "schedule": crontab(minute="*/5"),  # 每 5 分钟执行一次
     },
     "periodic_check_or_update_application_status": {
         "task": "backend.apps.application.tasks.check_or_update_application_status",
-        "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
+        "schedule": crontab(minute="*/30"),  # 每 30 分钟执行一次
     },
-    "periodic_user_group_policy_expire_remind": {
-        "task": "backend.apps.user.tasks.user_group_policy_expire_remind",
-        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
-    },
-    # "periodic_role_group_expire_remind": {
-    #     "task": "backend.apps.role.tasks.role_group_expire_remind",
-    #     "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
-    # },
     "periodic_user_expired_policy_cleanup": {
         "task": "backend.apps.user.tasks.user_cleanup_expired_policy",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨 2 时执行
     },
     "periodic_group_expired_member_cleanup": {
         "task": "backend.apps.group.tasks.group_cleanup_expired_member",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨0时执行
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨 0 时执行
     },
     "periodic_pre_create_audit_model": {
         "task": "backend.audit.tasks.pre_create_audit_model",
-        "schedule": crontab(0, 0, day_of_month="25"),  # 每月25号执行
+        "schedule": crontab(0, 0, day_of_month="25"),  # 每月 25 号执行
     },
     "periodic_generate_action_aggregate": {
         "task": "backend.apps.action.tasks.generate_action_aggregate",
@@ -263,63 +277,79 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_execute_model_change_event": {
         "task": "backend.apps.policy.tasks.execute_model_change_event",
-        "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
+        "schedule": crontab(minute="*/30"),  # 每 30 分钟执行一次
     },
     "periodic_cleanup_finished_model_change_event": {
         "task": "backend.apps.policy.tasks.cleanup_finished_model_change_event",
-        "schedule": crontab(minute=0, hour=1),  # 每天凌晨1时执行
+        "schedule": crontab(minute=0, hour=1),  # 每天凌晨 1 时执行
     },
     "periodic_retry_long_task": {
         "task": "backend.long_task.tasks.retry_long_task",
-        "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
+        "schedule": crontab(minute="*/10"),  # 每 10 分钟执行一次
     },
     "periodic_delete_unreferenced_expressions": {
         "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
-        "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
+        "schedule": crontab(minute=0, hour=4),  # 每天凌晨 4 时执行
     },
     "periodic_clean_expired_temporary_policies": {
         "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
-    "check_user_permission_clean_task": {
+    "periodic_check_user_permission_clean_task": {
         "task": "backend.apps.user.tasks.check_user_permission_clean_task",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
-    "clean_user_permission_clean_record": {
+    "periodic_clean_user_permission_clean_record": {
         "task": "backend.apps.user.tasks.clean_user_permission_clean_record",
-        "schedule": crontab(minute=0, hour=5),  # 每天凌晨5时执行
+        "schedule": crontab(minute=0, hour=5),  # 每天凌晨 5 时执行
     },
 }
 
 # 是否开启初始化分级管理员
 ENABLE_INIT_GRADE_MANAGER = env.bool("BKAPP_ENABLE_INIT_GRADE_MANAGER", default=False)
 if ENABLE_INIT_GRADE_MANAGER:
-    CELERYBEAT_SCHEDULE["init_biz_grade_manager"] = {
+    CELERYBEAT_SCHEDULE["periodic_init_biz_grade_manager"] = {
         "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
-        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+        "schedule": crontab(minute="*/2"),  # 每 2 分钟执行一次
     }
 
 # 是否开启初始化BCS一级/二级管理员
 ENABLE_INIT_BCS_PROJECT_MANAGER = env.bool("BKAPP_ENABLE_INIT_BCS_PROJECT_MANAGER", default=False)
 if ENABLE_INIT_BCS_PROJECT_MANAGER:
-    CELERYBEAT_SCHEDULE["init_bcs_manager"] = {
+    CELERYBEAT_SCHEDULE["periodic_init_bcs_manager"] = {
         "task": "backend.apps.role.tasks.InitBcsProjectManagerTask",
-        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+        "schedule": crontab(minute="*/2"),  # 每 2 分钟执行一次
     }
 
-# 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
-# V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
-# V2 Smart只有BK_BROKER_URL
+# 环境变量中有 rabbitmq 时使用 rabbitmq, 没有时使用 BK_BROKER_URL
+# V3 Smart 可能会配 RABBITMQ_HOST 或者 BK_BROKER_URL
+# V2 Smart 只有 BK_BROKER_URL
+BROKER_URL = env.str("BK_BROKER_URL", default="")
 if "RABBITMQ_HOST" in env:
-    BROKER_URL = "amqp://{user}:{password}@{host}:{port}/{vhost}".format(
-        user=env.str("RABBITMQ_USER"),
-        password=env.str("RABBITMQ_PASSWORD"),
-        host=env.str("RABBITMQ_HOST"),
-        port=env.str("RABBITMQ_PORT"),
-        vhost=env.str("RABBITMQ_VHOST"),
-    )
-else:
-    BROKER_URL = env.str("BK_BROKER_URL", default="")
+    # rabbitmq as broker
+    RABBITMQ_USER = env.str("RABBITMQ_USER", default="")
+    RABBITMQ_PASSWORD = env.str("RABBITMQ_PASSWORD", default="")
+    RABBITMQ_HOST = env.str("RABBITMQ_HOST", default="")
+    RABBITMQ_PORT = env.str("RABBITMQ_PORT", default="")
+    RABBITMQ_VHOST = env.str("RABBITMQ_VHOST", default="")
+    # rabbitmq tls
+    RABBITMQ_TLS_ENABLED = env.bool("RABBITMQ_TLS_ENABLED", default=False)
+    RABBITMQ_TLS_CERT_CA_FILE = env.str("RABBITMQ_TLS_CERT_CA_FILE", default="")
+    RABBITMQ_TLS_CERT_FILE = env.str("RABBITMQ_TLS_CERT_FILE", default="")
+    RABBITMQ_TLS_CERT_KEY_FILE = env.str("RABBITMQ_TLS_CERT_KEY_FILE", default="")
+    # ssl.CERT_NONE = 0 / ssl.CERT_OPTIONAL = 1 / ssl.CERT_REQUIRED = 2
+    RABBITMQ_TLS_CERT_REQS = ssl.VerifyMode(env.int("RABBITMQ_TLS_CERT_REQS", default=2))
+
+    # Celery Broker URL
+    BROKER_URL = f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VHOST}"
+    # TLS Enabled
+    if RABBITMQ_TLS_ENABLED:
+        BROKER_URL = f"amqps://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VHOST}"
+        BROKER_USE_SSL = {"ca_certs": RABBITMQ_TLS_CERT_CA_FILE, "cert_reqs": RABBITMQ_TLS_CERT_REQS}
+        # mTLS
+        if RABBITMQ_TLS_CERT_FILE and RABBITMQ_TLS_CERT_KEY_FILE:
+            BROKER_USE_SSL["certfile"] = RABBITMQ_TLS_CERT_FILE
+            BROKER_USE_SSL["keyfile"] = RABBITMQ_TLS_CERT_KEY_FILE
 
 # tracing: sentry support
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
@@ -334,9 +364,9 @@ BKAPP_OTEL_INSTRUMENT_DB_API = env.bool("BKAPP_OTEL_INSTRUMENT_DB_API", default=
 if ENABLE_OTEL_TRACE or SENTRY_DSN:
     INSTALLED_APPS += ("backend.tracing",)
 
-# debug trace的过期时间
-MAX_DEBUG_TRACE_TTL = 7 * 24 * 60 * 60  # 7天
-# debug trace的最大数量
+# debug trace 的过期时间
+MAX_DEBUG_TRACE_TTL = 7 * 24 * 60 * 60  # 7 天
+# debug trace 的最大数量
 MAX_DEBUG_TRACE_COUNT = 1000
 
 # profile record
@@ -363,7 +393,7 @@ BK_IAM_ENGINE_HOST = env.str("BKAPP_IAM_ENGINE_HOST", default="")
 BK_IAM_ENGINE_HOST_TYPE = env.str("BKAPP_IAM_ENGINE_HOST_TYPE", default="direct")  # direct/apigateway
 
 # authorization limit
-# 授权对象授权用户组, 模板的最大限制
+# 授权对象授权用户组，模板的最大限制
 SUBJECT_AUTHORIZATION_LIMIT = {
     # -------- 用户 ---------
     # 用户能加入的分级管理员的最大数量
@@ -405,12 +435,12 @@ APPLY_POLICY_ADD_INSTANCES_LIMIT = env.int("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIM
 # 临时权限一个操作最大数量
 TEMPORARY_POLICY_LIMIT = env.int("BKAPP_TEMPORARY_POLICY_LIMIT", default=10)
 # 最长已过期权限删除期限
-MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
+MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1 年
 # 最长已过期临时权限期限
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
-# 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
+# 接入系统的资源实例 ID 最大长度，默认 36（已存在长度为 36 的数据）
 MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=36)
-# 被删除的subject最长保留天数
+# 被删除的 subject 最长保留天数
 SUBJECT_DELETE_DAYS = env.int("BKAPP_SUBJECT_DELETE_DAYS", default=30)
 
 # 前端页面功能开关
@@ -424,7 +454,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_bk_notice": env.bool("BKAPP_ENABLE_BK_NOTICE", default=False),
 }
 
-# Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
+# Open API 接入 APIGW 后，需要对 APIGW 请求来源认证，使用公钥解开 jwt
 BK_APIGW_PUBLIC_KEY = env.str("BKAPP_APIGW_PUBLIC_KEY", default="")
 
 # apigateway 相关配置
@@ -450,7 +480,6 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 # disable display systems
 HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=["bk_iam", "bk_ci_rbac"])
 
-
 # role resource relation type 用于自定期权限申请的权限审批
 ROLE_RESOURCE_RELATION_TYPE = [
     {"system_id": "bk_cmdb", "type": "biz"},
@@ -458,12 +487,12 @@ ROLE_RESOURCE_RELATION_TYPE = [
     {"system_id": "bk_bcs_app", "type": "project"},
     {"system_id": "bk_monitorv3", "type": "space"},
     {"system_id": "bk_paas3", "type": "application"},
+    {"system_id": "bk_dbm", "type": "biz"},
 ]
 
 ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
 
-
-# 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置
+# 对接审计中心相关配置，包括注册权限模型到权限中心后台的配置
 BK_IAM_SYSTEM_ID = "bk_iam"
 if BK_IAM_HOST_TYPE == "direct":
     BK_IAM_USE_APIGATEWAY = False
@@ -474,14 +503,29 @@ elif BK_IAM_HOST_TYPE == "apigateway":
 BK_IAM_MIGRATION_APP_NAME = "iam"
 BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 
-
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
 
-
-# BCS初始化ROLE网关api配置
+# BCS 初始化 ROLE 网关 api 配置
 BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
 
+# BK BOT approval 审批机器人通知
+BK_BOT_APPROVAL_APIGW_URL = env.str("BK_BOT_APPROVAL_APIGW_URL", default="")
+
+# BK BOT approval 审批机器人通知
+BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL", default="")
+
+# 通知的豁免名单，企业内部分人员不接收通知
+BK_NOTIFICATION_EXEMPTION_USERS = env.list("BK_NOTIFICATION_EXEMPTION_USERS", default=[])
 
 # 文档地址
 BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/")
+
+# 全局配置地址
+BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")
+
+# 不允许作为用户组成员的部门 ID，用英文逗号分割
+DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER", default="")
+
+# 问题反馈地址
+BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")

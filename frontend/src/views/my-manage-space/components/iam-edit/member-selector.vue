@@ -2,22 +2,23 @@
   <div class="iam-edit-selector" :style="styles">
     <template v-if="!isEditable">
       <div class="edit-wrapper">
-        <div class="edit-content" :title="displayValue.map(item => item.username) || ''">
-          <slot>
-            <span
-              v-for="(item, i) in displayValue"
-              :key="i"
-              class="member-item"
-              :class="item.readonly ? 'member-readonly' : ''"
-            >
-              {{ item.username }}
-              <!-- <Icon v-if="!isShowRole" type="close-small"
-                                @click.stop="handleDelete(index)" />
-                            <Icon v-else type="close-small"
-                                @click.stop="handleDelete(index)" /> -->
-            </span>
-          </slot>
-        </div>
+        <template v-if="displayValue.length">
+          <div class="edit-content" v-bk-tooltips="{ content: displayValue.map(item => item.username) }">
+            <slot>
+              <span
+                v-for="(item, i) in displayValue"
+                :key="i"
+                class="member-item"
+                :class="item.readonly ? 'member-readonly' : ''"
+              >
+                {{ item.username }}
+              </span>
+            </slot>
+          </div>
+        </template>
+        <template v-else>
+          <span>--</span>
+        </template>
         <div class="edit-action-box" v-if="isEditMode">
           <Icon
             type="edit-fill"
@@ -85,9 +86,15 @@
           return ['detail', 'edit'].includes(value);
         }
       },
+      // 默认允许空
       allowEmpty: {
         type: Boolean,
         default: false
+      },
+      // 编辑不允许空
+      isEditAllowEmpty: {
+        type: Boolean,
+        default: true
       }
     },
     data () {
@@ -109,6 +116,9 @@
       },
       isEditMode () {
         return this.mode === 'edit';
+      },
+      isAllowTrigger () {
+        return JSON.stringify(this.displayValue) !== JSON.stringify(this.value);
       }
     },
     watch: {
@@ -168,10 +178,9 @@
       handleEnter (event) {
         if (!this.isEditable) return;
         const { key, keyCode } = event;
-        const isUpdate = JSON.stringify(this.displayValue) !== JSON.stringify(this.value);
         if (key === 'Enter' && keyCode === 13) {
           this.handleDefaultEmpty();
-          if (isUpdate) {
+          if (this.isAllowTrigger) {
             this.handleEmptyChange();
             this.isEditable = false;
           } else {
@@ -197,7 +206,14 @@
       },
             
       triggerChange () {
-        if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+        console.log(this.isAllowTrigger, this.displayValue, '显示内容');
+        // 单独处理初始化为空但编辑不能为空数据
+        if (!this.displayValue.length && !this.isEditAllowEmpty) {
+          this.displayValue = [...this.value];
+          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
+          return;
+        }
+        if (this.isAllowTrigger) {
           this.isLoading = true;
           this.remoteHandler({
             [this.field]: this.displayValue
@@ -228,7 +244,7 @@
       handleRtxBlur () {
         this.isEditable = false;
         this.handleDefaultEmpty();
-        if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+        if (this.isAllowTrigger) {
           this.handleEmptyChange();
         }
       },

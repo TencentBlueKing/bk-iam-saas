@@ -8,20 +8,22 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.views import APIView
 
 from backend.api.authentication import ESBAuthentication
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.biz.resource_creator_action import ResourceCreatorActionBiz
 from backend.service.models import Subject
 from backend.trans.open_authorization import AuthorizationTrans
 
 from ..audit import SubjectPolicyGrantOrRevokeAuditProvider
-from ..constants import AuthorizationAPIEnum, VerifyApiParamLocationEnum
+from ..constants import AuthorizationAPIEnum, OperateEnum, VerifyApiParamLocationEnum
 from ..mixins import AuthViewMixin
 from ..permissions import AuthorizationAPIPermission
-from ..serializers import AuthBatchInstanceSLZ, AuthBatchPathSLZ, AuthInstanceSLZ, AuthPathSLZ
+from ..serializers import ActionAttributeSLZ, AuthBatchInstanceSLZ, AuthBatchPathSLZ, AuthInstanceSLZ, AuthPathSLZ
 
 
 class AuthInstanceView(AuthViewMixin, APIView):
@@ -196,5 +198,57 @@ class AuthBatchPathView(AuthViewMixin, APIView):
         policies = self.grant_or_revoke(operate, subject, policy_list)
 
         audit_context_setter(operate=operate, subject=subject, system_id=system_id, policies=policies)
+
+        return self.batch_policy_response(policies)
+
+
+class AuthAttributeView(AuthViewMixin, APIView):
+    """属性授权"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AuthorizationAPIPermission]
+    authorization_api_permission = {
+        "post": (
+            VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value,
+            AuthorizationAPIEnum.AUTHORIZATION_ATTRIBUTE.value,
+        ),
+    }
+
+    biz = ResourceCreatorActionBiz()
+    trans = AuthorizationTrans()
+
+    @swagger_auto_schema(
+        operation_description="属性授权",
+        request_body=ActionAttributeSLZ,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["open"],
+    )
+    @view_audit_decorator(SubjectPolicyGrantOrRevokeAuditProvider)
+    def post(self, request, *args, **kwargs):
+        serializer = ActionAttributeSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        subject = Subject.from_username(data["creator"])
+        system_id = data["system"]
+        action_id = data["action_id"]
+        resource_type_id = data["type"]
+        attributes = data["attributes"]
+
+        # 转换为策略列表
+        policy_list = self.trans.to_policy_list_for_attributes_of_creator(
+            system_id,
+            [
+                action_id,
+            ],
+            resource_type_id,
+            attributes,
+        )
+
+        # 授权
+        policies = self.grant_or_revoke(OperateEnum.GRANT.value, subject, policy_list)
+
+        audit_context_setter(operate=OperateEnum.GRANT.value, subject=subject, system_id=system_id, policies=policies)
 
         return self.batch_policy_response(policies)

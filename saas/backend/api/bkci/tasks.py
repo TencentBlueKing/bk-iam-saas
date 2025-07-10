@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -255,7 +255,7 @@ class BKCIMigrateTask(Task):
                 migrate_data.save(force_insert=True)
 
 
-current_app.tasks.register(BKCIMigrateTask())
+current_app.register_task(BKCIMigrateTask())
 
 
 class BKCILegacyMigrateTask(Task):
@@ -275,10 +275,10 @@ class BKCILegacyMigrateTask(Task):
         task.status = "SUCCESS"
         task.save(update_fields=["status"])
 
-    def handle_project(self, project_id: str, user_set):
+    def handle_project(self, project_id: str, user_set):  # noqa: C901
         MigrateData.objects.filter(version="v0", project_id=project_id).delete()
 
-        # 1. 从project表查询项目id
+        # 1. 从 project 表查询项目 id
         project = (
             Projects.objects.using("bkci").filter(project_code=project_id, deleted_at__isnull=True).only("id").first()
         )
@@ -287,7 +287,7 @@ class BKCILegacyMigrateTask(Task):
 
         project_uuid = project.id
 
-        # 2. 从services表查询出需要排除的service_id
+        # 2. 从 services 表查询出需要排除的 service_id
         # exclude_service_ids = list(
         #     Services.objects.using("bkci")
         #     .filter(
@@ -298,7 +298,7 @@ class BKCILegacyMigrateTask(Task):
         # )
         exclude_service_ids = [0]  # 暂时不排除
 
-        # 3. 从policies表中查询出所有的操作id与操作名生成map
+        # 3. 从 policies 表中查询出所有的操作 id 与操作名生成 map
         policies = (
             Policies.objects.using("bkci")
             .exclude(service_id__in=exclude_service_ids)
@@ -308,7 +308,7 @@ class BKCILegacyMigrateTask(Task):
         )
         policy_map = {one.id: one.policy_code for one in policies}
 
-        # 4. 从policies_groups表中查询出所有的操作group_id与操作的关系, 生成map
+        # 4. 从 policies_groups 表中查询出所有的操作 group_id 与操作的关系，生成 map
         policy_groups = (
             PolicyGroups.objects.using("bkci").filter(deleted_at__isnull=True).only("group_id", "policy_id").all()
         )
@@ -318,7 +318,7 @@ class BKCILegacyMigrateTask(Task):
             if one.policy_id in policy_map:
                 policy_group_map[one.group_id].append(policy_map[one.policy_id])
 
-        # 5. 从resource_type表中查询出所有的资源id与资源名生成map
+        # 5. 从 resource_type 表中查询出所有的资源 id 与资源名生成 map
         resource_types = (
             ResourceTypes.objects.using("bkci")
             .exclude(service_id__in=exclude_service_ids)
@@ -334,7 +334,7 @@ class BKCILegacyMigrateTask(Task):
                 "service_id": one.service_id,
             }
 
-        # 6. 从resources表中查询出所有的资源id与资源名生成map
+        # 6. 从 resources 表中查询出所有的资源 id 与资源名生成 map
         resources = (
             Resources.objects.using("bkci")
             .exclude(service_id__in=exclude_service_ids)
@@ -346,7 +346,7 @@ class BKCILegacyMigrateTask(Task):
         for one in resources:
             resource_map[one.id] = {"id": one.resource_code, "name": one.resource_name}
 
-        # 7. 从roles表中查询出所有的用户组id与用户组名生成map
+        # 7. 从 roles 表中查询出所有的用户组 id 与用户组名生成 map
         roles = (
             Roles.objects.using("bkci")
             .filter(deleted_at__isnull=True)
@@ -358,7 +358,7 @@ class BKCILegacyMigrateTask(Task):
         for one in roles:
             role_map[one.id] = {"id": one.id, "name": one.display_name, "members": []}
 
-        # 8. 从user_roles表中查询出role_id与user_id填充role_map
+        # 8. 从 user_roles 表中查询出 role_id 与 user_id 填充 role_map
         user_roles = (
             UserRoles.objects.using("bkci")
             .filter(deleted_at__isnull=True, project_id=project_uuid)
@@ -376,7 +376,7 @@ class BKCILegacyMigrateTask(Task):
                 continue
             role_map[role_id]["members"] = users
 
-        # 9. 查询特色资源group重名的service
+        # 9. 查询特色资源 group 重名的 service
         service_ids = []
         for resource_type in resource_type_map.values():
             if resource_type["id"] == "group" or resource_type["id"] == "task":
@@ -409,7 +409,7 @@ class BKCILegacyMigrateTask(Task):
             role_map,
         )
 
-    def handle_user_custom_policy(
+    def handle_user_custom_policy(  # noqa: C901, PLR0912
         self,
         project_id,
         project_uuid,
@@ -462,7 +462,7 @@ class BKCILegacyMigrateTask(Task):
             permissions = []
             for resource_type_id, resource_action in resource_type_action.items():
                 for resource_id, action_ids in resource_action.items():
-                    # 对于资源类型为group的特殊处理, 需要在action_ids中添加service
+                    # 对于资源类型为 group 的特殊处理，需要在 action_ids 中添加 service
                     if (
                         resource_type_map[resource_type_id]["id"] in ["group", "task"]
                         and resource_type_map[resource_type_id]["service_id"] in service_map
@@ -511,7 +511,7 @@ class BKCILegacyMigrateTask(Task):
             )
             migrate_data.save(force_insert=True)
 
-    def handle_group_web_policy(
+    def handle_group_web_policy(  # noqa: C901, PLR0912
         self,
         project_id,
         project_uuid,
@@ -564,7 +564,7 @@ class BKCILegacyMigrateTask(Task):
             permissions = []
             for resource_type_id, resource_action in resource_type_action.items():
                 for resource_id, action_ids in resource_action.items():
-                    # 对于资源类型为group的特殊处理, 需要在action_ids中添加service
+                    # 对于资源类型为 group 的特殊处理，需要在 action_ids 中添加 service
                     if (
                         resource_type_map[resource_type_id]["id"] in ["group", "task"]
                         and resource_type_map[resource_type_id]["service_id"] in service_map
@@ -619,4 +619,4 @@ class BKCILegacyMigrateTask(Task):
             migrate_data.save(force_insert=True)
 
 
-current_app.tasks.register(BKCILegacyMigrateTask())
+current_app.register_task(BKCILegacyMigrateTask())

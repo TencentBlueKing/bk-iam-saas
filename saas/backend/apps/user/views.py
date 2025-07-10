@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from copy import copy
 from typing import List, Optional
 
@@ -53,7 +54,6 @@ from .serializers import (
 
 
 class UserGroupViewSet(GenericViewSet):
-
     pagination_class = CustomPageNumberPagination
 
     biz = GroupBiz()
@@ -108,7 +108,6 @@ class UserGroupViewSet(GenericViewSet):
 
 
 class UserDepartmentGroupViewSet(GenericViewSet):
-
     pagination_class = None
 
     biz = GroupBiz()
@@ -134,7 +133,6 @@ class UserDepartmentGroupViewSet(GenericViewSet):
 
 
 class UserGroupRenewViewSet(GenericViewSet):
-
     pagination_class = CustomPageNumberPagination
 
     # service
@@ -226,7 +224,6 @@ class UserCommonActionViewSet(GenericViewSet):
 
 
 class RoleViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = RoleBiz()
@@ -247,7 +244,6 @@ class RoleViewSet(GenericViewSet):
 
 
 class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
-
     queryset = Group.objects.all()
     serializer_class = GroupSLZ
 
@@ -298,8 +294,7 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
         return search_group_ids(data)
 
     def get_subject(self, request, kwargs):
-        subject = Subject.from_username(request.user.username)
-        return subject
+        return Subject.from_username(request.user.username)
 
     def get_group_dict(self, subject: Subject):
         groups = list_all_subject_groups(subject.type, subject.id)
@@ -340,7 +335,6 @@ class UserDepartmentGroupSearchViewSet(SubjectGroupSearchMixin):
 
 
 class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
@@ -399,12 +393,10 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response([])
 
     def get_subject(self, request, kwargs):
-        subject = Subject.from_username(request.user.username)
-        return subject
+        return Subject.from_username(request.user.username)
 
 
 class UserSubjectTemplateGroupViewSet(GenericViewSet):
-
     pagination_class = CustomPageNumberPagination
 
     biz = SubjectTemplateBiz()
@@ -455,8 +447,7 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
         return search_group_ids(data)
 
     def get_subject(self, request, kwargs):
-        subject = Subject.from_username(request.user.username)
-        return subject
+        return Subject.from_username(request.user.username)
 
 
 def search_group_ids(data) -> Optional[List[int]]:
@@ -471,7 +462,6 @@ def search_group_ids(data) -> Optional[List[int]]:
 
 
 class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
-
     pagination_class = CustomPageNumberPagination
 
     biz = SubjectTemplateBiz()
@@ -522,8 +512,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
         return search_group_ids(data)
 
     def get_subject(self, request, kwargs):
-        subject = Subject.from_username(request.user.username)
-        return subject
+        return Subject.from_username(request.user.username)
 
 
 class UserFavoriteSystemViewSet(GenericViewSet):

@@ -16,49 +16,42 @@ repos:
       - id: trailing-whitespace
   - repo: local
     hooks:
-      - id: isort
-        name: isort
-        language: python
-        pass_filenames: false
-        entry: isort --settings-path=saas/pyproject.toml saas
-      - id: black
-        name: black
-        language: python
-        pass_filenames: false
-        entry: black --config=saas/pyproject.toml saas
-      - id: flake8
-        name: flak8
-        language: python
-        pass_filenames: false
-        entry: pflake8 --config=saas/pyproject.toml saas
+      - id: ruff-format
+        name: ruff-formatter
+        language: system
+        types: [python]
+        entry: ruff format --config=saas/pyproject.toml --no-cache
+        files: saas/
+      - id: ruff-lint
+        name: ruff-lint
+        language: system
+        types: [python]
+        entry: ruff check --config=saas/pyproject.toml --force-exclude --fix --no-cache
+        files: saas/
       - id: mypy
         name: mypy
         language: python
+        types: [python]
         pass_filenames: false
-        entry: mypy --config-file=saas/pyproject.toml saas
+        entry: mypy --config-file=saas/pyproject.toml
+        files: saas/
       - id: import-linter
         name: import-linter
-        language: python
-        pass_filenames: false
-        entry: cd saas && lint-imports --config=./.importlinter && cd ..
+        require_serial: true
+        language: system
+        entry: bash -c "cd saas && lint-imports"
       - id: pytest
         name: pytest
         language: python
         pass_filenames: false
         entry: pytest -c saas/pyproject.toml saas
-      - id: poetry-export
-        name: poetry-export
-        description: run poetry export to sync lock file with requirements.txt
+      - id: requirements-export
+        name: requirements-export
+        language: system
         entry: bash -c "cd saas && poetry export -f requirements.txt --output requirements.txt --without-hashes"
-        language: python
-        language_version: python3
-        pass_filenames: false
         files: ^.*/poetry.lock$
-      - id: poetry-export-dev
-        name: poetry-export-dev
-        description: run poetry export to sync lock file with requirements_dev.txt
-        entry: bash -c "cd saas && poetry export --dev -f requirements.txt --output requirements_dev.txt --without-hashes"
-        language: python
-        language_version: python3
-        pass_filenames: false
+      - id: requirements-dev-export
+        name: requirements-dev-export
+        language: system
+        entry: bash -c "cd saas && poetry export --only=main,dev -f requirements.txt --output requirements_dev.txt --without-hashes"
         files: ^.*/poetry.lock$

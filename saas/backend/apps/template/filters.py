@@ -8,23 +8,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django_filters import rest_framework as filters
 
+from backend.apps.group.models import Group
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
 
 
 class TemplateMemberFilter(filters.FilterSet):
-    types = filters.CharFilter(method="types_filter", label="用户名")
+    name = filters.CharFilter(method="name_filter", label="用户组名")
 
     class Meta:
         model = PermTemplatePolicyAuthorized
-        fields = ["types"]
+        fields = ["name"]
 
-    def types_filter(self, queryset, name, value):
-        types = value.split(",")
-        if types:
-            return queryset.filter(subject_type__in=types)
-        return queryset
+    def name_filter(self, queryset, name, value):
+        group_ids = list(Group.objects.filter(name__icontains=value).values_list("id", flat=True))
+        return queryset.filter(subject_id__in=group_ids)
 
 
 class TemplateFilter(filters.FilterSet):

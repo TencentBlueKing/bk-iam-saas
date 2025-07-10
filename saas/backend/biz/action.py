@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Dict, List, Optional, Set
 
 from pydantic.fields import Field
@@ -40,6 +41,16 @@ class ActionBean(Action):
     expired_at: Optional[int] = None
     tag: str = ActionTag.UNCHECKED.value
     sensitivity_level: str = ""
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if (
+            "sensitivity" in data
+            and data["sensitivity"]
+            and isinstance(data["sensitivity"], int)
+            and 1 < data["sensitivity"] < 6  # noqa: PLR2004
+        ):
+            self.sensitivity_level = SensitivityLevel.get_choices()[data["sensitivity"] - 1][0]
 
 
 class ActionSearchCondition(BaseModel):
@@ -76,6 +87,10 @@ class ActionBeanList:
     def fill_sensitivity_level(self, action_sensitivity_level: Dict[str, str]):
         # 填充敏感度等级
         for action in self.actions:
+            # NOTE: 模型本身已经有默认值
+            if action.id not in action_sensitivity_level and action.sensitivity_level:
+                continue
+
             action.sensitivity_level = action_sensitivity_level.get(action.id, SensitivityLevel.L1.value)
 
     def filter_by_scope_action_ids(self, scope_action_ids: List[str]) -> List[ActionBean]:
@@ -107,7 +122,7 @@ class ActionBiz:
     resource_type_svc = ResourceTypeService()
     policy_svc = PolicyQueryService()
 
-    @cachedmethod(timeout=1 * 60)  # 缓存1分钟
+    @cachedmethod(timeout=1 * 60)  # 缓存 1 分钟
     def list(self, system_id: str) -> ActionBeanList:
         actions = self.action_svc.list(system_id)
         action_list = ActionBeanList(parse_obj_as(List[ActionBean], actions))
@@ -137,17 +152,16 @@ class ActionBiz:
 
         scope_action_ids = RoleListQuery(role).list_scope_action_id(system_id)
 
-        actions = action_list.filter_by_scope_action_ids(scope_action_ids)
-        return actions
+        return action_list.filter_by_scope_action_ids(scope_action_ids)
 
     def list_template_tagged_action_by_role(
         self, system_id: str, role, template_action_set: Set[str]
     ) -> List[ActionBean]:
         """
-        查询角色相关的操作列表, 加上标签
+        查询角色相关的操作列表，加上标签
 
-        返回的操作是role范围+template操作的合集
-        对role范围外的操作要打上delete标签
+        返回的操作是 role 范围+template 操作的合集
+        对 role 范围外的操作要打上 delete 标签
         """
         actions = self.list(system_id).actions
         scope_action_ids = RoleListQuery(role).list_scope_action_id(system_id)
@@ -156,19 +170,19 @@ class ActionBiz:
                 action.tag = ActionTag.CHECKED.value if action.id in template_action_set else ActionTag.UNCHECKED.value
             return actions
 
-        # 筛选出在role范围内+在模板操作的操作集合
-        # 存量模板的action范围可能会超过role的范围, 为了展示完整, 需要补全role范围中没有的action
+        # 筛选出在 role 范围内 + 在模板操作的操作集合
+        # 存量模板的 action 范围可能会超过 role 的范围，为了展示完整，需要补全 role 范围中没有的 action
         filter_actions = [
             action for action in actions if action.id in scope_action_ids or action.id in template_action_set
         ]
         for action in filter_actions:
-            # 如果操作在模板内且不在role范围内, 操作已被删除
+            # 如果操作在模板内且不在 role 范围内，操作已被删除
             if action.id in template_action_set and action.id not in scope_action_ids:
                 action.tag = ActionTag.DELETE.value
-            # 如果操作同时在role范围内与模板内, 操作已勾选
+            # 如果操作同时在 role 范围内与模板内，操作已勾选
             elif action.id in template_action_set and action.id in scope_action_ids:
                 action.tag = ActionTag.CHECKED.value
-            # 如果操作不在模板内, 操作未勾选
+            # 如果操作不在模板内，操作未勾选
             else:
                 action.tag = ActionTag.UNCHECKED.value
         return filter_actions
@@ -181,7 +195,7 @@ class ActionBiz:
         action_list = ActionBeanList(actions)
 
         if hidden:
-            action_list = ActionList(action_list.list_not_hidden())
+            action_list = ActionBeanList(action_list.list_not_hidden())
 
         policies = self.policy_svc.list_by_subject(system_id, subject)
         action_expired_at = {policy.action_id: policy.expired_at for policy in policies}
@@ -230,7 +244,7 @@ class RelatedResourceTypeForCheck(BaseModel):
     id: str = Field(alias="type")
 
     class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 type 与 id
+        allow_population_by_field_name = True  # 支持 alias 字段同时传 type 与 id
 
 
 class Environment(BaseModel):
@@ -248,7 +262,7 @@ class ActionForCheck(BaseModel):
     environments: List[Environment] = []
 
     class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
+        allow_population_by_field_name = True  # 支持 alias 字段同时传 action_id 与 id
 
     def get_env_types(self) -> List[str]:
         return [e.type for e in self.environments]
@@ -259,7 +273,7 @@ class ActionResourceGroupForCheck(BaseModel):
     resource_groups: List[ResourceGroupForCheck]
 
     class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
+        allow_population_by_field_name = True  # 支持 alias 字段同时传 action_id 与 id
 
     def to_action_for_check(self) -> List["ActionForCheck"]:
         return [
@@ -288,8 +302,7 @@ class ActionCheckBiz:
 
     def _get_action_list(self, system_id: str):
         svc_actions = self.svc.list(system_id)
-        action_list = ActionList(svc_actions)
-        return action_list
+        return ActionList(svc_actions)
 
     def _check_action(self, action_list, action: ActionForCheck):
         svc_action: Action = action_list.get(action.id)

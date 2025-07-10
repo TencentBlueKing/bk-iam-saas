@@ -181,7 +181,7 @@
         </form>
       </render-horizontal-block>
       <render-horizontal-block ext-cls="mt16" :label="$t(`m.permApply['关联资源实例']`)">
-        <section ref="instanceTableRef">
+        <section ref="instanceTableRef" class="aggregate-tab-instance-table perm-apply-resource-instance-table">
           <resource-instance-table
             :list="tableData"
             :original-table-list="tableDataBackup"
@@ -191,14 +191,20 @@
             @on-select="handleResourceSelect"
             @on-realted-change="handleRelatedChange" />
           <div slot="append" class="expanded-action-wrapper">
-            <bk-switcher
-              v-model="isAllExpanded"
-              theme="primary"
-              size="small"
-              :disabled="isAggregateDisabled"
-              @change="handleAggregateActionChange">
-            </bk-switcher>
-            <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['逐项编辑']`) : $t(`m.grading['批量编辑']`) }}</span>
+            <div class="aggregate-action-tab-group">
+              <div
+                v-for="item in AGGREGATION_EDIT_ENUM"
+                :key="item.value"
+                :class="[
+                  'aggregate-action-btn',
+                  { 'is-active': isAllExpanded === item.value },
+                  { 'is-disabled': isAggregateDisabled }
+                ]"
+                @click.stop="handleAggregateActionChange(item.value)"
+              >
+                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+              </div>
+            </div>
           </div>
         </section>
       </render-horizontal-block>
@@ -272,12 +278,12 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { guid, formatCodeData } from '@/common/util';
+  import { PERMANENT_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
   import RenderActionTag from '@/components/common-action';
   import ResourceInstanceTable from '../components/resource-instance-table';
   import Policy from '@/model/policy';
   import AggregationPolicy from '@/model/aggregation-policy';
   import Condition from '@/model/condition';
-  import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import ConfirmDialog from '@/components/iam-confirm-dialog/index';
 
@@ -291,6 +297,7 @@
     },
     data () {
       return {
+        AGGREGATION_EDIT_ENUM,
         systemValue: '',
         systemList: [],
         buttonLoading: false,
@@ -351,6 +358,7 @@
           tipType: 'search'
         },
         isShowConfirmDialog: false,
+        isAllUnlimited: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
       };
     },
@@ -395,7 +403,6 @@
                         });
                     }
                 });
-                this.getFilterAggregateAction();
                 return allActionIds;
             }
     },
@@ -438,6 +445,7 @@
       },
       curSelectActions (value) {
         this.aggregationsTableData = this.aggregationsTableData.filter(item => value.includes(item.id));
+        this.getFilterAggregateAction();
       },
       tableData: {
         handler (value) {
@@ -1155,6 +1163,51 @@
       handleAggregateActionChange (payload) {
         this.getFilterAggregateAction();
         this.handleAggregateAction(payload);
+        // 扩展无限制、无实例下聚合操作和单操作去重场景
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
+      },
+
+      handleUnlimitedActionChange (payload) {
+        const tableData = _.cloneDeep(this.tableData);
+        tableData.forEach((item, index) => {
+          if (!item.isAggregate) {
+            if (item.resource_groups && item.resource_groups.length) {
+              item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                  if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
+                    return;
+                  }
+                  types.condition = payload ? [] : ['none'];
+                  if (payload) {
+                    types.isError = false;
+                  }
+                });
+              });
+            } else {
+              item.name = item.name.split('，')[0];
+            }
+          }
+          if (item.instances && item.isAggregate) {
+            item.isNoLimited = false;
+            item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+            item.isNeedNoLimited = true;
+            if (!payload || item.instances.length) {
+              item.isNoLimited = false;
+              item.isError = false;
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item.isNoLimited = true;
+              item.isError = false;
+              item.instances = [];
+            }
+            return this.$set(
+              tableData,
+              index,
+              new AggregationPolicy(item)
+            );
+          }
+        });
+        this.tableData = _.cloneDeep(tableData);
       },
 
       handleRelatedChange (payload) {
@@ -1232,6 +1285,7 @@
       },
 
       handleAggregateAction (payload) {
+        this.isAllExpanded = payload;
         const aggregationAction = this.aggregations;
         const actionIds = [];
         aggregationAction.forEach(item => {
@@ -1981,6 +2035,7 @@
 
 <style lang="postcss" scoped>
 @import './index.css';
+@import '@/css/mixins/aggregate-action-group.css';
 .action-hover {
     color: #3a84ff;
 }

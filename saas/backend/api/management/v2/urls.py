@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.urls import path
 
 from . import views
@@ -26,36 +27,48 @@ urlpatterns = [
         name="open.management.v2.grade_manager",
     ),
     # -------------- 用户组本身 --------------
-    # 系统管理员下创建用户组
+    # 系统管理员下创建用户组（支持同步创建人员模板）
     path(
         "grade_managers/-/groups/",
         views.ManagementSystemManagerGroupViewSet.as_view({"post": "create"}),
         name="open.management.v2.system_manager_group",
     ),
-    # 分级管理员下创建用户组
+    # 分级管理员下创建用户组（支持同步创建用户组对应的人员模板）
     path(
         "grade_managers/<int:id>/groups/",
         views.ManagementGradeManagerGroupViewSet.as_view({"post": "create", "get": "list"}),
         name="open.management.v2.grade_manager_group",
     ),
-    # 用户组基本信息更新 & 删除
+    # 用户组基本信息更新 & 删除（自动同步删除用户组人员模板）
     path(
         "groups/<int:id>/",
         views.ManagementGroupViewSet.as_view({"put": "update", "delete": "destroy"}),
         name="open.management.v2.group",
     ),
     # -------------- 用户组成员 --------------
-    # 用户组成员
+    # 用户组成员（增加和删除支持人员模板，查询列表不支持人员模板）
     path(
         "groups/<int:id>/members/",
         views.ManagementGroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.management.v2.group_member",
     ),
-    # 用户组成员有效期
+    # 用户组成员有效期（不支持人员模板）
     path(
         "groups/<int:id>/members/-/expired_at/",
         views.ManagementGroupMemberExpiredAtViewSet.as_view({"put": "update"}),
         name="open.management.v2.group_member.expired_at",
+    ),
+    # 用户组成员有效期批量更新（不支持人员模板）
+    path(
+        "groups/<int:id>/members/-/batch_expired_at/",
+        views.ManagementGroupMemberBatchExpiredAtViewSet.as_view({"put": "update"}),
+        name="open.management.v2.group_member.batch_expired_at",
+    ),
+    # 用户组下类型为人员模板的成员
+    path(
+        "groups/<int:id>/subject_templates/",
+        views.ManagementGroupSubjectTemplateViewSet.as_view({"get": "list"}),
+        name="open.management.v2.group_subject_template",
     ),
     # -------------- 用户组权限 --------------
     # 用户组自定义权限
@@ -63,6 +76,12 @@ urlpatterns = [
         "groups/<int:id>/policies/",
         views.ManagementGroupPolicyViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.management.v2.group_policy",
+    ),
+    # 用户组绑定权限模板的路由
+    path(
+        "groups/<int:id>/templates/",
+        views.ManagementGroupPolicyTemplateViewSet.as_view({"post": "create"}),
+        name="open.management.v2.group_policy_template",
     ),
     # 用户组自定义权限 - 操作级别的变更，不涉及Resources
     path(
@@ -81,6 +100,12 @@ urlpatterns = [
         "groups/-/renew/applications/",
         views.ManagementGroupRenewApplicationViewSet.as_view({"post": "create"}),
         name="open.management.v2.group_renew_application",
+    ),
+    # 用户组批量续期申请单
+    path(
+        "groups/-/batch_expired_at_renew/applications/",
+        views.ManagementGroupBatchExpiredAtRenewApplicationViewSet.as_view({"post": "create"}),
+        name="open.management.v2.group_batch_renew_application",
     ),
     # 用户组申请单
     path(
@@ -111,6 +136,12 @@ urlpatterns = [
         "departments/<int:id>/groups/belong/",
         views.ManagementDepartmentGroupBelongViewSet.as_view({"get": "check"}),
         name="open.management.v2.department_group_belong",
+    ),
+    # 批量查询某个成员在一批用户组里的详情（支持人员模板）
+    path(
+        "group_member_types/<str:group_member_type>/members/<str:member_id>/groups/-/details/",
+        views.ManagementMemberGroupDetailViewSet.as_view({"get": "list"}),
+        name="open.management.v2.member_group_detail",
     ),
     # -------------- Approval --------------
     # 审批回调
@@ -149,5 +180,11 @@ urlpatterns = [
         "grade_managers/<int:id>/subject_templates/",
         views.ManagementGradeManagerSubjectTemplateViewSet.as_view({"get": "list"}),
         name="open.management.v2.grade_manager_subject_template",
+    ),
+    # 分级管理员创建权限模板
+    path(
+        "grade_managers/<int:id>/templates/",
+        views.ManagementTemplateViewSet.as_view({"get": "list", "post": "create"}),
+        name="open.management.v2.template",
     ),
 ]

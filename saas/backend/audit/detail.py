@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Dict, List, Type
 
 from django.utils.translation import gettext as _
@@ -223,8 +224,7 @@ class RoleCommonActionProvider(BaseProvider):
     @property
     def sub_objects(self) -> List:
         extra = self.event.extra
-        commonaction = extra["commonaction"]
-        return commonaction
+        return extra["commonaction"]
 
 
 class RoleGroupRenewProvider(BaseProvider):
@@ -252,6 +252,12 @@ class RoleGroupRenewProvider(BaseProvider):
             )
 
         return {"members": data}
+
+
+class RoleConfigProvider(BaseProvider):
+    @property
+    def extra_info(self) -> Dict:
+        return {"data": self.event.extra["data"]}
 
 
 class ApprovalNameMixin:
@@ -393,6 +399,8 @@ class EventDetailExtra:
         AuditType.ROLE_COMMONACTION_CREATE.value: RoleCommonActionProvider,
         AuditType.ROLE_COMMONACTION_DELETE.value: RoleCommonActionProvider,
         AuditType.ROLE_GROUP_RENEW.value: RoleGroupRenewProvider,
+        AuditType.ROLE_UPDATE_GROUP_CONFIG.value: RoleConfigProvider,
+        AuditType.ROLE_UPDATE_NOTIFICATION_CONFIG.value: RoleConfigProvider,
         # approval
         AuditType.APPROVAL_GLOBAL_UPDATE.value: ApprovalGlobalProvider,
         AuditType.APPROVAL_ACTION_UPDATE.value: ApprovalActionProvider,

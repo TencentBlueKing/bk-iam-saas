@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from collections import defaultdict
 from copy import deepcopy
@@ -98,7 +99,7 @@ class ActionApplicationDataBean(BaseApplicationDataBean):
     applicants: List[Applicant]
 
     class Config:
-        # 由于PolicyBeanList并非继承于BaseModel，而是普通的类，所以需要声明允许"随意"类型
+        # 由于 PolicyBeanList 并非继承于 BaseModel，而是普通的类，所以需要声明允许"随意"类型
         arbitrary_types_allowed = True
 
 
@@ -141,25 +142,33 @@ class ApplicationIDStatusDict(BaseModel):
 
 class ApprovalProcessorBiz:
     """审批流程具体处理人查询
-    当前只能查询IAM本身角色，后续需要扩展支持其他的再重新抽象该类
+    当前只能查询 IAM 本身角色，后续需要扩展支持其他的再重新抽象该类
     """
 
     svc = RoleService()
 
-    @cachedmethod(timeout=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存 1 分钟
     def get_super_manager_members(self) -> str:
         """获取超级管理员成员员"""
         return Role.objects.get(type=RoleType.SUPER_MANAGER.value).members
 
-    @cachedmethod(timeout=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存 1 分钟
     def get_system_manager_members(self, system_id: str) -> str:
         """获取系统管理员成员"""
         return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=system_id).members
 
-    @cachedmethod(timeout=60)  # 缓存1分钟
-    def get_grade_manager_members_by_group_id(self, group_id: int) -> str:
-        """获取分级管理员"""
-        return self.svc.get_role_by_group_id(group_id).members
+    @cachedmethod(timeout=60)  # 缓存 1 分钟
+    def get_grade_manager_members_by_group_id(
+        self, group_id: int, fallback_to_parent_if_empty: bool = True
+    ) -> List[str]:
+        """获取分级管理员，如果为空，获取父级管理员"""
+        current_role = self.svc.get_role_by_group_id(group_id)
+
+        if fallback_to_parent_if_empty and not current_role.members:
+            parent_id = self.svc.get_parent_id(current_role.id)
+            return self.svc.list_members_by_role_id(parent_id)
+
+        return current_role.members
 
 
 class ApprovedPassApplicationBiz:
@@ -171,9 +180,9 @@ class ApprovedPassApplicationBiz:
 
     def _check_subject_exists(self, subject: Subject) -> Tuple[bool, str]:
         """
-        检查subject是否在职
+        检查 subject 是否在职
         """
-        assert subject.type == SubjectType.USER.value  # 只有用户类型的subject才需要检查
+        assert subject.type == SubjectType.USER.value  # 只有用户类型的 subject 才需要检查
         user = UserModel.objects.filter(username=subject.id).first()
         if not user:
             return False, f"user [{subject.id}] not exists"
@@ -189,15 +198,11 @@ class ApprovedPassApplicationBiz:
         """用户自定义权限授权"""
         system_id = application.data["system"]["id"]
         actions = application.data["actions"]
-        applicants = (
-            application.data["applicants"]
-            if "applicants" in application.data
-            else [{"type": subject.type, "id": subject.id}]
-        )
+        applicants = application.data.get("applicants", [{"type": subject.type, "id": subject.id}])
 
         for applicant in applicants:
             if applicant["type"] != SubjectType.USER.value:
-                logger.warn(
+                logger.warning(
                     "application [%d] grant action approve fail: %s", application.id, f"{subject} type is not user"
                 )
                 continue
@@ -205,7 +210,7 @@ class ApprovedPassApplicationBiz:
             subject = Subject.parse_obj(applicant)
             ok, msg = self._check_subject_exists(subject)
             if not ok:
-                logger.warn("application [%d] grant action approve fail: %s", application.id, msg)
+                logger.warning("application [%d] grant action approve fail: %s", application.id, msg)
                 continue
 
             policies = parse_obj_as(List[PolicyBean], actions)
@@ -217,7 +222,7 @@ class ApprovedPassApplicationBiz:
         """用户自定义权限续期"""
         ok, msg = self._check_subject_exists(subject)
         if not ok:
-            logger.warn("application [%d] renew action approve fail: %s", application.id, msg)
+            logger.warning("application [%d] renew action approve fail: %s", application.id, msg)
             return
 
         self._grant_action(subject, application, audit_type=AuditType.USER_POLICY_UPDATE.value)
@@ -226,14 +231,10 @@ class ApprovedPassApplicationBiz:
         """加入用户组"""
         ok, msg = self._check_subject_exists(subject)
         if not ok:
-            logger.warn("application [%d] join group approve fail: %s", application.id, msg)
+            logger.warning("application [%d] join group approve fail: %s", application.id, msg)
             return
 
-        applicants = (
-            application.data["applicants"]
-            if "applicants" in application.data
-            else [{"type": subject.type, "id": subject.id}]
-        )
+        applicants = application.data.get("applicants", [{"type": subject.type, "id": subject.id}])
 
         subjects = [Subject.parse_obj(one) for one in applicants]
 
@@ -242,20 +243,20 @@ class ApprovedPassApplicationBiz:
         )
         group_id_set = set(qs)
 
-        # 兼容，新老数据在data都存在expired_at
+        # 兼容，新老数据在 data 都存在 expired_at
         default_expired_at = application.data["expired_at"]
         # 加入用户组
         for group in application.data["groups"]:
             if group["id"] not in group_id_set:
                 continue
 
-            # 新数据才有，老数据则使用data外层的expired_at
+            # 新数据才有，老数据则使用 data 外层的 expired_at
             expired_at = group.get("expired_at", default_expired_at)
             try:
                 self.group_biz.add_members(group["id"], subjects, expired_at)
             except Group.DoesNotExist:
                 # 若审批通过时，用户组已经被删除，则直接忽略
-                logger.error(
+                logger.exception(
                     f"subject {subject} join group({group['id']}) fail! "
                     "the group has been deleted before the application is approved"
                 )
@@ -273,11 +274,7 @@ class ApprovedPassApplicationBiz:
         qs = Group.objects.filter(id__in=[group["id"] for group in groups]).values_list("id", flat=True)
         group_id_set = set(qs)
 
-        applicants = (
-            application.data["applicants"]
-            if "applicants" in application.data
-            else [{"type": subject.type, "id": subject.id}]
-        )
+        applicants = application.data.get("applicants", [{"type": subject.type, "id": subject.id}])
 
         subjects = [Subject.parse_obj(one) for one in applicants]
 
@@ -311,7 +308,7 @@ class ApprovedPassApplicationBiz:
         # 兼容新老数据
         auth_scopes = data["authorization_scopes"]
         for scope in auth_scopes:
-            # 新数据是system，没有system_id
+            # 新数据是 system，没有 system_id
             if "system_id" not in scope:
                 scope["system_id"] = scope["system"]["id"]
 
@@ -343,7 +340,7 @@ class ApprovedPassApplicationBiz:
                 )
 
             if application.source_system_id:
-                # 记录role创建来源信息
+                # 记录 role 创建来源信息
                 RoleSource.objects.create(
                     role_id=role.id,
                     source_type=RoleSourceType.API.value,
@@ -387,7 +384,7 @@ class ApprovedPassApplicationBiz:
         """临时权限授权"""
         ok, msg = self._check_subject_exists(subject)
         if not ok:
-            logger.warn("application [%d] grant temporary action approve fail: %s", application.id, msg)
+            logger.warning("application [%d] grant temporary action approve fail: %s", application.id, msg)
             return
 
         system_id = application.data["system"]["id"]
@@ -422,33 +419,33 @@ class ApplicationBiz:
         self, process: ApprovalProcess, **kwargs
     ) -> ApprovalProcessWithNodeProcessor:
         """获取审批流程并附带每个流程节点的实际处理人
-        kwargs: 可能有system_id、group_id
+        kwargs: 可能有 system_id、group_id
         由于不同流程节点的查询具体处理人时是依赖申请内容的
         比如申请不同用户组，其分级管理员成员可能是不一样的，同样申请不同系统的权限，其系统管理员成员也不一样
         """
         nodes = self.approval_process_svc.get_process_nodes(process.id)
-        # 1. 遍历每个节点，对IAM的角色进行查询对应的具体处理人
+        # 1. 遍历每个节点，对 IAM 的角色进行查询对应的具体处理人
         nodes_with_processor = []
         for node in nodes:
             node_with_processor = parse_obj_as(ApprovalProcessNodeWithProcessor, node)
-            # 非IAM来源，则不需要IAM关注
+            # 非 IAM 来源，则不需要 IAM 关注
             if not node.is_iam_source():
                 nodes_with_processor.append(node_with_processor)
                 continue
 
-            # 对于来着IAM的角色，则需要查询对应角色的成员
+            # 对于来着 IAM 的角色，则需要查询对应角色的成员
             processors = []
             if node.processor_type == RoleType.SUPER_MANAGER.value:
                 processors = self.approval_processor_biz.get_super_manager_members()
             elif node.processor_type == RoleType.SYSTEM_MANAGER.value:
                 processors = self.approval_processor_biz.get_system_manager_members(system_id=kwargs["system_id"])
-            elif node.processor_type == RoleType.GRADE_MANAGER.value:
-                # 如果是自定义权限, 需要后续流程中填充审批人
+            elif node.processor_type == RoleType.GRADE_MANAGER.value:  # noqa: SIM102
+                # 如果是自定义权限，需要后续流程中填充审批人
                 if "group_id" in kwargs:
                     processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
                         group_id=kwargs["group_id"]
                     )
-            # NOTE: 由于资源实例审批人节点的逻辑涉及到复杂的拆分, 合并逻辑, 不在这里处理
+            # NOTE: 由于资源实例审批人节点的逻辑涉及到复杂的拆分，合并逻辑，不在这里处理
 
             node_with_processor.processors = processors
             nodes_with_processor.append(node_with_processor)
@@ -482,18 +479,23 @@ class ApplicationBiz:
 
         return ApplicantInfo(username=applicant, organization=applicant_departments)
 
-    @cachedmethod(timeout=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存 1 分钟
     def _gen_application_system(self, system_id: str) -> ApplicationSystem:
         """生成申请的系统信息"""
         system = self.system_svc.get(system_id)
         return parse_obj_as(ApplicationSystem, system)
 
     def create_for_policy(
-        self, application_type: ApplicationType, data: ActionApplicationDataBean
+        self,
+        application_type: ApplicationType,
+        data: ActionApplicationDataBean,
+        content_template: Optional[Dict[str, Any]] = None,
+        policy_contents: Optional[List[Tuple[PolicyBean, Any]]] = None,
+        title_prefix: str = "",
     ) -> List[Application]:
         """自定义权限"""
         # 1. 提前查询部分信息
-        # (1) 对Policy里相关Name进行填充 => 调用Service层接口需要"完整"数据，用于Ticket创建和展示
+        # (1) 对 Policy 里相关 Name 进行填充 => 调用 Service 层接口需要"完整"数据，用于 Ticket 创建和展示
         policy_list = data.policy_list
         policy_list.fill_empty_fields()
         # (2) 查询申请者信息
@@ -506,7 +508,7 @@ class ApplicationBiz:
         action_ids = [p.action_id for p in policy_list.policies]
         action_processes = self.approval_process_svc.list_action_process(system_id=system_id, action_ids=action_ids)
 
-        # 4. 生成policy - process对象列表
+        # 4. 生成 policy - process 对象列表
         policy_process_list = []
         for action_process in action_processes:
             process = self._get_approval_process_with_node_processor(action_process.process, system_id=system_id)
@@ -526,7 +528,7 @@ class ApplicationBiz:
         # 6. 依据审批流程合并策略
         policy_list_process = self._merge_policies_by_approval_process(system_id, policy_process_list)
 
-        # 7. 根据合并的单据，组装出调用Service层创建单据所需数据
+        # 7. 根据合并的单据，组装出调用 Service 层创建单据所需数据
         new_data_list = []
         for policy_list, process in policy_list_process:
             # 组装申请数据
@@ -540,12 +542,31 @@ class ApplicationBiz:
                     applicants=data.applicants,
                 ),
             )
-            new_data_list.append((application_data, process))
+
+            # 组装外部传入的 itsm 单据数据
+            content: Optional[Dict[str, Any]] = None
+            if content_template and policy_contents:
+                content = deepcopy(content_template)
+                policy_form_value = [c for p, c in policy_contents if policy_list.contains_policy(p)]
+                for c in content["form_data"]:
+                    if (
+                        isinstance(c, dict)
+                        and c.get("scheme") == "policy_table_scheme"
+                        and isinstance(c.get("value"), list)
+                    ):
+                        c["value"] = policy_form_value
+
+            new_data_list.append((application_data, process, content))
 
         # 8. 循环创建申请单
         applications = []
-        for _data, _process in new_data_list:
-            application = self.svc.create_for_policy(_data, _process)
+        for _data, _process, _content in new_data_list:
+            application = self.svc.create_for_policy(
+                _data,
+                _process,
+                approval_content=_content,
+                approval_title_prefix=title_prefix,
+            )
             applications.append(application)
 
         return applications
@@ -554,13 +575,13 @@ class ApplicationBiz:
         self, system_id, policy_process_list: List[PolicyProcess]
     ) -> List[Tuple[PolicyBeanList, ApprovalProcessWithNodeProcessor]]:
         """聚合审批流程相同的策略"""
-        # 聚合相同流程所有的polices
+        # 聚合相同流程所有的 polices
         merge_process_dict = defaultdict(list)
         for policy_process in policy_process_list:
             merge_process_dict[policy_process.process].append(policy_process.policy)
 
         policy_list_process = []
-        # 流程相同的策略中, 合并action_id一样的策略
+        # 流程相同的策略中，合并 action_id 一样的策略
         for _process, _policies in merge_process_dict.items():
             policy_list = PolicyBeanList(system_id, [])
             for p in _policies:
@@ -579,7 +600,7 @@ class ApplicationBiz:
 
         # 查询策略所属系统
         db_policies = (
-            # TODO: 已存在的申请单数据如何处理？policy_id的含义已经变化了
+            # TODO: 已存在的申请单数据如何处理？policy_id 的含义已经变化了
             Policy.objects.filter(
                 subject_type=subject.type, subject_id=subject.id, id__in=[p.id for p in policy_infos]
             )
@@ -587,7 +608,7 @@ class ApplicationBiz:
             .order_by("system_id")
         )
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.get(username=applicant)
 
         # 按系统分组
@@ -721,7 +742,7 @@ class ApplicationBiz:
         # 4. 合并单据
         merge_process_dict = self._merge_application_by_approval_process(group_process_dict)
 
-        # 5. 根据合并的单据，组装出调用Service层创建单据所需数据
+        # 5. 根据合并的单据，组装出调用 Service 层创建单据所需数据
         new_data_list = []
         for process, group_ids in merge_process_dict.items():
             # 组装申请数据
@@ -734,7 +755,7 @@ class ApplicationBiz:
                 ),
             )
 
-            # 组装外部传入的itsm单据数据
+            # 组装外部传入的 itsm 单据数据
             content: Optional[Dict[str, Any]] = None
             if content_template and group_content:
                 content = deepcopy(content_template)
@@ -801,7 +822,7 @@ class ApplicationBiz:
         # 1. 查询申请者信息
         applicant_info = self._get_applicant_info(data.applicant)
 
-        # 2. 查询对应的审批流程(所有分级管理员的申请都使用同一个流程)
+        # 2. 查询对应的审批流程 (所有分级管理员的申请都使用同一个流程)
         grade_manager_process = self.approval_process_svc.get_default_process(
             ApplicationType.CREATE_GRADE_MANAGER.value
         )
@@ -833,14 +854,14 @@ class ApplicationBiz:
         """处理审批单据结果"""
         # 若还在审批中，则忽略
         if status == ApplicationStatus.PENDING.value:
-            return
+            return None
 
         # 已处理的单据不需要继续处理
         if application.status != ApplicationStatus.PENDING.value:
-            return
+            return None
 
         # 对于非审批中，都需要将单据状态更新保存
-        # Note: 由于application里的data字段较大，使用save更新时相当所有字段都更新，所以需指定status字段更新
+        # Note: 由于 application 里的 data 字段较大，使用 save 更新时相当所有字段都更新，所以需指定 status 字段更新
         application.status = status
         application.save(update_fields=["status", "updated_time"])
 
@@ -848,11 +869,11 @@ class ApplicationBiz:
             # 审批通过，则执行相关授权等
             if status == ApplicationStatus.PASS.value:
                 return self.approved_pass_biz.handle(application)
-        except Exception as e:  # pylint: disable=broad-except
-            # NOTE: 由于以上执行过程中会记录审计信息, 如果发生异常, 事务不能正常回滚, 所以这里手动回滚下
+        except Exception:  # pylint: disable=broad-except
+            # NOTE: 由于以上执行过程中会记录审计信息，如果发生异常，事务不能正常回滚，所以这里手动回滚下
             application.status = ApplicationStatus.PENDING.value
             application.save(update_fields=["status", "updated_time"])
-            raise e
+            raise
 
     def handle_approval_callback_request(self, callback_id: str, request: Request):
         """处理审批回调请求"""
@@ -887,6 +908,6 @@ class ApplicationBiz:
         self.handle_application_result(application, ApplicationStatus.CANCELLED.value)
 
     def get_approval_url(self, application: Application) -> str:
-        """查询审批URL"""
+        """查询审批 URL"""
         ticket = self.svc.get_ticket(application.sn)
         return ticket.url

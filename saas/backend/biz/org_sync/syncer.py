@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 
 所有组织架构同步操作 统一处理
 """
+
 import datetime
 
 from backend.apps.organization.models import Department, DepartmentMember, SubjectToDelete, User

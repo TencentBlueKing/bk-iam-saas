@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 
 审批流程
 """
+
 from typing import Dict, List
 
 from django.utils import timezone
@@ -73,7 +74,9 @@ class ApprovalProcessService:
         """获取某种申请类型的默认流程"""
         # 检查是否该申请类型支持配置审批流程
         if application_type not in DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES:
-            raise error_codes.INVALID_ARGS.format(_("不支持申请类型为[{}]拥有默认审批流程").format(application_type), True)
+            raise error_codes.INVALID_ARGS.format(
+                _("不支持申请类型为[{}]拥有默认审批流程").format(application_type), True
+            )
 
         # 检查是否有默认审批流程
         try:

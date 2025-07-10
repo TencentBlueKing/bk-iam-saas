@@ -8,7 +8,7 @@
       { 'no-perm-app-layout': ['403'].includes(routeName) }
     ]">
     <NoticeComponent
-      v-if="isShowNoticeAlert"
+      v-if="isEnableNoticeAlert"
       :api-url="noticeApi"
       @show-alert-change="handleShowAlertChange"
     />
@@ -31,15 +31,19 @@
         v-if="!externalSystemsLayout.hideIamHeader"
         @reload-page="handleRefreshPage"
         :route-name="routeName"
-        :user-group-id="userGroupId">
-      </header-nav>
-      <the-header @reload-page="handleRefreshPage"
+        :user-group-id="userGroupId"
+      />
+      <the-header
+        @reload-page="handleRefreshPage"
         :route-name="routeName"
         :user-group-id="userGroupId"
       />
-      <the-nav class="nav-layout"
+      <the-nav
+        class="nav-layout"
+        :route-name="routeName"
         @reload-page="reloadCurPage"
-        v-if="!externalSystemsLayout.hideIamSlider" />
+        v-if="!externalSystemsLayout.hideIamSlider"
+      />
     </template>
     <main
       :class="[
@@ -58,19 +62,35 @@
         <router-view class="views-layout" :key="routerKey" v-show="!mainContentLoading"></router-view>
       </div>
     </main>
-    <app-auth ref="bkAuth"></app-auth>
+    <!-- <app-auth ref="bkAuth"></app-auth> -->
+    <template v-if="!enableGroupInstanceSearch && needShowInstanceSearchRoute && noInstanceSearchData.show">
+      <FunctionalDependency
+        v-model="noInstanceSearchData.show"
+        :mode="noInstanceSearchData.mode"
+        :show-dialog="['dialog'].includes(noInstanceSearchData.mode)"
+        :title="noInstanceSearchData.title"
+        :functional-desc="noInstanceSearchData.functionalDesc"
+        :guide-title="noInstanceSearchData.guideTitle"
+        :guide-desc-list="noInstanceSearchData.guideDescList"
+        @gotoMore="handleMoreInfo(noInstanceSearchData.url)"
+      />
+    </template>
   </div>
 </template>
+
 <script>
     // import Cookie from 'js-cookie';
   import HeaderNav from '@/components/header-nav/index.vue';
   import theHeader from '@/components/header/index.vue';
   import theNav from '@/components/nav/index.vue';
   import NoticeComponent from '@blueking/notice-component-vue2';
+  import FunctionalDependency from '@blueking/functional-dependency/vue2/index.umd.min.js';
+  import '@blueking/functional-dependency/vue2/vue2.css';
   import '@blueking/notice-component-vue2/dist/style.css';
   // import IamGuide from '@/components/iam-guide/index.vue';
-  import { existValue, formatI18nKey } from '@/common/util';
+  import { existValue, formatI18nKey, navDocCenterPath } from '@/common/util';
   import { bus } from '@/common/bus';
+  import { buildURLParams } from '@/common/url';
   import { mapGetters } from 'vuex';
   import { afterEach } from '@/router';
   import { kebabCase } from 'lodash';
@@ -80,7 +100,9 @@
     provide () {
       return {
         reload: this.reload,
-        showNoticeAlert: this.isShowNoticeAlert
+        reloadCurPage: this.reloadCurPage,
+        // 基本类型不具备响应式，这里需要根据异步操作动态计算所以这里返回function
+        showNoticeAlert: () => this.isShowNoticeAlert
       };
     },
     components: {
@@ -88,7 +110,8 @@
       theHeader,
       theNav,
       HeaderNav,
-      NoticeComponent
+      NoticeComponent,
+      FunctionalDependency
     },
     data () {
       return {
@@ -111,15 +134,29 @@
         routeName: '',
         userGroupId: '',
         isRouterAlive: true,
-        showNoticeAlert: true,
+        showNoticeAlert: false,
         noticeApi: `${window.AJAX_URL_PREFIX}/notice/announcements/`,
-        enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
+        enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true',
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
+        // 需要展示FunctionalDependency组件的页面
+        needShowInstanceSearchRoute: ['applyCustomPerm'],
+        noInstanceSearchData: {
+          show: false,
+          mode: '',
+          title: '',
+          functionalDesc: '',
+          guideTitle: '',
+          guideDescList: []
+        }
       };
     },
     computed: {
-      ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout']),
+      ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout', 'versionLogs']),
       isShowNoticeAlert () {
-        return this.enableNotice && this.showNoticeAlert && !this.externalSystemsLayout.hideNoticeAlert;
+        return this.showNoticeAlert && this.isEnableNoticeAlert;
+      },
+      isEnableNoticeAlert () {
+        return this.enableNotice && !this.externalSystemsLayout.hideNoticeAlert;
       }
     },
     watch: {
@@ -127,7 +164,13 @@
         this.layoutCls = kebabCase(to.name) + '-container';
         this.routeName = to.name;
         this.userGroupId = to.params.id;
+        if (this.user.role && this.user.role.id > 0) {
+          window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
+            role_name: this.user.role.name
+          }))}`);
+        }
         this.$store.commit('updateRoute', from.name);
+        this.getRouteInstanceSearch({ routeName: to.name });
       },
       user: {
         handler (value) {
@@ -161,8 +204,8 @@
       if (!existValue('externalApp')) {
         this.fetchVersionLog();
         this.fetchNoviceGuide();
+        this.fetchUserGlobalConfig();
       }
-
       const isPoll = window.localStorage.getItem('isPoll');
       if (isPoll) {
         this.$store.commit('updateSync', true);
@@ -170,28 +213,31 @@
           this.fetchSyncStatus();
         }, 15000);
       }
-
       this.$once('hook:beforeDestroy', () => {
         bus.$off('show-login-modal');
         bus.$off('close-login-modal');
         bus.$off('updatePoll');
         bus.$off('nav-resize');
         bus.$off('show-guide');
+        bus.$off('show-function-dependency');
       });
     },
     mounted () {
-      const self = this;
-      bus.$on('show-login-modal', (payload) => {
-        self.$refs.bkAuth.showLoginModal(payload);
-      });
-      bus.$on('close-login-modal', () => {
-        self.$refs.bkAuth.hideLoginModal();
-        setTimeout(() => {
-          window.location.reload();
-        }, 0);
-      });
-      bus.$on('updatePoll', () => {
+      // const self = this;
+      // bus.$on('show-login-modal', (payload) => {
+      //   self.$refs.bkAuth.showLoginModal(payload);
+      // });
+      // bus.$on('close-login-modal', () => {
+      //   self.$refs.bkAuth.hideLoginModal();
+      //   setTimeout(() => {
+      //     window.location.reload();
+      //   }, 0);
+      // });
+      bus.$on('updatePoll', (payload) => {
         clearInterval(this.timer);
+        if (payload && payload.isStop) {
+          return;
+        }
         this.timer = setInterval(() => {
           this.fetchSyncStatus();
         }, 15000);
@@ -212,12 +258,9 @@
         if (guideMap[payload]) {
           guideMap[payload]();
         }
-        // if (payload === 'group') {
-        //     this.groupGuideShow = true;
-        // }
-        // if (payload === 'process') {
-        //     this.processGuideShow = true;
-        // }
+      });
+      bus.$on('show-function-dependency', (payload = {}) => {
+        this.getRouteInstanceSearch(payload);
       });
     },
     methods: {
@@ -293,6 +336,7 @@
                 ? this.$t(`m.permTemplate['同步组织架构成功']`)
                 : this.$t(`m.permTemplate['同步组织架构失败']`)
             });
+            bus.$emit('on-sync-record-status');
           }
         } catch (e) {
           console.error(e);
@@ -301,6 +345,13 @@
           clearInterval(this.timer);
           this.messageAdvancedError(e);
         }
+      },
+      
+      /**
+       * 获取用户全局配置
+       */
+      async fetchUserGlobalConfig () {
+        await this.$store.dispatch('userGlobalConfig/getCurrentGlobalConfig');
       },
 
       // 是否存在key
@@ -329,8 +380,44 @@
       },
 
       handleShowAlertChange (isShow) {
-        console.log(444, isShow);
+        console.log(isShow, '跑马灯回调');
         this.showNoticeAlert = isShow;
+      },
+
+      handleMoreInfo (payload) {
+        window.open(`${window.BK_DOCS_URL_PREFIX}${payload}`);
+      },
+
+      async getRouteInstanceSearch (payload = {}) {
+        const { show, routeName } = payload;
+        const curPath = await navDocCenterPath(this.versionLogs, `/UserGuide/Feature/PermissionsApply.md`, false);
+        const routeMap = {
+          applyCustomPerm: () => {
+            this.noInstanceSearchData = Object.assign({}, {
+              show: show || false,
+              mode: 'dialog',
+              url: curPath,
+              title: this.$t(`m.permApply['未启用用户组自动推荐功能']`),
+              functionalDesc: this.t(`m.permApply['该功能可以根据用户当前的权限需求，自动匹配相关的用户组']`),
+              guideTitle: this.$t(`m.permApply['如需启用该功能，请联系部署同学部署相关ES服务']`),
+              guideDescList: []
+            });
+            if (this.noInstanceSearchData.show) {
+              this.$nextTick(() => {
+                const buttonList = document.getElementsByClassName('fuctional-deps-button-text');
+                if (buttonList && buttonList.length > 0) {
+                  const customButtonList = [this.$t(`m.common['了解更多']`), this.$t(`m.common['取消']`)];
+                  for (let i = 0; i < buttonList.length; i++) {
+                    buttonList[i].innerText = customButtonList[i];
+                  }
+                }
+              });
+            }
+          }
+        };
+        if (routeMap[routeName]) {
+          return routeMap[routeName]();
+        }
       }
     }
   };
@@ -360,7 +447,7 @@
 
     .views-layout {
         min-height: 100%;
-        min-width: 1120px;
+        /* min-width: 1120px; */
         padding: 24px;
     }
 
@@ -400,10 +487,30 @@
 
     }
 
+    .user-org-perm-container {
+      .main-scroller {
+        height: calc(100% + 278px);
+      }
+      .views-layout {
+        min-width: 100%;
+        overflow: hidden;
+      }
+    }
+
     .notice-app-layout {
       height: calc(100% - 101px) !important;
       .main-scroller {
         height: calc(100% + 91px);
+      }
+      .my-perm-container {
+        .main-scroller {
+          height: calc(100% + 51px);
+        }
+      }
+      .user-org-perm-container {
+        .main-scroller {
+          height: calc(100% + 312px);
+        }
       }
     }
 
@@ -414,5 +521,4 @@
         background-color: #ffffff;
       }
     }
-
 </style>

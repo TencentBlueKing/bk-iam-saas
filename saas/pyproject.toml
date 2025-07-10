@@ -1,33 +1,193 @@
-[tool.black]
+[tool.poetry]
+package-mode = false
+requires-poetry = '>=2.0.0,<3.0.0'
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+name = "bk_iam_saas"
+version = "0.0.0"
+description = "IAM（Identity and Access Management） is centralized authority management services provided by Blueking，which is used for centralized access of various Platforms and SaaS within the BlueKing System, and provides access control for resources that are refined to specific resource instance."
+license = { text = "MIT License" }
+authors = [{ name = "TencentBlueKing", email = "contactus_bk@tencent.com" }]
+requires-python = ">=3.11.10,<3.12"
+# classifieres is dynamic because we want to create Python classifiers automatically
+dynamic = ["classifiers"]
+dependencies = [
+    'Django (==4.2.20)',
+    'pymysql (==1.1.1)',
+    'MarkupSafe (==2.1.1)',
+    'requests (==2.32.3)',
+    'celery (==5.2.7)',
+    'python-json-logger (==0.1.7)',
+    'whitenoise (==5.1.0)',
+    'six (==1.17.0)',
+    'httplib2 (==0.22.0)',
+    'djangorestframework (==3.15.2)',
+    'django-filter (==2.4.0)',
+    'django-cors-headers (==3.4.0)',
+    'Werkzeug (==2.1.1)',
+    'drf-yasg (==1.21.4)',
+    'pydantic (==1.9.2)',
+    'PyJWT (==2.8.0)',
+    'cryptography (==43.0.1)',
+    'django-prometheus (==2.2.0)',
+    'pytz (==2022.6)',
+    'aenum (==2.2.6)',
+    'dogpile.cache (==0.9.2)',
+    'django-mptt (==0.15.0)',
+    'pyinstrument (==3.1.3)',
+    'redis (==5.0.3)',
+    'django-redis (==5.2.0)',
+    'apigw-manager (==3.0.2)',
+    'typing-extensions (==4.12.2)',
+    'opentelemetry-api (==1.29.0)',
+    'opentelemetry-sdk (==1.29.0)',
+    'opentelemetry-exporter-otlp (==1.29.0)',
+    'opentelemetry-instrumentation-django (==0.50b0)',
+    'opentelemetry-instrumentation-dbapi (==0.50b0)',
+    'opentelemetry-instrumentation-redis (==0.50b0)',
+    'opentelemetry-instrumentation-requests (==0.50b0)',
+    'opentelemetry-instrumentation-celery (==0.50b0)',
+    'opentelemetry-instrumentation-logging (==0.50b0)',
+    'opentelemetry-exporter-jaeger (==1.20.0)',
+    'openpyxl (==3.1.5)',
+    'sentry-sdk (==1.43.0)',
+    'django-environ (>=0.8.1,<0.9.0)',
+    'gunicorn (==23.0.0)',
+    'gevent (==24.2.1)',
+    'blue-krill (==2.0.7)',
+    'protobuf (==5.29.3)',
+    'bk-iam (==1.3.6)',
+    'bk-audit (==1.2.2)',
+    'django-celery-beat (==2.6.0)',
+    'importlib-metadata (==8.5.0)',
+    'prometheus-client (==0.13.0)',
+    'bk-notice-sdk (==1.3.2)',
+    'certifi (==2024.12.14)',
+    'GitPython (==3.1.42)',
+    'grpcio (==1.69.0)',
+    'Jinja2 (==3.1.3)',
+    'opentelemetry-instrumentation (==0.50b0)',
+    'opentelemetry-semantic-conventions (==0.50b0)',
+    'sqlparse (==0.4.4)',
+    'urllib3 (==1.26.20)',
+    'future (==1.0.0)',
+    'concurrent-log-handler (==0.9.25)',
+    'pyyaml (==6.0.2)',
+]
+
+[tool.poetry.group.dev.dependencies]
+# python format and lint (instead of black/isort/flake8)
+ruff = "^0.11.13"
+# pytest
+pytest = "8.0.0"
+pytest-django = "4.1.0"
+django-dynamic-fixture = "^4.0.1"
+converge = "0.9.8"
+mock = "1.0.1"
+pytest-cov = "^3.0.0"
+# mypy
+mypy = "1.16.0"
+types-requests = "^2.25.0"
+types-pytz = "^2021.1.0"
+types-redis = "^3.5.4"
+types-six = "^0.1.7"
+types-mock = "^0.1.3"
+# security checks
+bandit = "1.7.1"
+# module and laryer dependency constraint
+import-linter = "1.2.6"
+
+[tool.ruff]
+# Same as Black.
 line-length = 119
-target-version = ['py36']
-exclude = '''
-(
-  /(
-      \.mypy_cache
-    | \.git
-    | migrations
-  )/
-)
-'''
+indent-width = 4
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "*/migrations/*",
+]
+target-version = "py311"
 
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = 'true'
-force_grid_wrap = 0
-use_parentheses = 'true'
-line_length = 119
-skip = [".mypy_cache", ".git", "*/migrations"]
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
 
-[tool.flake8]
-ignore = "C901,E203,W503,B010,B009"
-max-line-length=119
-max-complexity=12
-format = "pylint"
-show_source = "true"
-statistics = "true"
-count = "true"
-exclude = "*migrations*,*.pyc,.git,__pycache__,node_modules/*,*/templates_module*,*/bin/*,*/settings/*,config,tests/unittest_settings.py"
+[tool.ruff.lint]
+# 每个规则集的具体内容请参考：https://docs.astral.sh/ruff/rules/
+select = ["E", "F", "W", "I", "C90", "PL", "RET", "N", "C4", "PT", "PERF", "G", "TRY", "SIM", "B", "PIE"]
+ignore = [
+    # Consider moving this statement to an else block
+    "TRY300",
+    # Avoid specifying long messages outside the exception class
+    "TRY003",
+    # Use contextlib.suppress({exception}) instead of try-except-pass
+    "SIM105",
+    # Use ternary operator {contents} instead of if-else-block
+    "SIM108",
+    # Avoid too many arguments
+    "PLR0913",
+    # Avoid too many return statements
+    "PLR0911",
+    # Exception should be named with `Error` suffix
+    "N818",
+    # raise-without-from-inside-except
+    "B904",
+    # perflint: 忽略后，不强制要求一定用推导式替代 for 循环，因为有时循环的可读性更好
+    "PERF401",
+    # flake8-logging-format: 忽略后，允许在打印日志时使用 f-string 表达式，更可读但可能降低性能
+    "G004",
+]
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**.py" = ["PLR2004", "PT006", "PT009"]
+"**/tests/unittest_settings.py" = ["E402", "F403", "F405"]
+"**/config/prod.py" = ["F405"]
+"**/backend/audit/audit.py" = ["N806"]
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 12
+
+[tool.ruff.lint.isort]
+# 总是显式制定 import section 的顺序
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+# 添加那些不能被默认识别的 first party 的模块名
+known-first-party = ["backend", "tests"]
+relative-imports-order = "closest-to-furthest"
 
 [tool.bandit]
 exclude_dirs = ["tests"]
@@ -36,22 +196,62 @@ skips = ["B101", "B110", "B311", "B303"]
 
 [tool.mypy]
 files=["."]
-python_version = 3.6
+python_version = 3.11
 ignore_missing_imports=true
 follow_imports="skip"
 strict_optional=true
 pretty=true
 show_error_codes=true
+exclude = [
+    'config/.*$',
+    'tests/unittest_settings.py$',
+    'migrations/.*$',
+]
 
 [[tool.mypy.overrides]]
-module = [
-    "*.migrations.*",
-    "*.config.*",
-    "*.tests.unittest_settings",
-    "*.backend.tracing.*",
-    "*.settings"
-]
+module = "backend.service.constants"
 ignore_errors = true
+
+[tool.importlinter]
+root_package = "backend"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name="apps service biz component"
+type="layers"
+layers = [
+    "backend.apps",
+    "backend.trans",
+    "backend.biz",
+    "backend.service",
+    "backend.component",
+]
+ignore_imports = [
+    "backend.trans.* -> backend.apps.*.models",
+    "backend.biz.* -> backend.apps.*.models",
+    "backend.biz.*.* -> backend.apps.*.models",
+    "backend.service.* -> backend.apps.*.models",
+    "backend.service.*.* -> backend.apps.*.models",
+    "backend.biz.org_sync.syncer -> backend.apps.organization.tasks",
+    "backend.biz.application -> backend.apps.role.tasks",
+    "backend.biz.application -> backend.audit.audit",
+    "backend.audit.audit -> backend.apps.*.models",
+    "backend.audit.signals -> backend.audit.tasks",
+]
+
+[[tool.importlinter.contracts]]
+name="api service biz component"
+type="layers"
+layers =[
+    "backend.api",
+    "backend.trans",
+    "backend.biz",
+    "backend.service",
+    "backend.component",
+]
+ignore_imports = [
+    "backend.biz.model_event -> backend.api.authorization.models"
+]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.unittest_settings"
@@ -60,101 +260,3 @@ python_files = "*_tests.py"
 testpaths = [
     "tests"
 ]
-
-[tool.poetry]
-name = "bk_iam_saas"
-version = "0.0.0"
-description = "IAM（Identity and Access Management） is centralized authority management services  provided by Blueking，which is used for centralized access of various Platforms and SaaS within the BlueKing System, and provides access control for resources that are refined to specific resource instance."
-authors = ["TencentBlueKing <contactus_bk@tencent.com>"]
-license = "MIT License"
-
-[tool.poetry.dependencies]
-python = "3.6.6"
-# blueapps requirement
-Django = "3.2.16"
-mysqlclient = "2.0.1"
-MarkupSafe = "1.1.1"
-requests = "2.27.1"
-celery = "5.1.2"
-python-json-logger = "0.1.7"
-whitenoise = "5.1.0"
-six = "1.15.0"
-#v2 requirement
-httplib2 = "0.19.0"
-# framework
-djangorestframework = "3.14.0"
-django-filter = "2.4.0"
-django-cors-headers = "3.4.0"
-Werkzeug = "1.0.1"
-drf-yasg = "1.21.4"
-dataclasses = "0.7"
-pydantic = "1.9.2"
-PyJWT = "1.7.1"
-cryptography = "3.3.2"
-django-prometheus = "2.2.0"
-pytz = "2022.6"
-aenum = "2.2.6"
-# django cache
-"dogpile.cache" = "0.9.2"
-# preorder tree traversal
-django-mptt = "0.11.0"
-# profile record
-pyinstrument = "3.1.3"
-redis = "4.3.5"
-django-redis = "5.2.0"
-apigw-manager = "^1.0.2"
-typing-extensions = "3.7.4.3"
-opentelemetry-api = "^1.7.1"
-opentelemetry-sdk = "^1.7.1"
-opentelemetry-exporter-otlp = "^1.7.1"
-opentelemetry-instrumentation-django = "^0.26b1"
-opentelemetry-instrumentation-dbapi = "^0.26b1"
-opentelemetry-instrumentation-redis = "^0.26b1"
-opentelemetry-instrumentation-requests = "^0.26b1"
-opentelemetry-instrumentation-celery = "^0.26b1"
-opentelemetry-instrumentation-logging = "^0.26b1"
-opentelemetry-exporter-jaeger = "1.7.1"
-openpyxl = "^3.0.9"
-sentry-sdk = "^1.5.6"
-django-environ = "^0.8.1"
-gunicorn = "^20.1.0"
-gevent = "^21.12.0"
-blue-krill = "^1.1.0"
-protobuf = "3.19.5"
-bk-iam = "^1.2.2"
-bk-audit = "^1.0.1-rc.0"
-django-celery-beat = "2.2.1"
-importlib-metadata = "4.8.3"
-prometheus-client = "0.13.0"
-bk-notice-sdk = "^1.1.1"
-
-[tool.poetry.dev-dependencies]
-# For flake8 support pyproject.toml
-toml = "0.10.1"
-pyproject-flake8 = "^0.0.1-alpha.2"
-flake8-comprehensions = "^3.5.0"
-# pytest
-pytest = "6.2.2"
-pytest-django = "4.1.0"
-django-dynamic-fixture = "3.1.1"
-converge = "0.9.8"
-mock = "1.0.1"
-# black
-black = "21.7b0"
-# mypy
-mypy = "0.910"
-types-requests = "^2.25.0"
-types-pytz = "^2021.1.0"
-types-redis = "^3.5.4"
-types-six = "^0.1.7"
-types-mock = "^0.1.3"
-# isort
-isort = "^5.9.2"
-pytest-cov = "^3.0.0"
-flake8-bugbear = "22.9.23"
-bandit = "1.7.1"
-import-linter = "1.2.6"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"

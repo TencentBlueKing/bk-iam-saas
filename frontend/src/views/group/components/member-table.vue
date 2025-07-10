@@ -40,11 +40,10 @@
             </ul>
           </bk-dropdown-menu>
         </div>
-        <div class="group-member-button-item" data-test="no-leave">
+        <div class="group-member-button-item" @mouseenter="handleCascadeEnter">
           <bk-cascade
             ref="copyCascade"
             v-model="copyValue"
-            data-test="no-leave"
             :list="COPY_KEYS_ENUM"
             :clearable="false"
             :ext-popover-cls="
@@ -57,22 +56,11 @@
             :trigger="'hover'"
             :style="{ width: curLanguageIsCn ? '100px' : '140px' }"
           >
-            <div slot="option" slot-scope="{ node }" data-test="no-leave">
+            <div slot="option" slot-scope="{ node }">
               <div
-                data-test="no-leave"
-                @mouseleave="handleCascadeLeave"
-                @click="handleTriggerCopy(...arguments, node)"
-              >
-                <span
-                  v-if="node.children"
-                  data-test="no-leave"
-                  class="cascade-custom-content"
-                >
-                  {{ node.name }}
-                </span>
-                <span v-else data-test="no-leave" class="cascade-custom-content">
-                  {{ node.name }}
-                </span>
+                class="cascade-custom-content"
+                @click="handleTriggerCopy(...arguments, node)">
+                {{ node.name }}
               </div>
             </div>
           </bk-cascade>
@@ -126,7 +114,7 @@
         v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
       >
         <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
-        <template v-for="item in tableProps">
+        <template v-for="item in renderTableColumn">
           <template v-if="item.prop === 'name'">
             <bk-table-column
               :key="item.prop"
@@ -226,14 +214,16 @@
               :key="item.prop"
               :label="item.label"
               :prop="item.prop"
-              :width="['memberTemplate'].includes(tabActive) ? 180 : 'auto'">
+              :width="curLanguageIsCn ? 100 : 150"
+              :fixed="'right'"
+            >
               <template slot-scope="{ row }">
                 <template v-if="['memberTemplate'].includes(routeMode)">
                   <bk-button
                     text
                     theme="primary"
                     :disabled="disabledTempGroup()"
-                    :title="disabledTempGroup() ? $t(`m.memberTemplate['只读人员模板不能移除]`) : ''"
+                    :title="disabledTempGroup() ? $t(`m.memberTemplate['只读人员模板不能移除']`) : ''"
                     @click="handleDelete(row)"
                   >
                     {{ $t(`m.common['移除']`) }}
@@ -259,6 +249,19 @@
                     {{ $t(`m.renewal['续期']`) }}
                   </bk-button>
                 </template>
+              </template>
+            </bk-table-column>
+          </template>
+          <template v-else>
+            <bk-table-column
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop"
+            >
+              <template slot-scope="{ row }">
+                <span :title="row">
+                  {{ row[item.prop] || '--' }}
+                </span>
               </template>
             </bk-table-column>
           </template>
@@ -321,6 +324,7 @@
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP, COPY_KEYS_ENUM } from '@/common/constants';
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import renderRenewalDialog from '@/components/render-renewal-dialog';
   import DeleteDialog from '../common/iam-confirm-dialog';
   import AddMemberDialog from './iam-add-member';
@@ -372,6 +376,9 @@
       displaySet: {
         type: Object
       },
+      curDetailData: {
+        type: Object
+      },
       showExpiredAt: {
         type: Boolean,
         default: false
@@ -381,6 +388,7 @@
       return {
         tableList: [],
         tableLoading: false,
+        isMouseCascadeEnter: false,
         currentSelectList: [],
         pagination: {
           current: 1,
@@ -438,21 +446,12 @@
         isDropdownShow: false,
         copyValue: [],
         curCopyCascade: {},
+        PERMANENT_TIMESTAMP,
         COPY_KEYS_ENUM,
         externalRoutes: ['userGroupDetail', 'memberTemplate'],
-        classNameList: [
-          'iam-user-group-member ',
-          'bk-cascade-name',
-          'bk-option-content',
-          'bk-cascade is-focus is-unselected is-default-trigger',
-          'bk-cascade-dropdown-content copy-user-group-cls',
-          'cascade-custom-content',
-          'bk-cascade-panel',
-          'bk-cascade-right bk-icon icon-angle-right'
-        ],
         groupTabList: [
           {
-            name: 'userOrOrg',
+            name: 'userOrgPerm',
             label: this.$t(`m.userGroup['用户/组织']`),
             count: 0,
             empty: 'emptyOrgData',
@@ -466,7 +465,7 @@
             tableList: []
           }
         ],
-        tabActive: 'userOrOrg',
+        tabActive: 'userOrgPerm',
         copyUrl: 'userGroup/getUserGroupMemberList',
         curRouteMode: '',
         curTempData: {},
@@ -499,112 +498,116 @@
       };
     },
     computed: {
-    ...mapGetters(['user', 'externalSystemId']),
-    isNoBatchDelete () {
-      return () => {
-        const hasData = this.currentSelectList.length > 0;
-        if (
-          hasData
-          && ['userOrOrg'].includes(this.tabActive)
-          && this.getGroupAttributes
-          && this.getGroupAttributes().source_from_role
-        ) {
-          const isAll = hasData && this.currentSelectList.length === this.userOrOrgCount;
-          this.adminGroupTitle = isAll
-            ? this.$t(`m.userGroup['管理员组至少保留一条数据']`)
-            : '';
-          return isAll;
-        }
-        return !hasData;
-      };
-    },
-    isNoBatchRenewal () {
-      return () => {
-        const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
-        if (emptyField) {
-          const hasData = emptyField.tableList.length > 0 && this.currentSelectList.length > 0;
-          if (hasData) {
-            this.selectNoRenewalList = this.currentSelectList.filter(
-              (item) => item.expired_at === PERMANENT_TIMESTAMP
-            );
-            if (this.currentSelectList.length === this.selectNoRenewalList.length) {
-              this.renewalGroupTitle = this.$t(
-                `m.userGroup['已选择的用户组成员不需要续期']`
-              );
-              return true;
-            }
+      ...mapGetters(['user', 'externalSystemId']),
+      isNoBatchDelete () {
+        return () => {
+          const hasData = this.currentSelectList.length > 0;
+          if (
+            hasData
+            && ['userOrgPerm'].includes(this.tabActive)
+            && this.getGroupAttributes
+            && this.getGroupAttributes().source_from_role
+          ) {
+            const isAll = hasData && this.currentSelectList.length === this.userOrOrgCount;
+            this.adminGroupTitle = isAll
+              ? this.$t(`m.userGroup['管理员组至少保留一条数据']`)
+              : '';
+            return isAll;
           }
           return !hasData;
-        }
-      };
-    },
-    isRatingManager () {
-      return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
-    },
-    curType () {
-      return this.curData.type || 'department';
-    },
-    disabledGroup () {
-      return () => {
-        return (
-          this.getGroupAttributes
-          && this.getGroupAttributes().source_from_role
-          && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
-          && (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
-        );
-      };
-    },
-    disabledTempGroup () {
-      return () => {
-        return this.readOnly;
-      };
-    },
-    isBatchDisabled () {
-      return ['memberTemplate'].includes(this.routeMode) ? this.readOnly : !this.currentSelectList.length;
-    },
-    isCopyDisabled () {
-      return this.readOnly || (!this.groupTabList[0].tableList.length);
-    },
-    formatPagination () {
-      return () => {
-        const typeMap = {
-          userOrOrg: () => {
-            return this.userOrOrgPagination;
-          },
-          memberTemplate: () => {
-            return this.memberPagination;
+        };
+      },
+      isNoBatchRenewal () {
+        return () => {
+          const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
+          if (emptyField) {
+            const hasData = emptyField.tableList.length > 0 && this.currentSelectList.length > 0;
+            if (hasData) {
+              this.selectNoRenewalList = this.currentSelectList.filter(
+                (item) => item.expired_at === PERMANENT_TIMESTAMP
+              );
+              if (this.currentSelectList.length === this.selectNoRenewalList.length) {
+                this.renewalGroupTitle = this.$t(
+                  `m.userGroup['已选择的用户组成员不需要续期']`
+                );
+                return true;
+              }
+            }
+            return !hasData;
           }
         };
-        return typeMap[this.tabActive]();
-      };
-    },
-    getTableList () {
-      return () => {
-        const typeMap = {
-          userOrOrg: () => {
-            return this.groupTabList[0].tableList;
-          },
-          memberTemplate: () => {
-            return this.groupTabList[1].tableList;
-          }
+      },
+      isRatingManager () {
+        return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
+      },
+      curType () {
+        return this.curData.type || 'department';
+      },
+      disabledGroup () {
+        return () => {
+          return (
+            this.getGroupAttributes
+            && this.getGroupAttributes().source_from_role
+            && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
+            && (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
+          );
         };
-        return typeMap[this.tabActive]();
-      };
-    },
-    isAdminGroup () {
-        return this.getGroupAttributes && this.getGroupAttributes().source_from_role;
-    },
-    isShowMemberTemplate () {
-        return !['staff'].includes(this.user.role.type) && !this.isAdminGroup;
-    },
-    // 蓝盾场景
-    isShowExternalMemberTemplate () {
-      return !['staff', 'rating_manager'].includes(this.user.role.type) && !this.isAdminGroup;
-    },
-    isExistMemberTemplate () {
-      return this.externalSystemId
-      ? this.isShowTab && this.isShowExternalMemberTemplate : this.isShowTab && this.isShowMemberTemplate;
-    }
+      },
+      disabledTempGroup () {
+        return () => {
+          return this.readOnly;
+        };
+      },
+      isBatchDisabled () {
+        return ['memberTemplate'].includes(this.routeMode) ? this.readOnly : !this.currentSelectList.length;
+      },
+      isCopyDisabled () {
+        return this.readOnly || (!this.groupTabList[0].tableList.length);
+      },
+      formatPagination () {
+        return () => {
+          const typeMap = {
+            userOrgPerm: () => {
+              return this.userOrOrgPagination;
+            },
+            memberTemplate: () => {
+              return this.memberPagination;
+            }
+          };
+          return typeMap[this.tabActive]();
+        };
+      },
+      getTableList () {
+        return () => {
+          const [userOrgPerm, memberTemplate] = this.groupTabList;
+          const typeMap = {
+            userOrgPerm: () => {
+              return userOrgPerm.tableList;
+            },
+            memberTemplate: () => {
+              return memberTemplate.tableList;
+            }
+          };
+          return typeMap[this.tabActive]();
+        };
+      },
+      renderTableColumn () {
+        return this.tableProps.filter((v) => v.visible);
+      },
+      isAdminGroup () {
+          return this.getGroupAttributes && this.getGroupAttributes().source_from_role;
+      },
+      isShowMemberTemplate () {
+          return !['staff'].includes(this.user.role.type) && !this.isAdminGroup;
+      },
+      // 蓝盾场景
+      isShowExternalMemberTemplate () {
+        return !['staff', 'rating_manager'].includes(this.user.role.type) && !this.isAdminGroup;
+      },
+      isExistMemberTemplate () {
+        return this.externalSystemId
+        ? this.isShowTab && this.isShowExternalMemberTemplate : this.isShowTab && this.isShowMemberTemplate;
+      }
     },
     watch: {
       'userOrOrgPagination.current' (value) {
@@ -630,11 +633,11 @@
       },
       tabActive: {
         handler (newValue, oldValue) {
-          this.curRouteMode = ['userOrOrg'].includes(newValue) ? 'userGroupDetail' : newValue;
+          this.curRouteMode = ['userOrgPerm'].includes(newValue) ? 'userGroupDetail' : newValue;
           if (this.routeMode) {
             this.curRouteMode = _.cloneDeep(this.routeMode);
           }
-          this.tableProps = this.getTableProps(newValue);
+          this.tableProps = Object.freeze(this.getTableProps(newValue));
           if (oldValue && oldValue !== newValue) {
             this.resetPagination();
           }
@@ -642,18 +645,8 @@
         immediate: true
       }
     },
-    mounted () {
-      document.addEventListener('mouseover', this.handleCascadeEnter);
-      document.addEventListener('mouseout', this.handleCascadeLeave);
-      this.$once('hook:beforeDestroy', () => {
-        document.removeEventListener('mouseover', this.handleCascadeEnter);
-        document.removeEventListener('mouseout', this.handleCascadeLeave);
-      });
-    },
     created () {
-      this.PERMANENT_TIMESTAMP = PERMANENT_TIMESTAMP;
       this.fetchInitData();
-    // window.addEventListener('message', this.fetchReceiveData);
     },
     methods: {
       renderHeader (h, data) {
@@ -669,34 +662,51 @@
 
       getTableProps (payload) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return [
               { label: this.$t(`m.userGroup['用户/组织']`), prop: 'name' },
               { label: this.$t(`m.userGroupDetail['所属组织架构']`), prop: 'user_departments' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
-            ];
+            ].map((v) => {
+              return {
+                ...v,
+                ...{
+                  visible: true
+                }
+              };
+            });
           },
           memberTemplate: () => {
             return [
               { label: this.$t(`m.memberTemplate['人员模板']`), prop: 'template_name' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
-            ];
+            ].map((v) => {
+              return {
+                ...v,
+                ...{
+                  visible: true
+                }
+              };
+            });
           }
         };
         return tabMap[payload]();
       },
 
       getDefaultSelect () {
+        const [userOrgPerm, memberTemplate] = this.groupTabList;
         const typeMap = {
-          userOrOrg: () => {
-            return this.groupTabList[0].tableList.length > 0;
+          userOrgPerm: () => {
+            return userOrgPerm.tableList.length > 0;
           },
           memberTemplate: () => {
-            return this.groupTabList[1].tableList.length > 0;
+            return memberTemplate.tableList.length > 0;
           }
         };
         return typeMap[this.tabActive];
@@ -707,13 +717,6 @@
           return 'iam-table-cell-depart-cls';
         }
         return '';
-      },
-
-      // 接收iframe父页面传递的message
-      fetchReceiveData (payload) {
-        const { data } = payload;
-        console.log(data, '接受传递过来的数据');
-      // this.fetchResetData(data);
       },
 
       fetchInitData () {
@@ -772,7 +775,7 @@
           this.tableLoading = false;
           const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
           if (emptyField) {
-            this.emptyData = _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' }));
+            this.emptyData = formatCodeData(0, _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' })));
           }
         }
       },
@@ -836,10 +839,10 @@
         this.curMember = {};
         this.currentSelectList = [];
         this.$set(this.groupTabList[0], 'tableList', []);
-        this.$set(this.groupTabList[0], 'tableList', []);
+        this.$set(this.groupTabList[1], 'tableList', []);
         this.resetPagination();
         const tabMap = {
-          userOrOrg: async () => {
+          userOrgPerm: async () => {
             await this.fetchUserOrOrgList();
           },
           memberTemplate: async () => {
@@ -893,9 +896,13 @@
 
       fetchCustomTotal () {
         this.$nextTick(() => {
-          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.groupMemberRef && selectionCount && selectionCount.length) {
-            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+          const tableRef = this.$refs.groupMemberRef;
+          if (tableRef && tableRef.$refs && tableRef.$refs.paginationWrapper) {
+            const paginationWrapper = tableRef.$refs.paginationWrapper;
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount && selectCount.length && selectCount[0].children) {
+              selectCount[0].children[0].innerHTML = this.currentSelectList.length;
+            }
           }
         });
       },
@@ -945,32 +952,11 @@
         this.isDropdownShow = false;
       },
 
-      handleCascadeEnter (event) {
+      handleCascadeEnter () {
         this.$nextTick(() => {
-          if (
-            ['bk-cascade-name'].includes(event.target.className)
-            && this.$refs.copyCascade
-            && this.$refs.copyCascade.$refs.cascadeDropdown
-          ) {
-            this.$refs.copyCascade.$refs.cascadeDropdown.showHandler();
-          }
-        });
-      },
-
-      async handleCascadeLeave (event) {
-        const { className, dataset } = event.target;
-        if (dataset.test && dataset.test === 'no-leave') {
-          return;
-        }
-        this.$nextTick(() => {
-          if (
-            className
-            && !this.classNameList.includes(className)
-            && this.$refs.copyCascade
-            && this.$refs.copyCascade.$refs.cascadeDropdown
-          ) {
-          // this.$refs.copyCascade.$refs.cascadeDropdown.hideHandler();
-          }
+          this.isMouseCascadeEnter = true;
+          const copyCascade = this.$refs.copyCascade;
+          copyCascade && copyCascade.$refs.cascadeDropdown.showHandler();
         });
       },
 
@@ -1291,8 +1277,8 @@
           if (this.curModeMap[this.curRouteMode]) {
             this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
               this.currentSelectList.length
-            } ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(
-              `m.info['这些成员将不再关联该用户组的权限']`
+            } ${this.$t(`m.common['个人员模板']`)}${this.$t(`m.common['，']`)}${this.$t(
+              `m.info['相关人员将不再关联该用户组的权限']`
             )}${this.$t(`m.common['。']`)}`;
           } else {
             this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
@@ -1339,7 +1325,7 @@
 
       handlePageChange (current) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current });
             this.fetchUserOrOrgList();
           },
@@ -1353,7 +1339,7 @@
 
       handleLimitChange (limit) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current: 1, limit });
             this.fetchUserOrOrgList();
           },
@@ -1413,6 +1399,10 @@
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.handleRefreshTab();
             this.fetchMemberListCount();
+            // 用户/组织模块在模板详情里移除成员需要同步更新加入人员模板的用户组列表数据
+            if (['userOrgPerm'].includes(this.$route.name)) {
+              bus.$emit('on-refresh-template-table', this.curDetailData);
+            }
           }
         } catch (e) {
           console.error(e);
@@ -1439,6 +1429,22 @@
           this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
           this.isShowRenewalDialog = false;
           this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
+          if (this.externalRoutes.includes(this.$route.name)) {
+            const externalParams = {
+              ...params,
+              count: params.members.length,
+              id: this.id
+            };
+            delete externalParams.groupId;
+            window.parent.postMessage(
+              {
+                type: 'IAM',
+                data: externalParams,
+                code: ['memberTemplate'].includes(this.tabActive) ? 'renewal_template_confirm' : 'renewal_user_confirm'
+              },
+              '*'
+            );
+          }
           this.handleRefreshTab();
         } catch (e) {
           console.error(e);
@@ -1451,7 +1457,7 @@
       async fetchMemberListCount () {
         // 搜索移除成员后，再去查询当前搜索的数据是不是最后一条
         if (
-          (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
+          (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
           && this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
           && this.keyword) {
@@ -1487,7 +1493,7 @@
   width: auto !important;
   .bk-cascade-options {
     width: auto !important;
-    height: 70px !important;
+    height: 72px !important;
   }
   .bk-cascade-panel {
     .bk-cascade-panel-ul {
@@ -1519,8 +1525,8 @@
 /deep/ .iam-table-cell-depart-cls {
   .cell {
     padding: 5px 0;
-    -webkit-line-clamp: 100;
     padding-left: 15px;
+    display: block;
     .user_departs {
       margin-bottom: 10px;
       word-break: break-all;
@@ -1533,7 +1539,9 @@
 
 .group-member-button {
   &-item {
-    margin-right: 10px;
+    &:not(&:last-child) {
+      margin-right: 10px;
+    }
     .group-dropdown-trigger-btn {
       display: flex;
       align-items: center;

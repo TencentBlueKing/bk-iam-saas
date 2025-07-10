@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.urls import include, path
 
 from . import views
@@ -58,6 +59,12 @@ urlpatterns = [
                     "update_commit/",
                     views.TemplateUpdateCommitViewSet.as_view({"post": "create"}),
                     name="template.update_commit",
+                ),
+                # 转换成自定义权限
+                path(
+                    "convert_to_custom_policy/",
+                    views.TemplateConvertToCustomPolicyViewSet.as_view({"post": "create"}),
+                    name="template.convert_to_custom_policy",
                 ),
             ]
         ),

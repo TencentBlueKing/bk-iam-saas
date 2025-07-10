@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List
 
 from rest_framework import exceptions
@@ -45,7 +46,7 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         主要是针对分级管理员创建和更新时的可授权范围
         """
         # 加速判断：大部分系统都只是管理自身系统的权限，即可授权范围里的每个系统都只能等于自身
-        if all([sys_id == system_id for sys_id in auth_system_ids]):
+        if all(sys_id == system_id for sys_id in auth_system_ids):
             return
 
         #  接入系统可管控的系统表[system_id/auth_system_id]来实现管控更多接入系统权限

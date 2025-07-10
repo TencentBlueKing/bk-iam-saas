@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 from typing import Dict, Type
 
@@ -34,7 +35,6 @@ EXECUTE_HANDOVER_MAP: Dict[str, Type[BaseHandoverHandler]] = {
 
 @shared_task(ignore_result=True)
 def execute_handover_task(handover_from, handover_to, handover_record_id):
-
     handover_task_list = HandoverTask.objects.filter(handover_record_id=handover_record_id)
 
     # 用于整个交接的最终状态判断
@@ -66,7 +66,6 @@ def _calculate_record_status(success_task_count, total_task_count):
     """
     if success_task_count == 0:
         return HandoverStatus.FAILED.value
-    elif success_task_count == total_task_count:
+    if success_task_count == total_task_count:
         return HandoverStatus.SUCCEED.value
-    else:
-        return HandoverStatus.PARTIAL_FAILED.value
+    return HandoverStatus.PARTIAL_FAILED.value

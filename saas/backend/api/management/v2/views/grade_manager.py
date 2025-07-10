@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
@@ -22,11 +23,10 @@ from backend.api.management.v2.serializers import ManagementGradeManagerCreateSL
 from backend.apps.role.audit import RoleCreateAuditProvider, RoleDeleteAuditProvider, RoleUpdateAuditProvider
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
-from backend.apps.role.tasks import sync_subset_manager_subject_scope
+from backend.apps.role.tasks import delete_role, sync_subset_manager_subject_scope
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz
-from backend.biz.helper import RoleDeleteHelper
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.lock import gen_role_upsert_lock
 from backend.service.constants import GroupSaaSAttributeEnum, RoleSourceType, RoleType
@@ -186,7 +186,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     @view_audit_decorator(RoleDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         role = self.get_object()
-        RoleDeleteHelper(role.id).delete()
+        delete_role.delay(role.id)
 
         # 审计
         audit_context_setter(role=role)

@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from itertools import chain, groupby
 from typing import List
 
@@ -54,7 +55,6 @@ from .serializers import (
 
 
 class PolicyViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
@@ -161,7 +161,6 @@ class PolicyViewSet(GenericViewSet):
 
 
 class PolicyResourceGroupDeleteViewSet(GenericViewSet):
-
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
 
@@ -189,7 +188,6 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
 
 
 class PolicySystemViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()
@@ -208,7 +206,6 @@ class PolicySystemViewSet(GenericViewSet):
 
 
 class PolicyExpireSoonViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()

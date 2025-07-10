@@ -3,11 +3,15 @@
     <div class="ghost-wrapper" :style="ghostStyle"></div>
     <div class="render-wrapper" ref="content">
       <div
+        v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
         v-for="item in renderData"
         :key="item.id"
         :style="getNodeStyle(item)"
-        :class="['node-item', { 'active': item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
-        :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
+        :class="[
+          'node-item',
+          { 'active': item.isSelected && !item.disabled },
+          { 'is-disabled': item.disabled || isDisabled }
+        ]"
         @click.stop="nodeClick(item)">
         <Icon
           bk
@@ -29,18 +33,24 @@
           <Icon
             v-if="item.level || isRatingManager"
             type="file-close"
-            :class="['node-icon file-icon', { 'active': item.selected }]" />
+            :class="['node-icon file-icon', { 'active': item.isSelected && !item.disabled }]"
+          />
           <Icon
             v-else
             type="user-directory"
-            class="node-icon" />
+            class="node-icon"
+          />
         </template>
-        <Icon v-else type="personal-user" class="node-svg" />
+        <Icon
+          v-else
+          type="personal-user"
+          :class="['node-icon', { 'active': item.isSelected && !item.disabled }]"
+        />
         <!-- eslint-disable max-len -->
         <span
           :style="nameStyle(item)"
-          :class="['node-title', { 'node-selected': item.selected }]"
-          :title="nameType(item)">
+          :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
+        >
           {{ item.type === 'user' ? item.username : item.name }}
           <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
         </span>
@@ -51,7 +61,7 @@
         >
           {{ '(' + item.count + `)` }}
         </span>
-        <spin-loading ext-cls="loading" v-if="item.loading" />
+        <spin-loading ext-cls="node-tree-loading" v-if="item.loading" />
       </div>
       <template v-if="!renderData.length && emptyData.type">
         <ExceptionEmpty
@@ -88,7 +98,7 @@
       // 子节点左侧偏移的基础值
       leftBaseIndent: {
         type: Number,
-        default: 18
+        default: 22
       },
       // 点击事件 $emit 事件 类型
       // all: 既触发click 也触发 radio 事件
@@ -191,42 +201,47 @@
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName } = payload;
+          const { name, type, username, full_name: fullName, disabled } = payload;
+          if (disabled) {
+            return this.$t(`m.common['该成员已添加']`);
+          }
           const typeMap = {
-              user: () => {
-                  // eslint-disable-next-line camelcase
-                  if (fullName) {
-                  return fullName;
-                  } else {
-                  return name ? `${username}(${name})` : username;
-                  }
-              },
-              depart: () => {
-                  // eslint-disable-next-line camelcase
-                  return fullName || name;
+            user: () => {
+              if (fullName) {
+                return fullName;
+              } else {
+                return name ? `${username}(${name})` : username;
               }
+            },
+            depart: () => {
+              return fullName || name;
+            }
           };
           return typeMap[type]();
         };
       },
       disabledNode () {
         return (payload) => {
-          const isDisabled = payload.disabled || this.isDisabled;
-          return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+          const { disabled, type } = payload;
+          const isDisabled = disabled || this.isDisabled;
+          return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && type === 'depart') : isDisabled;
         };
       },
       selectedNode () {
         return (payload) => {
-          if (payload.disabled) {
+          const { id, name, username, disabled, isSelected } = payload;
+          // 如果之前已选且禁用直接返回
+          if (disabled && isSelected) {
             return true;
           }
-          if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
-            payload.is_selected = this.hasSelectedDepartments.map(
-              item => item.id.toString()).includes(payload.id.toString())
-              || this.hasSelectedUsers.map(
-              item => item.username).includes(payload.username);
-              return payload.is_selected;
+          const isExistSelected = this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
+          if (isExistSelected) {
+            const hasDeparts = this.hasSelectedDepartments.map(item => `${item.name}&${String(item.id)}`).includes(`${name}&${String(id)}`);
+            const hasUsers = this.hasSelectedUsers.map(item => item.username).includes(username);
+            payload.isSelected = hasDeparts || hasUsers;
+            return payload.isSelected;
           }
+          return false;
         };
       }
     },
@@ -292,18 +307,23 @@
         if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
           return;
         }
+        // 增加蓝盾侧限制勾选组织架构业务
+        if (node.limitOrgNodeTip) {
+          this.$emit('on-show-limit', { title: node.limitOrgNodeTip });
+          return;
+        }
         if ((node.level === 0 || (node.async && node.disabled)) && !this.isRatingManager) {
           this.expandNode(node);
           return;
         }
         if (!node.disabled) {
           if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
-            node.is_selected = !node.is_selected;
+            node.isSelected = !node.isSelected;
             // type为user时需校验不用组织下的相同用户让其禁选
             if (node.type === 'user') {
-              this.handleBanUser(node, node.is_selected);
+              this.handleBanUser(node, node.isSelected);
             }
-            this.$emit('on-select', node.is_selected, node);
+            this.$emit('on-select', node.isSelected, node);
           }
         }
         if (['all', 'only-click'].includes(this.clickTriggerTypeBat)) {
@@ -318,7 +338,7 @@
         this.allData.forEach(item => {
           if (item.username === node.username && item.id !== node.id) {
             item.disabled = flag;
-            item.is_selected = flag;
+            item.isSelected = flag;
           }
         });
       },
@@ -380,14 +400,20 @@
         });
       },
 
-      async handleNodeClick (node) {
-        const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
+      handleNodeClick (node) {
+        const { type, disabled, isSelected, limitOrgNodeTip } = node;
+        const isDisabled = disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && type === 'depart');
         if (!isDisabled) {
-          node.is_selected = !node.is_selected;
-          if (node.type === 'user') {
-            this.handleBanUser(node, node.is_selected);
+          // 增加蓝盾侧限制勾选组织架构业务
+          if (limitOrgNodeTip) {
+            this.$emit('on-show-limit', { title: limitOrgNodeTip });
+            return;
           }
-          this.$emit('on-select', node.is_selected, node);
+          node.isSelected = !isSelected;
+          if (node.type === 'user') {
+            this.handleBanUser(node, node.isSelected);
+          }
+          this.$emit('on-select', node.isSelected, node);
         }
       },
 
@@ -399,18 +425,18 @@
       },
 
       /**
-       * 清除节点 is_selected 状态(不含禁选节点)
+       * 清除节点 isSelected 状态(不含禁选节点)
        */
       clearAllIsSelectedStatus () {
         this.allData.forEach(item => {
           if (!item.disabled) {
-            item.is_selected = false;
+            item.isSelected = false;
           }
         });
       },
 
       /**
-       * 设置单个节点 is_selected 状态
+       * 设置单个节点 isSelected 状态
        *
        * @param {String} nodeKey 当前节点唯一key值
        * @param {String} username 用户节点username
@@ -419,7 +445,7 @@
       setSingleSelectedStatus (nodeKey, username, isSelected) {
         this.allData.forEach(item => {
           if (username === item.username || nodeKey === item.id) {
-            item.is_selected = isSelected;
+            item.isSelected = isSelected;
           }
         });
       },
@@ -430,173 +456,155 @@
     }
   };
 </script>
+
 <style lang="postcss">
-    .infinite-tree {
-        height: 862px;
-        font-size: 14px;
-        overflow: auto;
-        position: relative;
-        /* overflow: scroll; */
-        will-change: transform;
-
-        &::-webkit-scrollbar {
-            width: 4px;
-            background-color: lighten(transparent, 80%);
-        }
-        &::-webkit-scrollbar-thumb {
-            height: 5px;
-            border-radius: 2px;
-            background-color: #e6e9ea;
-        }
-
-        .ghost-wrapper {
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            z-index: -1;
-        }
-
-        .render-wrapper {
-            left: 0;
-            right: 0;
-            top: 0;
-            position: absolute;
-        }
-
-        .node-item {
-            display: flex;
-            align-items: center;
-            position: relative;
-            margin: 0;
-            text-align: left;
-            line-height: 32px;
-            cursor: pointer;
-            &.active {
-                color: #3a84ff;
-                background: #eef4ff;
-            }
-            &.is-disabled {
-                color: #c4c6cc;
-                /* cursor: not-allowed; */
-            }
-            &:hover {
-                color: #3a84ff;
-                background: #eef4ff;
-            }
-            &.is-disabled:hover {
-                color: #c4c6cc;
-                background: #eee;
-            }
-            &.is-selected {
-                background: #eef4ff;
-            }
-        }
-
-        .node-svg {
-            font-size: 16px;
-            color: #a3c5fd;
-        }
-
-        .node-icon {
-            position: relative;
-            font-size: 16px;
-            color: #a3c5fd;
-            margin: 0 5px;
-            &.active {
-                color: #3a84ff;
-            }
-            &.file-icon {
-                font-size: 17px;
-            }
-        }
-
-        .arrow-icon {
-            color: #c0c4cc;
-        }
-
-        .node-title {
-            position: relative;
-            display: inline-block;
-            min-width: 14px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            vertical-align: top;
-            user-select: none;
-        }
-
-        .red-dot {
-            display: inline-block;
-            position: relative;
-            top: -10px;
-            left: -3px;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ff0000;
-        }
-
-        .node-user-count {
-            color: #c4c6cc;
-        }
-
-        .node-radio {
-            /* margin-right: 5px;
-            float: left; */
-            margin-left: 5px;
-            .node-checkbox {
-                display: inline-block;
-                position: relative;
-                top: 3px;
-                width: 16px;
-                height: 16px;
-                margin: 0 6px 0 0;
-                border: 1px solid #979ba5;
-                border-radius: 2px;
-                &.is-checked {
-                    border-color: #3a84ff;
-                    background-color: #3a84ff;
-                    background-clip: border-box;
-                    &:after {
-                        content: "";
-                        position: absolute;
-                        top: 1px;
-                        left: 4px;
-                        width: 4px;
-                        height: 8px;
-                        border: 2px solid #fff;
-                        border-left: 0;
-                        border-top: 0;
-                        transform-origin: center;
-                        transform: rotate(45deg) scaleY(1);
-                    }
-                    &.is-disabled {
-                        background-color: #dcdee5;
-                    }
-                }
-                &.is-disabled {
-                    border-color: #dcdee5;
-                    cursor: not-allowed;
-                }
-                &.is-indeterminate {
-                    border-width: 7px 4px;
-                    border-color: #3a84ff;
-                    background-color: #fff;
-                    background-clip: content-box;
-                    &:after {
-                        visibility: hidden;
-                    }
-                }
-            }
-        }
-
-        .loading {
-            display: inline-block;
-            position: relative;
-            top: -1px;
-            width: 14px;
-            height: 14px;
-        }
+.infinite-tree {
+  height: 862px;
+  font-size: 14px;
+  overflow: auto;
+  position: relative;
+  will-change: transform;
+  &::-webkit-scrollbar {
+    width: 4px;
+    background-color: lighten(transparent, 80%);
+  }
+  &::-webkit-scrollbar-thumb {
+    height: 5px;
+    border-radius: 2px;
+    background-color: #e6e9ea;
+  }
+  .ghost-wrapper,
+  .render-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    z-index: -1;
+  }
+  .ghost-wrapper {
+    z-index: -1;
+  }
+  .node-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin: 0;
+    text-align: left;
+    line-height: 32px;
+    cursor: pointer;
+    .node-icon {
+      position: relative;
+      font-size: 16px;
+      color: #a3c5fd;
+      margin: 0 5px;
+      &.active {
+        color: #3a84ff;
+      }
+      &.file-icon {
+        font-size: 17px;
+      }
     }
+    .node-title {
+      position: relative;
+      display: inline-block;
+      min-width: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: top;
+      user-select: none;
+    }
+    .node-user-count {
+      color: #c4c6cc;
+    }
+    .node-radio {
+      .node-checkbox {
+        display: inline-block;
+        position: relative;
+        top: 3px;
+        width: 16px;
+        height: 16px;
+        margin: 0 6px 0 0;
+        border: 1px solid #979ba5;
+        border-radius: 2px;
+        &.is-checked {
+          border-color: #3a84ff;
+          background-color: #3a84ff;
+          background-clip: border-box;
+          &:after {
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 4px;
+            width: 4px;
+            height: 8px;
+            border: 2px solid #fff;
+            border-left: 0;
+            border-top: 0;
+            transform-origin: center;
+            transform: rotate(45deg) scaleY(1);
+          }
+          &.is-disabled {
+            background-color: #dcdee5;
+          }
+        }
+        &.is-disabled {
+          border-color: #dcdee5;
+          cursor: not-allowed;
+        }
+        &.is-indeterminate {
+          border-width: 7px 4px;
+          border-color: #3a84ff;
+          background-color: #fff;
+          background-clip: content-box;
+          &:after {
+            visibility: hidden;
+          }
+        }
+      }
+    }
+    .arrow-icon {
+      color: #c0c4cc;
+      margin: 0 4px;
+    }
+    .red-dot {
+      display: inline-block;
+      position: relative;
+      top: -10px;
+      left: -3px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #ff0000;
+    }
+    &.active,
+    &:hover {
+      color: #3a84ff;
+      background-color: #eef4ff;
+      .node-icon,
+      .node-user-count {
+        color: #3a84ff;
+      }
+    }
+    &.is-disabled {
+      color: #c4c6cc;
+      background-color: transparent;
+      cursor: not-allowed;
+      .node-icon,
+      .node-user-count {
+        color: #c4c6cc;
+      }
+      &:hover {
+        background-color: #eee;
+      }
+    }
+  }
+  .node-tree-loading {
+    display: inline-block;
+    position: relative;
+    top: -1px;
+    width: 14px;
+    height: 14px;
+  }
+}
 </style>

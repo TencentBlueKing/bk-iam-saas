@@ -21,6 +21,7 @@ from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.audit.models import get_event_model
+from backend.audit.signals import send_bulk_create_signal
 from backend.common.base import is_open_api_request_path
 from backend.common.local import local
 from backend.service.models import Subject
@@ -34,8 +35,6 @@ class NoNeedAuditException(Exception):
     """
     不需要的审计
     """
-
-    pass
 
 
 class DataProvider(ABC):
@@ -142,7 +141,7 @@ def audit_context_setter(**kwargs):
         return
 
     if not hasattr(request, "_audit_context"):
-        setattr(request, "_audit_context", {})
+        request._audit_context = {}
     request._audit_context.update(kwargs)
 
 
@@ -154,7 +153,7 @@ def audit_context_getter(request: Request, key: str):
     _request = request._request
 
     if not hasattr(_request, "_audit_context"):
-        setattr(_request, "_audit_context", {})
+        _request._audit_context = {}
     return _request._audit_context.get(key)
 
 
@@ -164,7 +163,7 @@ def add_audit(provider_cls: Type[DataProvider], request: Request, **kwargs):
     """
     # 设置审计对象和额外信息，直接覆盖，避免传递过来的request对象重复使用导致_audit_context存储了上次调用的信息
     # 这里使用的是Django Request，provider_cls获取相关内容时使用的audit_context_getter方法也是从Django Request里获取
-    setattr(request._request, "_audit_context", kwargs)
+    request._request._audit_context = kwargs
     # 实例化审计信息提供者
     provider = provider_cls(request)
     try:
@@ -244,6 +243,8 @@ def log_group_event(
         events.append(event)
 
     Event.objects.bulk_create(events)
+    # NOTE: 由于bulk_create不能触发信号，手动触发信号
+    send_bulk_create_signal(Event, events)
 
 
 def log_role_event(
@@ -361,3 +362,5 @@ def log_subject_template_event(
         events.append(event)
 
     Event.objects.bulk_create(events)
+    # NOTE: 由于bulk_create不能触发信号，手动触发信号
+    send_bulk_create_signal(Event, events)

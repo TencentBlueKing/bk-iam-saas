@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -53,8 +54,7 @@ class ResourceTypeProviderConfigService:
     def _list_resource_type_provider_config(self, system_id: str) -> Dict[str, Dict]:
         """提供给provider_config使用的获取某个系统所有资源类型"""
         resource_types = iam.list_resource_type([system_id], fields="id,provider_config")[system_id]
-        provider_config_dict = {i["id"]: i["provider_config"] for i in resource_types}
-        return provider_config_dict
+        return {i["id"]: i["provider_config"] for i in resource_types}
 
     def get_provider_config(self, system_id: str, resource_type_id: str) -> ResourceTypeProviderConfig:
         """获取资源类型的回调配置"""

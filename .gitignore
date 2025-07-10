@@ -4,3 +4,7 @@ logs
 build.yml
 .codecc/
 .vscode/
+
+
+pre-*-bkcodeai
+bkcodeai.json

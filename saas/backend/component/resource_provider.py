@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 import time
 import traceback
@@ -49,7 +50,7 @@ class AuthTypeEnum(LowerStrEnum):
 
 
 class ResourceAPIEnum(LowerStrEnum):
-    """资源回调的API"""
+    """资源回调的 API"""
 
     LIST_ATTR = auto()
     LIST_ATTR_VALUE = auto()
@@ -80,7 +81,7 @@ def _generate_http_auth(auth_info: Dict[str, str]) -> Union[None, auth.HTTPBasic
     if auth_type == AuthTypeEnum.DIGEST.value:
         return auth.HTTPDigestAuth(username, password)
 
-    # 后续可能支持Signature，可以继承auth.AuthBase类自定义相关子类
+    # 后续可能支持 Signature，可以继承 auth.AuthBase 类自定义相关子类
     # 可参考：https://requests.readthedocs.io/en/master/user/authentication/#new-forms-of-authentication
 
     raise error_codes.RESOURCE_PROVIDER_AUTH_INFO_VALID
@@ -90,7 +91,7 @@ class ResourceProviderClient:
     """资源提供者请求客户端"""
 
     def __init__(self, system_id: str, resource_type_id: str, url: str, auth_info: Dict[str, str]):
-        """初始化请求需要的HTTP鉴权和其他HEADER"""
+        """初始化请求需要的 HTTP 鉴权和其他 HEADER"""
         self.system_id = system_id
         self.resource_type_id = resource_type_id
         self.url = url
@@ -105,7 +106,7 @@ class ResourceProviderClient:
         self.timeout = 30
 
     def _call_api(self, data):
-        """调用请求API"""
+        """调用请求 API"""
         trace_func = partial(http_trace, method="post", url=self.url, data=data)
 
         # 特殊场景下，给到请求时的用户名
@@ -123,7 +124,7 @@ class ResourceProviderClient:
             "verify": False,
         }
 
-        # 由于request_id可能在请求返回header被更新，所以需要lazyObject
+        # 由于 request_id 可能在请求返回 header 被更新，所以需要 lazyObject
         # 该信息用于日志
         base_log_msg = SimpleLazyObject(
             lambda: (
@@ -153,13 +154,13 @@ class ResourceProviderClient:
         try:
             st = time.time()
             resp = request_pool.request("post", **kwargs)
-            # 接入系统可返回request_id便于排查，避免接入系统未使用权限中心请求头里的request_id而自行生成，所以需要再获取赋值
+            # 接入系统可返回 request_id 便于排查，
+            # 避免接入系统未使用权限中心请求头里的 request_id 而自行生成，所以需要再获取赋值
             self.request_id = resp.headers.get("X-Request-Id") or self.request_id
             latency = int((time.time() - st) * 1000)
-            # 打印DEBUG日志，用于调试时使用
+            # 打印 DEBUG 日志，用于调试时使用
             logger.debug(
-                f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
-                f"{base_log_msg}"
+                f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms].{base_log_msg}"
             )
 
             callback_request_duration.labels(
@@ -179,9 +180,9 @@ class ResourceProviderClient:
             )
 
         try:
-            # 非2xx类都会异常
+            # 非 2xx 类都会异常
             resp.raise_for_status()
-            # 返回可能非JSON
+            # 返回可能非 JSON
             resp = resp.json()
         except requests.exceptions.HTTPError:
             logger.exception(f"StatusCodeException! {base_log_msg}")
@@ -192,11 +193,11 @@ class ResourceProviderClient:
                 f"{request_detail_info}"
             )
         except Exception as error:  # pylint: disable=broad-except
-            logger.exception(f"ResponseDataException! response_content: {resp.text}， error: {error}. {base_log_msg}")
+            logger.exception(f"ResponseDataException! response_content: {resp.text}. {base_log_msg}")
             trace_func(exc=traceback.format_exc())
-            # 数据异常，JSON解析出错
+            # 数据异常，JSON 解析出错
             raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(
-                f"{self.system_id}'s API error: {error}! " f"{request_detail_info}"
+                f"{self.system_id}'s API error: {error}! {request_detail_info}"
             )
 
         if "code" not in resp:
@@ -206,16 +207,17 @@ class ResourceProviderClient:
 
         code = resp["code"]
         if code == 0:
-            # TODO: 验证Data数据的schema是否正确，可能得放到每个具体method去定义并校验
+            # TODO: 验证 Data 数据的 schema 是否正确，可能得放到每个具体 method 去定义并校验
             return resp["data"]
 
         logger.error(f"Return Code Not Zero! response_content: {resp}. {base_log_msg}")
 
-        # code不同值代表不同意思，401: 认证失败，404: 资源类型不存在，500: 接入系统异常，422: 资源内容过多，拒绝返回数据 等等
+        # code 不同值代表不同意思，
+        # 401: 认证失败，404: 资源类型不存在，500: 接入系统异常，422: 资源内容过多，拒绝返回数据 等等
         if code not in ResponseCodeToErrorDict:
             trace_func(code=code)
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
-                f"{self.system_id}'s API response body.code != 0, code is {code}! " f"{request_detail_info}"
+                f"{self.system_id}'s API response body.code != 0, code is {code}! {request_detail_info}"
             )
 
         raise ResponseCodeToErrorDict[code]["error"].format(
@@ -227,12 +229,12 @@ class ResourceProviderClient:
         )
 
     def _handle_empty_data(self, data, default: Union[List, Dict]) -> Any:
-        """处理兼容对方返回空数据为None、[]、{}、字符串"""
+        """处理兼容对方返回空数据为 None、[]、{}、字符串"""
         if not data:
             return default
 
         # 校验类型是否一致
-        if type(data) != type(default):
+        if not isinstance(data, type(default)):
             raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
                 f"{self.system_id}'s API response data wrong! "
                 f"the type of data must be {type(default)}, but got {type(data)}! [data={data}]."
@@ -274,8 +276,7 @@ class ResourceProviderClient:
         resp_data = self._handle_empty_data(self._call_api(data), default=[])
 
         # {"id": "id", "display_name":""} should not be displayed in frontend for making policy
-        removed_attr_id_data = [d for d in resp_data if d.get("id") != "id"]
-        return removed_attr_id_data
+        return [d for d in resp_data if d.get("id") != "id"]
 
     def list_attr_value(
         self, attr: str, filter_condition: Dict, page: Dict[str, int]
@@ -331,14 +332,14 @@ class ResourceProviderClient:
         return resp_data["count"], resp_data["results"]
 
     def search_instance(self, filter_condition: Dict, page: Dict[str, int]) -> Tuple[int, List[Dict[str, str]]]:
-        """根据过滤条件且必须保证keyword不为空查询实例"""
+        """根据过滤条件且必须保证 keyword 不为空查询实例"""
         return self._search_instance(self.system_id, self.resource_type_id, filter_condition, page)
 
-    @cachedmethod(timeout=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存 1 分钟
     def _search_instance(
         self, system_id: str, resource_type_id: str, filter_condition: Dict, page: Dict[str, int]
     ) -> Tuple[int, List[Dict[str, str]]]:
-        """根据过滤条件且必须保证keyword不为空查询实例"""
+        """根据过滤条件且必须保证 keyword 不为空查询实例"""
         if not filter_condition["keyword"]:
             raise error_codes.RESOURCE_PROVIDER_VALIDATE_ERROR.format(
                 f"search_instance[system:{system_id}] param keyword should not be empty"

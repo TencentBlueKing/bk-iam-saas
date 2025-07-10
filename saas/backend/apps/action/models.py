@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 
 from django.db import models
@@ -24,7 +25,7 @@ class AggregateAction(models.Model):
         verbose_name = "聚合操作"
         verbose_name_plural = "聚合操作"
 
-        index_together = ["system_id"]
+        indexes = [models.Index(fields=["system_id"])]
 
     @property
     def action_ids(self):

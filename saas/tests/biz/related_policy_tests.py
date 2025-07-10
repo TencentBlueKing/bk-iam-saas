@@ -1,5 +1,5 @@
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -7,6 +7,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import uuid
 
 import mock
@@ -25,7 +26,7 @@ class DependingActionCheckPathTests(TestCase):
     def test_check_path_same_type_1(self):
         svc = RelatedPolicyBiz()
         path = [
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"}),
+            PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
         ]
         selections = [
             InstanceSelection(
@@ -44,16 +45,16 @@ class DependingActionCheckPathTests(TestCase):
         ]
         self.assertEqual(
             svc._check_path_by_instance_selection(path, selections),
-            [PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"})],
+            [PathNodeBean(system_id="bk_cmdb", type="host", id="host1")],
         )
 
     def test_check_path_same_type_2(self):
         svc = RelatedPolicyBiz()
         path = [
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "biz", "id": "biz1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "set", "id": "set1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "module", "id": "module1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"}),
+            PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
+            PathNodeBean(system_id="bk_cmdb", type="set", id="set1"),
+            PathNodeBean(system_id="bk_cmdb", type="module", id="module1"),
+            PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
         ]
         selections = [
             InstanceSelection(
@@ -73,10 +74,10 @@ class DependingActionCheckPathTests(TestCase):
     def test_check_path_same_type_4(self):
         svc = RelatedPolicyBiz()
         path = [
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "biz", "id": "biz1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "set", "id": "set1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "module", "id": "module1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"}),
+            PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
+            PathNodeBean(system_id="bk_cmdb", type="set", id="set1"),
+            PathNodeBean(system_id="bk_cmdb", type="module", id="module1"),
+            PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
         ]
         selections = [
             InstanceSelection(
@@ -96,20 +97,20 @@ class DependingActionCheckPathTests(TestCase):
         self.assertEqual(
             svc._check_path_by_instance_selection(path, selections),
             [
-                PathNodeBean(**{"system_id": "bk_cmdb", "type": "biz", "id": "biz1"}),
-                PathNodeBean(**{"system_id": "bk_cmdb", "type": "set", "id": "set1"}),
-                PathNodeBean(**{"system_id": "bk_cmdb", "type": "module", "id": "module1"}),
-                PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"}),
+                PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
+                PathNodeBean(system_id="bk_cmdb", type="set", id="set1"),
+                PathNodeBean(system_id="bk_cmdb", type="module", id="module1"),
+                PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
             ],
         )
 
     def test_check_path_same_type_5(self):
         svc = RelatedPolicyBiz()
         path = [
-            PathNodeBean(**{"system_id": "bk_job", "type": "biz", "id": "biz1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "set", "id": "set1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "module", "id": "module1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"}),
+            PathNodeBean(system_id="bk_job", type="biz", id="biz1"),
+            PathNodeBean(system_id="bk_cmdb", type="set", id="set1"),
+            PathNodeBean(system_id="bk_cmdb", type="module", id="module1"),
+            PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
         ]
         selections = [
             InstanceSelection(
@@ -131,8 +132,8 @@ class DependingActionCheckPathTests(TestCase):
     def test_check_path_same_type_6(self):
         svc = RelatedPolicyBiz()
         path = [
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "biz", "id": "biz1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"}),
+            PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
+            PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
         ]
         selections = [
             InstanceSelection(
@@ -163,16 +164,16 @@ class DependingActionCheckPathTests(TestCase):
         self.assertEqual(
             svc._check_path_by_instance_selection(path, selections),
             [
-                PathNodeBean(**{"system_id": "bk_cmdb", "type": "biz", "id": "biz1"}),
-                PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"}),
+                PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
+                PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
             ],
         )
 
     def test_check_path_different_type_1(self):
         svc = RelatedPolicyBiz()
         path = [
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "biz", "id": "biz1"}),
-            PathNodeBean(**{"system_id": "bk_cmdb", "type": "host", "id": "host1"}),
+            PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
+            PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
         ]
         selections = [
             InstanceSelection(
@@ -197,7 +198,7 @@ class DependingActionCheckPathTests(TestCase):
         ]
         self.assertEqual(
             svc._check_path_by_instance_selection(path, selections),
-            [PathNodeBean(**{"system_id": "bk_cmdb", "type": "biz", "id": "biz1"})],
+            [PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1")],
         )
 
 
@@ -710,7 +711,7 @@ class FilterResourceTypeDifferentTypeTests(TestCase):
                 ],
             ),
         ]
-        action_rrt = action_rrt = RelatedResourceType(
+        action_rrt = RelatedResourceType(
             id="biz",
             system_id="bk_cmdb",
             name_alias="test",
@@ -803,7 +804,7 @@ class FilterResourceTypeDifferentTypeTests(TestCase):
                 ],
             ),
         ]
-        action_rrt = action_rrt = RelatedResourceType(
+        action_rrt = RelatedResourceType(
             id="biz",
             system_id="bk_cmdb",
             name_alias="test",

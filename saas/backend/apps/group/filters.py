@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django_filters import rest_framework as filters
 
 from backend.apps.group.models import Group
@@ -104,7 +105,11 @@ class GroupTemplateSystemFilter(filters.FilterSet):
 
 class GroupSubjectTemplateFilter(filters.FilterSet):
     name = filters.CharFilter(label="名字", lookup_expr="icontains")
+    expire_soon = filters.BooleanFilter(method="expire_soon_filter", label="即将过期")
 
     class Meta:
         model = SubjectTemplate
-        fields = ["name"]
+        fields = ["name", "expire_soon"]
+
+    def expire_soon_filter(self, queryset, name, value):
+        return queryset

@@ -98,7 +98,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, existValue } from '@/common/util';
   import GroupPolicy from '@/model/group-policy';
   import RenderPermItem from '../common/render-perm-item-new.vue';
   import RenderTemplateItem from '../common/render-template-item.vue';
@@ -160,7 +160,7 @@
                 return this.mode === 'edit';
             },
             expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+                return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
             },
             canEditGroup () {
                 return this.$route.query.edit === 'GroupEdit';
@@ -187,7 +187,7 @@
       mode: {
         handler (value) {
           console.log('value', value);
-          window.parent.postMessage({ type: 'IAM', data: { tab: 'group_perm' }, code: 'change_group_detail_tab' }, '*');
+          this.handleIframeSend({ tab: 'group_perm' }, 'change_group_detail_tab');
         },
         immediate: true
       }
@@ -235,8 +235,9 @@
       async fetchDetail (payload) {
         if (this.$parent.fetchDetail) {
           const { data } = await this.$parent.fetchDetail(payload);
-          const { attributes, readonly } = data;
+          const { attributes, name, readonly } = data;
           this.readonly = readonly;
+          this.$store.commit('setHeaderTitle', name);
           if (Object.keys(attributes).length) {
             this.groupAttributes = Object.assign(this.groupAttributes, attributes);
           }
@@ -268,12 +269,16 @@
         }
       },
 
-      handleEdit (paylaod) {
-        this.$set(paylaod, 'isEdit', true); // 事件会冒泡会触发handleExpanded方法
+      handleEdit (payload) {
+        this.$set(payload, 'isEdit', true); // 事件会冒泡会触发handleExpanded方法
       },
 
-      handleCancel (paylaod) {
-        this.$set(paylaod, 'isEdit', false);
+      handleCancel (payload) {
+        const { tableData, tableDataBackup } = payload;
+        if (JSON.stringify(tableData) !== JSON.stringify(tableDataBackup)) {
+          payload.tableData = _.cloneDeep(tableDataBackup);
+        }
+        this.$set(payload, 'isEdit', false);
       },
 
       async getGroupTemplateList (groupSystem) {
@@ -510,14 +515,16 @@
         }
         subItem.editLoading = true;
         try {
-          await this.$store.dispatch('userGroup/updateGroupPolicy', {
+          const params = {
             id: this.groupId,
             data: {
               system_id: item.id,
               template_id: subItem.id,
               actions
             }
-          });
+          };
+          await this.$store.dispatch('userGroup/updateGroupPolicy', params);
+          this.handleIframeSend(params, 'submit_edit_group_perm');
           if (subItem.count > 0) {
             this.getGroupCustomPolicy(subItem);
           } else {
@@ -531,6 +538,7 @@
           subItem.editLoading = false;
         }
       },
+
       handleDelete (item, subItem) {
         this.removingSingle = false;
         if (subItem.id > 0) {
@@ -591,6 +599,7 @@
             item.custom_policy_count = 0;
           }
           this.policyList = subItem;
+          this.handleIframeSend(params, 'submit_delete_group_perm');
           if (isExistTemplate) {
             this.getGroupTemplateList(item);
           }
@@ -614,6 +623,19 @@
             ids: data.ids ? data.ids.join(',') : data.policy_id
           }
         }, item, {}, false);
+      },
+
+      handleIframeSend (payload, code) {
+        if (existValue('externalApp') && this.externalSystemId) {
+          window.parent.postMessage(
+            {
+              type: 'IAM',
+              data: payload,
+              code
+            },
+            '*'
+          );
+        }
       },
       
       handleEmptyRefresh () {

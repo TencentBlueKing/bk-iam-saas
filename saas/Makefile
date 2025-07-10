@@ -12,7 +12,7 @@ i18n_mo:
 # 虽然使用了poetry，但是由于蓝鲸Smart应用还是依赖requirements，所以需要导出
 export_requirements:
 	poetry export -f requirements.txt --output requirements.txt --without-hashes
-	poetry export --dev -f requirements.txt --output requirements_dev.txt --without-hashes
+	poetry export --only=main,dev -f requirements.txt --output requirements_dev.txt --without-hashes
 
 init:
 	pip install -U pip setuptools
@@ -22,14 +22,13 @@ init:
 	pre-commit install
 
 lint:
-	pflake8 --config=./pyproject.toml .
+	ruff check --config=./pyproject.toml --fix --no-cache .
 	bandit -c ./pyproject.toml -r .
 	mypy --config-file=./pyproject.toml .
-	lint-imports --config .importlinter
+	lint-imports --config ./pyproject.toml
 
 fmt:
-	isort --settings-path=./pyproject.toml .
-	black --config=./pyproject.toml .
+	ruff format --config=./pyproject.toml --no-cache .
 
 test:
 	pytest -c ./pyproject.toml .

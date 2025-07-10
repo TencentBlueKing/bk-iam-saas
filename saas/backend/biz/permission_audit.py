@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from io import BytesIO
 
 import openpyxl
@@ -59,6 +60,7 @@ class QueryAuthorizedSubjects(object):
         # 系统+操作+自定义权限
         if self.permission_type == PermissionTypeEnum.CUSTOM.value:
             return self._query_by_custom()
+        return None
 
     def _query_by_custom(self):
         """
@@ -124,8 +126,7 @@ class QueryAuthorizedSubjects(object):
             "limit": self.limit,
         }
 
-        data = self.engine_svc.query_subjects_by_resource_instance(query_data=query_data)
-        return data
+        return self.engine_svc.query_subjects_by_resource_instance(query_data=query_data)
 
     def _gen_resource_instance_info(self, resource_instances):
         """
@@ -181,8 +182,7 @@ class QueryAuthorizedSubjects(object):
         export_data = self._gen_export_data()
         work_book, work_shell = ExcelHandler().fill_work_shell(export_data)
         self._fill_export_data_style(work_shell)
-        output = ExcelHandler().save_handled_work_book(work_book, filename)
-        return output
+        return ExcelHandler().save_handled_work_book(work_book, filename)
 
 
 class ExcelHandler(object):

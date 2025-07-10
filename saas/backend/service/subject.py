@@ -26,8 +26,7 @@ class SubjectService:
         冻结用户列表
         """
         data = iam.list_freezed_subjects()
-        subjects = parse_obj_as(List[Subject], data)
-        return subjects
+        return parse_obj_as(List[Subject], data)
 
     def freeze_users(self, subjects: List[Dict]):
         # def freeze_users(self, usernames: List[str]):

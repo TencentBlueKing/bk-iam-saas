@@ -23,7 +23,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
+  
 /**
  * 获取不同身份的router差异
  *
@@ -36,12 +36,14 @@ export const getRouterDiff = (payload) => {
     return [
       'userGroup',
       'createUserGroup',
+      'cloneUserGroup',
       'userGroupDetail',
       'permTemplate',
       'permTemplateCreate',
       'user',
       'permTemplateDetail',
       'administrator',
+      'systemAdministrator',
       'approvalProcess',
       'groupPermRenewal',
       'audit',
@@ -49,15 +51,25 @@ export const getRouterDiff = (payload) => {
       'permTemplateDiff',
       'addGroupPerm',
       'resourcePermiss',
-      'firstManageSpace',
       'ratingManager',
+      'gradingAdminCreate',
+      'gradingAdminClone',
+      'gradingAdminDetail',
+      'gradingAdminEdit',
       'secondaryManageSpace',
-      'authorBoundary',
       'secondaryManageSpaceCreate',
+      'secondaryManageSpaceClone',
+      'secondaryManageSpaceDetail',
+      'secondaryManageSpaceEdit',
+      'authorBoundary',
+      'authorBoundaryEditFirstLevel',
+      'authorBoundaryEditSecondLevel',
       'userGroupSetting',
       'sensitivityLevel',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
   if (payload === 'super_manager') {
@@ -72,10 +84,12 @@ export const getRouterDiff = (payload) => {
       'orgPermDetail',
       'ratingManager',
       'gradingAdminCreate',
+      'gradingAdminClone',
       'gradingAdminDetail',
+      'gradingAdminEdit',
       'user',
-      'gradingAdminUpdateTemplate',
       'administrator',
+      'systemAdministrator',
       'approval',
       'permRenewal',
       'audit',
@@ -86,16 +100,20 @@ export const getRouterDiff = (payload) => {
       'systemAccessOptimize',
       'systemAccessComplete',
       'resourcePermiss',
-      'userGroupDetail',
-      'firstManageSpace',
       'secondaryManageSpace',
       'authorBoundary',
+      'authorBoundaryEditFirstLevel',
+      'authorBoundaryEditSecondLevel',
       'myManageSpace',
       'myManageSpaceCreate',
+      'myManageSpaceClone',
       'permTransfer',
       'myManageSpaceSubDetail',
       'sensitivityLevel',
-      'resourcePermManage'
+      'resourcePermManage',
+      'renewalNotice',
+      'userOrgPerm',
+      'administrator'
     ];
   }
   if (payload === 'system_manager') {
@@ -110,11 +128,14 @@ export const getRouterDiff = (payload) => {
       'orgPermDetail',
       'ratingManager',
       'gradingAdminCreate',
+      'gradingAdminClone',
       'gradingAdminDetail',
+      'gradingAdminEdit',
       'user',
-      'gradingAdminUpdateTemplate',
+      'administrator',
       'approval',
       'permRenewal',
+      'permTransfer',
       'audit',
       'systemAccess',
       'systemAccessCreate',
@@ -122,12 +143,19 @@ export const getRouterDiff = (payload) => {
       'systemAccessRegistry',
       'systemAccessOptimize',
       'systemAccessComplete',
-      'resourcePermiss',
-      'firstManageSpace',
       'secondaryManageSpace',
+      'secondaryManageSpaceCreate',
+      'secondaryManageSpaceClone',
+      'secondaryManageSpaceDetail',
+      'secondaryManageSpaceEdit',
       'authorBoundary',
+      'authorBoundaryEditFirstLevel',
+      'authorBoundaryEditSecondLevel',
       'myManageSpace',
-      'sensitivityLevel'
+      'myManageSpaceCreate',
+      'myManageSpaceClone',
+      'renewalNotice',
+      'userOrgPerm'
     ];
   }
   if (payload === 'rating_manager') {
@@ -142,12 +170,15 @@ export const getRouterDiff = (payload) => {
       'orgPermDetail',
       'ratingManager',
       'gradingAdminCreate',
+      'gradingAdminClone',
       'gradingAdminDetail',
+      'gradingAdminEdit',
       'user',
-      'gradingAdminUpdateTemplate',
       'administrator',
+      'systemAdministrator',
       'approval',
       'permRenewal',
+      'permTransfer',
       'audit',
       'systemAccess',
       'systemAccessCreate',
@@ -157,9 +188,9 @@ export const getRouterDiff = (payload) => {
       'systemAccessComplete',
       'myManageSpace',
       'resourcePermiss',
-      'firstManageSpace',
       'sensitivityLevel',
-      'resourcePermManage'
+      'resourcePermManage',
+      'renewalNotice'
     ];
   }
   if (payload === 'subset_manager') {
@@ -174,12 +205,15 @@ export const getRouterDiff = (payload) => {
       'orgPermDetail',
       'ratingManager',
       'gradingAdminCreate',
+      'gradingAdminClone',
       'gradingAdminDetail',
+      'gradingAdminEdit',
       'user',
-      'gradingAdminUpdateTemplate',
       'administrator',
+      'systemAdministrator',
       'approval',
       'permRenewal',
+      'permTransfer',
       'audit',
       'systemAccess',
       'systemAccessCreate',
@@ -190,14 +224,18 @@ export const getRouterDiff = (payload) => {
       'resourcePermiss',
       'secondaryManageSpace',
       'secondaryManageSpaceCreate',
+      'secondaryManageSpaceClone',
       'secondaryManageSpaceDetail',
-      'firstManageSpace',
+      'secondaryManageSpaceEdit',
+      'authorBoundaryEditFirstLevel',
       'myManageSpace',
       'permTemplate',
       'userGroupSetting',
       'sensitivityLevel',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -214,6 +252,7 @@ export const getRouterDiff = (payload) => {
     'orgPermDetail',
     'userGroup',
     'createUserGroup',
+    'cloneUserGroup',
     'userGroupDetail',
     'userGroupPermDetail',
     'permTemplate',
@@ -226,10 +265,11 @@ export const getRouterDiff = (payload) => {
     'user',
     'ratingManager',
     'gradingAdminCreate',
+    'gradingAdminClone',
     'gradingAdminDetail',
     'gradingAdminEdit',
-    'gradingAdminUpdateTemplate',
     'administrator',
+    'systemAdministrator',
     'approvalProcess',
     'approval',
     'permRenewal',
@@ -243,23 +283,30 @@ export const getRouterDiff = (payload) => {
     'authorBoundaryEditSecondLevel',
     'secondaryManageSpace',
     'myManageSpace',
-    'MyManageSpaceCreate',
-    'ResourcePermManage'
+    'myManageSpaceCreate',
+    'myManageSpaceClone',
+    'resourcePermManage',
+    'resourcePermiss',
+    'sensitivityLevel',
+    'userOrgPerm',
+    'renewalNotice'
   ];
 };
 
 // 导航路由
-export const getNavRouterDiff = (navIndex) => {
+export const getNavRouterDiff = (navIndex, managerPerm = '') => {
   if (navIndex === 0 || navIndex === '') {
     return [
       'userGroup',
       'createUserGroup',
+      'cloneUserGroup',
       'userGroupDetail',
       'permTemplate',
       'permTemplateCreate',
       'user',
       'permTemplateDetail',
       'administrator',
+      'systemAdministrator',
       'approvalProcess',
       'groupPermRenewal',
       'audit',
@@ -267,14 +314,25 @@ export const getNavRouterDiff = (navIndex) => {
       'permTemplateDiff',
       'addGroupPerm',
       'resourcePermiss',
-      'firstManageSpace',
       'ratingManager',
+      'gradingAdminCreate',
+      'gradingAdminClone',
+      'gradingAdminDetail',
+      'gradingAdminEdit',
       'authorBoundary',
+      'authorBoundaryEditFirstLevel',
+      'authorBoundaryEditSecondLevel',
       'secondaryManageSpace',
+      'secondaryManageSpaceCreate',
+      'secondaryManageSpaceClone',
+      'secondaryManageSpaceDetail',
+      'secondaryManageSpaceEdit',
       'userGroupSetting',
       'sensitivityLevel',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
 
@@ -292,6 +350,7 @@ export const getNavRouterDiff = (navIndex) => {
       'orgPermDetail',
       'userGroup',
       'createUserGroup',
+      'cloneUserGroup',
       'userGroupDetail',
       'userGroupPermDetail',
       'permTemplate',
@@ -304,33 +363,42 @@ export const getNavRouterDiff = (navIndex) => {
       'user',
       'ratingManager',
       'gradingAdminCreate',
+      'gradingAdminClone',
       'gradingAdminDetail',
       'gradingAdminEdit',
-      'gradingAdminUpdateTemplate',
       'administrator',
+      'systemAdministrator',
       'approvalProcess',
       'approval',
       'permRenewal',
+      'permTransfer',
       'groupPermRenewal',
       'permTemplateEdit',
       'permTemplateDiff',
       'addGroupPerm',
       'resourcePermiss',
-      'firstManageSpace',
       'authorBoundary',
-      'secondaryManageSpace',
+      'authorBoundaryEditFirstLevel',
+      'authorBoundaryEditSecondLevel',
       'myManageSpace',
+      'myManageSpaceCreate',
+      'myManageSpaceClone',
+      'secondaryManageSpace',
       'secondaryManageSpaceCreate',
+      'secondaryManageSpaceClone',
       'secondaryManageSpaceDetail',
+      'secondaryManageSpaceEdit',
       'userGroupSetting',
       'sensitivityLevel',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
 
   if (navIndex === 3) {
-    return [
+    const menuList = [
       'applyCustomPerm',
       'applyProvisionPerm',
       'applyJoinUserGroup',
@@ -341,6 +409,7 @@ export const getNavRouterDiff = (navIndex) => {
       'orgPermDetail',
       'approval',
       'permRenewal',
+      'permTransfer',
       'systemAccess',
       'systemAccessCreate',
       'systemAccessAccess',
@@ -350,20 +419,52 @@ export const getNavRouterDiff = (navIndex) => {
       'audit',
       'userGroup',
       'createUserGroup',
+      'cloneUserGroup',
       'userGroupDetail',
       'userGroupPermDetail',
       'permTemplate',
       'permTemplateDetail',
       'permTemplateCreate',
-      'approvalProcess',
-      'authorBoundary',
-      'secondaryManageSpace',
       'myManageSpace',
+      'myManageSpaceCreate',
+      'myManageSpaceClone',
+      'secondaryManageSpace',
       'secondaryManageSpaceCreate',
+      'secondaryManageSpaceClone',
       'secondaryManageSpaceDetail',
+      'secondaryManageSpaceEdit',
+      'authorBoundary',
+      'authorBoundaryEditFirstLevel',
+      'authorBoundaryEditSecondLevel',
+      'permTemplateEdit',
+      'permTemplateDiff',
+      'addGroupPerm',
+      'groupPermRenewal',
       'userGroupSetting',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm',
+      'systemAdministrator'
     ];
+    if (['hasSystemNoSuperManager'].includes(managerPerm)) {
+      // 非超管用户隐藏的路由
+      const hideMenuList = [
+        'user',
+        'approvalProcess',
+        'ratingManager',
+        'gradingAdminCreate',
+        'gradingAdminClone',
+        'gradingAdminDetail',
+        'gradingAdminEdit',
+        'renewalNotice',
+        'systemAdministrator'
+      ];
+      const systemManagerMenu = [
+        ...menuList,
+        ...hideMenuList
+      ];
+      return systemManagerMenu;
+    }
+    return menuList;
   }
 };

@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 from typing import Dict
 
@@ -19,7 +20,7 @@ from backend.util.url import url_join
 
 from .constants import ComponentEnum
 from .http import http_get, http_post
-from .util import do_blueking_http_request
+from .util import do_blueking_http_request, remove_notification_exemption_user
 
 
 def _call_esb_api(http_func, url_path, data, timeout=30, request_session=None):
@@ -49,6 +50,11 @@ def get_api_public_key() -> Dict:
 
 def send_mail(username, title, content, body_format="Html"):
     """发送邮件"""
+    # 移除豁免的用户，如果为空，则直接返回
+    username = ",".join(remove_notification_exemption_user(username.split(",")))
+    if not username:
+        return None
+
     url_path = "/api/c/compapi/cmsi/send_mail/"
     data = {"receiver__username": username, "title": title, "content": content, "body_format": body_format}
     return _call_esb_api(http_post, url_path, data=data)

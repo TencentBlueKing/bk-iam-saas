@@ -1,5 +1,5 @@
 <template>
-  <div class="template-resource-instance-table-wrapper">
+  <div class="iam-resource-instance-table-wrapper">
     <div :class="[
            'iam-resource-expand'
          ]"
@@ -75,15 +75,6 @@
               </template>
               <template v-else>
                 {{ $t(`m.common['无需关联实例']`) }}
-              </template>
-              <Icon
-                type="detail-new"
-                class="view-icon"
-                :title="$t(`m.common['详情']`)"
-                v-if="isShowView(row)"
-                @click.stop="handleViewResource(row)" />
-              <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
-                <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
               </template>
             </template>
             <template v-else>
@@ -185,9 +176,9 @@
       :width="resourceSliderWidth"
       quick-close
       transfer
-      :ext-cls="'relate-instance-sideslider'"
+      ext-cls="related-instance-slider"
       @update:isShow="handleResourceCancel('mask')">
-      <div slot="content" class="sideslider-content">
+      <div slot="content" class="slider-content">
         <render-resource
           ref="renderResourceRef"
           :data="condition"
@@ -207,7 +198,6 @@
           data-test-id="group_btn_resourceInstanceSubmit">
           {{ $t(`m.common['保存']`) }}
         </bk-button>
-        <bk-button style="margin-left: 10px;" :disabled="disabled" v-if="isShowPreview" @click="handleResourcePreview">{{ $t(`m.common['预览']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
@@ -382,6 +372,8 @@
         selectedIndex: 0,
         instanceKey: '',
         curCopyDataId: '',
+        curSystemActions: [],
+        relatedActionsList: [],
         emptyResourceGroupsList: [],
         isExpandTable: false,
         isAggregateEmptyMessage: false,
@@ -457,12 +449,6 @@
                 .related_resource_types[this.curResIndex];
             return curData.selectionMode;
         },
-        isShowPreview () {
-            if (this.curIndex === -1) {
-                return false;
-            }
-            return this.tableList[this.curIndex].policy_id !== '';
-        },
         isShowView () {
             return (payload) => {
                 return !payload.isEmpty;
@@ -470,9 +456,6 @@
         },
         isCreateMode () {
             return this.mode === 'create';
-        },
-        isUserGroupDetail () {
-            return this.$route.name === 'userGroupDetail';
         },
         curSelectionCondition () {
             if (this.curIndex === -1) {
@@ -707,14 +690,14 @@
         // eslint-disable-next-line max-len
         const actions = (scopeAction && scopeAction.filter(item => payload.map(_ => _.id).includes(item.id))) || [];
         const conditions = actions.map(
-          item => item.resource_groups[0].related_resource_types[0].condition
+          item => item.resource_groups && item.resource_groups[0].related_resource_types[0].condition
         ).filter(_ => _.length > 0);
         if (conditions.length < 1) {
           return [];
         }
         const instances = actions.map(item => {
-          const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
-            && item.resource_groups[0].related_resource_types[0].condition[0].instances;
+          const instancesItem = item.resource_groups && item.resource_groups[0].related_resource_types[0].condition[0]
+            && item.resource_groups && item.resource_groups[0].related_resource_types[0].condition[0].instances;
           return (instancesItem && instancesItem.filter(e => e.type === id)) || [];
         });
         const tempData = [];
@@ -723,11 +706,13 @@
         let resourceList = instances
           .map(item => item[0] && item[0].path)
           .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
-          .flat(2);
+          .flat(Infinity);
         resourceList = resourceList.filter(item => item !== undefined);
         resources.forEach(item => {
           item && item.forEach(subItem => {
-            const hasIntersectionResource = resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            const hasIntersectionResource = resources.every((v) =>
+              v && v.some(vItem => vItem[0] === subItem[0])
+            );
             const hasResource = resources.find(v => v && v.some(vItem => vItem[0] === subItem[0]));
             if (hasIntersectionResource) {
               tempData.push(subItem[0]);
@@ -738,7 +723,9 @@
             }
           });
         });
-        if (instances.length !== actions.length) {
+        // 如果instances数量与actions数量不一致，则代表聚合的操作有存在空的资源实例
+        const hasActionInstance = instances.filter((v) => v.length > 0);
+        if (hasActionInstance.length !== actions.length) {
           return [];
         }
         const curResource = [...new Set(tempData)];
@@ -973,6 +960,126 @@
       handleOnInit (payload) {
         this.disabled = !payload;
       },
+      handleRelatedAction (payload) {
+        if (payload.length < 1) {
+          return;
+        }
+        let hasScopeData = true;
+        let scopeInsList = [];
+        let scopeInstanceList = [];
+        let scopeAttributeList = [];
+        payload.forEach(item => {
+          const curIndex = this.tableList.findIndex(sub =>
+            sub.id === item.id && item.resource_groups[this.curGroupIndex]
+          );
+          if (curIndex > -1) {
+            const { isTemplate, detail } = this.tableList[curIndex];
+            const systemId = this.isCreateMode && detail ? detail.system.id : this.systemId;
+            const scopeAction = this.authorization[systemId] || [];
+            const curScopeAction = _.cloneDeep(scopeAction.find((scopeItem) => scopeItem.id === item.id));
+            // 如果有授权边界判断授权范围是否包含有关联实例
+            if (curScopeAction && curScopeAction.resource_groups) {
+              curScopeAction.resource_groups.forEach((curScopeActionItem) => {
+                curScopeActionItem.related_resource_types.forEach((related) => {
+                  if (related.condition.length) {
+                    related.condition.forEach((resource) => {
+                      // 获取授权范围内的所有实例、属性数据
+                      const { instance, instances, attributes } = resource;
+                      const resourceInstance = instance || instances;
+                      scopeInstanceList = resourceInstance.map(item => item.path).flat(Infinity) || [];
+                      scopeAttributeList = _.cloneDeep(attributes);
+                    });
+                  }
+                });
+              });
+              if (scopeInstanceList && scopeInstanceList.length > 0) {
+                scopeInsList = scopeInstanceList.map((scopeIns) => `${scopeIns.id}&${scopeIns.name}&${scopeIns.type}`);
+              }
+              item.resource_groups && item.resource_groups.forEach((v) => {
+                v.related_resource_types.forEach((related) => {
+                  if (related.condition.length) {
+                    related.condition.forEach((resource) => {
+                      resource.instances.forEach((ins) => {
+                        ins.path.forEach((p, pathIndex) => {
+                          if (p.length > 0) {
+                            // 处理授权范围是父级，但是选择了子集数据，需要查找所选数据是不是属于授权范围内的子集数据
+                            // let curParentChain = [];
+                            // const tempPath = p.filter(v => v.id !== '*');
+                            // if (tempPath.length) {
+                            //   curParentChain = tempPath.slice(0, tempPath.length - 1);
+                            // }
+                            const curParentChain = p.slice(0, p.length - 1);
+                            // 判断授权范围是不是父级数据
+                            const isExistParent = curParentChain.filter((subPath) => scopeInsList.includes(`${subPath.id}&${subPath.name}&${subPath.type}`));
+                            // 只获取授权范围内的资源实例
+                            ins.path[pathIndex] = p.filter((subPath) => scopeInsList.includes(`${subPath.id}&${subPath.name}&${subPath.type}`) || isExistParent.length > 0);
+                          }
+                        });
+                        // 因为path链路是多维数组且无法确定链路数量，所以这里需要过滤掉空数组
+                        ins.path = ins.path.filter((p) => p && p.length > 0);
+                        if (ins.paths) {
+                          ins.paths = _.cloneDeep(ins.path);
+                        }
+                      });
+                      // 这里会存在path的内容不在授权范围内会被过滤掉，而path内容是必填项
+                      resource.instances = resource.instances.filter((k) => k.path && k.path.length > 0);
+                      if (resource.attributes && resource.attributes.length > 0
+                        && scopeAttributeList && scopeAttributeList.length > 0
+                      ) {
+                        const scopeAttrList = scopeAttributeList.map((scopeAttr) => `${scopeAttr.id}&${scopeAttr.name}`);
+                        const scopeAttrValues = scopeAttributeList.map((scopeAttr) => scopeAttr.values);
+                        resource.attributes = resource.attributes.filter((attr) => {
+                          if (scopeAttrList.includes(`${attr.id}&${attr.name}`)) {
+                            attr.values = attr.values.filter((k) => scopeAttrValues.map((p) => `${p.id}&${p.name}`).includes(`${k.id}&${k.name}`));
+                          }
+                        });
+                      }
+                      // 如果有授权范围且没有范围内的实例和属性，清空instance和attribute
+                      const isNoInstance = resource.instances.every((ins) => ins.path && ins.path.length === 0);
+                      if (isNoInstance) {
+                        resource.instances = [];
+                      }
+                      const hasCondition = related.condition.filter((k) =>
+                        (k.instances && k.instances.length > 0) || (k.attributes && k.attributes.length > 0));
+                      if (!hasCondition.length) {
+                        related.condition = ['none'];
+                      }
+                    });
+                  }
+                });
+              });
+              // 判断是否有授权范围的数据
+              hasScopeData = item.resource_groups[this.curGroupIndex].related_resource_types.some((v) => v.condition.length > 0 && v.condition[0] !== 'none');
+            }
+            if (hasScopeData) {
+              this.tableList.splice(
+                curIndex,
+                1,
+                new GroupPolicy(
+                  {
+                    ...item,
+                    tag: 'add',
+                    isShowRelatedText: true
+                  },
+                  '',
+                  isTemplate ? 'template' : 'custom',
+                  // new GroupPolicy 最后一个参数是 detail 就是 this.tableList[curIndex].detail
+                  Object.assign({}, detail, {
+                    system: {
+                      id: detail.system.id,
+                      name: detail.system.name
+                    },
+                    // 此 id 会在 handleSpanMethod 方法中使用到，合并单元格的依据，使用 CUSTOM_PERM_TEMPLATE_ID 会导致问题
+                    // id: CUSTOM_PERM_TEMPLATE_ID
+                    id: isTemplate ? detail.id : CUSTOM_PERM_TEMPLATE_ID
+                  }),
+                  true
+                )
+              );
+            }
+          }
+        });
+      },
       async showResourceInstance (data, index, resItem, resIndex, groupIndex) {
         window.changeDialog = true;
         this.params = {
@@ -1005,18 +1112,19 @@
           delete item.instance;
           delete item.attribute;
         });
-        const curData = _.cloneDeep(this.tableList[this.curIndex]);
+        const tableList = _.cloneDeep(this.tableList);
+        const curData = _.cloneDeep(tableList[this.curIndex]);
         // eslint-disable-next-line max-len
         curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex]];
         curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload;
-        const relatedList = _.cloneDeep(this.tableList.filter(item => {
+        const relatedList = tableList.filter(item => {
           return !item.isAggregate
             && relatedActions.includes(item.id)
             && curData.detail.system.id === item.detail.system.id
             && item.resource_groups[this.curGroupIndex]
             && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty);
-        }));
+        });
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
             delete item.policy_id;
@@ -1034,7 +1142,10 @@
         curData.resource_groups = curData.resource_groups.filter(item => item.related_resource_types);
         const targetPolicies = relatedList.filter(item =>
           item.resource_groups[this.curGroupIndex].related_resource_types
-          && item.resource_groups[this.curGroupIndex].related_resource_types.length);
+          && item.resource_groups[this.curGroupIndex].related_resource_types.length
+          && (item.resource_groups[this.curGroupIndex].related_resource_types[0].condition.length === 0
+            || item.resource_groups[this.curGroupIndex].related_resource_types[0].condition.some(
+              (v) => v.instances.length > 0 || v.attributes.length > 0)));
         try {
           const res = await this.$store.dispatch('permApply/getRelatedPolicy', {
             source_policy: curData,
@@ -1058,39 +1169,18 @@
           this.messageAdvancedError(e);
         }
       },
-      handleRelatedAction (payload) {
-        if (payload.length < 1) {
-          return;
+      async fetchActions (systemId) {
+        const params = {
+          system_id: systemId,
+          user_id: this.user.username
+        };
+        try {
+          const { data } = await this.$store.dispatch('permApply/getActions', params);
+          this.curSystemActions = _.cloneDeep(data || []);
+          this.handleActionLinearData();
+        } catch (e) {
+          this.messageAdvancedError(e);
         }
-        payload.forEach(item => {
-          const curIndex = this.tableList.findIndex(sub => sub.id === item.id
-            && item.resource_groups[this.curGroupIndex]
-            && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
-              .related_resource_types[0].system_id);
-          if (curIndex > -1) {
-            const old = this.tableList[curIndex];
-            this.tableList.splice(curIndex, 1, new GroupPolicy(
-              {
-                                ...item,
-                                tag: 'add',
-                                isShowRelatedText: true
-              },
-              '',
-              old.isTemplate ? 'template' : 'custom',
-              // new GroupPolicy 最后一个参数是 detail 就是 this.tableList[curIndex].detail
-              Object.assign({}, old.detail, {
-                system: {
-                  id: this.tableList[curIndex].detail.system.id,
-                  name: this.tableList[curIndex].detail.system.name
-                },
-                // 此 id 会在 handleSpanMethod 方法中使用到，合并单元格的依据，使用 CUSTOM_PERM_TEMPLATE_ID 会导致问题
-                // id: CUSTOM_PERM_TEMPLATE_ID
-                id: old.isTemplate ? this.tableList[curIndex].detail.id : CUSTOM_PERM_TEMPLATE_ID
-              }),
-              true
-            ));
-          }
-        });
       },
       // 保存
       async handleResourceSumit () {
@@ -1109,13 +1199,28 @@
         if (isConditionEmpty) {
           resItem.condition = ['none'];
         } else {
-          const { isMainAction, related_actions } = this.tableList[this.curIndex];
+          const { isMainAction, related_actions, id, system_id: curSystemId } = this.tableList[this.curIndex];
+          resItem.condition = data;
+          resItem.isError = false;
           // 如果为主操作
           if (isMainAction) {
             await this.handleMainActionSubmit(data, related_actions);
           }
-          resItem.condition = data;
-          resItem.isError = false;
+          // 如果没有变更实例，则从actions接口重新拉取最新的关联实例
+          if (!isMainAction && curSystemId) {
+            await this.fetchActions(curSystemId);
+            if (this.relatedActionsList.length) {
+              const policyIdList = this.tableList.map(v => v.id);
+              const linearActionList = this.relatedActionsList.filter(item => policyIdList.includes(item.id));
+              const curActions = linearActionList.filter(item => item.id === id);
+              if (curActions.length) {
+                const relatedList = curActions.map((v) => v.related_actions);
+                if (relatedList.length) {
+                  await this.handleMainActionSubmit(data, relatedList);
+                }
+              }
+            }
+          }
         }
         window.changeAlert = false;
         this.resourceInstanceSidesliderTitle = '';
@@ -1131,39 +1236,19 @@
         //     this.$emit('handleAggregateAction', false)
         // }
       },
-      handleResourcePreview () {
-        // debugger
-        window.changeDialog = true;
-        // eslint-disable-next-line max-len
-        const { system_id, type, name } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex].related_resource_types[this.curResIndex];
-        const condition = [];
-        const conditionData = this.$refs.renderResourceRef.handleGetPreviewValue();
-        conditionData.forEach(item => {
-          const { id, attribute, instance } = item;
-          condition.push({
-            id,
-            attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
-            instances: instance ? instance.filter(item => item.path.length > 0) : []
+      handleActionLinearData () {
+        const linearActions = [];
+        this.curSystemActions.forEach((item) => {
+          item.actions.forEach(act => {
+            linearActions.push(act);
+          });
+          (item.sub_groups || []).forEach(sub => {
+            sub.actions.forEach(act => {
+              linearActions.push(act);
+            });
           });
         });
-        this.previewResourceParams = {
-          id: this.templateId,
-          action_id: this.tableList[this.curIndex].id,
-          related_resource_type: {
-            system_id,
-            type,
-            name,
-            condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
-          },
-          reverse: true,
-          groupId: this.groupId,
-          policy_id: this.tableList[this.curIndex].policy_id,
-          resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
-          isTemplate: this.tableList[this.curIndex].isTemplate,
-          isNotLimit: conditionData.length === 0
-        };
-        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}` });
-        this.isShowPreviewDialog = true;
+        this.relatedActionsList = _.cloneDeep(linearActions);
       },
       handlerConditionMouseover (payload) {
         if (Object.keys(this.curCopyParams).length < 1 && this.curCopyMode === 'normal') {
@@ -1986,147 +2071,6 @@
     }
   };
 </script>
-
-<style lang="postcss">
-    .template-resource-instance-table-wrapper {
-        min-height: 101px;
-        .bk-table {
-            width: 100%;
-            margin-top: 8px;
-            border-right: none;
-            border-bottom: none;
-            font-size: 12px;
-            &.is-detail-view {
-                .bk-table-body-wrapper {
-                    .cell {
-                        padding: 20px !important;
-                    }
-                }
-            }
-            .bk-table-header-wrapper {
-                th:first-child .cell {
-                    padding-left: 20px;
-                }
-            }
-            .bk-table-body-wrapper {
-                .cell {
-                    .view-icon {
-                        display: none;
-                        position: absolute;
-                        top: 50%;
-                        right: 30px;
-                        transform: translate(0, -50%);
-                        font-size: 18px;
-                        cursor: pointer;
-                    }
-                    &:hover {
-                        .view-icon {
-                            display: inline-block;
-                            color: #3a84ff;
-                        }
-                    }
-                }
-            }
-            .bk-table-body {
-                tr {
-                    &:hover {
-                        background-color: transparent;
-                        & > td {
-                            background-color: transparent;
-                        }
-                        .remove-icon {
-                            display: inline-block;
-                        }
-                    }
-                }
-                td:first-child .cell,
-                th:first-child .cell {
-                    /* padding-left: 15px; */
-                    padding-left: 10px;
-                }
-                .iam-new-action {
-                    display: inline-block;
-                    position: relative;
-                    top: 3px;
-                    width: 24px;
-                    vertical-align: top;
-                }
-            }
-            .relation-content-wrapper,
-            .conditions-wrapper {
-                position: relative;
-                height: 100%;
-                padding: 17px 0;
-                color: #63656e;
-                .resource-type-name {
-                    display: block;
-                    margin-bottom: 9px;
-                }
-                .iam-condition-item {
-                    width: 90%;
-                }
-            }
-            .remove-icon {
-                /* display: none; */
-                position: absolute;
-                /* top: 5px; */
-                top: 5px;
-                right: 0;
-                cursor: pointer;
-                &:hover {
-                    color: #3a84ff;
-                }
-                i {
-                    font-size: 20px;
-                }
-            }
-            .relation-content-item {
-                margin-top: 17px;
-                &:first-child {
-                    margin-top: 0;
-                }
-                &.reset-margin-top {
-                    margin-top: 10px;
-                }
-                .content-name {
-                    margin-bottom: 9px;
-                }
-            }
-            .action-name {
-                margin-left: 6px;
-                display: inline-block;
-                vertical-align: bottom;
-                word-wrap: break-word;
-                word-break: break-all;
-            }
-            .conditions-item {
-                margin-top: 7px;
-                &:first-child {
-                    margin-top: 0;
-                }
-            }
-        }
-    }
-    .relate-instance-sideslider {
-        .sideslider-content {
-            height: calc(100vh - 114px);
-        }
-        .bk-sideslider-footer {
-            background-color: #f5f6fa!important;
-            border-color: #dcdee5!important;
-        }
-    }
-    .error-tips {
-        position: absolute;
-        line-height: 16px;
-        font-size: 10px;
-        color: #ea3636;
-    }
-
-    .tab-button{
-        margin: 10px 0;
-    }
-</style>
 
 <style lang="postcss" scoped>
 @import '@/css/mixins/space-resource-instance-table.css';

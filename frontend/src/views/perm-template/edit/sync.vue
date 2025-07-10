@@ -251,7 +251,8 @@
         prevLoading: false,
         curCopyParams: {},
         resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
-          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7),
+        permStorageMap: null
       };
     },
     computed: {
@@ -383,6 +384,7 @@
     },
     created () {
       this.curCopyKey = '';
+      this.permStorageMap = new Map();
       this.fetchData();
       this.fetchAuthorizationScopeActions();
     },
@@ -392,6 +394,9 @@
       });
       window.addEventListener('resize', (this.formatFormItemWidth));
     },
+    beforeDestroy () {
+      this.permStorageMap = null;
+    },
     methods: {
       formatFormItemWidth () {
         this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
@@ -400,40 +405,47 @@
       
       async fetchData () {
         try {
-          const res = await this.$store.dispatch('permTemplate/getGroupsPreview', {
-            id: this.id,
-            data: {
-              limit: this.pagination.limit,
-              offset: this.pagination.limit * (this.pagination.current - 1)
-            }
-          });
-          this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
-          this.tableList = _.cloneDeep(res.data.results);
-          this.tableList.forEach((item, index) => {
-            if (this.addAction.length > 0) {
-              this.$set(item, 'add_actions', _.cloneDeep(this.addAction));
-              item.add_actions = item.add_actions.map(act => {
+          if (this.permStorageMap && this.permStorageMap.get(this.pagination.current)) {
+            this.tableList = this.permStorageMap.get(this.pagination.current);
+          } else {
+            this.requestQueue = ['group'];
+            const res = await this.$store.dispatch('permTemplate/getGroupsPreview', {
+              id: this.id,
+              data: {
+                limit: this.pagination.limit,
+                offset: this.pagination.limit * (this.pagination.current - 1)
+              }
+            });
+            this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+            this.tableList = _.cloneDeep(res.data.results);
+            this.tableList.forEach((item, index) => {
+              if (this.addAction.length > 0) {
+                this.$set(item, 'add_actions', _.cloneDeep(this.addAction));
+                item.add_actions = item.add_actions.map(act => {
+                  if (!act.resource_groups || !act.resource_groups.length) {
+                    act.resource_groups = act.related_resource_types && act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
+                  }
+                  return new SyncPolicy({ ...act, tag: 'add' }, 'add');
+                });
+              }
+              item.delete_actions = item.delete_actions.map(act => {
                 if (!act.resource_groups || !act.resource_groups.length) {
                   act.resource_groups = act.related_resource_types && act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
                 }
                 return new SyncPolicy({ ...act, tag: 'add' }, 'add');
               });
-            }
-            item.delete_actions = item.delete_actions.map(act => {
-              if (!act.resource_groups || !act.resource_groups.length) {
-                act.resource_groups = act.related_resource_types && act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
-              }
-              return new SyncPolicy({ ...act, tag: 'add' }, 'add');
             });
-          });
+          }
           this.setTableProps();
           this.originalList = _.cloneDeep(this.tableList);
           this.isLastPage = this.pagination.current === this.pagination.totalPage;
-          this.$emit('on-all-submit', this.pagination.current === this.pagination.totalPage);
+          this.$emit('on-all-submit', this.isLastPage || this.permStorageMap.get(this.pagination.current));
+          window.changeDialog = true;
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
         } finally {
+          this.nextLoading = false;
           this.requestQueue.shift();
         }
       },
@@ -494,10 +506,21 @@
       getData () {
         let flag = false;
         let isNoAdd = false;
+        let emptyIndex = -1;
         const groups = [];
-        this.tableList.forEach(groupItem => {
-          const actionList = []
-          ;(groupItem.add_actions || []).forEach(item => {
+        let tableList = [];
+        // 优先从缓存里取数据
+        if (this.permStorageMap.size > 0) {
+          for (const item of this.permStorageMap.values()) {
+            tableList.push(item);
+          }
+          tableList = tableList.flat(Infinity);
+        } else {
+          tableList = this.tableList;
+        }
+        tableList.forEach((groupItem, groupIndex) => {
+          const actionList = [];
+          (groupItem.add_actions || []).forEach(item => {
             const { type, id, name, environment, description } = item;
             const relatedResourceTypes = [];
             const groupResourceTypes = [];
@@ -508,6 +531,7 @@
                     if (resItem.empty) {
                       resItem.isError = true;
                       flag = true;
+                      emptyIndex = groupIndex + 1;
                     }
                     const conditionList = (resItem.condition.length > 0 && !resItem.empty)
                       ? resItem.condition.map(conItem => {
@@ -580,52 +604,52 @@
         return {
           flag,
           groups,
-          isNoAdd
+          isNoAdd,
+          emptyIndex
         };
       },
 
       handlePrevPage () {
-        window.changeDialog = true;
+        this.permStorageMap.set(this.pagination.current, this.tableList);
         if (this.pagination.current > 1) {
           --this.pagination.current;
         }
-        this.requestQueue = ['group'];
         this.fetchData();
       },
 
       async handleNextPage () {
-        window.changeDialog = true;
-        if (this.isAddActionEmpty) {
-          if (this.pagination.current < this.pagination.totalPage) {
-            ++this.pagination.current;
-            this.requestQueue = ['group'];
-            this.fetchData();
+        if (this.pagination.current < this.pagination.totalPage) {
+          this.permStorageMap.set(this.pagination.current, this.tableList);
+          ++this.pagination.current;
+          if (!this.permStorageMap.get(this.pagination.current)) {
+            this.nextLoading = true;
           }
-          return;
+          await this.fetchData();
+          this.permStorageMap.set(this.pagination.current, this.tableList);
         }
-        const { groups, flag } = this.getData();
-        if (flag) {
-          return;
-        }
-        this.nextLoading = true;
-        try {
-          await this.$store.dispatch('permTemplate/preGroupSync', {
-            id: this.id,
-            data: {
-              groups
-            }
-          });
-          if (this.pagination.current < this.pagination.totalPage) {
-            ++this.pagination.current;
-            this.requestQueue = ['group'];
-            this.fetchData();
-          }
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        } finally {
-          this.nextLoading = false;
-        }
+        // const { groups, flag } = this.getData();
+        // if (flag) {
+        //   return;
+        // }
+        // this.nextLoading = true;
+        // try {
+        //   await this.$store.dispatch('permTemplate/preGroupSync', {
+        //     id: this.id,
+        //     data: {
+        //       groups
+        //     }
+        //   });
+        //   if (this.pagination.current < this.pagination.totalPage) {
+        //     ++this.pagination.current;
+        //     this.requestQueue = ['group'];
+        //     this.fetchData();
+        //   }
+        // } catch (e) {
+        //   console.error(e);
+        //   this.messageAdvancedError(e);
+        // } finally {
+        //   this.nextLoading = false;
+        // }
       },
 
       async handleReferInstance (resItem, act, row, index, $index) {
@@ -978,6 +1002,7 @@
     .iam-template-sync-wrapper {
         min-height: 200px;
         .iam-template-sync-table-cls {
+            border-bottom: 0;
             .relation-content-wrapper {
                 height: 100%;
                 padding: 17px 0;

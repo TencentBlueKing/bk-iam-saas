@@ -36,7 +36,7 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t(`m.set['更多权限设置']`)">
+        <!-- <bk-table-column :label="$t(`m.set['更多权限设置']`)">
           <template slot-scope="{ row }">
             <bk-checkbox
               :true-value="true"
@@ -47,8 +47,8 @@
               {{ $t(`m.set['拥有蓝鲸平台所有操作权限']`) }}
             </bk-checkbox>
           </template>
-        </bk-table-column>
-        <bk-table-column :label="$t(`m.common['操作']`)" width="120">
+        </bk-table-column> -->
+        <bk-table-column :label="$t(`m.common['操作-table']`)" width="120">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit">
               <bk-button
@@ -75,7 +75,7 @@
             <template v-else>
               <iam-popover-confirm
                 :title="$t(`m.set['确定删除该超级管理员']`)"
-                :confirm-handler="() => handleDelete(row, $index)">
+                :confirm-handler="(e) => handleDelete(e, row, $index)">
                 <bk-button
                   theme="primary"
                   text>
@@ -185,6 +185,9 @@
 
       async fetchSuperManager () {
         this.$emit('data-ready', false);
+        if (!['super_manager'].includes(this.user.role.type)) {
+          return;
+        }
         try {
           const { code, data } = await this.$store.dispatch('role/getSuperManager');
           const tempArr = [];
@@ -269,11 +272,12 @@
         });
       },
 
-      async handleDelete (payload, index) {
+      async handleDelete (e, payload, index) {
         const username = payload.user[0];
         try {
           this.$store.dispatch('role/deleteSuperManager', { username });
           this.superUserList.splice(index, 1);
+          e && e.hide();
           this.messageSuccess(this.$t(`m.common['操作成功']`));
           if (username === this.user.username) {
             bus.$emit('refresh-role', {

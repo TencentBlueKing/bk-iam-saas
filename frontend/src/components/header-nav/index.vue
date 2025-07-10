@@ -2,15 +2,16 @@
   <!-- eslint-disable max-len -->
   <header class="header-nav-layout">
     <div :class="['logo', 'fl']" @click.stop="handleBackHome">
-      <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
-      <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
+      <!-- <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" /> -->
+      <img :src="appLogo" :alt="$t(`m.nav['蓝鲸权限中心']`)">
+      <span class="text">{{ appName }}</span>
     </div>
     <div class="header-breadcrumbs fl">
       <div class="nav-container">
         <span v-for="(item, i) in navData" :key="i">
           <h2
             v-if="item.show"
-            class="heaer-nav-title"
+            class="header-nav-title"
             @click="handleSelect(item, i)"
             :class="index === i ? 'active' : ''"
           >
@@ -29,7 +30,7 @@
     </div>
     <div class="user fr">
       <div class="help-flag">
-        <Icon type="help-fill" style="color: #979ba5" />
+        <Icon type="help-fill" />
         <div :class="[
           'dropdown-panel',
           { 'lang-dropdown-panel': !curLanguageIsCn }
@@ -40,6 +41,9 @@
           </div>
           <div class="item" @click="handleOpenQuestion">
             {{ $t(`m.common['问题反馈']`) }}
+          </div>
+          <div class="item" @click="handleOpenSource">
+            {{ $t(`m.common['开源社区']`) }}
           </div>
         </div>
       </div>
@@ -121,13 +125,13 @@
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
-  import { buildURLParams } from '@/common/url';
-  import { formatI18nKey, jsonpRequest } from '@/common/util';
+  import { formatI18nKey, jsonpRequest, getManagerMenuPerm, navDocCenterPath } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
-  import SystemLog from '../system-log';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
-  import Cookie from 'js-cookie';
+  import SystemLog from '../system-log';
+  import Cookies from 'js-cookie';
   import magicbox from 'bk-magic-vue';
+  import logoSvg from '@/images/logo.svg';
 
   // 有选项卡的页面，user-group-detail 以及 perm-template-detail
   const getTabData = (routerName) => {
@@ -168,42 +172,8 @@
     };
   };
 
-  const NORMAL_DOCU_LINK = '/IAM/UserGuide/Introduce/README.md';
-  // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
-
-  const docuLinkMap = new Map([
-    // 权限模板
-    [['permTemplate', 'permTemplateDetail', 'permTemplateCreate'], NORMAL_DOCU_LINK],
-    // 首页
-    [['', 'index'], NORMAL_DOCU_LINK],
-    // 用户组
-    [
-      ['userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'],
-      NORMAL_DOCU_LINK
-    ],
-    // 系统接入
-    [['systemAccess'], NORMAL_DOCU_LINK],
-    // 我的申请
-    [['apply'], NORMAL_DOCU_LINK],
-    // 权限申请 'permApply'
-    [['applyCustomPerm', 'applyJoinUserGroup'], NORMAL_DOCU_LINK],
-    // 我的权限
-    [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal'], NORMAL_DOCU_LINK],
-    // 管理空间
-    [
-      ['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
-      NORMAL_DOCU_LINK
-    ],
-    // 管理员
-    [['administrator'], NORMAL_DOCU_LINK],
-    // 审批流程
-    [['approvalProcess'], NORMAL_DOCU_LINK],
-    // 用户
-    [['user'], NORMAL_DOCU_LINK]
-  ]);
-
   export default {
-    name: '',
+    inject: ['reloadCurPage'],
     components: {
       SystemLog
       // IamGuide
@@ -248,19 +218,18 @@
         getTabData: getTabData,
         curRoleList: [],
         searchValue: '',
-        docuLinkMap: docuLinkMap,
-        curDocuLink: `${window.BK_DOCS_URL_PREFIX}${NORMAL_DOCU_LINK}`,
         showGuide: false,
         isShowHeader: false,
         placeholderValue: '',
         userGroupName: '',
         navData: [
-          { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: 'staff' },
-          { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: 'all_manager' },
-          { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
-          { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
+          { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: ['staff'] },
+          { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: ['all_manager'] },
+          { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: ['super_manager'] },
+          { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: ['super_manager'] }
         ],
         defaultRouteList: ['myPerm', 'userGroup', 'audit', 'user', 'addGroupPerm'],
+        systemNoSuperList: ['myPerm', 'userGroup', 'audit', 'resourcePermiss', 'addGroupPerm'],
         isRatingChange: false,
         haveManager: false,
         showNavDataLength: 0,
@@ -274,39 +243,52 @@
             label: 'English',
             value: 'en'
           }
-        ]
+        ],
+        curFromName: ''
       };
     },
     computed: {
-            ...mapGetters([
-            'navStick',
-            'headerTitle',
-            'backRouter',
-            'user',
-            'mainContentLoading',
-            'roleList',
-            'index',
-            'navCurRoleId',
-            'externalSystemId'
-            ]),
-            style () {
-                return {
-                    // height: `${this.roleList.length ? this.curHeight : 46}px`
-                    height: `46px`
-                };
-            },
-            curAccountLogo () {
-                return [].slice.call(this.user.username)[0].toUpperCase() || '-';
-            },
-            isHide () {
-                return this.$route.query.system_id && this.$route.query.tid;
-            },
-            isShowSearch () {
-                return this.searchValue === '';
-            }
+      ...mapGetters([
+        'navStick',
+        'headerTitle',
+        'backRouter',
+        'user',
+        'mainContentLoading',
+        'roleList',
+        'index',
+        'navCurRoleId',
+        'externalSystemId',
+        'versionLogs'
+      ]),
+      ...mapGetters('userGlobalConfig', ['globalConfig']),
+      style () {
+        return {
+          // height: `${this.roleList.length ? this.curHeight : 46}px`
+          height: `46px`
+        };
+      },
+      curAccountLogo () {
+        return [].slice.call(this.user.username)[0].toUpperCase() || '-';
+      },
+      isHide () {
+        return this.$route.query.system_id && this.$route.query.tid;
+      },
+      isShowSearch () {
+        return this.searchValue === '';
+      },
+      appName () {
+        // 如果未获取到配置，使用默认title
+        return this.globalConfig && this.globalConfig.i18n ? this.globalConfig.i18n.productName : this.$t('m.nav["蓝鲸权限中心"]');
+      },
+      appLogo () {
+        // 如果未获取到配置，使用默认logo
+        const src = this.globalConfig.appLogo || logoSvg;
+        return src;
+      }
     },
     watch: {
       $route: function (to, from) {
+        this.curFromName = from.name || '';
         this.hasPageTab = !!to.meta.hasPageTab;
         if (['permTemplateDetail', 'userGroupDetail'].includes(to.name)) {
           this.panels = this.getTabData(to.name);
@@ -315,12 +297,6 @@
             active = 'GroupPerm';
           }
           this.active = active;
-        }
-        for (const [key, value] of this.docuLinkMap.entries()) {
-          if (key.includes(to.name)) {
-            this.curDocuLink = `${window.BK_DOCS_URL_PREFIX}${value}`;
-            break;
-          }
         }
       },
       user: {
@@ -348,7 +324,10 @@
       },
       routeName: {
         handler (value) {
-          const index = this.defaultRouteList.findIndex((item) => item === value);
+          // const isSystemNoSuper = this.roleList.find((item) => ['system_manager'].includes(item.type) && !['super_manager'].includes(item.type));
+          // const list = isSystemNoSuper ? this.systemNoSuperList : this.defaultRouteList;
+          const list = this.defaultRouteList;
+          const index = list.findIndex((item) => item === value);
           if (index > -1) {
             ['addGroupPerm'].includes(value)
               ? this.fetchUserGroup()
@@ -366,7 +345,7 @@
           this.haveManager
             = this.showNavDataLength
               && this.showGuide
-              && newValue.find((item) => ['all_manager'].includes(item.type) && item.show);
+              && newValue.find((item) => item.type.includes('all_manager') && item.show);
         },
         immediate: true,
         deep: true
@@ -391,7 +370,7 @@
       });
 
       bus.$on('rating-admin-change', () => {
-        const data = this.navData.find((e) => e.type === 'staff');
+        const data = this.navData.find((e) => e.type.includes('staff'));
         this.isRatingChange = true;
         this.handleSelect(data, 0);
       });
@@ -445,11 +424,15 @@
       },
 
       handleOpenDocu () {
-        window.open(this.curDocuLink);
+        navDocCenterPath(this.versionLogs, '/UserGuide/Introduce/README.md', true);
       },
 
       handleOpenQuestion () {
-        window.open(window.CE_URL);
+        window.open(window.BK_CE_URL);
+      },
+
+      handleOpenSource () {
+        window.open(`https://github.com/TencentBlueKing/bk-iam`);
       },
 
       back () {
@@ -479,17 +462,29 @@
         );
       },
 
+      // 需要切换的时候刷新不同菜单下的同名路由
+      handleRefreshSameRoute (payload) {
+        if (['resourcePermiss', 'sensitivityLevel', 'approvalProcess'].includes(this.$route.name) && [1, 3].includes(payload)) {
+          this.reloadCurPage(this.$route);
+        }
+      },
+
       async updateRouter (navIndex = 0) {
         let difference = [];
+        const permResult = getManagerMenuPerm(this.roleList);
+        // const list = permResult.includes('hasSystemNoSuperManager') ? this.systemNoSuperList : this.defaultRouteList;
+        const list = this.defaultRouteList;
         if (navIndex === 1) {
+          // 不同导航栏下相同的权限路由名称跳转增加延时时间，防止相同接口调用多次被节流
           await this.$store.dispatch('userInfo');
           const type = this.curRole;
           difference = getRouterDiff(type);
           this.$store.commit('updataRouterDiff', type);
         } else {
-          difference = getNavRouterDiff(navIndex);
+          difference = getNavRouterDiff(navIndex, permResult);
           this.$store.commit('updataNavRouterDiff', navIndex);
         }
+        this.handleRefreshSameRoute(navIndex);
         const curRouterName = this.$route.name;
         if (difference.length) {
           if (difference.includes(curRouterName)) {
@@ -497,38 +492,34 @@
             window.localStorage.removeItem('iam-header-title-cache');
             window.localStorage.removeItem('iam-header-name-cache');
             this.$router.push({
-              name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex],
+              name: this.isRatingChange ? 'myManageSpace' : list[navIndex],
               params: navIndex === 1 ? { id: this.user.role.id, entry: 'updateRole' } : {}
             });
           } else {
-            // if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
-            //     this.$router.push({
-            //         name: 'myPerm'
-            //     });
-            // } else if (navIndex === 3 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit', 'myManageSpaceCreate', 'myManageSpaceSubDetail'].includes(curRouterName)) {
-            //     this.$router.push({
-            //         name: 'user'
-            //     });
-            // }
             // 修复当前是添加组权限页面点击其他角色菜单会再次跳到权限管理
             // 处理二级管理空间点击staff菜单不刷新路由问题
             // 处理超级管理员账号下头部导航没选择默认路由问题
             const OtherRoute = [
               'gradingAdminDetail',
               'gradingAdminCreate',
+              'gradingAdminClone',
               'gradingAdminEdit',
+              'myManageSpace',
               'myManageSpaceCreate',
               'secondaryManageSpaceCreate',
               'secondaryManageSpaceDetail',
+              'secondaryManageSpaceEdit',
               'addGroupPerm',
               'authorBoundaryEditFirstLevel'
             ];
             if (OtherRoute.includes(curRouterName)) {
               this.$router.push({
-                name: this.defaultRouteList[navIndex]
+                name: list[navIndex]
               });
             }
           }
+          // 更新后重置我的管理空间跳转开关
+          this.isRatingChange = false;
         }
       },
 
@@ -555,11 +546,6 @@
         this.$set(currentData, 'active', true);
         this.$store.commit('updateIndex', index);
         window.localStorage.setItem('index', index);
-        // if (this.routeName === 'addGroupPerm') {
-        //     this.$router.push({
-        //         name: 'userGroup'
-        //     });
-        // }
         this.isShowGradingWrapper = false;
         this.isShowUserDropdown = false;
         try {
@@ -603,39 +589,56 @@
         locale.use(magicBoxLanguageMap[formatI18nKey()]);
         window.CUR_LANGUAGE = formatI18nKey();
         this.$i18n.locale = formatI18nKey();
-        window.location.reload();
       },
         
-      handleChangeLocale (language) {
-        Cookie.remove('blueking_language', { path: '' });
-        Cookie.set('blueking_language', language, {
-          domain: window.BK_DOMAIN
-        });
+      async handleChangeLocale (language) {
+        const curDomain = window.BK_DOMAIN || window.location.hostname.replace(/^.*(\.[^.]+\.[^.]+)$/, '$1');
+        Cookies.remove(
+          'blueking_language',
+          {
+            expires: -1,
+            domain: curDomain,
+            path: ''
+          }
+        );
+        // 增加语言cookie有效期为一年
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        Cookies.set(
+          'blueking_language',
+          language,
+          {
+            expires: expires,
+            domain: curDomain
+          }
+        );
         this.setMagicBoxLocale(language);
-        jsonpRequest(`${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${language}`, { language });
+        if (window.BK_COMPONENT_API_URL) {
+          const url = `${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/`;
+          try {
+            await jsonpRequest(url, { language });
+          } finally {
+            window.location.reload();
+          }
+          return;
+        }
+        window.location.reload();
       },
 
       handleSwitchIdentity () {
         // this.curHeight = document.getElementsByClassName('user-dropdown')[0].offsetHeight
         this.isShowGradingWrapper = !this.isShowGradingWrapper;
       },
-
-      handleBack () {
-        this.isShowUserDropdown = false;
-        this.isShowGradingWrapper = false;
-        this.handleSwitchRole({ id: 0, type: 'staff', name: this.user.role.name });
-      },
-
+      
       handleLogout () {
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');
         window.localStorage.removeItem('applyGroupList');
-        window.localStorage.removeItem('index');
-        window.location = window.LOGIN_SERVICE_URL + '/?c_url=' + window.location.href;
+        window.location = `${window.LOGIN_SERVICE_URL}/?c_url=${encodeURIComponent(window.location.href)}&is_from_logout=1`;
       },
 
       handleManager () {
-        const data = this.navData.find((e) => e.type !== 'staff');
+        const data = this.navData.find((e) => !e.type.includes('staff'));
         this.handleSelect(data, 1);
         this.$store.commit('updateSelectManager', true);
       },
@@ -653,40 +656,36 @@
         window.localStorage.removeItem('index');
       },
 
-      handlePageTabChange (name) {
-        bus.$emit('on-tab-change', name);
-
-        let tab = '';
-        if (name === 'GroupDetail') {
-          tab = 'group_detail';
-        } else if (name === 'GroupPerm') {
-          tab = 'group_perm';
-        }
-        if (tab) {
-          window.history.replaceState(
-            {},
-            '',
-            `?${buildURLParams(
-              Object.assign({}, this.$route.query, {
-                tab: tab
-              })
-            )}`
-          );
-        }
-      },
-
       // 根据角色设置
       setTabRoleData () {
         const superManager = this.curRoleList.find((e) => e.type === 'super_manager');
+        const systemManager = this.curRoleList.find((e) => e.type === 'system_manager');
         const allManager = this.curRoleList.find((e) => e.type !== 'staff');
         this.navData.forEach((element, i) => {
           element.active = i === this.index;
-          if (element.type === 'super_manager' && superManager) {
-            element.id = superManager.id;
-            element.show = true;
-          } else if (element.type === 'all_manager' && allManager) {
-            element.id = this.navCurRoleId || allManager.id;
-            // element.id = allManager.id;
+          const rolesMap = [
+            [
+              () => element.type.includes('super_manager') && superManager,
+              () => {
+                element = Object.assign(element, { id: superManager.id, show: true });
+              }
+            ],
+            [
+              () => element.type.includes('system_manager') && systemManager && !superManager,
+              () => {
+                element = Object.assign(element, { id: systemManager.id, show: true });
+              }
+            ],
+            [
+              () => element.type.includes('all_manager') && allManager,
+              () => {
+                element = Object.assign(element, { id: this.navCurRoleId || allManager.id });
+              }
+            ]
+          ];
+          const getRole = rolesMap.find((item) => item[0]());
+          if (getRole) {
+            getRole[1]();
           }
         });
         this.$store.commit('updateNavData', this.navData);
@@ -695,7 +694,7 @@
       setNavData () {
         this.$nextTick(() => {
           for (let i = 0; i < this.navData.length; i++) {
-            if (this.navData[i].type === 'all_manager') {
+            if (this.navData[i].type.includes('all_manager')) {
               this.navData[i].show = !!this.roleList.length;
               break;
             }

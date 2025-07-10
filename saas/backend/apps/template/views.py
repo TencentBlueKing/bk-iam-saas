@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, Dict, List, Set
 
 from django.shortcuts import get_object_or_404
@@ -25,6 +26,7 @@ from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthori
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.action import ActionBiz, ActionCheckBiz, ActionResourceGroupForCheck
 from backend.biz.action_group import ActionGroupBiz
+from backend.biz.policy import PolicyBean, PolicyOperationBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleObjectRelationChecker
 from backend.biz.subject import SubjectInfoList
 from backend.biz.template import (
@@ -60,6 +62,7 @@ from .serializers import (
     TemplateGroupAuthorationPreUpdateSLZ,
     TemplateGroupPreViewSchemaSLZ,
     TemplateGroupPreViewSLZ,
+    TemplateGroupSLZ,
     TemplateIdSLZ,
     TemplateListSchemaSLZ,
     TemplateListSLZ,
@@ -96,7 +99,6 @@ class TemplatePermissionMixin:
 
 
 class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_TEMPLATE.value,
@@ -259,7 +261,6 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
 
 class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
-
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_TEMPLATE.value,
@@ -298,7 +299,7 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
         填充模板成员信息
         """
         subject_list = SubjectInfoList(parse_obj_as(List[Subject], data))
-        for d, subject in zip(data, subject_list.subjects):
+        for d, subject in zip(data, subject_list.subjects, strict=False):
             d.update(subject.dict())
         return data
 
@@ -538,5 +539,45 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
         TaskFactory().run(task.id)
 
         audit_context_setter(template=template)
+
+        return Response({})
+
+
+class TemplateConvertToCustomPolicyViewSet(TemplatePermissionMixin, GenericViewSet):
+    """
+    转换成自定义权限
+    """
+
+    lookup_field = "id"
+    queryset = PermTemplate.objects.all()
+
+    policy_biz = PolicyOperationBiz()
+    template_biz = TemplateBiz()
+
+    @swagger_auto_schema(
+        operation_description="模版权限转换成自定义权限",
+        responses={status.HTTP_200_OK: TemplateGroupSLZ()},
+        tags=["template"],
+    )
+    @view_audit_decorator(TemplateMemberDeleteAuditProvider)
+    def create(self, request, *args, **kwargs):
+        template = self.get_object()
+
+        slz = TemplateGroupSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+        group_id = slz.validated_data["group_id"]
+
+        # 查询用户组关联的模版权限
+        subject = Subject.from_group_id(group_id)
+        authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, template.id)
+        template_policies = parse_obj_as(List[PolicyBean], authorized_template.data["actions"])
+
+        # 合并权限, 重新授权自定义权限
+        self.policy_biz.alter(template.system_id, subject, template_policies)
+
+        # 解除用户组与模版直接的关系
+        self.template_biz.revoke_subjects(template.system_id, template.id, [subject])
+
+        audit_context_setter(template=template, members=[subject.dict()])
 
         return Response({})

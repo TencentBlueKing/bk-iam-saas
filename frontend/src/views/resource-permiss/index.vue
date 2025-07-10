@@ -29,7 +29,9 @@
               style="width: 200px; background: #fff"
               v-model="systemId"
               :clearable="true"
+              :searchable="true"
               :placeholder="$t(`m.verify['请选择']`)"
+              :disabled="isSystemDisabled"
               @change="handleCascadeChange"
               @clear="handleSystemClear">
               <bk-option v-for="option in systemList"
@@ -106,7 +108,7 @@
           <iam-form-item :label="$t(`m.resourcePermiss['条数展示']`)" class="pb20 pr20">
             <bk-select
               style="width: 200px; background: #fff"
-              v-model="pagination.limit"
+              v-model="limit"
               :clearable="false"
               :placeholder="$t(`m.verify['请选择']`)"
               @change="limitChange">
@@ -127,7 +129,7 @@
     <div class="resource-flex">
       <div>
         <bk-button class="mr10" theme="default" @click="handleReset">{{ $t(`m.common['重置']`) }}</bk-button>
-        <bk-button v-if="isShowExport" theme="default" @click="handleSearchAndExport(true)" :disabled="!systemId || !actionId">
+        <bk-button theme="default" @click="handleSearchAndExport(true)" :disabled="!systemId || !actionId">
           {{ $t(`m.common['导出']`) }}</bk-button>
       </div>
 
@@ -240,8 +242,8 @@
         typeList: [{ name: this.$t(`m.resourcePermiss['自定义权限']`), value: 'custom' }, { name: this.$t(`m.resourcePermiss['模板权限']`), value: 'template' }],
         permissionType: '',
         groupValue: '1-1',
-        limit: 100,
-        limitList: [10, 20, 50, 100],
+        limit: 1000,
+        limitList: [10, 50, 100, 500, 1000],
         resourceActionId: 0,
         resourceActionSystemId: '',
         resourceSystemId: '',
@@ -268,7 +270,7 @@
         pagination: {
           current: 1,
           count: 0,
-          limit: 100
+          limit: 10
         },
         currentBackup: 1,
         emptyData: {
@@ -282,7 +284,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId']),
+      ...mapGetters(['externalSystemId', 'user', 'index']),
       condition () {
           if (this.curResIndex === -1 || this.groupIndex === -1) {
               return [];
@@ -292,7 +294,7 @@
           if (!curData) {
               return [];
           }
-          if (curData.condition.length === 0) curData.condition = ['none'];
+          // if (curData.condition.length === 0) curData.condition = ['none'];
           return _.cloneDeep(curData.condition);
       },
       curSelectionMode () {
@@ -306,8 +308,8 @@
       originalCondition () {
           return _.cloneDeep(this.condition);
       },
-      isShowExport () {
-        return ['resource-permiss'].includes(this.$route.name);
+      isSystemDisabled () {
+        return this.index === 1 && ['system_manager'].includes(this.user.role.type);
       }
     },
     watch: {
@@ -347,6 +349,10 @@
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
+      async fetchPageData () {
+        await this.fetchSystemList();
+      },
+
       async fetchSystemList () {
         try {
           const params = {};
@@ -355,7 +361,7 @@
           }
           const res = await this.$store.dispatch('system/getSystems', params);
           this.systemList = res.data;
-          if (this.systemList.length && ['resourcePermManage'].includes(this.$route.name)) {
+          if (this.systemList.length && ['system_manager'].includes(this.user.role.type)) {
             this.systemId = this.systemList[0].id;
           }
         } catch (e) {
@@ -451,74 +457,48 @@
           });
           return prev;
         }, []);
-        // 区分管理空间下和平台管理下的资源权限管理的业务
-        const { current, limit } = this.pagination;
         const params = {
-          limit,
+          limit: this.limit,
           system_id: this.systemId || '',
           action_id: this.actionId,
           resource_instances: resourceInstances || []
         };
-        const routeMap = {
-          resourcePermManage: async () => {
-            params.apply_disable = false;
-            params.offset = limit * (current - 1);
-            try {
-              const { code, data } = await this.$store.dispatch('permApply/getJoinGroupSearch', params);
-              this.pagination.count = data.count || 0;
-              this.tableList = data.results || [];
-              this.tableListClone = _.cloneDeep(this.tableList);
-              this.emptyData.tipType = 'search';
-              this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
-            } catch (e) {
-              console.error(e);
-              this.tableList = [];
-              this.emptyData = formatCodeData(e.code, this.emptyData);
-              this.messageAdvancedError(e);
-            } finally {
-              this.tableLoading = false;
-            }
-          },
-          resourcePermiss: async () => {
-            params.permission_type = this.searchType === 'resource_instance' ? 'resource_instance' : this.permissionType;
-            try {
-              const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager';
-              const res = await this.$store.dispatch(fetchUrl, params);
-              if (isExport) {
-                if (res.ok) {
-                  const blob = await res.blob();
-                  const url = URL.createObjectURL(blob);
-                  const element = document.createElement('a');
-                  element.download = '资源权限管理.xlsx';
-                  element.href = url;
-                  element.click();
-                  URL.revokeObjectURL(blob);
+        params.permission_type = this.searchType === 'resource_instance' ? 'resource_instance' : this.permissionType;
+        try {
+          const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager';
+          const res = await this.$store.dispatch(fetchUrl, params);
+          if (isExport) {
+            if (res.ok) {
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const element = document.createElement('a');
+              element.download = '资源权限管理.xlsx';
+              element.href = url;
+              element.click();
+              URL.revokeObjectURL(blob);
 
-                  this.$bkMessage({
-                    theme: 'success',
-                    message: '导出成功！'
-                  });
-                }
-              } else {
-                this.tableList = res.data || [];
-                this.tableListClone = _.cloneDeep(this.tableList);
-                this.pagination.count = res.data.length;
-                const data = this.getDataByPage();
-                this.tableList.splice(0, this.tableList.length, ...data);
-                this.emptyData.tipType = 'search';
-                this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
-              }
-            } catch (e) {
-              console.error(e);
-              this.tableList = [];
-              this.emptyData = formatCodeData(e.code, this.emptyData);
-              this.messageAdvancedError(e);
-            } finally {
-              this.tableLoading = false;
+              this.$bkMessage({
+                theme: 'success',
+                message: '导出成功！'
+              });
             }
+          } else {
+            this.tableList = res.data || [];
+            this.tableListClone = _.cloneDeep(this.tableList);
+            this.pagination.count = res.data.length;
+            const data = this.getDataByPage();
+            this.tableList.splice(0, this.tableList.length, ...data);
+            this.emptyData.tipType = 'search';
+            this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
           }
-        };
-        return routeMap[this.$route.name]();
+        } catch (e) {
+          console.error(e);
+          this.tableList = [];
+          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.tableLoading = false;
+        }
       },
 
       handlePathData (data, type) {
@@ -549,13 +529,16 @@
       // 重置
       handleReset () {
         this.searchType = 'resource_instance';
-        this.systemId = '';
+        if (!this.isSystemDisabled) {
+          this.systemId = '';
+        }
         this.actionId = '';
         this.permissionType = '';
+        this.limit = 1000;
         this.tableList = [];
         this.resourceInstances = [];
         this.resourceTypeData = { isEmpty: true };
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 100, showTotalCount: true });
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10, showTotalCount: true });
         this.emptyData = {
           type: 'empty',
           text: '暂无数据',
@@ -672,30 +655,21 @@
             
       // 搜索
       handleSearch () {
-        const routeMap = {
-          resourcePermManage: async () => {
-            this.pagination = Object.assign(this.pagination, { current: 1, limit: 100 });
-            await this.handleSearchAndExport();
-          },
-          resourcePermiss: () => {
-            if (this.searchValue) {
-              this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
-              this.tableList = _.cloneDeep(this.tableListClone).filter(item => {
-                if (['user'].includes(item.type)) {
-                  return item.id.indexOf(this.searchValue) > -1
-                    || item.name.indexOf(this.searchValue) > -1
-                    || `${item.id} (${item.name})`.indexOf(this.searchValue) > -1;
-                } else {
-                  return item.name.indexOf(this.searchValue) > -1;
-                }
-              }
-              );
+        if (this.searchValue) {
+          this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
+          this.tableList = _.cloneDeep(this.tableListClone).filter(item => {
+            if (['user'].includes(item.type)) {
+              return item.id.indexOf(this.searchValue) > -1
+                || item.name.indexOf(this.searchValue) > -1
+                || `${item.id} (${item.name})`.indexOf(this.searchValue) > -1;
             } else {
-              this.tableList = _.cloneDeep(this.tableListClone);
+              return item.name.indexOf(this.searchValue) > -1;
             }
           }
-        };
-        routeMap[this.$route.name]();
+          );
+        } else {
+          this.tableList = _.cloneDeep(this.tableListClone);
+        }
       },
 
       quickSearchMethod (value) {
@@ -710,9 +684,6 @@
         this.searchValue = '';
         this.handleReset();
         this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { type: 'empty', text: '', tipType: '' }));
-        if (['resourcePermManage'].includes(this.$route.name)) {
-          this.handleSearchAndExport();
-        }
       },
 
       handleEmptyRefresh () {
@@ -727,35 +698,18 @@
       },
 
       pageChange (page) {
-        const routeMap = {
-          resourcePermManage: async () => {
-            this.pagination.current = page;
-            await this.handleSearchAndExport();
-          },
-          resourcePermiss: () => {
-            if (this.currentBackup === page) {
-              return;
-            }
-            this.pagination.current = page;
-            const data = this.getDataByPage(page);
-            this.tableList.splice(0, this.tableList.length, ...data);
-          }
-        };
-        return routeMap[this.$route.name]();
+        if (this.currentBackup === page) {
+          return;
+        }
+        this.pagination.current = page;
+        const data = this.getDataByPage(page);
+        this.tableList.splice(0, this.tableList.length, ...data);
       },
 
       limitChange (limit) {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit });
-        const routeMap = {
-          resourcePermManage: async () => {
-            await this.handleSearchAndExport();
-          },
-          resourcePermiss: () => {
-            const data = this.getDataByPage(this.pagination.current);
-            this.tableList.splice(0, this.tableList.length, ...data);
-          }
-        };
-        return routeMap[this.$route.name]();
+        this.limit = limit;
+        const data = this.getDataByPage(this.pagination.current);
+        this.tableList.splice(0, this.tableList.length, ...data);
       },
 
       getDataByPage (page) {

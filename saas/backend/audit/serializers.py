@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import time
 
 from rest_framework import serializers
@@ -43,8 +44,9 @@ class EventListSchemaSLZ(serializers.ModelSerializer):
     def get_username(self, obj):
         if obj.username == BKNonEntityUser.BK__UNVERIFIED_USER.value:
             return "UnverifiedUser"
-        elif obj.username == BKNonEntityUser.BK__ANONYMOUS_USER.value:
+        if obj.username == BKNonEntityUser.BK__ANONYMOUS_USER.value:
             return "AnonymousUser"
+        return None
 
 
 class EventListSLZ(EventListSchemaSLZ):
@@ -112,8 +114,9 @@ class EventDetailSchemaSLZ(serializers.ModelSerializer):
     def get_username(self, obj):
         if obj.username == BKNonEntityUser.BK__UNVERIFIED_USER.value:
             return "UnverifiedUser"
-        elif obj.username == BKNonEntityUser.BK__ANONYMOUS_USER.value:
+        if obj.username == BKNonEntityUser.BK__ANONYMOUS_USER.value:
             return "AnonymousUser"
+        return None
 
 
 class EventDetailSLZ(EventDetailSchemaSLZ):

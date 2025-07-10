@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List
 
 from django.db.models.query import QuerySet
@@ -21,7 +22,6 @@ from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.biz.policy import PolicyBean, PolicyBeanList
-from backend.biz.role import RoleScopeSystemActions
 from backend.biz.system import SystemBiz
 from backend.service.constants import SubjectType
 
@@ -30,7 +30,7 @@ from .constants import TemplateTag
 
 class TemplateCreateSLZ(serializers.Serializer):
     name = serializers.CharField(label="模板名称", max_length=128)
-    system_id = serializers.CharField(label="系统id", max_length=32)
+    system_id = serializers.CharField(label="系统 id", max_length=32)
     action_ids = serializers.ListField(label="操作策略", child=serializers.CharField(), allow_empty=False)
     description = serializers.CharField(label="描述", max_length=255, allow_blank=True)
 
@@ -43,10 +43,10 @@ class TemplateCreateSLZ(serializers.Serializer):
 
 class TemplateIdSLZ(serializers.Serializer):
     """
-    模板id
+    模板 id
     """
 
-    id = serializers.IntegerField(label="模板id")
+    id = serializers.IntegerField(label="模板 id")
 
 
 class TemplateListSLZ(serializers.ModelSerializer):
@@ -57,7 +57,9 @@ class TemplateListSLZ(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         self.authorized_template = kwargs.pop("authorized_template", set())
-        self.role_system_actions: RoleScopeSystemActions = kwargs.pop("role_system_actions")  # NOTE: 必须要传
+        # role_system_actions 数据类型：RoleScopeSystemActions
+        # NOTE: 必须要传
+        self.role_system_actions = kwargs.pop("role_system_actions")
         assert self.role_system_actions
         super().__init__(*args, **kwargs)
         self._system_list = SystemBiz().new_system_list()
@@ -101,15 +103,15 @@ class TemplateListSLZ(serializers.ModelSerializer):
         return obj.id in self._lock_ids
 
     def get_need_to_update(self, obj):
-        # 如果系统不在授权范围内, 说明整个系统的操作都被删除了, 这个模板只能被删除
+        # 如果系统不在授权范围内，说明整个系统的操作都被删除了，这个模板只能被删除
         if not self.role_system_actions.has_system(obj.system_id):
             return True
 
-        # 如果role的范围时任意, 模板不需要更新
+        # 如果 role 的范围时任意，模板不需要更新
         if self.role_system_actions.is_all_action(obj.system_id):
             return False
 
-        # template 的 action set 减去 role 的action set, 还有剩下的说明模板需要更新
+        # template 的 action set 减去 role 的 action set, 还有剩下的说明模板需要更新
         rest_action = set(obj.action_ids) - set(self.role_system_actions.list_action_id(obj.system_id))
         return len(rest_action) != 0
 
@@ -146,7 +148,7 @@ class TemplateRetrieveSchemaSLZ(TemplateListSchemaSLZ):
 
 class TemplateMemberListSLZ(serializers.ModelSerializer):
     type = serializers.ReadOnlyField(label="成员类型", source="subject_type")
-    id = serializers.ReadOnlyField(label="成员ID", source="subject_id")
+    id = serializers.ReadOnlyField(label="成员 ID", source="subject_id")
 
     class Meta:
         model = PermTemplatePolicyAuthorized
@@ -161,8 +163,8 @@ class TemplateMemberListSLZ(serializers.ModelSerializer):
 
 class TemplateMemberListSchemaSLZ(TemplateMemberListSLZ):
     name = serializers.CharField(label="成员名称")
-    full_name = serializers.CharField(label="全名(仅部门有)")
-    member_count = serializers.IntegerField(label="成员数量(仅部门和用户组有)")
+    full_name = serializers.CharField(label="全名 (仅部门有)")
+    member_count = serializers.IntegerField(label="成员数量 (仅部门和用户组有)")
 
     class Meta:
         model = PermTemplatePolicyAuthorized
@@ -180,7 +182,7 @@ class TemplateMemberListSchemaSLZ(TemplateMemberListSLZ):
 
 class TemplateMemberSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=[(SubjectType.GROUP.value, _("用户组"))])
-    id = serializers.CharField(label="成员id")
+    id = serializers.CharField(label="成员 id")
 
 
 class TemplateDeleteMemberSLZ(serializers.Serializer):
@@ -197,11 +199,11 @@ class TemplatePartialUpdateSLZ(serializers.Serializer):
 
 
 class TemplatePreUpdateSLZ(serializers.Serializer):
-    action_ids = serializers.ListField(label="操作ID", child=serializers.CharField(), allow_empty=False)
+    action_ids = serializers.ListField(label="操作 ID", child=serializers.CharField(), allow_empty=False)
 
 
 class GroupAuthorationPreUpdateSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="用户组id")
+    id = serializers.IntegerField(label="用户组 id")
     actions = serializers.ListField(label="操作策略", child=BasePolicyActionSLZ(label="策略"), allow_empty=False)
 
     def validate(self, data):
@@ -221,12 +223,12 @@ class TemplateGroupAuthorationPreUpdateSLZ(serializers.Serializer):
 
 class GroupCopyActionInstanceSLZ(serializers.Serializer):
     """
-    用户组列表从已授权的操作中copy实例
+    用户组列表从已授权的操作中 copy 实例
     """
 
-    action_id = serializers.CharField(label="新操作ID")
-    clone_from_action_id = serializers.CharField(label="复制的操作ID")
-    group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(), allow_empty=False)
+    action_id = serializers.CharField(label="新操作 ID")
+    clone_from_action_id = serializers.CharField(label="复制的操作 ID")
+    group_ids = serializers.ListField(label="用户组 ID 列表", child=serializers.IntegerField(), allow_empty=False)
 
 
 class TemplatePreUpdateGroupSyncSchemaSLZ(TemplateListSchemaSLZ):
@@ -275,3 +277,7 @@ class TemplateGroupPreViewSchemaSLZ(TemplateGroupPreViewSLZ):
 
 class TemplatePreUpdateSchemaSLZ(serializers.Serializer):
     action_ids = serializers.ListField(label="操作策略", child=serializers.CharField(), allow_empty=False)
+
+
+class TemplateGroupSLZ(serializers.Serializer):
+    group_id = serializers.IntegerField(label="用户组 id")

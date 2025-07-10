@@ -1,17 +1,13 @@
 <template>
   <smart-action class="iam-add-group-perm-wrapper">
-    <render-horizontal-block
-      :label="$t(`m.userGroup['组权限']`)"
-      :required="true">
-      <div class="grade-admin-select-wrapper">
-        <div class="action">
-          <section class="action-wrapper" @click.stop="handleAddPerm" data-test-id="group_btn_addGroupPerm">
+    <render-horizontal-block :label="$t(`m.userGroup['组权限']`)" :required="true">
+      <div class="user-group-select-wrapper">
+        <div class="flex-between action">
+          <div class="action-wrapper" @click.stop="handleAddPerm" data-test-id="group_btn_addGroupPerm">
             <Icon bk type="plus-circle-shape" />
             <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
-          </section>
-        </div>
-        <div class="info-wrapper">
-          <section style="min-width: 108px; position: relative;">
+          </div>
+          <div class="info-wrapper">
             <template v-if="['super_manager', 'system_manager'].includes(user.role.type)">
               <bk-switcher
                 v-model="isAllUnlimited"
@@ -22,21 +18,27 @@
               </bk-switcher>
               <span class="text">{{ $t(`m.common['批量无限制']`) }}</span>
             </template>
-            <template>
-              <bk-switcher
-                v-model="isAllExpanded"
-                :disabled="isAggregateDisabled"
-                size="small"
-                theme="primary"
-                @change="handleAggregateAction" />
-              <span class="text">{{ expandedText }}</span>
-            </template>
-          </section>
+            <div class="aggregate-action-tab-group">
+              <div
+                v-for="item in AGGREGATION_EDIT_ENUM"
+                :key="item.value"
+                :class="[
+                  'aggregate-action-btn',
+                  { 'is-active': isAllExpanded === item.value },
+                  { 'is-disabled': isAggregateDisabled }
+                ]"
+                @click.stop="handleAggregateAction(item.value)"
+              >
+                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+              </div>
+            </div>
+          </div>
         </div>
         <resource-instance-table
           is-edit
           mode="create"
           ref="resInstanceTableRef"
+          class="aggregate-tab-instance-table"
           :is-all-expanded="isAllExpanded"
           :list="tableList"
           :authorization="curAuthorizationData"
@@ -57,7 +59,7 @@
     <add-perm-sideslider
       :is-show.sync="isShowAddSideslider"
       :custom-perm="originalList"
-      :template="tempalteDetailList"
+      :template="templateDetailList"
       :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
       :aggregation="aggregationData"
       :authorization="authorizationData"
@@ -87,7 +89,7 @@
 <script>
   import _ from 'lodash';
   import { guid, existValue } from '@/common/util';
-  import { CUSTOM_PERM_TEMPLATE_ID } from '@/common/constants';
+  import { CUSTOM_PERM_TEMPLATE_ID, AGGREGATION_EDIT_ENUM } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import AddPermSideslider from '../components/add-group-perm-sideslider';
   import AddActionSideslider from '../components/add-action-sideslider';
@@ -108,15 +110,15 @@
     },
     data () {
       return {
+        AGGREGATION_EDIT_ENUM,
         submitLoading: false,
         isShowAddSideslider: false,
         isShowAddActionSideslider: false,
         curActionValue: [],
         originalList: [],
-
         tableList: [],
         tableListBackup: [],
-        tempalteDetailList: [],
+        templateDetailList: [],
         aggregationData: {},
         authorizationData: {},
         aggregationDataByCustom: {},
@@ -167,7 +169,7 @@
         return isDisabled;
       },
       expandedText () {
-          return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+          return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
       },
       defaultValue () {
           if (this.originalList.length < 1) {
@@ -248,28 +250,22 @@
       },
 
       handleSubmitPerm (templates, aggregation, authorization) {
-        // debugger
         this.isShowErrorTips = false;
-
-        if (this.isAllExpanded) {
-          this.isAllExpanded = false;
-          this.handleAggregateAction(false);
-        }
-
         this.aggregationData = aggregation;
         this.authorizationData = authorization;
-
+        const temps = [];
+        const tempList = [];
         let hasDeleteTemplateList = [];
         let hasAddTemplateList = [];
-        if (this.tempalteDetailList.length > 0) {
+        if (this.templateDetailList.length > 0) {
           const intersection = templates.filter(
-            item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
+            item => this.templateDetailList.map(sub => sub.id).includes(item.id)
           );
           // 判断权限模板数量没做任何变动时
-          if (JSON.stringify(this.tempalteDetailList) === JSON.stringify(templates)) {
+          if (JSON.stringify(this.templateDetailList) === JSON.stringify(templates)) {
             hasAddTemplateList = _.cloneDeep(templates);
           } else {
-            hasDeleteTemplateList = this.tempalteDetailList.filter(
+            hasDeleteTemplateList = this.templateDetailList.filter(
               item => !intersection.map(sub => sub.id).includes(item.id)
             );
             hasAddTemplateList = [
@@ -280,32 +276,20 @@
         } else {
           hasAddTemplateList = templates;
         }
-        this.tempalteDetailList = _.cloneDeep(templates);
-
+        this.templateDetailList = _.cloneDeep(templates);
         if (hasDeleteTemplateList.length > 0) {
           this.tableList = this.tableList.filter(
             item => !hasDeleteTemplateList.map(sub => sub.id).includes(item.detail.id)
           );
         }
-
         if (this.hasDeleteCustomList.length > 0) {
           this.tableList = this.tableList.filter(item => {
             return item.detail.id === CUSTOM_PERM_TEMPLATE_ID && !this.hasDeleteCustomList.map(sub => sub.$id).includes(`${item.detail.system.id}&${item.id}`);
           });
         }
-
-        const tempList = [];
         hasAddTemplateList.forEach(item => {
           const temp = _.cloneDeep(item);
           delete temp.actions;
-
-          // // mock数据
-          // item.actions.forEach((element, index) => {
-          //     element.resource_groups = [{
-          //         id: index,
-          //         related_resource_types: element.related_resource_types
-          //     }]
-          // })
           item.actions.forEach(sub => {
             if (!sub.resource_groups || !sub.resource_groups.length) {
               sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : [];
@@ -313,8 +297,6 @@
             tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
           });
         });
-
-        const temps = [];
         this.tableList.forEach(item => {
           if (item.detail.id === CUSTOM_PERM_TEMPLATE_ID) {
             if (item.isAggregate) {
@@ -324,16 +306,8 @@
             }
           }
         });
-
         console.log('this.hasAddCustomList', this.hasAddCustomList);
         const addCustomList = this.originalList.filter(item => !temps.includes(item.$id));
-        // // mock数据
-        // addCustomList.forEach((element, index) => {
-        //     element.resource_groups = [{
-        //         id: index,
-        //         related_resource_types: element.related_resource_types
-        //     }]
-        // })
         addCustomList.forEach(item => {
           if (!item.resource_groups || !item.resource_groups.length) {
             item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
@@ -346,15 +320,17 @@
             id: CUSTOM_PERM_TEMPLATE_ID
           }));
         });
-
         this.tableList.push(...tempList);
         this.tableListBackup = _.cloneDeep(this.tableList);
-
+        // 处理当前是聚合形态再新增数据需要重新组装成非聚合形态，兼容新增的数据会存在可以聚合的数据业务场景
+        if (this.isAllExpanded) {
+          this.handleAggregateAction(false);
+        }
+        this.isAllExpanded = false;
         // 处理聚合的数据，将表格数据按照相同的聚合id分配好
         this.handleAggregateData();
         // 处理为批量无限制， 默认为新增的操作选中无实例
         this.handleUnlimitedActionChange(this.isAllUnlimited);
-
         this.$nextTick(() => {
           if (hasDeleteTemplateList.length > 0 || this.hasDeleteCustomList.length > 0) {
             this.setCurMapData(hasDeleteTemplateList);
@@ -443,7 +419,6 @@
         this.allAggregationData = data;
         this.tableList.forEach(item => {
           if (this.allAggregationData[item.detail.system.id]) {
-            console.log(data, item.detail.system.id, 564554);
             const aggregationData = this.allAggregationData[item.detail.system.id];
             aggregationData.forEach(aggItem => {
               if (aggItem.actions.map(act => act.id).includes(item.id)) {
@@ -552,7 +527,11 @@
       },
 
       handleAggregateAction (payload) {
-        const tempData = [];
+        if (this.isAggregateDisabled) {
+          return;
+        }
+        this.isAllExpanded = payload;
+        let tempData = [];
         let templateIds = [];
         let instancesDisplayData = {};
         if (payload) {
@@ -565,10 +544,13 @@
           for (const [key, value] of this.curMap.entries()) {
             if (value.length === 1) {
               tempData.push(...value);
+              tempData = _.uniqWith(tempData, _.isEqual);
             } else {
               let curInstances = [];
-              const conditions = value.map(subItem => subItem.resource_groups[0]
-                .related_resource_types[0].condition);
+              // 这里避免从模板选择的权限和自定义权限下的操作是一致的，所以需要去重
+              tempData = _.uniqWith(tempData, _.isEqual);
+              const conditions = value.map((subItem) => subItem.resource_groups
+                && subItem.resource_groups[0].related_resource_types[0].condition);
               // 是否都选择了实例
               const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
               if (isAllHasInstance) {
@@ -855,49 +837,8 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .iam-add-group-perm-wrapper {
-        .grade-admin-select-wrapper {
-            .action {
-                position: relative;
-                display: flex;
-                justify-content: flex-start;
-                .action-wrapper {
-                    font-size: 14px;
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                    i {
-                        position: relative;
-                        top: -1px;
-                        left: 2px;
-                    }
-                }
-                .info-icon {
-                    margin: 2px 0 0 2px;
-                    color: #c4c6cc;
-                    &:hover {
-                        color: #3a84ff;
-                    }
-                }
-            }
-            .info-wrapper {
-                display: flex;
-                justify-content: flex-end;
-                margin-top: 16px;
-                margin-bottom: 10px;
-                line-height: 24px;
-                .tips,
-                .text {
-                    line-height: 20px;
-                    font-size: 12px;
-                    &:not(&:last-child) {
-                      margin-right: 20px;
-                    }
-                }
-            }
-        }
-    }
+@import '@/css/mixins/create-user-group.css';
+@import '@/css/mixins/aggregate-action-group.css';
 </style>

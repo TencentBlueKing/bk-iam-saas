@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.db import models
 
 from backend.api.constants import ALLOW_ANY
@@ -20,7 +21,7 @@ from .constants import ManagementAPIEnum
 class ManagementAPIAllowListConfig(BaseModel):
     """管理类API允许系统白名单"""
 
-    api = models.CharField("API", choices=ManagementAPIEnum.get_choices(), max_length=36, help_text="*代表任意")
+    api = models.CharField("API", choices=ManagementAPIEnum.get_choices(), max_length=64, help_text="*代表任意")
     system_id = models.CharField("接入系统", max_length=32)
 
     class Meta:
@@ -51,7 +52,7 @@ class SystemAllowAuthSystem(BaseModel):
         verbose_name = "系统允许授权的系统"
         verbose_name_plural = "系统允许授权的系统"
         ordering = ["-id"]
-        index_together = ["system_id", "auth_system_id"]
+        indexes = [models.Index(fields=["system_id", "auth_system_id"])]
 
     @classmethod
     @cachedmethod(timeout=5 * 60)  # 缓存5分钟

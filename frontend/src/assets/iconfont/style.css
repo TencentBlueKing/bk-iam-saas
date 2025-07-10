@@ -158,6 +158,9 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-jump-link:before {
 	content: "\e226";
 }
+.iamcenter-right-shape:before {
+	content: "\e232";
+}
 .iamcenter-check-small:before {
 	content: "\e1b4";
 }
@@ -239,6 +242,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-revoke:before {
 	content: "\e1d2";
 }
+.iamcenter-qq:before {
+	content: "\e22b";
+}
+.iamcenter-qw:before {
+	content: "\e229";
+}
+.iamcenter-wechat:before {
+	content: "\e22a";
+}
 .iamcenter-user-directory:before {
 	content: "\e1d3";
 }
@@ -311,6 +323,12 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-left-angle:before {
 	content: "\e1ed";
 }
+.iamcenter-more-fill:before {
+	content: "\e249";
+}
+.iamcenter-folder-fill:before {
+	content: "\e242";
+}
 .iamcenter-dustbin:before {
 	content: "\e1ee";
 }
@@ -346,6 +364,18 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .iamcenter-exact-search:before {
 	content: "\e1f8";
+}
+.iamcenter-cc-jump-link-2:before {
+	content: "\e233";
+}
+.iamcenter-favorite-o:before {
+	content: "\e24b";
+}
+.iamcenter-favorite:before {
+	content: "\e24a";
+}
+.iamcenter-fullscreen:before {
+	content: "\e247";
 }
 .iamcenter-drag-fill:before {
 	content: "\e1f9";
@@ -407,6 +437,9 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-admin-api:before {
 	content: "\e213";
 }
+.iamcenter-down-shape:before {
+	content: "\e231";
+}
 .iamcenter-brush-fill:before {
 	content: "\e215";
 }
@@ -436,4 +469,85 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .iamcenter-renyuanmuban:before {
 	content: "\e225";
+}
+.iamcenter-setting:before {
+	content: "\e227";
+}
+.iamcenter-locate:before {
+	content: "\e22e";
+}
+.iamcenter-notification:before {
+	content: "\e228";
+}
+.iamcenter-action-temp:before {
+	content: "\e230";
+}
+.iamcenter-unfinished:before {
+	content: "\e22f";
+}
+.iamcenter-duanxin:before {
+	content: "\e22d";
+}
+.iamcenter-youjian:before {
+	content: "\e22c";
+}
+.iamcenter-node:before {
+	content: "\e246";
+}
+.iamcenter-dongzuo-shuaxin:before {
+	content: "\e248";
+}
+.iamcenter-zonghe2:before {
+	content: "\e243";
+}
+.iamcenter-wodeguanlikongjian:before {
+	content: "\e235";
+}
+.iamcenter-yijiguanli:before {
+	content: "\e234";
+}
+.iamcenter-yuan-jiahao:before {
+	content: "\e239";
+}
+.iamcenter-shouqi:before {
+	content: "\e238";
+}
+.iamcenter-yonghu:before {
+	content: "\e236";
+}
+.iamcenter-guoqi-big:before {
+	content: "\e237";
+}
+.iamcenter-duanxin-2:before {
+	content: "\e23b";
+}
+.iamcenter-xitong:before {
+	content: "\e23a";
+}
+.iamcenter-erjiguanliyuan:before {
+	content: "\e23e";
+}
+.iamcenter-youjian-2:before {
+	content: "\e23d";
+}
+.iamcenter-ziyuanguanli:before {
+	content: "\e23f";
+}
+.iamcenter-all-2:before {
+	content: "\e23c";
+}
+.iamcenter-mingandengji-2:before {
+	content: "\e240";
+}
+.iamcenter-renyuanjihe:before {
+	content: "\e241";
+}
+.iamcenter-yuan-chexiao:before {
+	content: "\e244";
+}
+.iamcenter-fanhui:before {
+	content: "\e245";
+}
+.iamcenter-guanlikongjian-3:before {
+	content: "\e24c";
 }

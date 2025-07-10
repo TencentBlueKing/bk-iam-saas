@@ -2,7 +2,7 @@
   <div class="iam-condition-detail-wrapper"
     :class="conditionData.length > 1 ? 'reset-top' : ''">
     <template v-if="conditionData.length > 0">
-      <div v-for="(condition, conIndex) in conditionData" :key="condition">
+      <div v-for="(condition, conIndex) in conditionData" :key="conIndex">
         <render-order-number v-if="conditionData.length > 1" :number="`${conIndex + 1 }`" />
         <div class="group-checked-wrapper"
           v-if="conditionData.length > 1 && canEdit && condition.hasOwnProperty('instance')">

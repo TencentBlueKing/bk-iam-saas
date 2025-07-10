@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 import logging
 import traceback
@@ -19,8 +20,10 @@ from django.db import transaction
 from django.utils import timezone
 
 from backend.apps.organization.models import SubjectToDelete, SyncErrorLog, SyncRecord
+from backend.apps.policy.models import Policy
 from backend.apps.role.models import RoleGroupMember, RoleScope, RoleUser, ScopeSubject
 from backend.apps.subject_template.models import SubjectTemplateRelation
+from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.biz.org_sync.department import DBDepartmentSyncExactInfo, DBDepartmentSyncService
 from backend.biz.org_sync.department_member import DBDepartmentMemberSyncService
 from backend.biz.org_sync.iam_department import IAMBackendDepartmentSyncService
@@ -163,6 +166,9 @@ def clean_subject_to_delete():
             # 批量删除用户关系数据
             batch_delete_subject_relations(SubjectType.USER.value, usernames)
 
+            # 批量删除用户权限
+            batch_delete_subject_policy(SubjectType.USER.value, usernames)
+
         # 清理部门相关数据
         if department_ids:
             # 批量删除部门关系数据
@@ -222,3 +228,11 @@ def update_role_subject_scope(usernames: List[str], department_ids: List[str]):
 
         ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=usernames).delete()
         ScopeSubject.objects.filter(subject_type=SubjectType.DEPARTMENT.value, subject_id__in=department_ids).delete()
+
+
+def batch_delete_subject_policy(subject_type: str, subject_ids: List[str]):
+    # 删除权限
+    Policy.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).delete()
+
+    # 清理临时权限
+    TemporaryPolicy.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).delete()

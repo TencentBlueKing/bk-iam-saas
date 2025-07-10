@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Dict, Generator, List, Tuple
 
 from django.db import transaction
@@ -292,8 +293,7 @@ class GroupService:
         查询所有subject在指定过期时间之前的相关Group
         """
         all_subject_groups = iam.list_all_subject_groups(subject.type, subject.id, expired_at=expired_at)
-        relations = parse_obj_as(List[SubjectGroup], all_subject_groups)
-        return relations
+        return parse_obj_as(List[SubjectGroup], all_subject_groups)
 
     def get_member_count_before_expired_at(self, group_id: int, expired_at: int) -> int:
         """
@@ -313,19 +313,20 @@ class GroupService:
         )
         return data["count"], parse_obj_as(List[SubjectGroup], data["results"])
 
-    def list_exist_groups_before_expired_at(self, group_ids: List[int], expired_at: int) -> List[int]:
+    def list_group_subject_before_expired_at_by_ids(self, group_ids: List[int], expired_at: int) -> List[GroupSubject]:
         """
         筛选出存在的即将过期的用户组id
         """
         subjects = [{"type": SubjectType.GROUP.value, "id": str(_id)} for _id in group_ids]
 
-        exist_group_ids = []
-        for i in range(0, len(subjects), 500):
-            part_subjects = subjects[i : i + 500]
+        group_subjects = []
+        for i in range(0, len(subjects), 100):
+            part_subjects = subjects[i : i + 100]
             data = iam.list_exist_subjects_before_expired_at(part_subjects, expired_at)
-            exist_group_ids.extend([int(m["id"]) for m in data])
+            relations = parse_obj_as(List[GroupSubject], data)
+            group_subjects.extend(relations)
 
-        return exist_group_ids
+        return group_subjects
 
     def update_subject_groups_expired_at(self, subject_expired_at: GroupMemberExpiredAt, group_ids: List[int]):
         """
@@ -376,6 +377,7 @@ class GroupService:
         limit, offset = 1000, 0
         while True:
             iam_data = iam.list_group_subject_before_expired_at(expired_at=expired_at, limit=limit, offset=offset)
+            assert isinstance(iam_data["results"], list)
             if len(iam_data["results"]) == 0:
                 break
 

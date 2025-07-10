@@ -170,7 +170,7 @@
 
     #app {
         height: calc(100% - 61px);
-        min-width: 1280px;
+        min-width: 1024px;
     }
 
     .iam-perm-apply-expired-input-cls {

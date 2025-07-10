@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from aenum import LowerStrEnum, auto, skip
 
 from backend.api.constants import BaseAPIEnum
@@ -26,8 +27,16 @@ class AuthorizationAPIEnum(BaseAPIEnum):
     AUTHORIZATION_INSTANCE = auto()
     # 新建关联实例授权API，白名单控制时主要是控制System+ResourceType
     CREATOR_AUTHORIZATION_INSTANCE = auto()
+    # 属性授权
+    AUTHORIZATION_ATTRIBUTE = auto()
 
-    _choices_labels = skip(((AUTHORIZATION_INSTANCE, "实例授权"), (CREATOR_AUTHORIZATION_INSTANCE, "新建关联实例授权")))
+    _choices_labels = skip(
+        (
+            (AUTHORIZATION_INSTANCE, "实例授权"),
+            (CREATOR_AUTHORIZATION_INSTANCE, "新建关联实例授权"),
+            (AUTHORIZATION_ATTRIBUTE, "属性授权"),
+        )
+    )
 
 
 class AllowListMatchOperationEnum(ChoicesEnum, LowerStrEnum):

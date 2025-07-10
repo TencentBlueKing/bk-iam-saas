@@ -41,18 +41,14 @@
         :style="{ top: '-10px', left: '125px' }"
         :content="$t(`m.guide['添加组权限']`)" /> -->
     </render-action>
-    <render-horizontal-block
-      :label="$t(`m.grading['操作和资源范围']`)"
-      v-if="isHasPermTemplate">
+    <render-horizontal-block :label="$t(`m.grading['操作和资源范围']`)" v-if="isHasPermTemplate">
       <div class="user-group-select-wrapper">
-        <div class="action">
-          <section class="action-wrapper" @click.stop="handleAddPerm">
+        <div class="flex-between action">
+          <div class="action-wrapper" @click.stop="handleAddPerm">
             <Icon bk type="plus-circle-shape" />
             <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
-          </section>
-        </div>
-        <div class="info-wrapper">
-          <section style="min-width: 108px; position: relative;">
+          </div>
+          <div class="info-wrapper">
             <template v-if="['super_manager', 'system_manager'].includes(user.role.type)">
               <bk-switcher
                 v-model="isAllUnlimited"
@@ -63,18 +59,27 @@
               </bk-switcher>
               <span class="text">{{ $t(`m.common['批量无限制']`) }}</span>
             </template>
-            <template>
-              <bk-switcher
-                v-model="isAllExpanded"
-                :disabled="isAggregateDisabled"
-                size="small"
-                theme="primary"
-                @change="handleAggregateAction" />
-              <span class="text">{{ expandedText }}</span>
-            </template>
-          </section>
+            <div class="aggregate-action-tab-group">
+              <div
+                v-for="item in AGGREGATION_EDIT_ENUM"
+                :key="item.value"
+                :class="[
+                  'aggregate-action-btn',
+                  { 'is-active': isAllExpanded === item.value },
+                  { 'is-disabled': isAggregateDisabled }
+                ]"
+                @click.stop="handleAggregateAction(item.value)"
+              >
+                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <section ref="instanceTableContentRef" v-bkloading="{ isLoading: cloneLoading, opacity: 1 }">
+        <section
+          ref="instanceTableContentRef"
+          class="aggregate-tab-instance-table"
+          v-bkloading="{ isLoading: cloneLoading, opacity: 1 }"
+        >
           <resource-instance-table
             is-edit
             mode="create"
@@ -86,7 +91,8 @@
             :group-id="groupId"
             @handleAggregateAction="handleAggregateAction"
             @on-select="handleAttrValueSelected"
-            @on-resource-select="handleResSelect" />
+            @on-resource-select="handleResSelect"
+          />
         </section>
       </div>
     </render-horizontal-block>
@@ -133,7 +139,7 @@
     <add-perm-sideslider
       :is-show.sync="isShowAddSideslider"
       :custom-perm="originalList"
-      :template="tempalteDetailList"
+      :template="templateDetailList"
       :aggregation="aggregationData"
       :authorization="authorizationData"
       :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
@@ -164,7 +170,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants';
+  import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   // import IamGuide from '@/components/iam-guide/index.vue';
   import AddMemberDialog from '../components/iam-add-member';
@@ -200,6 +206,7 @@
     },
     data () {
       return {
+        AGGREGATION_EDIT_ENUM,
         formData: {
           name: '',
           approval_process_id: 1,
@@ -219,10 +226,9 @@
         isShowAddActionSideslider: false,
         curActionValue: [],
         originalList: [],
-
         tableList: [],
         tableListBackup: [],
-        tempalteDetailList: [],
+        templateDetailList: [],
         aggregationData: {},
         aggregationDataClone: {},
         authorizationDataClone: {},
@@ -264,7 +270,7 @@
               return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
           }, []);
           const temps = [];
-          // console.log('aggregationIds', this.tableList, aggregationIds);
+          console.log('aggregationIds', this.tableList, aggregationIds);
           aggregationIds.forEach(item => {
               if (!temps.some(sub => sub.includes(item))) {
                   temps.push([item]);
@@ -290,7 +296,7 @@
        * expandedText
        */
       expandedText () {
-          return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+          return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
       },
       members () {
           const arr = [];
@@ -433,7 +439,7 @@
 
       // 获取分级管理员用户组配置
       async fetchUserGroupSet () {
-        if (!['subset_manager'].includes(this.user.role.type)) {
+        if (!['subset_manager', 'staff', ''].includes(this.user.role.type)) {
           try {
             const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
             if (data) {
@@ -723,26 +729,21 @@
        * handleSubmitPerm
        */
       handleSubmitPerm (templates, aggregation, authorization) {
-        // debugger
-        if (this.isAllExpanded) {
-          this.isAllExpanded = false;
-          this.handleAggregateAction(false);
-        }
-
         this.aggregationData = aggregation;
         this.authorizationData = authorization;
-
+        const temps = [];
+        const tempList = [];
         let hasDeleteTemplateList = [];
         let hasAddTemplateList = [];
-        if (this.tempalteDetailList.length > 0) {
+        if (this.templateDetailList.length > 0) {
           const intersection = templates.filter(
-            item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
+            item => this.templateDetailList.map(sub => sub.id).includes(item.id)
           );
           // 判断权限模板数量没做任何变动时
-          if (JSON.stringify(this.tempalteDetailList) === JSON.stringify(templates)) {
+          if (JSON.stringify(this.templateDetailList) === JSON.stringify(templates)) {
             hasAddTemplateList = _.cloneDeep(templates);
           } else {
-            hasDeleteTemplateList = this.tempalteDetailList.filter(
+            hasDeleteTemplateList = this.templateDetailList.filter(
               item => !intersection.map(sub => sub.id).includes(item.id)
             );
             hasAddTemplateList = [
@@ -753,14 +754,12 @@
         } else {
           hasAddTemplateList = templates;
         }
-        this.tempalteDetailList = _.cloneDeep(templates);
-
+        this.templateDetailList = _.cloneDeep(templates);
         if (hasDeleteTemplateList.length > 0) {
           this.tableList = this.tableList.filter(
             item => !hasDeleteTemplateList.map(sub => sub.id).includes(item.detail.id)
           );
         }
-
         if (this.hasDeleteCustomList.length > 0) {
           this.tableList = this.tableList.filter(item => {
             return item.detail.id === CUSTOM_PERM_TEMPLATE_ID
@@ -768,28 +767,6 @@
                 .map(sub => sub.$id).includes(`${item.detail.system.id}&${item.id}`);
           });
         }
-
-        // this.hasAddCustomList.forEach(item => {
-        //   if (!item.resource_groups || !item.resource_groups.length) {
-        //     item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
-        //   }
-        //   tempList.push(new GroupPolicy(item, 'add', 'custom', {
-        //     system: {
-        //       id: item.system_id,
-        //       name: item.system_name
-        //     },
-        //     id: CUSTOM_PERM_TEMPLATE_ID
-        //   }));
-        // });
-
-        // if (this.tableList.length < 1) {
-        //   this.tableList = _.cloneDeep(tempList);
-        // } else {
-        //   this.tableList.push(..._.cloneDeep(tempList));
-        // }
-        // this.tableListBackup = _.cloneDeep(this.tableList);
-
-        const tempList = [];
         hasAddTemplateList.forEach(item => {
           const temp = _.cloneDeep(item);
           delete temp.actions;
@@ -800,8 +777,6 @@
             tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
           });
         });
-
-        const temps = [];
         this.tableList.forEach(item => {
           if (item.detail.id === CUSTOM_PERM_TEMPLATE_ID) {
             if (item.isAggregate) {
@@ -811,10 +786,8 @@
             }
           }
         });
-        
         console.log('this.hasAddCustomList', this.hasAddCustomList);
         const addCustomList = this.originalList.filter(item => !temps.includes(item.$id));
-
         addCustomList.forEach(item => {
           if (!item.resource_groups || !item.resource_groups.length) {
             item.resource_groups = item.related_resource_types && item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
@@ -829,12 +802,15 @@
         });
         this.tableList.push(...tempList);
         this.tableListBackup = _.cloneDeep(this.tableList);
-
+        // 处理当前是聚合形态再新增数据需要重新组装成非聚合形态，兼容新增的数据会存在可以聚合的数据业务场景
+        if (this.isAllExpanded) {
+          this.handleAggregateAction(false);
+        }
+        this.isAllExpanded = false;
         // 处理聚合的数据，将表格数据按照相同的聚合id分配好
         this.handleAggregateData();
         // 处理为批量无限制， 默认为新增的操作选中无实例
         this.handleUnlimitedActionChange(this.isAllUnlimited);
-
         this.$nextTick(() => {
           if (hasDeleteTemplateList.length > 0 || this.hasDeleteCustomList.length > 0) {
             this.setCurMapData(hasDeleteTemplateList);
@@ -1053,7 +1029,11 @@
        * handleAggregateAction
        */
       handleAggregateAction (payload) {
-        const tempData = [];
+        if (this.isAggregateDisabled) {
+          return;
+        }
+        this.isAllExpanded = payload;
+        let tempData = [];
         let templateIds = [];
         let instancesDisplayData = {};
         if (payload) {
@@ -1067,10 +1047,13 @@
           for (const [key, value] of this.curMap.entries()) {
             if (value.length === 1) {
               tempData.push(...value);
+              tempData = _.uniqWith(tempData, _.isEqual);
             } else {
               let curInstances = [];
-              const conditions = value.map(subItem => subItem.resource_groups[0]
-                .related_resource_types[0].condition);
+              // 这里避免从模板选择的权限和自定义权限下的操作是一致的，所以需要去重
+              tempData = _.uniqWith(tempData, _.isEqual);
+              const conditions = value.map((subItem) => subItem.resource_groups
+                && subItem.resource_groups[0].related_resource_types[0].condition);
               // 是否都选择了实例
               const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
               if (isAllHasInstance) {
@@ -1393,4 +1376,5 @@
 
 <style lang="postcss" scoped>
 @import '@/css/mixins/create-user-group.css';
+@import '@/css/mixins/aggregate-action-group.css';
 </style>

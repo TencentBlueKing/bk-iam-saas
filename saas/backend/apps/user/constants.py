@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from aenum import LowerStrEnum, auto, skip
 from django.utils.translation import gettext as _
 
@@ -17,9 +18,8 @@ from backend.util.enum import ChoicesEnum
 class NewbieSceneEnum(ChoicesEnum, LowerStrEnum):
     """新手指引场景枚举"""
 
-    GRADE_MANAGER_AUTHORIZATION_SCOPE = (
-        "rating_manager_authorization_scope"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
-    )
+    # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    GRADE_MANAGER_AUTHORIZATION_SCOPE = "rating_manager_authorization_scope"
     GRADE_MANAGER_SUBJECT_SCOPE = "rating_manager_subject_scope"
     GRADE_MANAGER_MERGE_ACTION = "rating_manager_merge_action"
     SWITCH_ROLE = auto()

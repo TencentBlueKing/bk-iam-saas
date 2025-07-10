@@ -27,7 +27,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import http from '@/api';
-import { unifyObjectStyle, json2Query } from '@/common/util';
+import { unifyObjectStyle, json2Query, getManagerMenuPerm, getRoutePath } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
 
@@ -85,15 +85,24 @@ import spaceManage from './modules/space-manage';
 // 用户组设置模块
 import userGroupSetting from './modules/user-group-setting';
 
-// 敏感等级
+// 敏感等级模块
 import sensitivityLevel from './modules/sensitivity-level';
 
-// 人员模板
+// 人员模板模块
 import memberTemplate from './modules/member-template';
+
+// 用户/组织模块
+import userOrOrg from './modules/user-org';
+
+// 续期通知
+import renewalNotice from './modules/renewal-notice';
+
+// 用户全局配置
+import userGlobalConfig from './modules/global-config';
 
 Vue.use(Vuex);
 
-const SITE_URL = window.SITE_URL;
+const SITE_URL = getRoutePath(window.SITE_URL);
 
 const currentNav = [
   {
@@ -158,14 +167,14 @@ const currentNav = [
   },
   {
     icon: 'perm-manage',
-    name: il8n('nav', '权限管理'),
-    rkey: 'managePermission',
+    name: il8n('nav', '主动授权'),
+    rkey: 'proactiveAuthorization',
     children: [
       {
         icon: 'user-group',
         id: 'userGroupNav',
         rkey: 'userGroup',
-        name: il8n('nav', '用户组'),
+        name: il8n('nav', '用户组管理'),
         path: `${SITE_URL}user-group`,
         disabled: false
       },
@@ -178,6 +187,29 @@ const currentNav = [
         disabled: false
       },
       {
+        icon: 'renyuanmuban',
+        id: 'memberTemplateNav',
+        rkey: 'memberTemplate',
+        name: il8n('nav', '人员模板'),
+        path: `${SITE_URL}member-template`,
+        disabled: false
+      }
+    ]
+  },
+  {
+    icon: 'perm-manage',
+    name: il8n('nav', '权限管理'),
+    rkey: 'managePermission',
+    children: [
+      {
+        icon: 'personal-user',
+        id: 'userOrgPermNav',
+        rkey: 'userOrgPerm',
+        name: il8n('nav', '用户权限管理'),
+        path: `${SITE_URL}user-org-perm`,
+        disabled: false
+      },
+      {
         icon: 'personal-user',
         id: 'userNav',
         rkey: 'user',
@@ -186,42 +218,11 @@ const currentNav = [
         disabled: false
       },
       {
-        icon: 'renyuanmuban',
-        id: 'memberTemplateNav',
-        rkey: 'memberTemplate',
-        name: il8n('nav', '人员模板'),
-        path: `${SITE_URL}member-template`,
-        disabled: false
-      }
-      // {
-      //   icon: 'resource-perm-manage',
-      //   id: 'resourcePermManageNav',
-      //   rkey: 'resourcePermManage',
-      //   name: il8n('nav', '资源权限管理'),
-      //   path: `${SITE_URL}resource-perm-manage`,
-      //   disabled: false
-      // }
-    ]
-  },
-  {
-    icon: 'perm-manage',
-    name: il8n('nav', '管理空间'),
-    rkey: 'manageSpaces',
-    children: [
-      {
-        icon: 'auth-scope',
-        id: 'authorBoundaryNav',
-        rkey: 'authorBoundary',
-        name: il8n('nav', '授权边界-nav'),
-        path: `${SITE_URL}manage-spaces/authorization-boundary`,
-        disabled: false
-      },
-      {
-        icon: 'level-two-manage-space',
-        id: 'secondaryManageSpaceNav',
-        rkey: 'secondaryManageSpace',
-        name: il8n('nav', '二级管理空间'),
-        path: `${SITE_URL}manage-spaces/secondary-manage-space`,
+        icon: 'resource-perm-manage',
+        id: 'resourcePermissNav',
+        rkey: 'resourcePermiss',
+        name: il8n('nav', '资源权限管理'),
+        path: `${SITE_URL}resource-permiss`,
         disabled: false
       }
     ]
@@ -234,49 +235,65 @@ const currentNav = [
     path: `${SITE_URL}rating-manager`,
     disabled: false
   },
-  // {
-  //     icon: 'grade-admin',
-  //     id: 'firstManageSpaceNav',
-  //     rkey: 'firstManageSpace',
-  //     name: il8n('nav', '一级管理空间'),
-  //     path: `${SITE_URL}first-manage-space`,
-  //     disabled: false
-  // },
-  {
-    icon: 'resource-perm-manage',
-    id: 'resourcePermissNav',
-    rkey: 'resourcePermiss',
-    name: il8n('nav', '资源权限管理'),
-    path: `${SITE_URL}resource-permiss`,
-    disabled: false
-  },
-  {
-    icon: 'mingandengji',
-    id: 'sensitivityLevelNav',
-    rkey: 'sensitivityLevel',
-    name: il8n('nav', '敏感等级'),
-    path: `${SITE_URL}sensitivity-level`,
-    disabled: false
-  },
   {
     icon: 'perm-manage',
     name: il8n('common', '设置'),
     rkey: 'set',
     children: [
       {
+        icon: 'auth-scope',
+        id: 'authorBoundaryNav',
+        rkey: 'authorBoundary',
+        name: il8n('nav', '空间信息'),
+        path: `${SITE_URL}manage-spaces/authorization-boundary`,
+        disabled: false
+      },
+      {
+        icon: 'level-two-manage-space',
+        id: 'secondaryManageSpaceNav',
+        rkey: 'secondaryManageSpace',
+        name: il8n('nav', '二级管理空间'),
+        path: `${SITE_URL}manage-spaces/secondary-manage-space`,
+        disabled: false
+      },
+      {
+        icon: 'mingandengji',
+        id: 'sensitivityLevelNav',
+        rkey: 'sensitivityLevel',
+        name: il8n('nav', '敏感等级'),
+        path: `${SITE_URL}sensitivity-level`,
+        disabled: false
+      },
+      {
         icon: 'super-admin',
         name: il8n('common', '管理员'),
-        id: 'settingNav',
+        id: 'systemAdministratorNav',
+        rkey: 'systemAdministrator',
+        path: `${SITE_URL}system-administrator`,
+        disabled: false
+      },
+      {
+        icon: 'super-admin',
+        name: il8n('common', '管理员'),
+        id: 'administratorNav',
         rkey: 'administrator',
         path: `${SITE_URL}administrator`,
         disabled: false
       },
       {
         icon: 'approval-process-manage',
-        name: il8n('myApply', '审批流程'),
+        name: il8n('myApply', '审批流程管理'),
         id: 'approvalProcessNav',
         rkey: 'approvalProcess',
         path: `${SITE_URL}approval-process`,
+        disabled: false
+      },
+      {
+        icon: 'notification',
+        name: il8n('nav', '续期通知'),
+        id: 'renewalNoticeNav',
+        rkey: 'renewalNotice',
+        path: `${SITE_URL}renewal-notice`,
         disabled: false
       },
       {
@@ -285,14 +302,6 @@ const currentNav = [
         id: 'auditNav',
         rkey: 'audit',
         path: `${SITE_URL}audit`,
-        disabled: false
-      },
-      {
-        icon: 'setting-fill',
-        name: il8n('nav', '用户组设置'),
-        id: 'userGroupSettingNav',
-        rkey: 'userGroupSetting',
-        path: `${SITE_URL}user-group-setting`,
         disabled: false
       }
     ]
@@ -348,7 +357,10 @@ const store = new Vuex.Store({
     spaceManage,
     userGroupSetting,
     sensitivityLevel,
-    memberTemplate
+    memberTemplate,
+    userOrOrg,
+    renewalNotice,
+    userGlobalConfig
   },
   state: {
     mainContentLoading: false,
@@ -451,7 +463,8 @@ const store = new Vuex.Store({
       // 设置项目最大可授权范围
       addMemberBoundary: {
         customFooterClass: false, // 设置项目最大可授权范围, 底部插槽自定义样式
-        hideInfiniteTreeCount: false // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+        hideInfiniteTreeCount: false, // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+        hideScopeRangeEntry: false // 隐藏跳转到授权边界页面入口
       }
     },
     curTreeTableDataIndex: 0,
@@ -639,7 +652,8 @@ const store = new Vuex.Store({
     },
 
     updataNavRouterDiff (state, index) {
-      state.routerDiff = [...getNavRouterDiff(index)];
+      const result = getManagerMenuPerm(state.roleList);
+      state.routerDiff = [...getNavRouterDiff(index, result)];
     },
 
     updateRoleList (state, payload) {
@@ -738,20 +752,14 @@ const store = new Vuex.Store({
       const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
       return http.get(`${AJAX_URL_PREFIX}/accounts/user/`, config).then((response) => {
         const data = response ? response.data : {};
-        // 由于现有搜索改成后端接口搜索，去掉之前前端自定义的内容
-        // if (data.role.type === 'system_manager') {
-        //   const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
-        //   data.role.name = `${data.role.name}${langManager}`;
-        // }
         commit('updateUser', data);
-
         if (Object.keys(data).length > 0) {
           const role = data.role.type;
           if (role === 'staff') {
             commit('updateIndex', 0);
           }
           state.index = state.index || Number(window.localStorage.getItem('index'));
-          if (state.index && state.index > 1) {
+          if (state.index !== 1) {
             commit('updataNavRouterDiff', state.index);
           } else {
             commit('updataRouterDiff', role);
@@ -784,14 +792,9 @@ const store = new Vuex.Store({
       };
       return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/?${json2Query(queryParams)}`).then(({ data }) => {
         const results = data.results || [];
-        // results.forEach((item) => {
-        //   if (item.type === 'system_manager') {
-        //     const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
-        //     item.name = `${item.name}${langManager}`;
-        //   }
-        // });
         commit('updateRoleListTotal', data.count || 0);
         commit('updateRoleList', results);
+        // commit('updateRoleList', results.filter((item) => item.type !== 'super_manager'));
         return results;
       });
     },
@@ -940,7 +943,8 @@ const store = new Vuex.Store({
         // 设置项目最大可授权范围
         addMemberBoundary: {
           customFooterClass: true, // 设置项目最大可授权范围, 底部插槽自定义样式
-          hideInfiniteTreeCount: true// 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+          hideInfiniteTreeCount: true, // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+          hideScopeRangeEntry: true // 隐藏跳转到授权边界页面入口
         }
       };
       commit('setExternalSystemsLayout', externalSystemsLayout);

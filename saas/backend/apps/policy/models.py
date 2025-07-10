@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 
 from django.db import models
@@ -38,15 +39,17 @@ class Policy(BaseModel):
     # policy_id = models.BigIntegerField("后端policy_id", default=0)
 
     # 策略的鉴权类型
-    auth_type = models.CharField("策略的鉴权类型", max_length=16, choices=AuthType.get_choices(), default=AuthType.ABAC.value)
+    auth_type = models.CharField(
+        "策略的鉴权类型", max_length=16, choices=AuthType.get_choices(), default=AuthType.ABAC.value
+    )
 
     class Meta:
         verbose_name = "权限策略"
         verbose_name_plural = "权限策略"
 
-        index_together = [
-            ("subject_id", "subject_type", "system_id"),
-            ("action_id", "system_id", "subject_type", "subject_id"),
+        indexes = [
+            models.Index(fields=["subject_id", "subject_type", "system_id"]),  # 第一个索引
+            models.Index(fields=["action_id", "system_id", "subject_type", "subject_id"]),  # 第二个索引
         ]
 
     @property

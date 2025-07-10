@@ -7,12 +7,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import pytest
 
 from backend.biz.org_sync.util import convert_list_for_mptt
 
 
-@pytest.fixture()
+@pytest.fixture
 def node_list():
     return [(1, None), (2, 1), (3, 1), (4, 2), (5, 2), (4, 1)]
 

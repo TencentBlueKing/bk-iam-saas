@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from backend.audit.audit import DataProvider, NoNeedAuditException, audit_context_getter
 from backend.audit.constants import AuditObjectType, AuditType
 
@@ -115,3 +116,19 @@ class RoleGroupRenewAuditProvider(BaseRoleDataProvider):
     def extra(self):
         members = audit_context_getter(self.request, "members")
         return {"members": members}
+
+
+class RoleUpdateGroupConfigProvider(BaseRoleDataProvider):
+    type = AuditType.ROLE_UPDATE_GROUP_CONFIG.value
+
+    @property
+    def extra(self):
+        return {"data": audit_context_getter(self.request, "data")}
+
+
+class RoleUpdateNotificationConfigProvider(BaseRoleDataProvider):
+    type = AuditType.ROLE_UPDATE_NOTIFICATION_CONFIG.value
+
+    @property
+    def extra(self):
+        return {"data": audit_context_getter(self.request, "data")}

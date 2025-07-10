@@ -7,7 +7,7 @@
 
 .resource-instance-table-wrapper {
     min-height: 101px;
-    .bk-table {
+    /deep/ .bk-table {
         width: 100%;
         margin-top: 8px;
         border-right: none;
@@ -15,7 +15,21 @@
         font-size: 12px;
         .bk-table-header-wrapper {
             th:first-child .cell {
-                padding-left: 20px;
+                padding-left: 15px;
+            }
+            .bk-table-column-selection {
+                padding-left: 0;
+                text-align: center;
+                .cell {
+                    padding-left: 0;
+                }
+            }
+        }
+        .bk-table-fixed {
+            .bk-table-column-selection {
+                .cell {
+                    padding-left: 0 !important;
+                }
             }
         }
         .mock-disabled-select {
@@ -45,12 +59,13 @@
                 }
                 &.has-perm-row-animation-cls {
                     animation: rowAnimation 2s ease 0s 1 normal;
+                    -webkit-animation: rowAnimation 2s ease 0s 1 normal;
                 }
             }
             td:first-child .cell,
             th:first-child .cell {
-                /* padding-left: 15px; */
-                padding-left: 10px;
+                padding-left: 15px;
+                /* padding-left: 10px; */
             }
             .iam-deadline-select.is-default-trigger.is-unselected:before {
                 color: #63656e !important;
@@ -72,7 +87,7 @@
             } */
             .iam-perm-table-cell-cls {
                 .cell {
-                    height: 100%;
+                    /* height: 100%; */
                     .condition-table-cell{
                         height: 100%;
                         flex-flow: column;
@@ -80,13 +95,15 @@
                         justify-content: space-evenly;
                         padding-top: 20px;
                     }
-                    .action-name-cell{
-                        margin-top: 38px;
-                    }
                     .action-name-empty{
                         height: 50px;
                         margin-top: 0px;
                         padding-top: 20px;
+                    }
+                    .recommend-action-name-empty {
+                        margin-top: 0;
+                        height: auto;
+                        padding-top: 0;
                     }
                     .empty-text {
                         padding-top: 0px;
@@ -164,7 +181,7 @@
         }
 
         .action-name {
-            margin-left: 6px;
+            /* margin-left: 6px; */
             display: inline-block;
             vertical-align: bottom;
             word-wrap: break-word;
@@ -235,8 +252,9 @@
         height: calc(100vh - 114px);
     }
     .bk-sideslider-footer {
-        background-color: #f5f6fa!important;
-        border-color: #dcdee5!important;
+        /* background-color: #f5f6fa!important; */
+        background-color: #ffffff !important;
+        border-color: #dcdee5 !important;
     }
 }
 .iam-deadline-select-dropdown-content {

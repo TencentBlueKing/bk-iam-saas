@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 
 from django.db import models
@@ -37,7 +38,10 @@ class Application(BaseModel, BaseSystemHiddenModel):
         verbose_name = "权限申请"
         verbose_name_plural = "权限申请"
         ordering = ["-id"]
-        index_together = [["created_time"], ["callback_id", "sn"]]
+        indexes = [
+            models.Index(fields=["created_time"]),  # 单字段索引
+            models.Index(fields=["callback_id", "sn"]),  # 多字段组合索引
+        ]
 
     @property
     def data(self):

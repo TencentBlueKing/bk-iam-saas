@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Dict, List, Optional
 
 from pydantic import parse_obj_as
@@ -36,7 +37,7 @@ class ActionService:
 
     full_fields = (
         "id,name,name_en,related_resource_types,version,type,hidden,description,description_en,"
-        "related_actions,related_environments"
+        "related_actions,related_environments,sensitivity"
     )
 
     @cachedmethod(timeout=60)

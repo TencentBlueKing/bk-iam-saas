@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, Dict, List, Optional
 
 from django.db import transaction
@@ -265,7 +266,9 @@ class TemplateCheckBiz:
 
         try:
             PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, template_id)
-            raise error_codes.VALIDATE_ERROR.format(_("用户组: {} 不能授权已授权的模板: {}").format(subject.id, template.name))
+            raise error_codes.VALIDATE_ERROR.format(
+                _("用户组: {} 不能授权已授权的模板: {}").format(subject.id, template.name)
+            )
         except Http404:
             pass
 
@@ -339,7 +342,7 @@ class ChainNodeList:
         """
         匹配视图的前缀
         """
-        for self_node, node in zip(self.nodes, node_list.nodes):
+        for self_node, node in zip(self.nodes, node_list.nodes, strict=False):
             if not self_node.match_chain_node(node):
                 return None
 
@@ -357,7 +360,7 @@ class ChainNodeList:
         if len(path) > self.length:
             return False
 
-        for path_node, chain_node in zip(path, self.nodes):
+        for path_node, chain_node in zip(path, self.nodes, strict=False):
             if not chain_node.match_resource_type(path_node.to_path_resource_type()):
                 return False
 
@@ -544,9 +547,7 @@ class TemplatePolicyCloneBiz:
         action_list = self.action_svc.new_action_list(system_id)
         config_dict = self._gen_action_clone_config_dict(action_list, new_action_ids, old_action_ids)
         for target_action_id, source_action_dict in config_dict.items():
-            copy_from_actions = [
-                ThinAction.parse_obj(action_list.get(action_id)) for action_id in source_action_dict.keys()
-            ]
+            copy_from_actions = [ThinAction.parse_obj(action_list.get(action_id)) for action_id in source_action_dict]
             configs.append(ActionCloneConfig(action_id=target_action_id, from_actions=copy_from_actions))
 
         return configs

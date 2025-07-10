@@ -30,7 +30,7 @@
           ref="topologyTableRef"
           size="small"
           data-test-id="topology_tree_group"
-          ext-cls="topology-tree-table"
+          :ext-cls="formatTableCls"
           :header-border="false"
           :outer-border="false"
           :max-height="formatTableHeight"
@@ -220,7 +220,7 @@
                 ref="topologyTableRef"
                 size="small"
                 data-test-id="topology_tree_group"
-                ext-cls="topology-tree-table"
+                :ext-cls="formatTableCls"
                 :header-border="false"
                 :outer-border="false"
                 :data="renderTopologyData"
@@ -758,6 +758,12 @@
           return false;
         };
       },
+      formatTableCls () {
+        if (this.resourceValue) {
+          return 'topology-tree-table topology-tree-table-radio';
+        }
+        return 'topology-tree-table';
+      },
       isTreeEmpty () {
         return this.allTreeData.filter((item) => item.type === 'node').length === 0 || this.searchDisplayText === this.$t(`m.common['搜索结果为空']`);
       }
@@ -1217,6 +1223,10 @@
               index: this.curTreeTableDataIndex
             });
           }
+        }
+        // 处理空数据搜索
+        if (!curNode && this.curTreeTableData.children && !this.curTreeTableData.children.length) {
+          this.$emit('on-table-empty-search', { keyword: this.tableKeyWord });
         }
         setTimeout(() => {
           this.tableLoading = false;
@@ -2007,6 +2017,17 @@
       .jump-input {
         outline: none;
         min-width: 0;
+      }
+    }
+  }
+}
+/deep/ .topology-tree-table {
+  &.topology-tree-table-radio {
+    .bk-table-header-wrapper {
+      .cell {
+        .bk-form-checkbox {
+          display: none !important;
+        }
       }
     }
   }

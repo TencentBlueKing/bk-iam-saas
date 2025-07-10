@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Any, List
 
 from pydantic import BaseModel, Field
@@ -35,7 +36,9 @@ class OpenRelatedResource(BaseModel):
     system_id: str = Field(alias="system")
     type: str
     paths: List[List[OpenResourcePathNode]] = []
-    attributes: List[Any] = []  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
+    attributes: List[
+        Any
+    ] = []  # 一般情况下，若支持属性，其API协议与PolicyBean等都一致的，所以不需要额外定义，Any表示即可
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段传 system 或 system_id
@@ -55,7 +58,7 @@ class OpenRelatedResource(BaseModel):
                 self._raise_match_selection_fail_exception(path)
 
             # 判断是否路径上每个节点都有system，有的话不需要使用实例视图填充
-            if all([node.system_id != "" for node in path]):
+            if all(node.system_id != "" for node in path):
                 continue
 
             # 取匹配的实例视图的第一个来做填充
@@ -63,7 +66,7 @@ class OpenRelatedResource(BaseModel):
 
             # 获取到实例视图提供的系统列表, 填充到现有的path中
             system_ids = first_match_selection.list_match_path_system_id(path_resource_types)
-            for node, system_id in zip(path, system_ids):
+            for node, system_id in zip(path, system_ids, strict=False):
                 node.system_id = system_id
 
             # 如果有多个实例视图可以匹配, 所有实例视图返回的system_ids必须一致
@@ -76,7 +79,7 @@ class OpenRelatedResource(BaseModel):
         Note: 这里的填充名字只会对缺名称的进行填充，因为对于授权API是说，是可以完全信任接入系统传的名称
         """
         # 必须保证所有资源实例的system_id都存在
-        assert all([node.system_id != "" for path in self.paths for node in path])
+        assert all(node.system_id != "" for path in self.paths for node in path)
 
         # 查询资源Name
         resource_biz = ResourceBiz()
@@ -186,11 +189,9 @@ class OpenCommonTrans:
             for p in policies:
                 p.set_expired_at(expired_at)
 
-        policy_list = PolicyBeanList(
+        return PolicyBeanList(
             system_id=system_id,
             policies=policies,
             need_fill_empty_fields=True,  # 填充相关字段
             need_check_instance_selection=True,  # 校验实例视图
         )
-
-        return policy_list

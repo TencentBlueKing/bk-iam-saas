@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.db import models
 
 from backend.apps.handover.constants import HandoverObjectType, HandoverStatus
@@ -28,8 +29,7 @@ class HandoverRecord(TimestampedModel):
     reason = models.CharField("交接原因", max_length=255)
 
     def detail(self):
-        handover_record_details = HandoverTask.objects.filter(handover_record_id=self.id)
-        return handover_record_details
+        return HandoverTask.objects.filter(handover_record_id=self.id)
 
 
 class HandoverTask(TimestampedModel):

@@ -94,6 +94,7 @@
                 @on-load-more="handleLoadMore"
                 @on-page-change="handlePageChange"
                 @on-table-page-change="handleTablePageChange"
+                @on-table-empty-search="handleTableEmptySearch"
                 @async-load-nodes="handleAsyncNodes"
                 @async-load-table-nodes="handleAsyncNodes"
               />
@@ -173,6 +174,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { guid, formatCodeData } from '@/common/util';
   import il8n from '@/language';
@@ -319,6 +321,8 @@
     data () {
       return {
         isLoading: false,
+        // 判断第一层数据是否是空
+        isFirstLevelEmpty: false,
         limit: 100,
         resourceTotal: 0,
         subResourceTotal: 0,
@@ -360,19 +364,29 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       isOnlyLevel () {
         return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
       isManualInput () {
         return ['manualInput'].includes(this.curSelectedChain.id) && ['instance:paste'].includes(this.selectionMode);
       },
+      isSuperManager () {
+        return this.user.role.type === 'super_manager';
+      },
       renderTopologyData () {
         const hasNode = {};
         const treeData = [...this.treeData];
         const list = treeData.reduce((curr, next) => {
-          // eslint-disable-next-line no-unused-expressions
-          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
-          // hasNode[next.name] ? '' : hasNode[next.name] = true && curr.push(next);
+          if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
+            const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
+          } else {
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          }
           return curr;
         }, []);
         return list;
@@ -454,7 +468,8 @@
 
       handleOnExpanded (index, expanded) {
         window.changeAlert = true;
-        if (!expanded && this.treeData[index + 2].type === 'search-empty') {
+        const searchEmptyData = this.treeData[index + 2];
+        if (!expanded && searchEmptyData && searchEmptyData.type === 'search-empty') {
           this.treeData.splice(index + 2, 1);
         }
       },
@@ -838,6 +853,7 @@
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
           this.resourceTotal = data.count || 0;
+          this.isFirstLevelEmpty = data.results.length < 1;
           if (data.results.length < 1) {
             this.searchDisplayText = RESULT_TIP[code];
             return;
@@ -938,6 +954,7 @@
         let id = '';
         let name = '';
         let systemId = '';
+        let parentChainData = null;
         if (!curChainData) {
           id = this.curChain[chainLen - 1].id;
           name = this.curChain[chainLen - 1].name;
@@ -947,7 +964,8 @@
           name = curChainData.name;
           systemId = curChainData.system_id;
         }
-        if (this.isManualInput) {
+        // 如果是手动输入或者第一次加载resource为空且身份不是超管，代表它的范围只是他本身
+        if (this.isManualInput || (this.isFirstLevelEmpty && !this.isSuperManager)) {
           parentChain.push({
             type: id,
             type_name: name,
@@ -985,6 +1003,26 @@
             }
             return this.curChain[this.curChain.length - 1];
           })();
+          // 处理只有一层拓扑，但业务类型却又有多条情况
+          if (node.level === 0 && !node.async) {
+            parentChainData = {
+              type: this.curChain[0].id,
+              type_name: this.curChain[0].name,
+              id: node.id,
+              name: node.name,
+              system_id: this.curChain[0].system_id,
+              child_type: node.childType || ''
+            };
+          } else {
+            parentChainData = {
+              type: id,
+              type_name: name,
+              id: node.id,
+              name: node.name,
+              system_id: systemId,
+              child_type: node.childType || ''
+            };
+          }
           parentChain.forEach((item, index) => {
             let id = '';
             if (this.curChain[index]) {
@@ -995,14 +1033,7 @@
             item.type = id;
             item.type_name = id;
           });
-          parentChain.push({
-            type: id,
-            type_name: name,
-            id: node.id,
-            name: node.name,
-            system_id: systemId,
-            child_type: node.childType || ''
-          });
+          parentChain.push(parentChainData);
           if (isNeedAny) {
             parentChain.push({
               type: anyData.id,
@@ -1072,6 +1103,15 @@
 
       async handleAsyncNodes (node, index, flag) {
         console.log('handleAsyncNodes', node, index);
+        const chainLen = this.curChain.length;
+        // 兼容如果是实例视图最后一个节点且child_type为空，则代表没有下一级不需要调接口
+        if (!node.childType && node.level + 1 >= chainLen) {
+          node.expanded = false;
+          node.async = false;
+          this.emptyTreeData = formatCodeData(0, this.emptyData, true);
+          this.removeAsyncNode();
+          return;
+        }
         window.changeAlert = true;
         const asyncItem = {
           ...ASYNC_ITEM,
@@ -1080,7 +1120,6 @@
         };
         const asyncData = new Node(asyncItem, node.level + 1, false, 'async');
         this.treeData.splice((index + 1), 0, asyncData);
-        const chainLen = this.curChain.length;
         const params = {
           limit: this.limit,
           offset: 0,
@@ -1141,7 +1180,6 @@
           }, []);
         }
         params.ancestors.push(...parentData, ancestorItem);
-
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyTreeData = formatCodeData(code, this.emptyData, data.results.length === 0);
@@ -1262,7 +1300,6 @@
             this.treeData.splice((index + childNodes.length + 1), 0, loadData);
             node.children.push(new Node(loadItem, curLevel, false, 'load'));
           }
-
           const searchItem = {
             ...SEARCH_ITEM,
             totalPage: totalPage,
@@ -1272,7 +1309,6 @@
             visiable: flag,
             placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
           };
-
           const searchData = new Node(searchItem, curLevel, false, 'search');
           // 保存当前页条数用于自定义分页
           this.curTableData = [...childNodes];
@@ -1284,22 +1320,27 @@
           }
           this.removeAsyncNode();
         } catch (e) {
-          console.error(e);
-          const { code } = e;
           this.removeAsyncNode();
-          this.emptyTreeData = formatCodeData(code, this.emptyData);
+          this.emptyTreeData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         }
       },
 
       removeAsyncNode () {
         // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
-        const obj = {};
-        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
-        this.treeData = treeList.reduce((pre, item) => {
-          // eslint-disable-next-line no-unused-expressions
-          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
-          return pre;
+        const hasNode = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name !== ''));
+        this.treeData = treeList.reduce((curr, next) => {
+          if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
+            const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
+          } else {
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          }
+          return curr;
         }, []);
         const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
@@ -1311,7 +1352,8 @@
         node.current = node.current + 1;
         node.loadingMore = true;
         const chainLen = this.curChain.length;
-        let keyword = !isTable ? this.curKeyword : '';
+        // 如果是表格搜索或者level大于0，,代表当前搜索层级不是最外层，需要清空搜索条件
+        let keyword = isTable || (!isTable && node.level > 0) ? '' : this.curKeyword;
         if (Object.keys(this.curSearchObj).length) {
           if (node.parentId === this.curSearchObj.parentId) {
             keyword = this.curSearchObj.value;
@@ -1600,6 +1642,11 @@
       // 多层拓扑分页
       async handleTablePageChange (node, index) {
         this.handleLoadMore(node, index, true);
+      },
+
+      handleTableEmptySearch ({ keyword }) {
+        this.emptyTreeData.tipType = keyword ? 'search' : 'empty';
+        this.emptyTreeData = formatCodeData(0, this.emptyData, true);
       }
     }
   };

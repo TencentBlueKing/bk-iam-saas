@@ -10,7 +10,7 @@
       :cell-class-name="getCellClass"
       @select="handlerChange"
       @select-all="handlerAllChange">
-      <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
+      <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="50"></bk-table-column>
       <bk-table-column v-if="hasSystem && systemId" :resizable="false" :label="$t(`m.common['系统']`)">
         <span>
           {{ formatSystemLabel }}
@@ -22,7 +22,12 @@
             :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
             <span class="action-name" :title="row.name">{{ row.name }}</span>
           </div>
-          <div v-else :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
+          <div v-else
+            :class="[
+              'action-name-cell',
+              { 'recommend-action-name-empty': isNoPermPage }
+            ]"
+          >
             <span class="action-name" style="padding: 10px 0;" :title="row.name">{{ row.name }}</span>
             <span v-if="!emptyResourceGroupsList.length">
               <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
@@ -359,6 +364,10 @@
         type: Boolean,
         default: false
       },
+      isNoPermPage: {
+        type: Boolean,
+        default: false
+      },
       hasSystem: {
         type: Boolean,
         default: false
@@ -498,21 +507,24 @@
               return false;
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.isDefaultLimit;
+          return curData && curData.isDefaultLimit;
       },
       curAggregateFlag () {
           if (this.aggregateIndex === -1) {
               return 'add';
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.flag;
+          return curData && curData.flag;
       },
       curAggregateSelectionMode () {
           if (this.aggregateIndex === -1) {
               return 'all';
           }
           const curData = this.tableList[this.aggregateIndex];
-          return curData.selectionMode;
+          if (curData) {
+            return curData.selectionMode;
+          }
+          return 'all';
       },
       isShowPreview () {
           if (this.curIndex === -1) {
@@ -764,7 +776,6 @@
       },
 
       handlerAggregateOnBatchPaste (payload, index) {
-        console.log(666, this.curCopyMode, this.curCopyData, payload, index);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -1004,7 +1015,8 @@
         }
 
         );
-        const curData = _.cloneDeep(this.tableList[this.curIndex]);
+        const tableList = _.cloneDeep(this.tableList);
+        const curData = _.cloneDeep(tableList[this.curIndex]);
         // eslint-disable-next-line max-len
         curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex]];
@@ -1034,13 +1046,13 @@
             && groupItem.related_resource_types[0].condition[0] === 'none');
         });
 
-        const relatedList = _.cloneDeep(this.tableList.filter(item => {
+        const relatedList = tableList.filter(item => {
           return !item.isAggregate
             && relatedActions.includes(item.id)
             // && item.resource_groups[this.curGroupIndex]
             // && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
             && item.resource_groups.map(item => !item.related_resource_types.every(sub => sub.empty))[0];
-        }));
+        });
 
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
@@ -1139,6 +1151,7 @@
           resItem.isLimitExceeded = false;
           resItem.isError = true;
         } else {
+          resItem.condition = data;
           const { isMainAction, related_actions } = this.tableList[this.curIndex];
           // 如果为主操作
           if (isMainAction) {
@@ -1336,17 +1349,16 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
+          if (tempCurData[0] === 'none') {
+            return;
+          }
+          content.condition = _.cloneDeep(tempCurData);
         }
-        if (tempCurData[0] === 'none') {
-          return;
-        }
-        content.condition = _.cloneDeep(tempCurData);
         content.isError = false;
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
 
       handlerOnBatchPaste (payload, content, index, subIndex) {
-        console.log(payload, this.curCopyMode, this.curCopyData, this.curCopyKey, 454455);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -1440,7 +1452,6 @@
                     item.isNeedNoLimited = true;
                     this.$set(item, 'isNoLimited', false);
                     item.isError = false;
-                    console.log(556656, item);
                   }
                 });
                 this.$emit('on-select', item);
@@ -1493,7 +1504,6 @@
                 groupItem.related_resource_types
                   && groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
                     if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                      console.log(tempCurData);
                       subItem.condition = _.cloneDeep(tempCurData);
                       subItem.isError = false;
                     }
@@ -1507,7 +1517,6 @@
             }
           });
         }
-        console.log(payload, content, this.curCopyKey, tempCurData, '内容');
         if (content.hasOwnProperty('isError')) {
           content.isError = false;
         }
@@ -1815,13 +1824,9 @@
       handleResourceEffectTimeSubmit () {
         const environments = this.$refs.sidesliderRef.handleGetValue();
         if (!environments) return;
-        console.log(this.curIndex, this.curGroupIndex);
 
         const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex];
         resItem.environments = environments;
-        console.log(resItem);
-        console.log(environments);
-        console.log(this.tableList);
 
         window.changeAlert = false;
         this.resourceInstanceEffectTimeTitle = '';

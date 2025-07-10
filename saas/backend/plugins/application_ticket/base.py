@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import abc
 from typing import Dict, List, Optional
 
@@ -28,19 +29,21 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def list_by_sns(self, sns: List[str]) -> List[ApplicationTicket]:
         """批量根据单据号查询单据信息"""
-        pass
 
     @abc.abstractmethod
     def get_ticket(self, sn: str) -> ApplicationTicket:
         """获取单据信息"""
-        pass
 
     @abc.abstractmethod
     def create_for_policy(
-        self, data: GrantActionApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
+        self,
+        data: GrantActionApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        approval_title_prefix: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> str:
         """创建 - 申请或续期自定义权限单据"""
-        pass
 
     @abc.abstractmethod
     def create_for_group(
@@ -53,7 +56,6 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         approval_content: Optional[Dict] = None,
     ) -> str:
         """创建 - 申请加入或续期用户组单据"""
-        pass
 
     @abc.abstractmethod
     def create_for_grade_manager(
@@ -66,14 +68,11 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         tag: str = "",
     ) -> str:
         """创建 - 创建或更新分级管理员"""
-        pass
 
     @abc.abstractmethod
     def get_approval_ticket_from_callback_request(self, request: Request) -> ApplicationTicket:
         """处理审批回调结果"""
-        pass
 
     @abc.abstractmethod
     def cancel_ticket(self, sn: str, operator: str):
         """撤销单据"""
-        pass

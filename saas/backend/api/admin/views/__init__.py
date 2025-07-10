@@ -8,8 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from .audit import AdminAuditEventViewSet
-from .group import AdminGroupMemberViewSet, AdminGroupViewSet
+from .group import AdminGroupInfoViewSet, AdminGroupMemberViewSet, AdminGroupPolicyViewSet, AdminGroupViewSet
 from .role import AdminSuperManagerMemberViewSet, AdminSystemManagerMemberViewSet
 from .subject import (
     AdminSubjectFreezeViewSet,
@@ -18,10 +19,12 @@ from .subject import (
     AdminSubjectPermissionExistsViewSet,
     AdminSubjectRoleViewSet,
 )
-from .system import AdminSystemViewSet
+from .system import AdminSystemProviderConfigViewSet, AdminSystemViewSet
+from .template import AdminTemplateViewSet
 
 __all__ = [
     "AdminGroupViewSet",
+    "AdminGroupInfoViewSet",
     "AdminGroupMemberViewSet",
     "AdminSubjectGroupViewSet",
     "AdminSuperManagerMemberViewSet",
@@ -32,4 +35,7 @@ __all__ = [
     "AdminSubjectFreezeViewSet",
     "AdminSubjectPermissionCleanupViewSet",
     "AdminSubjectPermissionExistsViewSet",
+    "AdminTemplateViewSet",
+    "AdminGroupPolicyViewSet",
+    "AdminSystemProviderConfigViewSet",
 ]

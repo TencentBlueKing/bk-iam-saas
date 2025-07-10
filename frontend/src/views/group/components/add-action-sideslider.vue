@@ -13,32 +13,32 @@
       v-bkloading="{ isLoading, opacity: 1 }">
       <template v-if="isShowContent">
         <div class="left-wrapper">
-          <div class="search-wrappers">
+          <div class="search-wrapper">
             <bk-input
               clearable
               right-icon="bk-icon icon-search"
-              style="max-width: calc(100% - 48px)"
+              class="search-wrapper-input"
               v-model="keyword"
               @input="handleInput"
-              @enter="handleSearch">
-            </bk-input>
-            <div
-              v-if="['rating_manager', 'subset_manager'].includes(user.role.type)"
-              class="icon-iamcenter-wrapper"
-              @click.stop="refreshList">
-              <i class="iam-icon iamcenter-refresh"></i>
+              @enter="handleSearch"
+              @right-icon-click="handleSearch"
+            />
+            <div class="icon-iamcenter-wrapper" @click.stop="handleRefreshList">
+              <i class="iam-icon iamcenter-refresh" />
             </div>
           </div>
           <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
             <template v-if="curSystemList.length > 0">
               <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                <div class="system-item single-hide"
+                <div class="flex-between system-item"
                   v-for="item in curSystemList"
                   :key="item.id"
                   :class="item.id === curSystem ? 'active' : ''"
                   :title="item.name"
                   @click.stop="handleSysChange(item)">
-                  {{ item.name }}
+                  <div :class="['single-hide','system-item-name',{ 'has-badge': systemData[item.id].count }]">
+                    {{ item.name }}
+                  </div>
                   <template v-if="systemData[item.id].count">
                     <bk-badge
                       :theme="getComputedTheme(item.id)"
@@ -46,14 +46,6 @@
                       :val="systemData[item.id].count" />
                   </template>
                 </div>
-                <!-- <div
-                                    v-if="user.role.type === 'rating_manager'"
-                                    :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                    :title="$t(`m.grading['修改管理空间授权范围']`)"
-                                    @click="handleSkip">
-                                    <i class="iam-icon iamcenter-edit-fill"></i>
-                                    {{ $t(`m.grading['修改管理空间授权范围']`) }}
-                                </div> -->
               </div>
             </template>
             <template v-else>
@@ -66,15 +58,6 @@
                 @on-refresh="handleEmptyRefresh"
               />
             </template>
-            <!-- <template v-else>
-                            <div class="empty-wrapper empty-wrapper2">
-                                <template v-if="user.role.type === 'rating_manager'">
-                                    <bk-exception class="exception-wrap-item exception-part" type="search-empty" scene="part"></bk-exception>
-                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改管理空间授权范围']`) }}</p>
-                                </template>
-                                <iam-svg v-else />
-                            </div>
-                        </template> -->
           </div>
         </div>
         <div class="right-wrapper" v-bkloading="{ isLoading: isRightLoading, opacity: 1, color: '#f5f6fa' }">
@@ -515,6 +498,9 @@
        * @param {String} systemId 系统id
        */
       async fetchCommonActions (systemId) {
+        if (!systemId) {
+          return;
+        }
         try {
           const { code, data } = await this.$store.dispatch('permApply/getUserCommonAction', { systemId });
           this.commonActions.splice(0, this.commonActions.length, ...(data || []));
@@ -599,12 +585,15 @@
           this.fetchErrorMsg(e);
         } finally {
           this.initRequestQueue.shift();
+          if (!this.systemList.length) {
+            this.initRequestQueue = [];
+          }
           this.systemListIsLoading = false;
         }
       },
 
       async fetchAggregationAction () {
-        if (this.aggregationData[this.curSystem]) {
+        if (!this.curSystem || this.aggregationData[this.curSystem]) {
           return;
         }
         try {
@@ -618,7 +607,7 @@
       },
 
       async fetchAuthorizationScopeActions () {
-        if (this.authorizationData[this.curSystem]) {
+        if (!this.curSystem || this.authorizationData[this.curSystem]) {
           return;
         }
         try {
@@ -640,6 +629,9 @@
        * @param {String} systemId 系统id
        */
       async fetchActions (systemId) {
+        if (!systemId) {
+          return;
+        }
         const params = {
           system_id: systemId
         };
@@ -719,23 +711,14 @@
             this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
             this.$set(item, 'allDisabled', allDisabled);
           });
-          this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
-        }
-
-        if (this.defaultValue.length > 0) {
-          const curAllActionIds = [];
-          this.systemData[payload].list.forEach(item => {
-            item.actions.forEach(act => {
-              curAllActionIds.push(act.$id);
+          const curSystem = this.systemList.find(item => item.id === payload);
+          if (curSystem) {
+            const hasSelectedActions = this.linearAction.filter((v) => v.checked);
+            this.systemData[payload] = Object.assign(this.systemData[payload], {
+              system_name: curSystem.name,
+              count: hasSelectedActions.length
             });
-            item.sub_groups.forEach(sub => {
-              (sub.actions || []).forEach(v => {
-                curAllActionIds.push(v.$id);
-              });
-            });
-          });
-          const intersection = curAllActionIds.filter(item => this.defaultValue.includes(item));
-          this.systemData[payload].count = intersection.length;
+          }
         }
       },
 
@@ -990,6 +973,7 @@
         this.isFilter = false;
         this.curSystem = '';
         this.curSelectValue = [];
+        this.linearAction = [];
       },
 
       fetchErrorMsg (payload) {
@@ -1034,14 +1018,15 @@
         this.resetData();
       },
 
-      refreshList () {
+      handleRefreshList () {
         this.keyword = '';
+        this.linearAction = [];
         this.fetchSystems();
       },
             
       handleEmptyClear () {
         this.emptyData.tipType = '';
-        this.refreshList();
+        this.handleRefreshList();
       },
 
       handleEmptyRefresh () {
@@ -1051,246 +1036,6 @@
   };
 </script>
 
-<style lang="postcss">
-    .iam-add-action-sideslider {
-        z-index: 2502;
-        .content-wrapper {
-            display: flex;
-            justify-content: flex-start;
-            position: relative;
-            padding: 0 0 0 30px;
-            min-height: calc(100vh - 114px);
-            .left-wrapper {
-                position: relative;
-                flex: 0 0 220px;
-                padding: 12px 0 12px 0;
-                border-right: 1px solid #dcdee5;
-                background: #fff;
-                .system-wrapper {
-                    margin-top: 8px;
-                    .system-item {
-                        position: relative;
-                        padding-left: 10px;
-                        line-height: 32px;
-                        font-size: 14px;
-                        cursor: pointer;
-                        &:hover {
-                            background: #f5f6fa;
-                        }
-                        &.active {
-                            background: #f5f6fa;
-                            color: #3a84ff;
-                        }
-                        .bk-form-checkbox {
-                            top: -2px;
-                            width: 100%;
-                            line-height: 32px;
-                        }
-                        .bk-form-checkbox .bk-checkbox-text {
-                            max-width: 190px;
-                            text-overflow: ellipsis;
-                            white-space: nowrap;
-                            overflow: hidden;
-                        }
-                        .action-count-badge-cls {
-                            position: absolute;
-                            right: 15px;
-                        }
-                    }
-                    .skip-link {
-                        text-align: center;
-                        font-size: 14px;
-                        padding: 8px 5px;
-                        margin-top: 10px;
-                        margin-right: 20px;
-                        background: #f5f6fa;
-                        cursor: pointer;
-                        border-radius: 3px;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-
-                        &:hover {
-                            color: #3a84ff;
-                            background-color: #f0f8ff;
-                        }
-                    }
-                    .skip-link-fixed {
-                        position: fixed;
-                        bottom: 80px;
-                        width: 218px;
-                    }
-                }
-                .system-item-fixed {
-                    margin-bottom: 40px;
-                }
-                .empty-wrapper {
-                    position: absolute !important;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    img {
-                        width: 120px;
-                    }
-                    .tips-link {
-                        margin-top: 10px;
-                        width: 218px;
-                        font-size: 12px;
-                        color: #3a84ff;
-                        cursor: pointer;
-                        text-align: center;
-                    }
-                }
-            }
-            .right-wrapper {
-                position: relative;
-                flex: 0 0 calc(100% - 240px);
-                padding: 12px 20px;
-                background: #f5f6fa;
-                .custom-tmpl-wrapper {
-                    &:last-child {
-                        margin-bottom: 0;
-                    }
-                    .custom-action-checkbox-cls {
-                        .bk-checkbox-text {
-                            cursor: pointer !important;
-                            .text {
-                                font-size: 12px;
-                            }
-                        }
-                    }
-                    .bk-label {
-                        line-height: 20px;
-                        font-size: 12px;
-                        .name {
-                            font-weight: 600;
-                        }
-                        &:after {
-                            margin: 0 -7px 0 2px;
-                        }
-                    }
-                    &.custom-tmpl-wrapper-none {
-                      display: none;
-                    }
-                }
-                .choose-perm-tmpl {
-                    line-height: 30px;
-                    user-select: none;
-                    &.set-style {
-                        padding-bottom: 2px;
-                        border-bottom: 1px solid #fff;
-                    }
-                    .bk-form-checkbox {
-                        width: 130px;
-                        .bk-checkbox-text {
-                            .text {
-                                display: inline-block;
-                                max-width: 105px;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                white-space: nowrap;
-                                vertical-align: middle;
-                                outline: none;
-                            }
-                        }
-                    }
-                }
-                .choose-perm-sub-tmpl {
-                    user-select: none;
-                }
-                .sub-group-wrapper {
-                    .sub-item {
-                        display: flex;
-                        justify-content: flex-start;
-                        line-height: 30px;
-                        &.set-mt {
-                            margin-top: 5px;
-                        }
-                        &.sub-item-none {
-                          display: none;
-                        }
-                    }
-                    .sub-item-name {
-                        flex: 0 0 130px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                        vertical-align: middle;
-                        outline: none;
-                    }
-                    .bk-form-checkbox {
-                        width: 130px;
-                        .bk-checkbox-text {
-                            .text {
-                                display: inline-block;
-                                max-width: 105px;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                white-space: nowrap;
-                                vertical-align: middle;
-                                outline: none;
-                            }
-                        }
-                    }
-                    .custom-action-checkbox-sub-cls {
-                        .bk-checkbox-text {
-                            cursor: pointer !important;
-                            .text {
-                                font-size: 12px;
-                            }
-                        }
-                    }
-                }
-                .select-all {
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                    &.disabled {
-                        color: #c4c6cc;
-                        cursor: not-allowed;
-                    }
-                }
-                .empty-wrapper {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    img {
-                        width: 120px;
-                    }
-                }
-            }
-        }
-
-        .search-wrappers {
-            display: flex;
-
-            .icon-iamcenter-wrapper {
-                margin: 0 10px 0 8px;
-                height: 32px;
-                padding: 0 6px;
-                border-radius: 2px;
-                cursor: pointer;
-
-                &:hover {
-                    border-color: #979ba5;
-                    color: #63656e;
-                }
-
-                i {
-                    line-height: 32px;
-                }
-            }
-        }
-
-        .empty-wrapper2 .exception-part {
-            img {
-                width: 220px !important;
-            }
-        }
-    }
+<style lang="postcss" scoped>
+@import "@/css/mixins/iam-add-action-slider.css";
 </style>

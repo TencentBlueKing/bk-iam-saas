@@ -65,7 +65,7 @@ the `create_job` operation of the `bk_job` system is not associated with any res
   ],
   "applicant": "user001",
   "reason": "for grant policies",
-  "expired_at: 1704042061
+  "expired_at": 1704042061
 }
 ```
 
@@ -87,11 +87,11 @@ the `view_job` operation of the `bk_job` system is associated with the `job` res
             [  # an array represents a topology path of an instance, and the topology path must be consistent with the resource link of the instance view, business (biz)-job (job)
               {
                 "type": "biz",  # the first layer of resources in the instance view
-                "id": "biz1",
+                "id": "biz1"
               },
               {
                 "type": "job",  # the second layer of the resource topology path in the instance view
-                "id": "job1",
+                "id": "job1"
               }
             ]
           ]
@@ -123,11 +123,11 @@ the `execute_job` operation of the `bk_job` system is associated with the `job` 
             [  # 业务(biz)-作业(job)
               {
                 "type": "biz",
-                "id": "biz1",
+                "id": "biz1"
               },
               {
                 "type": "job",
-                "id": "job1",
+                "id": "job1"
               }
             ]
           ]
@@ -139,16 +139,16 @@ the `execute_job` operation of the `bk_job` system is associated with the `job` 
             [  # 4层的拓扑路径, 必须与实例视图的资源链路一致: 业务(biz)-集群(set)-模块(module)-主机(host)
               {
                 "type": "biz",
-                "id": "biz1",
+                "id": "biz1"
               }, {
                 "type": "set",
-                "id": "set1",
+                "id": "set1"
               }, {
                 "type": "module",
-                "id": "module1",
+                "id": "module1"
               }, {
                 "type": "host",
-                "id": "host1",
+                "id": "host1"
               }
             ]
           ],

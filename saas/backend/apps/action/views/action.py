@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, status
 from rest_framework.response import Response
@@ -22,7 +23,6 @@ from ..serializers import ActionSLZ, GroupActionQuerySLZ
 
 
 class ActionViewSet(GenericViewSet):
-
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = ActionBiz()
@@ -50,7 +50,7 @@ class ActionViewSet(GenericViewSet):
         # 1. 获取用户的权限列表
         if user_id != "" and user_id == request.user.username:
             actions = self.biz.list_by_subject(system_id, request.role, Subject.from_username(user_id), hidden=hidden)
-        elif user_id != "" and user_id != request.user.username:
+        elif user_id not in ("", request.user.username):
             raise exceptions.PermissionDenied
         elif group_id != -1:
             actions = self.biz.list_by_subject(system_id, request.role, Subject.from_group_id(group_id), hidden=hidden)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from typing import List, Optional
 
@@ -30,19 +31,19 @@ from .models import AuthAPIAllowListConfig
 logger = logging.getLogger("app")
 
 
-# TODO: 目前其他OpenAPI暂时没有其他多种匹配规则的需求，后续需要则抽取到api下共用
+# TODO: 目前其他 OpenAPI 暂时没有其他多种匹配规则的需求，后续需要则抽取到 api 下共用
 class AllowItem:
     def __init__(self, object_id: str):
-        # Note: 这里兼容了旧数据无Operation的情况，无Operation默认是eq
+        # Note: 这里兼容了旧数据无 Operation 的情况，无 Operation 默认是 eq
         self.operation = AllowListMatchOperationEnum.EQ.value
         self.object_id = object_id
 
-        # 解析object_id，拆分出operation 和 匹配的对象
-        # 若分隔符在object_id里，说明需要拆分出真正的object_id和operation
+        # 解析 object_id，拆分出 operation 和 匹配的对象
+        # 若分隔符在 object_id 里，说明需要拆分出真正的 object_id 和 operation
         if ALLOW_LIST_OBJECT_OPERATION_STEP in object_id:
             object_split_list = object_id.split(ALLOW_LIST_OBJECT_OPERATION_STEP)
-            # 长度非2，则说明非正常的规则，则默认使用等于匹配
-            if len(object_split_list) == 2:
+            # 长度非 2，则说明非正常的规则，则默认使用等于匹配
+            if len(object_split_list) == 2:  # noqa: PLR2004
                 self.operation = object_split_list[0]
                 self.object_id = object_split_list[1]
 
@@ -55,7 +56,7 @@ class AllowItem:
         if self.operation == AllowListMatchOperationEnum.EQ.value:
             return object_id == self.object_id
 
-        # Note: 对于前缀匹配，存储是的前缀，所以应该判断self.object_id是否是object_id的前缀
+        # Note: 对于前缀匹配，存储是的前缀，所以应该判断 self.object_id 是否是 object_id 的前缀
         if self.operation == AllowListMatchOperationEnum.STARTS_WITH.value:
             return object_id.startswith(self.object_id)
 
@@ -63,26 +64,22 @@ class AllowItem:
 
 
 class AuthorizationAPIAllowListCheckMixin:
-    """授权API相关白名单控制"""
+    """授权 API 相关白名单控制"""
 
-    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
+    @cachedmethod(timeout=5 * 60)  # 缓存 5 分钟
     def _list_system_allow_list(self, api: str, system_id: str) -> List[AllowItem]:
-        """查询系统某类API的白名单"""
+        """查询系统某类 API 的白名单"""
         allow_list = AuthAPIAllowListConfig.objects.filter(type=api, system_id=system_id)
         return [AllowItem(object_id=i.object_id) for i in allow_list]
 
     def _is_allowed(self, api: str, system_id: str, object_id: str) -> bool:
-        """判断是否系统允许某个API"""
+        """判断是否系统允许某个 API"""
         allow_list = self._list_system_allow_list(api, system_id)
-        for i in allow_list:
-            if i.match(object_id):
-                return True
-
-        return False
+        return any(i.match(object_id) for i in allow_list)
 
     def verify_api(self, system_id: str, object_id: str, api: AuthorizationAPIEnum):
         """
-        对授权API进行权限校验，判断该系统是否允许调用
+        对授权 API 进行权限校验，判断该系统是否允许调用
         """
         is_allowed = self._is_allowed(api, system_id, object_id)
 
@@ -93,14 +90,14 @@ class AuthorizationAPIAllowListCheckMixin:
 
     def verify_api_by_object_ids(self, system_id: str, object_ids: List[str], api: AuthorizationAPIEnum):
         """
-        批量Object进行校验
+        批量 Object 进行校验
         """
         for object_id in object_ids:
             self.verify_api(system_id, object_id, api)
 
 
 class AuthViewMixin:
-    """所有授权API的一些公共处理函数"""
+    """所有授权 API 的一些公共处理函数"""
 
     role_biz = RoleBiz()
 
@@ -112,7 +109,7 @@ class AuthViewMixin:
         """授权或回收权限"""
         system_id = policy_list.system_id
 
-        # 对于授权Admin，自动忽略
+        # 对于授权 Admin，自动忽略
         if subject.type == SubjectType.USER.value and subject.id.lower() == ADMIN_USER:
             # 原样返回，PolicyID=0，默认没有执行实际授权
             return policy_list.policies
@@ -153,7 +150,7 @@ class AuthViewMixin:
         # 用户组对应的分级管理员
         role = self.role_biz.get_role_by_group_id(int(subject.id))
 
-        # NOTE: 临时处理: 自动扩张管理员的授权范围
+        # NOTE: 临时处理：自动扩张管理员的授权范围
         self.role_biz.incr_update_auth_scope(role, [self.role_auth_scope_trans.from_policy_list(policy_list)])
 
     def policy_response(self, policy: Optional[PolicyBean]):
@@ -162,7 +159,7 @@ class AuthViewMixin:
             return Response({})
 
         return Response(
-            # TODO: 这个PolicyID是否去除呢？这里已经调整为SaaS Policy ID了，对于调用方没什么意义
+            # TODO: 这个 PolicyID 是否去除呢？这里已经调整为 SaaS Policy ID 了，对于调用方没什么意义
             {"policy_id": policy.policy_id, "statistics": {"instance_count": policy.count_all_type_instance()}}
         )
 

@@ -8,14 +8,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from typing import Any, Dict, List, Optional, Set
 
 from pydantic import BaseModel
 from pydantic.fields import Field
 
-from ..constants import SelectionMode
 from .instance_selection import InstanceSelection
+from ..constants import SelectionMode
 
 logger = logging.getLogger("app")
 
@@ -59,6 +60,7 @@ class Action(BaseModel):
     related_resource_types: List[RelatedResourceType] = []
     related_actions: List[str] = []  # 依赖操作
     related_environments: List[RelatedEnvironment] = []
+    sensitivity: int = 1
 
     def __init__(self, **data: Any):
         if "related_actions" in data and data["related_actions"] is None:

@@ -8,11 +8,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from .application import (
     ManagementApplicationCancelView,
     ManagementGradeManagerApplicationViewSet,
     ManagementGradeManagerUpdatedApplicationViewSet,
     ManagementGroupApplicationViewSet,
+    ManagementGroupBatchExpiredAtRenewApplicationViewSet,
     ManagementGroupRenewApplicationViewSet,
 )
 from .approval import ManagementApplicationApprovalView
@@ -20,16 +22,24 @@ from .grade_manager import ManagementGradeManagerViewSet
 from .group import (
     ManagementGradeManagerGroupViewSet,
     ManagementGroupActionPolicyViewSet,
+    ManagementGroupMemberBatchExpiredAtViewSet,
     ManagementGroupMemberExpiredAtViewSet,
     ManagementGroupMemberViewSet,
     ManagementGroupPolicyActionViewSet,
+    ManagementGroupPolicyTemplateViewSet,
     ManagementGroupPolicyViewSet,
+    ManagementGroupSubjectTemplateViewSet,
     ManagementGroupViewSet,
     ManagementSystemManagerGroupViewSet,
 )
-from .subject import ManagementDepartmentGroupBelongViewSet, ManagementUserGroupBelongViewSet
+from .subject import (
+    ManagementDepartmentGroupBelongViewSet,
+    ManagementMemberGroupDetailViewSet,
+    ManagementUserGroupBelongViewSet,
+)
 from .subject_template import ManagementGradeManagerSubjectTemplateViewSet
 from .subset_manager import ManagementSubsetManagerCreateListViewSet, ManagementSubsetManagerViewSet
+from .template import ManagementTemplateViewSet
 
 __all__ = [
     "ManagementSystemManagerGroupViewSet",
@@ -37,6 +47,7 @@ __all__ = [
     "ManagementGroupViewSet",
     "ManagementGroupMemberViewSet",
     "ManagementGroupMemberExpiredAtViewSet",
+    "ManagementGroupSubjectTemplateViewSet",
     "ManagementGroupPolicyViewSet",
     "ManagementGroupApplicationViewSet",
     "ManagementGroupRenewApplicationViewSet",
@@ -52,4 +63,9 @@ __all__ = [
     "ManagementGradeManagerViewSet",
     "ManagementSubsetManagerViewSet",
     "ManagementGradeManagerSubjectTemplateViewSet",
+    "ManagementMemberGroupDetailViewSet",
+    "ManagementGroupPolicyTemplateViewSet",
+    "ManagementTemplateViewSet",
+    "ManagementGroupMemberBatchExpiredAtViewSet",
+    "ManagementGroupBatchExpiredAtRenewApplicationViewSet",
 ]

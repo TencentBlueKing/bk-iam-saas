@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import time
 
 from django.utils.translation import gettext as _
@@ -41,7 +42,7 @@ class UserViewSet(GenericViewSet):
             {
                 "timestamp": timestamp,
                 "username": user.username,
-                "role": {"type": role.type, "id": role.id, "name": role.name},
+                "role": {"type": role.type, "id": role.id, "name": role.name, "code": role.code},
                 "timezone": user.get_property("time_zone"),
                 "name": u.display_name if u else "",
             }

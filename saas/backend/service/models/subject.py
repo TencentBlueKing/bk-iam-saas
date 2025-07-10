@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import List, Union
 
 from pydantic import BaseModel
@@ -38,7 +39,7 @@ class Subject(BaseModel):
         return cls(type=SubjectType.DEPARTMENT.value, id=str(department_id))
 
     @classmethod
-    def from_usernames(cls, usernames: str) -> List["Subject"]:
+    def from_usernames(cls, usernames: List[str]) -> List["Subject"]:
         return [cls.from_username(username) for username in usernames]
 
 

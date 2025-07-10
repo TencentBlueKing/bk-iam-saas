@@ -10,7 +10,7 @@
           :clearable="false"
           :disabled="item.disabled"
           searchable
-          style="width: 130px;"
+          style="width: 160px;"
           @selected="handleAttributeSelected(...arguments, item)">
           <bk-option v-for="option in list"
             :key="option.id"
@@ -18,30 +18,46 @@
             :name="option.display_name">
           </bk-option>
         </bk-select>
-        <bk-select
-          v-model="item.selecteds"
-          :ref="`${item.id}&${index}&valueRef`"
-          :multiple="true"
-          searchable
-          :disabled="item.disabled"
-          :loading="item.loading"
-          style="position: relative; left: -1px; width: 330px;"
-          :remote-method="handleRemoteValue"
-          @clear="handleClear(...arguments, item)"
-          @toggle="handleAttrValueToggle(...arguments, index, item)"
-          @selected="handleAttrValueSelected(...arguments, item)">
-          <bk-option v-for="option in attrValueListMap[item.id]"
-            :key="option.id"
-            :id="option.id"
-            :name="option.display_name">
-            <template v-if="option.id !== ''">
-              <span>{{ option.display_name }}</span>
-            </template>
-            <template v-else>
-              <div v-bkloading="{ isLoading: true, size: 'mini' }"></div>
-            </template>
-          </bk-option>
-        </bk-select>
+        <!-- 单独处理dbm系统业务个别属性id需要展示不同的组件 -->
+        <template v-if="isMemberSelector(item)">
+          <BkUserSelector
+            ref="selector"
+            class="sub-selector-content"
+            :api="userApi"
+            :value="formatMemberValue(item)"
+            :disabled="formatDisabled(item)"
+            :placeholder="$t(`m.verify['请输入']`)"
+            :empty-text="$t(`m.common['无匹配人员']`)"
+            @change="handleMemberChange(...arguments, item)"
+          />
+        </template>
+        <template v-else>
+          <bk-select
+            v-model="item.selecteds"
+            class="sub-selector-content"
+            :ref="`${item.id}&${index}&valueRef`"
+            :multiple="true"
+            searchable
+            :loading="item.loading"
+            :disabled="formatDisabled(item)"
+            :remote-method="handleRemoteValue"
+            @clear="handleClear(...arguments, item)"
+            @toggle="handleAttrValueToggle(...arguments, index, item)"
+            @selected="handleAttrValueSelected(...arguments, item)">
+            <bk-option
+              v-for="option in attrValueListMap[item.id]"
+              :key="option.id"
+              :id="option.id"
+              :name="option.display_name">
+              <template v-if="option.id !== ''">
+                <span>{{ option.display_name }}</span>
+              </template>
+              <template v-else>
+                <div v-bkloading="{ isLoading: item.isScrollRemote, size: 'mini' }"></div>
+              </template>
+            </bk-option>
+          </bk-select>
+        </template>
       </div>
       <div class="attribute-action" v-if="!item.disabled">
         <Icon type="add-hollow" @click="addAttribute" />
@@ -54,9 +70,12 @@
     </div>
   </div>
 </template>
+
 <script>
-  import _ from 'lodash';
+  import { cloneDeep, debounce } from 'lodash';
+  import { sleep } from '@/common/util';
   import Attribute from '@/model/attribute';
+  import BkUserSelector from '@blueking/user-selector';
 
   const ATTRIBUTE_ITEM = {
     id: '',
@@ -68,7 +87,9 @@
     display_name: ''
   };
   export default {
-    name: '',
+    components: {
+      BkUserSelector
+    },
     props: {
       list: {
         type: Array,
@@ -88,6 +109,7 @@
     },
     data () {
       return {
+        userApi: window.BK_USER_API,
         attrValues: [],
         curOperateData: {},
         pagination: {
@@ -95,8 +117,32 @@
           current: 1,
           totalPage: 0
         },
-        attrValueListMap: {}
+        attrValueListMap: {},
+        curToggleItem: '',
+        curKeyWord: '',
+        curSelectDom: null
       };
+    },
+    computed: {
+      isMemberSelector () {
+        return (payload) => {
+          return ['bk_cmdb'].includes(this.params.system_id) && ['operator', 'bk_bak_operator'].includes(payload.id);
+        };
+      },
+      formatDisabled () {
+        return (payload) => {
+          return payload.disabled || !payload.id;
+        };
+      },
+      formatMemberValue () {
+        return (payload) => {
+          const { values } = payload;
+          if (values && values.length > 0) {
+            return values.map((v) => v.id);
+          }
+          return [];
+        };
+      }
     },
     watch: {
       value: {
@@ -129,10 +175,30 @@
       }
     },
     methods: {
+      handleMemberChange (payload, row) {
+        this.$set(row, 'selecteds', payload);
+        if (!payload.length) {
+          row.values = [];
+          this.trigger();
+          return;
+        }
+        const tempValues = [];
+        payload.forEach((item) => {
+          tempValues.push({
+            id: item,
+            name: item
+          });
+        });
+        row.values = [...tempValues];
+        this.trigger();
+      },
+
       handleClear (value, payload) {
+        payload.selecteds = [];
         payload.values = [];
         this.trigger();
       },
+
       handleAttrValueSelected (value, options, payload) {
         if (value.length < 1) {
           payload.values = [];
@@ -155,11 +221,11 @@
         item.loading = true;
         try {
           const res = await this.$store.dispatch('permApply/getResourceAttrValues', {
-                        ...this.params,
-                        limit: this.pagination.limit,
-                        offset: this.pagination.limit * (this.pagination.current - 1),
-                        attribute: item.id,
-                        keyword: ''
+            ...this.params,
+            limit: this.pagination.limit,
+            offset: this.pagination.limit * (this.pagination.current - 1),
+            attribute: item.id,
+            keyword: ''
           });
           this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
           if (this.pagination.totalPage > 1) {
@@ -195,24 +261,32 @@
           payload.name = curAttr.display_name || '';
         }
         if (this.attrValueListMap[payload.id] && this.attrValueListMap[payload.id].length < 1) {
-          this.fetchResourceAttrValues(payload, '', true);
+          this.resetPagination(payload, '', true, false);
         }
       },
 
       handleAttrValueToggle (val, index, payload) {
-        const curOptionDom = this.$refs[`${payload.id}&${index}&valueRef`][0].$refs.optionList;
+        this.curSelectDom = this.$refs[`${payload.id}&${index}&valueRef`][0];
+        const curOptionDom = this.curSelectDom.$refs.optionList;
         curOptionDom.addEventListener('scroll', this.handleScroll);
         if (val) {
           // 记录当前操作的属性值数据
           this.curOperateData = payload;
+          // 处理多个下拉框切换或者搜索数据后重新打开下拉框需要重置分页数据
+          if ((this.curToggleItem && `${payload.id}&${index}&valueRef` !== this.curToggleItem) || !this.curKeyWord) {
+            this.curSelectDom.searchLoading = false;
+            this.resetPagination(payload, '', false, false);
+          }
+          this.curToggleItem = `${payload.id}&${index}&valueRef`;
         } else {
+          this.curSelectDom = null;
           this.curOperateData = {};
           curOptionDom.removeEventListener('scroll', this.handleScroll);
         }
       },
 
       async handleScroll (event) {
-        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
+        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight - 1) {
           ++this.pagination.current;
           if (this.pagination.current > this.pagination.totalPage) {
             this.pagination.current = this.pagination.totalPage;
@@ -222,61 +296,86 @@
             );
             // 删除loading项
             if (loadItemIndex !== -1) {
-              this.attrValueListMap[this.curOperateData.id] = _.cloneDeep(
+              this.attrValueListMap[this.curOperateData.id] = cloneDeep(
                 this.attrValueListMap[this.curOperateData.id].slice(0, loadItemIndex)
               );
             }
             return;
           }
-          await this.fetchResourceAttrValues(this.curOperateData, '', false, true);
+          await this.fetchResourceAttrValues(this.curOperateData, this.curKeyWord, false, true);
           event.target.scrollTo(0, event.target.scrollTop - 10);
         }
       },
 
-      async handleRemoteValue (val) {
+      handleRemoteValue (value) {
+        if (this.curSelectDom) {
+          this.curSelectDom.searchLoading = false;
+        }
+        this.handleDebounceSearch(value);
+      },
+
+      handleDebounceSearch: debounce(function (value) {
+        this.curKeyWord = value;
         if (this.curOperateData.id) {
-          this.pagination.current = 1;
-          this.pagination.totalPage = 0;
           const loadItemIndex = this.attrValueListMap[this.curOperateData.id].findIndex(
             item => item.id === '' && item.display_name === ''
           );
           // 删除loading项
           if (loadItemIndex !== -1) {
-            this.attrValueListMap[this.curOperateData.id] = _.cloneDeep(
+            this.attrValueListMap[this.curOperateData.id] = cloneDeep(
               this.attrValueListMap[this.curOperateData.id].slice(0, loadItemIndex)
             );
           }
-          await this.fetchResourceAttrValues(this.curOperateData, val, false);
+          this.curSelectDom.searchLoading = true;
+          this.resetPagination(this.curOperateData, value, false, false);
         }
-      },
+      }, 800),
 
       async fetchResourceAttrValues (payload, keyword = '', isLoading = true, isScrollRemote = false) {
         payload.loading = isLoading && !isScrollRemote;
+        payload.isScrollRemote = isScrollRemote;
         const { limit, current } = this.pagination;
         try {
           const res = await this.$store.dispatch('permApply/getResourceAttrValues', {
-                        ...this.params,
-                        limit: limit,
-                        offset: limit * (current - 1),
-                        attribute: payload.id,
-                        keyword
+              ...this.params,
+              limit: limit,
+              offset: limit * (current - 1),
+              attribute: payload.id,
+              keyword
           });
           if (isScrollRemote) {
             const len = this.attrValueListMap[payload.id].length;
-            this.attrValueListMap[payload.id].splice(len - 2, 0, ...res.data.results);
+            this.attrValueListMap[payload.id].splice(len - 1, 0, ...res.data.results);
           } else {
             this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
             if (this.pagination.totalPage > 1) {
               res.data.results.push(LOADING_ITEM);
+            } else {
+              res.data.results = res.data.results.filter((item) => item.id !== '');
             }
-            this.attrValueListMap[payload.id] = _.cloneDeep(res.data.results);
+            this.attrValueListMap[payload.id] = cloneDeep(res.data.results);
           }
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
         } finally {
           payload.loading = false;
+          if (this.curSelectDom) {
+            this.curSelectDom.searchLoading = false;
+          }
+          sleep(300).then(() => {
+            payload.isScrollRemote = false;
+          });
         }
+      },
+
+      async resetPagination (payload, keyword = '', isLoading = true, isScrollRemote = false) {
+        this.pagination = Object.assign({
+          limit: 10,
+          current: 1,
+          totalPage: 0
+        });
+        await this.fetchResourceAttrValues(payload, keyword, isLoading, isScrollRemote);
       },
 
       trigger () {
@@ -285,27 +384,7 @@
     }
   };
 </script>
-<style lang="postcss">
-    .attribute-item {
-        display: flex;
-        &.set-margin-top {
-            margin-top: 8px;
-        }
-    }
-    .attribute-select {
-        display: flex;
-    }
-    .attribute-action {
-        margin-left: 12px;
-        line-height: 32px;
-        i {
-            color: #979ba5;
-            font-size: 20px;
-            cursor: pointer;
-            &.disabled {
-                color: #c4c6cc;
-                cursor: not-allowed;
-            }
-        }
-    }
+
+<style lang="postcss" scoped>
+@import '@/css/mixins/attribute.css';
 </style>

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
@@ -78,6 +79,9 @@ class SubjectGroupBean(BaseModel):
     user_count: int = 0
     department_count: int = 0
 
+    def get_role_name(self) -> str:
+        return RoleService().get_role_by_group_id(self.id).name
+
 
 class GroupMemberBean(BaseModel):
     type: str
@@ -135,7 +139,7 @@ class GroupBiz:
     action_svc = ActionService()
     subject_template_svc = SubjectTemplateService()
 
-    # TODO 这里为什么是biz?
+    # TODO 这里为什么是 biz?
     action_check_biz = ActionCheckBiz()
     policy_operation_biz = PolicyOperationBiz()
     template_biz = TemplateBiz()
@@ -148,7 +152,7 @@ class GroupBiz:
     check_subject_groups_quota = GroupService.__dict__["check_subject_groups_quota"]
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
-    list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
+    list_group_subject_before_expired_at_by_ids = GroupService.__dict__["list_group_subject_before_expired_at_by_ids"]
     list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
     batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
     convert_attr_value = GroupAttributeService.__dict__["convert_attr_value"]
@@ -198,7 +202,7 @@ class GroupBiz:
         self._add_role_group_member(group_id, 0, subjects)
 
     def _add_role_group_member(self, group_id: int, subject_template_id: int, subjects: List[Subject]):
-        # 添加role group member
+        # 添加 role group member
         role = self.role_svc.get_role_by_group_id(group_id)
         if role.type == RoleType.SUBSET_MANAGER.value:
             role_id = self.role_svc.get_parent_id(role.id)
@@ -232,7 +236,7 @@ class GroupBiz:
     ) -> List[Group]:
         """
         批量创建用户组
-        用于管理api
+        用于管理 api
         """
         with transaction.atomic():
             groups = self.group_svc.batch_create(parse_obj_as(List[GroupCreation], infos), creator)
@@ -260,7 +264,7 @@ class GroupBiz:
             object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id, sync_perm=True
         ).first()
         if relation:
-            # 如果用户组是role的同步用户组, 需要同步添加成员到role
+            # 如果用户组是 role 的同步用户组，需要同步添加成员到 role
             usernames = [m.id for m in members if m.type == SubjectType.USER.value]
             if usernames:
                 self.role_svc.add_grade_manager_members(relation.role_id, usernames)
@@ -280,7 +284,7 @@ class GroupBiz:
             object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id, sync_perm=True
         ).first()
         if relation:
-            # 如果用户组是role的同步用户组, 需要同步删除成员到role
+            # 如果用户组是 role 的同步用户组，需要同步删除成员到 role
             usernames = [m.id for m in subjects if m.type == SubjectType.USER.value]
             if usernames:
                 RoleUser.objects.delete_grade_manager_member(relation.role_id, usernames)
@@ -293,7 +297,7 @@ class GroupBiz:
     def _remove_members(self, group_id, subjects):
         self.group_svc.remove_members(group_id, subjects)
 
-        # 同步删除role group member
+        # 同步删除 role group member
         user_ids = [m.id for m in subjects if m.type == SubjectType.USER.value]
         if user_ids:
             RoleGroupMember.objects.filter(
@@ -314,7 +318,7 @@ class GroupBiz:
 
     def list_system_counter(self, group_id: int, hidden: bool = True) -> List[GroupSystemCounterBean]:
         """
-        查询用户组授权的系统信息, 返回自定义权限/模板的数量
+        查询用户组授权的系统信息，返回自定义权限/模板的数量
         """
         subject = Subject.from_group_id(group_id)
         policy_systems_count = self.policy_query_svc.list_system_counter_by_subject(subject, hidden=hidden)
@@ -373,7 +377,7 @@ class GroupBiz:
         更新用户组单个权限
         """
         subject = Subject.from_group_id(group_id)
-        # 检查新增的实例名字, 检查新增的实例是否满足角色的授权范围
+        # 检查新增的实例名字，检查新增的实例是否满足角色的授权范围
         self.check_update_policies_resource_name_and_role_scope(role, system_id, template_id, policies, subject)
         # 检查策略是否与操作信息匹配
         self.action_check_biz.check_action_resource_group(
@@ -406,9 +410,10 @@ class GroupBiz:
         subject = Subject.from_group_id(group_id)
 
         updated_policies = policy_list.auto_update_resource_name()
-        # 只有存在更新，才修改DB数据
+        # 只有存在更新，才修改 DB 数据
         if len(updated_policies) > 0:
-            # 只修改DB数据，由于权限模板授权信息是完整一个json数据，所以只能使用policy_list.policies完整更新，不可使用updated_policies
+            # 只修改 DB 数据，由于权限模板授权信息是完整一个 json 数据，
+            # 所以只能使用 policy_list.policies 完整更新，不可使用 updated_policies
             self.template_svc.direct_update_db_template_auth(subject, template_id, policy_list.policies)
 
         # 返回完整的模板授权信息，包括未被更新资源实例名称的策略
@@ -446,7 +451,7 @@ class GroupBiz:
         self, subject: Subject, limit: int = 10, offset: int = 0
     ) -> Tuple[int, List[SubjectGroupBean]]:
         """
-        查询subject所属的用户组
+        查询 subject 所属的用户组
         """
         count, relations = self.group_svc.list_subject_group(subject, limit=limit, offset=offset)
         return count, self._convert_to_subject_group_beans(relations)
@@ -464,7 +469,7 @@ class GroupBiz:
         self, system_id: str, subject: Subject, limit: int = 10, offset: int = 0
     ) -> Tuple[int, List[SubjectGroupBean]]:
         """
-        查询有系统权限subject所属的用户组
+        查询有系统权限 subject 所属的用户组
         """
         count, relations = self.group_svc.list_system_subject_group(system_id, subject, limit=limit, offset=offset)
         return count, self._convert_to_subject_group_beans(relations)
@@ -483,7 +488,7 @@ class GroupBiz:
     def list_all_subject_group(self, subject: Subject) -> List[SubjectGroupBean]:
         """
         查询指定过期时间之前的所有用户组
-        注意: 分页查询, 可能会有性能问题
+        注意：分页查询，可能会有性能问题
         """
         relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at=0)
         return self._convert_to_subject_group_beans(relations)
@@ -491,21 +496,21 @@ class GroupBiz:
     def list_all_subject_group_before_expired_at(self, subject: Subject, expired_at: int) -> List[SubjectGroupBean]:
         """
         查询指定过期时间之前的所有用户组
-        注意: 分页查询, 可能会有性能问题
+        注意：分页查询，可能会有性能问题
         """
         relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at)
         return self._convert_to_subject_group_beans(relations)
 
     def list_all_user_department_group(self, subject: Subject) -> List[SubjectGroupBean]:
         """
-        查询指定用户继承的所有用户组列表(即, 继承来自于部门的用户组列表)
+        查询指定用户继承的所有用户组列表 (即，继承来自于部门的用户组列表)
         """
         relations = self.group_svc.list_user_department_group(subject)
         return self._convert_to_subject_group_beans(relations)
 
     def list_all_system_user_department_group(self, system_id: str, subject: Subject) -> List[SubjectGroupBean]:
         """
-        查询指定用户继承的所有用户组列表(即, 继承来自于部门的用户组列表)
+        查询指定用户继承的所有用户组列表 (即，继承来自于部门的用户组列表)
         """
         relations = self.group_svc.list_system_user_department_group(system_id, subject)
         return self._convert_to_subject_group_beans(relations)
@@ -521,7 +526,7 @@ class GroupBiz:
         删除用户组
         """
         if GroupAuthorizeLock.objects.filter(group_id=group_id).exists():
-            raise error_codes.VALIDATE_ERROR.format(_("用户组正在授权, 不能删除!"))
+            raise error_codes.VALIDATE_ERROR.format(_("用户组正在授权，不能删除！"))
 
         subject = Subject.from_group_id(group_id)
         with transaction.atomic():
@@ -560,7 +565,7 @@ class GroupBiz:
 
         # 组合数据结构
         group_member_beans = []
-        for subject, relation in zip(subjects, relations):
+        for subject, relation in zip(subjects, relations, strict=False):
             subject_info = subject_info_list.get(subject)
             if not subject_info:
                 continue
@@ -586,14 +591,14 @@ class GroupBiz:
         return group_member_beans
 
     def list_paging_group_member(self, group_id: int, limit: int, offset: int) -> Tuple[int, List[GroupMemberBean]]:
-        """分页查询用户组成员，并给成员填充name/full_named等相关信息"""
+        """分页查询用户组成员，并给成员填充 name/full_named 等相关信息"""
         count, relations = self.group_svc.list_paging_group_member(group_id, limit, offset)
         return count, self._convert_to_group_members(relations)
 
     def list_paging_template_group_member(
         self, group_id: int, template_id: int, limit: int, offset: int
     ) -> Tuple[int, List[GroupMemberBean]]:
-        """分页查询模版用户组成员，并给成员填充name/full_named等相关信息"""
+        """分页查询模版用户组成员，并给成员填充 name/full_named 等相关信息"""
         count, relations = self.group_svc.list_paging_template_group_member(group_id, template_id, limit, offset)
         return count, self._convert_to_group_members(relations)
 
@@ -602,7 +607,7 @@ class GroupBiz:
         subject_info_list = SubjectInfoList(subjects)
 
         group_member_beans = []
-        for subject, relation in zip(subjects, relations):
+        for subject, relation in zip(subjects, relations, strict=False):
             subject_info = subject_info_list.get(subject)
             if not subject_info:
                 continue
@@ -620,7 +625,7 @@ class GroupBiz:
     def list_paging_thin_group_member(
         self, group_id: int, limit: int, offset: int
     ) -> Tuple[int, List[GroupMemberBean]]:
-        """分页查询用户组成员，并给成员填充name/full_named等相关信息"""
+        """分页查询用户组成员，并给成员填充 name/full_named 等相关信息"""
         count, relations = self.group_svc.list_paging_group_member(group_id, limit, offset)
         return count, self._convert_to_thin_group_members(relations)
 
@@ -673,10 +678,10 @@ class GroupBiz:
         custom_action_system_ids = [template.system_id for template in templates if template.template_id == 0]
         # 判断是否有权限模板正在同步更新
         if PermTemplatePreUpdateLock.objects.filter(template_id__in=template_ids).exists():
-            raise error_codes.VALIDATE_ERROR.format(_("部分权限模板正在更新, 不能授权!"))
+            raise error_codes.VALIDATE_ERROR.format(_("部分权限模板正在更新，不能授权！"))
         # 判断该用户组在长时任务里是否正在添加涉及到的权限模板和自定义权限
         if GroupAuthorizeLock.objects.is_authorizing(group.id, template_ids, custom_action_system_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("正在授权中, 请稍后!"))
+            raise error_codes.VALIDATE_ERROR.format(_("正在授权中，请稍后！"))
 
     def check_before_grant(
         self,
@@ -708,12 +713,12 @@ class GroupBiz:
                 if need_check_resource_name:
                     template_policy_list = PolicyBeanList(system_id=template.system_id, policies=template.policies)
                     template_policy_list.check_resource_name()
-                # 检查策略是否在role的授权范围内
+                # 检查策略是否在 role 的授权范围内
                 scope_checker = RoleAuthorizationScopeChecker(role)
                 scope_checker.check_policies(template.system_id, template.policies)
             except APIError as e:
                 raise error_codes.VALIDATE_ERROR.format(
-                    _("系统: {} 模板: {} 校验错误: {}").format(template.system_id, template.template_id, e.message),
+                    _("系统：{} 模板：{} 校验错误：{}").format(template.system_id, template.template_id, e.message),
                     replace=True,
                 )
 
@@ -724,7 +729,9 @@ class GroupBiz:
         policy_list = self.policy_query_svc.new_policy_list_by_subject(system_id, subject)
         for action_id in action_ids:
             if policy_list.get(action_id):
-                raise error_codes.VALIDATE_ERROR.format(_("系统: {} 的操作: {} 权限已存在").format(system_id, action_id))
+                raise error_codes.VALIDATE_ERROR.format(
+                    _("系统：{} 的操作：{} 权限已存在").format(system_id, action_id)
+                )
 
     def _gen_grant_lock(self, subject: Subject, template: GroupTemplateGrantBean, uuid: str) -> GroupAuthorizeLock:
         """
@@ -756,7 +763,7 @@ class GroupBiz:
         subject = Subject.from_group_id(group.id)
 
         if len(templates) == 1:
-            # 如果授权只有一个模版, 直接同步授权
+            # 如果授权只有一个模版，直接同步授权
             self._grant_one_template(group, templates[0])
             return
 
@@ -784,23 +791,23 @@ class GroupBiz:
 
     def get_group_role_dict_by_ids(self, group_ids: List[int]) -> GroupRoleDict:
         """
-        获取group_id: UserRole的字典
+        获取 group_id: UserRole 的字典
         """
         related_objects = RoleRelatedObject.objects.filter(
             object_type=RoleRelatedObjectType.GROUP.value, object_id__in=group_ids
         )
 
-        # 查询所有关联的role对象
+        # 查询所有关联的 role 对象
         role_dict = {one.id: one for one in self.role_svc.list_by_ids(list({ro.role_id for ro in related_objects}))}
 
-        # 生成用户组id -> role对象的映射
+        # 生成用户组 id -> role 对象的映射
         return GroupRoleDict(
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
 
     def get_group_name_dict_by_ids(self, group_ids: List[int]) -> GroupNameDict:
         """
-        获取用户组id: name的字典
+        获取用户组 id: name 的字典
         """
         queryset = Group.objects.filter(id__in=group_ids).only("name")
         return GroupNameDict(data={one.id: one.name for one in queryset})
@@ -809,9 +816,7 @@ class GroupBiz:
         """根据关键词 获取指定用户组成员列表"""
         maximum_number_of_member = 1000
         _, group_members = self.list_paging_group_member(group_id=group_id, limit=maximum_number_of_member, offset=0)
-        hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
-
-        return hit_members
+        return list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
 
     def search_template_group_member_by_keyword(
         self, group_id: int, template_id: int, keyword: str
@@ -821,9 +826,7 @@ class GroupBiz:
         _, group_members = self.list_paging_template_group_member(
             group_id=group_id, template_id=template_id, limit=maximum_number_of_member, offset=0
         )
-        hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
-
-        return hit_members
+        return list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
 
     def create_sync_perm_group_by_role(
         self,
@@ -836,13 +839,13 @@ class GroupBiz:
         """
         创建与分级管理员授权范围同步的用户组
 
-        同步数据:
+        同步数据：
         1. 分级管理员授权范围 -> 用户组的自定义权限
         2. 分级管理员的成员 -> 用户组的成员 (过期时间永久)
         """
         group_name_suffix = _("-管理员组")
 
-        # 创建用户组, 加成员
+        # 创建用户组，加成员
         with transaction.atomic():
             group = self.group_svc.create(
                 GroupCreation(
@@ -878,7 +881,7 @@ class GroupBiz:
         # 查询角色的授权范围
         auth_scopes = self.role_svc.list_auth_scope(role.id)
 
-        # 转换成group授权的自定义权限
+        # 转换成 group 授权的自定义权限
         templates = self._trans_auth_scope_to_grant_templates(auth_scopes)
 
         self.grant(role, group, templates, need_check=False)  # 分级管理员同步的数据不需要再次校验
@@ -889,7 +892,7 @@ class GroupBiz:
         """
         同步用户组的成员或权限
         """
-        # 查询role的同步权限用户组
+        # 查询 role 的同步权限用户组
         relation = (
             RoleRelatedObject.objects.filter(
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, sync_perm=True
@@ -898,12 +901,12 @@ class GroupBiz:
             .first()
         )
 
-        # 1. 如果role sync_perm 被修改为False, 同时存在同步权限用户组, 需要删除用户组
+        # 1. 如果 role sync_perm 被修改为 False, 同时存在同步权限用户组，需要删除用户组
         if relation and not role.sync_perm:
             self.delete(relation.object_id)
             return
 
-        # 2. 如果role sync_perm 被修改为True, 同时不存在同步权限用户组, 需要创建同步权限用户组
+        # 2. 如果 role sync_perm 被修改为 True, 同时不存在同步权限用户组，需要创建同步权限用户组
         if not relation and role.sync_perm:
             attrs = {
                 GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
@@ -911,7 +914,7 @@ class GroupBiz:
             self.create_sync_perm_group_by_role(role, user_id, group_name=group_name, attrs=attrs)
             return
 
-        # 3. 不存在同步权限用户组, 不需要处理
+        # 3. 不存在同步权限用户组，不需要处理
         if not relation and not role.sync_perm:
             return
 
@@ -943,13 +946,13 @@ class GroupBiz:
 
         subject = Subject.from_group_id(group_id)
         for template in templates:
-            # Note: 同步授权, 避免检查逻辑
-            # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
+            # Note: 同步授权，避免检查逻辑
+            # 这里主要是针对自定义授权，直接使用 policy_biz 提供的方法即可
             self.policy_operation_biz.alter(template.system_id, subject, template.policies)
 
     def _trans_auth_scope_to_grant_templates(self, auth_scopes) -> List[GroupTemplateGrantBean]:
         """
-        转换role授权范围为用户组授权模板信息
+        转换 role 授权范围为用户组授权模板信息
         """
         templates = []
         for scope in auth_scopes:
@@ -978,7 +981,7 @@ class GroupBiz:
 
         subject = Subject.from_group_id(group_id)
 
-        # 如果系统以被授权, 删除系统下操过范围的操作
+        # 如果系统以被授权，删除系统下操过范围的操作
         for scope in auth_scopes:
             if scope.system_id not in system_action_ids:
                 continue
@@ -988,9 +991,9 @@ class GroupBiz:
             if policy_ids:
                 self.policy_operation_biz.delete_by_ids(scope.system_id, subject, policy_ids)
 
-        # 如果在授权范围中每个这个系统, 删除系统所有的权限
+        # 如果在授权范围中每个这个系统，删除系统所有的权限
         auth_scope_systems = {scope.system_id for scope in auth_scopes}
-        for system_id in system_action_ids.keys():
+        for system_id in system_action_ids:
             if system_id in auth_scope_systems:
                 continue
 
@@ -1082,7 +1085,8 @@ class GroupCheckBiz:
         """
         批量检查角色的用户组名字是否唯一
         """
-        # FIXME: 对于RBAC模型下，某个系统管理员下可能有上亿个用户组（10万项目 * 500流水线 * 3个用户组 = 1.5亿用户组 ）
+        # FIXME: 对于 RBAC 模型下，某个系统管理员下可能有上亿个用户组
+        #  10 万项目 * 500 流水线 * 3 个用户组 = 1.5 亿用户组
         #  性能问题如何解决？？
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
         if Group.objects.filter(name__in=names, id__in=role_group_ids).exists():
@@ -1090,7 +1094,7 @@ class GroupCheckBiz:
 
     def check_role_subject_scope(self, role, subjects: List[Subject]):
         """
-        检查role的subject scope
+        检查 role 的 subject scope
         """
         scope_checker = RoleSubjectScopeChecker(role)
         scope_checker.check(subjects)
@@ -1105,7 +1109,7 @@ class GroupCheckBiz:
         for p in policies:
             if policy_list.get(p.action_id):
                 raise error_codes.VALIDATE_ERROR.format(
-                    _("系统: {} 的操作: {} 权限已存在, 只能新增, 不能修改!").format(system_id, p.action_id)
+                    _("系统：{} 的操作：{} 权限已存在，只能新增，不能修改！").format(system_id, p.action_id)
                 )
 
     def check_subject_template(self, role: Role, subject_template_ids: List[int]):
@@ -1118,4 +1122,4 @@ class GroupCheckBiz:
         exist_ids = set(RoleListQuery(role, None).query_subject_template_id())
         for subject_template_id in subject_template_ids:
             if subject_template_id not in exist_ids:
-                raise error_codes.VALIDATE_ERROR.format(_("人员模板不存在: {}").format(subject_template_id))
+                raise error_codes.VALIDATE_ERROR.format(_("人员模板不存在：{}").format(subject_template_id))

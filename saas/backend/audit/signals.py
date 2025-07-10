@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -29,3 +30,9 @@ def audit_event_handler(sender, instance, created, **kwargs):
     id = instance.id.hex
 
     log_audit_event.delay(suffix, id)
+
+
+def send_bulk_create_signal(model_class, instances):
+    """提供批量创建的信号"""
+    for instance in instances:
+        post_save.send(sender=model_class, instance=instance, created=True)

@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -17,25 +18,28 @@ from urllib.parse import urlencode
 from blue_krill.web.std_error import APIError
 from celery import Task, current_app, shared_task
 from django.conf import settings
+from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from pydantic.main import BaseModel
 
-from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
+from backend.apps.subject_template.models import SubjectTemplateGroup
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
+from backend.biz.helper import RoleDeleteHelper, get_role_expired_group_members
 from backend.biz.policy import PolicyBean, PolicyBeanList, ResourceGroupBeanList
 from backend.biz.resource import ResourceBiz
-from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
+from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean, get_global_notification_config
 from backend.biz.system import SystemBiz
 from backend.common.lock import gen_bcs_manager_lock, gen_init_grade_manager_lock
-from backend.common.time import DAY_SECONDS, get_soon_expire_ts
+from backend.common.time import DAY_SECONDS, get_expired_at, need_run_expired_remind
 from backend.component import esb
 from backend.component.bcs import list_project_for_iam
+from backend.component.bkbot import send_iam_ticket
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
 from backend.service.action import ActionService
-from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Action, PathResourceType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
@@ -43,7 +47,7 @@ from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleMember
 from backend.util.url import url_join
 from backend.util.uuid import gen_uuid
 
-from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffixEnum
+from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffixEnum, NotificationTypeEnum
 
 logger = logging.getLogger("celery")
 
@@ -88,37 +92,96 @@ class SendRoleGroupExpireRemindMailTask(Task):
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
 
-    def run(self, role_id: int, expired_at: int):
+    def run(self, role_id: int, expired_at_before: int, expired_at_after: int, notification_types: List[str]):
         role = Role.objects.get(id=role_id)
-        group_ids = list(
-            RoleRelatedObject.objects.filter(
-                role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value
-            ).values_list("object_id", flat=True)
-        )
-        if not group_ids:
+
+        # 查询即将过期与过期的用户组成员
+        group_members = get_role_expired_group_members(role, expired_at_before, expired_at_after)
+        if not group_members:
             return
 
-        exist_group_ids = self.group_biz.list_exist_groups_before_expired_at(group_ids, expired_at)
-        if not exist_group_ids:
-            return
-
-        groups = Group.objects.filter(id__in=exist_group_ids)
-
-        params = {"source": "email", "current_role_id": role.id, "role_type": role.type}
+        # 发送邮件
+        params = {"source": "notification", "current_role_id": role.id, "role_type": role.type}
         url = self.base_url + "?" + urlencode(params)
-
-        mail_content = render_to_string(
-            "group_expired_mail.html", {"groups": groups, "role": role, "url": url, "index_url": settings.APP_URL}
-        )
-
         usernames = RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True)
-        try:
-            esb.send_mail(",".join(usernames), "蓝鲸权限中心用户组续期提醒", mail_content)
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
+
+        if NotificationTypeEnum.MAIL.value in notification_types:
+            mail_content = render_to_string(
+                "group_expired_mail.html",
+                {"groups": group_members, "role": role, "url": url, "index_url": settings.APP_URL},
+            )
+
+            try:
+                esb.send_mail(",".join(usernames), "【蓝鲸权限中心】用户组成员续期提醒", mail_content)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
+
+        if NotificationTypeEnum.RTX.value in notification_types and settings.BK_BOT_APPROVAL_APIGW_URL:
+            content = render_to_string(
+                "group_expired_rtx.tpl",
+                {"groups": group_members, "role": role},
+            )
+
+            data = {
+                "title": "**【蓝鲸权限中心】用户组成员续期提醒**",
+                "summary": content,
+                "approvers": ",".join(usernames),
+                "detail_url": url,
+                "refuse_url": "",
+                "refuse_data": {"action": "refse"},
+                "actions": [
+                    {
+                        "name": "3个月",
+                        "callback_url": url_join(
+                            settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
+                            "/api/v1/open/application/approval_bot/role/",
+                        ),
+                        "callback_data": {
+                            "role_id": role.id,
+                            "expired_at_before": expired_at_before,
+                            "expired_at_after": expired_at_after,
+                            "month": 3,
+                        },
+                        "confirm_button_info": "你已成功续期3个月",
+                    },
+                    {
+                        "name": "6个月",
+                        "callback_url": url_join(
+                            settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
+                            "/api/v1/open/application/approval_bot/role/",
+                        ),
+                        "callback_data": {
+                            "role_id": role.id,
+                            "expired_at_before": expired_at_before,
+                            "expired_at_after": expired_at_after,
+                            "month": 6,
+                        },
+                        "confirm_button_info": "你已成功续期6个月",
+                    },
+                    {
+                        "name": "1年",
+                        "callback_url": url_join(
+                            settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
+                            "/api/v1/open/application/approval_bot/role/",
+                        ),
+                        "callback_data": {
+                            "role_id": role.id,
+                            "expired_at_before": expired_at_before,
+                            "expired_at_after": expired_at_after,
+                            "month": 12,
+                        },
+                        "confirm_button_info": "你已成功续期1年",
+                    },
+                ],
+            }
+
+            try:
+                send_iam_ticket(data)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("send role_group_expire_remind rtx fail, usernames=%s", usernames)
 
 
-current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
+current_app.register_task(SendRoleGroupExpireRemindMailTask())
 
 
 @shared_task(ignore_result=True)
@@ -126,34 +189,61 @@ def role_group_expire_remind():
     """
     角色管理的用户组过期提醒
     """
+    # 获取配置
+    notification_config = get_global_notification_config()
+
+    if not need_run_expired_remind(notification_config):
+        return
+
+    expired_at_before = get_expired_at(notification_config["expire_days_before"])
+    expired_at_after = get_expired_at(notification_config["expire_days_after"] * -1)
+
     group_biz = GroupBiz()
-    expired_at = get_soon_expire_ts()
 
     group_id_set, role_id_set = set(), set()  # 去重用
 
     # 查询有过期成员的用户组关系
-    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at)
+    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_before)
     for gs in group_subjects:
-        group_id = gs.group.id
-        if group_id in group_id_set:
+        # role 只通知部门相关的权限续期
+        if gs.subject.type == SubjectType.USER.value:
             continue
 
-        group_id_set.add(group_id)
-
-        # 查询用户组对应的分级管理员
-        relation = RoleRelatedObject.objects.filter(
-            object_type=RoleRelatedObjectType.GROUP.value, object_id=int(group_id)
-        ).first()
-
-        if not relation:
+        # 判断过期时间是否在区间内
+        if gs.expired_at < expired_at_after:
             continue
 
-        role_id = relation.role_id
-        if role_id in role_id_set:
-            continue
+        _add_group_role_set(group_id_set, role_id_set, int(gs.group.id))
 
-        role_id_set.add(role_id)
-        SendRoleGroupExpireRemindMailTask().delay(role_id, expired_at)
+    # 查询人员模版过期的相关用户组
+    qs = SubjectTemplateGroup.objects.filter(expired_at__range=(expired_at_after, expired_at_before))
+    paginator = Paginator(qs, 100)
+    for i in paginator.page_range:
+        for stg in paginator.page(i):
+            _add_group_role_set(group_id_set, role_id_set, stg.group_id)
+
+    # 生成子任务
+    for role_id in role_id_set:
+        SendRoleGroupExpireRemindMailTask().delay(
+            role_id, expired_at_before, expired_at_after, notification_config["notification_types"]
+        )
+
+
+def _add_group_role_set(group_id_set: Set[int], role_id_set: Set[int], group_id: int):
+    if group_id in group_id_set:
+        return
+
+    group_id_set.add(group_id)
+
+    # 查询用户组对应的分级管理员
+    relation = RoleRelatedObject.objects.filter(
+        object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
+    ).first()
+
+    if not relation:
+        return
+
+    role_id_set.add(relation.role_id)
 
 
 class ResourceInstance(BaseModel):
@@ -240,7 +330,6 @@ class AnyAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
 
 class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
-
     resource_biz = ResourceBiz()
 
     def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
@@ -428,7 +517,6 @@ class ActionWithoutResourceAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
 
 class AuthScopeActionGenerator:
-
     handler_map: Dict[Tuple[str, str], Type[BaseAuthScopeActionHandler]] = {
         ("bk_nodeman", "cloud_view"): AnyAuthScopeActionHandler,
         ("bk_cmdb", "unassign_biz_host"): CmdbUnassignBizHostAuthScopeActionHandler,
@@ -449,7 +537,7 @@ class AuthScopeActionGenerator:
     def _get_handler(self) -> BaseAuthScopeActionHandler:
         if len(self._action.related_resource_types) == 0:
             return ActionWithoutResourceAuthScopeActionHandler()
-        elif self._system_id in ["bk_log_search", "bk_monitorv3"]:
+        if self._system_id in ["bk_log_search", "bk_monitorv3"]:
             return LogSpaceAuthScopeActionHandler()
 
         return self.handler_map.get((self._system_id, self._action.id), DefaultAuthScopeActionHandler)()
@@ -651,7 +739,7 @@ class InitBizGradeManagerTask(Task):
         return templates
 
 
-current_app.tasks.register(InitBizGradeManagerTask())
+current_app.register_task(InitBizGradeManagerTask())
 
 
 class AuthScopeMerger:
@@ -863,9 +951,14 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
             self.group_biz.grant(role, group, templates, need_check=False)
 
 
-current_app.tasks.register(InitBcsProjectManagerTask())
+current_app.register_task(InitBcsProjectManagerTask())
 
 
 @shared_task(ignore_result=True)
 def sync_subset_manager_subject_scope(role_id: int):
     RoleBiz().sync_subset_manager_subject_scope(role_id)
+
+
+@shared_task(ignore_result=True)
+def delete_role(role_id: int):
+    RoleDeleteHelper(role_id).delete()

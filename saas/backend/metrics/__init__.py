@@ -29,17 +29,17 @@ def get_component_by_url(url: str) -> str:
     path = urlparse(url).path
     if "/api/v1/web/" in path:
         return ComponentEnum.IAM_BACKEND.value
-    elif "/api/v1/engine" in path or "/api/v1/batch-search" in path:
+    if "/api/v1/engine" in path or "/api/v1/batch-search" in path:
         return ComponentEnum.IAM_ENGINE.value
-    elif "/api/c/compapi/v2/usermanage/" in path:
+    if "/api/c/compapi/v2/usermanage/" in path:
         return ComponentEnum.USERMGR.value
-    elif "/api/c/compapi/v2/itsm/" in path:
+    if "/api/c/compapi/v2/itsm/" in path:
         return ComponentEnum.ITSM.value
-    elif "/api/c/compapi/v2/esb/" in path:
+    if "/api/c/compapi/v2/esb/" in path:
         return ComponentEnum.ESB.value
-    elif "/api/c/compapi/cmsi/" in path:
+    if "/api/c/compapi/cmsi/" in path:
         return ComponentEnum.CMSI.value
-    elif "/api/c/compapi/v2/bk_login/" in path or "/is_login/" in path or "/user/get_info" in path:
+    if "/api/c/compapi/v2/bk_login/" in path or "/is_login/" in path or "/user/get_info" in path:
         return ComponentEnum.LOGIN.value
     return "unknown"
 

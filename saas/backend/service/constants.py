@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from aenum import LowerStrEnum, StrEnum, auto, enum, skip
 from django.utils.translation import gettext as _
 
@@ -112,7 +113,9 @@ class RoleType(ChoicesEnum, LowerStrEnum):
     STAFF = auto()
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
-    GRADE_MANAGER: enum = "rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    GRADE_MANAGER: enum = (
+        "rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    )
     SUBSET_MANAGER = auto()
 
     _choices_labels = skip(
@@ -120,8 +123,8 @@ class RoleType(ChoicesEnum, LowerStrEnum):
             (STAFF, "个人用户"),
             (SUPER_MANAGER, "超级管理员"),
             (SYSTEM_MANAGER, "系统管理员"),
-            (GRADE_MANAGER, "分级管理员"),
-            (SUBSET_MANAGER, "子集管理员"),
+            (GRADE_MANAGER, "管理空间管理员"),
+            (SUBSET_MANAGER, "二级管理空间管理员"),
         )
     )
 
@@ -171,7 +174,9 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_SUBJECT_TEMPLATE = auto()
     MANAGE_SUPER_MANAGER_MEMBER = auto()
     MANAGE_SYSTEM_MANAGER_MEMBER = auto()
-    CREATE_GRADE_MANAGER: enum = "create_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    CREATE_GRADE_MANAGER: enum = (
+        "create_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    )
     MANAGE_GRADE_MANAGER: enum = "manage_rating_manager"
     TRANSFER_GROUP = auto()
     AUDIT = auto()
@@ -189,6 +194,8 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     TRANSFER_GROUP_BY_GRADE_MANAGER = auto()
     MANAGE_SENSITIVITY_LEVEL = auto()
     MANAGE_ROLE_GROUP_MEMBER = auto()
+    MANAGE_NOTIFICATION_CONFIG = auto()
+    MANAGE_ROLE_GROUP_CONFIG = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
@@ -210,7 +217,9 @@ class ApplicationType(ChoicesEnum, LowerStrEnum):
     RENEW_ACTION = auto()
     JOIN_GROUP = auto()
     RENEW_GROUP = auto()
-    JOIN_GRADE_MANAGER: enum = "join_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    JOIN_GRADE_MANAGER: enum = (
+        "join_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    )
     CREATE_GRADE_MANAGER: enum = "create_rating_manager"
     UPDATE_GRADE_MANAGER: enum = "update_rating_manager"
     GRANT_TEMPORARY_ACTION = auto()

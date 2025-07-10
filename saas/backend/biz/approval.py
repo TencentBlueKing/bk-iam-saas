@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from typing import Dict, List
 
 from pydantic import BaseModel
@@ -51,11 +52,10 @@ class ApprovalProcessBiz:
     def list_with_node_names(self, application_type: ApplicationType) -> List[ApprovalProcessWithNodeNamesBean]:
         """查询某个类型可配置的流程，用于展示，需要带上流程节点名称"""
         processes_with_nodes = self.svc.list_with_nodes(application_type)
-        processes = [
+        return [
             ApprovalProcessWithNodeNamesBean(id=p.id, name=p.name, node_names=[n.name for n in p.nodes])
             for p in processes_with_nodes
         ]
-        return processes
 
     def list_default_process(self) -> List[DefaultProcessBean]:
         """查询默认流程"""

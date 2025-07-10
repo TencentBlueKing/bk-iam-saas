@@ -1,4 +1,5 @@
-.iam-create-user-group-wrapper {
+.iam-create-user-group-wrapper,
+.iam-add-group-perm-wrapper {
   padding-bottom: 50px;
   .add-perm-action {
     margin: 16px 0 20px 0;
@@ -21,8 +22,7 @@
   .user-group-select-wrapper {
     .action {
       position: relative;
-      display: flex;
-      justify-content: flex-start;
+      margin-top: -5px;
       .action-wrapper {
         font-size: 14px;
         color: #3a84ff;
@@ -43,18 +43,19 @@
           color: #3a84ff;
         }
       }
-    }
-    .info-wrapper {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 16px;
-      line-height: 24px;
-      .tips,
-      .text {
-        line-height: 20px;
-        font-size: 12px;
-        &:not(&:last-child) {
-          margin-right: 20px;
+      .info-wrapper {
+        display: flex;
+        align-items: center;
+        min-width: 108px;
+        position: relative;
+        .tips,
+        .text {
+          line-height: 20px;
+          font-size: 12px;
+          &:not(&:last-child) {
+            margin-left: 4px;
+            margin-right: 16px;
+          }
         }
       }
     }

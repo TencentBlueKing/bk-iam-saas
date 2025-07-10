@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from backend.audit.models import get_audit_db
 
 
@@ -39,7 +40,7 @@ class AuditRouter:
         """
         Allow relations if a model in the audit app is involved.
         """
-        if obj1._meta.app_label == self.app_label or obj2._meta.app_label == self.app_label:
+        if self.app_label in (obj1._meta.app_label, obj2._meta.app_label):
             return False
         return None
 

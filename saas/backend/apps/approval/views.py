@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from collections import Counter
 
 from django.db.models import Q
@@ -26,7 +27,7 @@ from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleO
 from backend.common.error_codes import error_codes
 from backend.common.serializers import SystemQuerySLZ
 from backend.service.action import ActionService
-from backend.service.constants import PermissionCodeEnum
+from backend.service.constants import PermissionCodeEnum, RoleType
 
 from .audit import (
     ActionSensitivityLevelAuditProvider,
@@ -73,7 +74,6 @@ class ApprovalProcessViewSet(GenericViewSet):
 
 
 class ApprovalProcessGlobalConfigViewSet(mixins.ListModelMixin, GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GLOBAL_SETTING.value)]
 
     pagination_class = None  # 去掉swagger中的limit offset参数
@@ -112,7 +112,6 @@ class ApprovalProcessGlobalConfigViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class ActionApprovalProcessViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value)]
 
     biz = ApprovalProcessBiz()
@@ -224,7 +223,7 @@ class SystemActionSensitivityLevelCountViewSet(GenericViewSet):
         action_list = self.biz.list_without_cache_sensitivity_level(system_id)
         level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
 
-        data = {sensitivity_level: count for sensitivity_level, count in level_count.items()}
+        data = dict(level_count.items())
         data["all"] = len(action_list.actions)
 
         return Response(data)
@@ -253,6 +252,10 @@ class ActionSensitivityLevelViewSet(GenericViewSet):
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
 
+        # 校验系统管理员权限
+        if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != system_id:
+            raise error_codes.FORBIDDEN
+
         self.biz.batch_create_or_update_action_sensitivity_level(
             system_id, action_ids, sensitivity_level, request.user.username
         )
@@ -265,7 +268,6 @@ class ActionSensitivityLevelViewSet(GenericViewSet):
 
 
 class GroupApprovalProcessViewSet(GenericViewSet):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GROUP.value)]
 
     biz = ApprovalProcessBiz()

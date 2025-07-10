@@ -1,33 +1,46 @@
 <template>
-  <div class="iam-approval-process-set-wrapper">
-    <section class="iam-approval-process-set-item-wrapper" v-if="isSuperManager">
-      <render-set-item
-        v-for="(item, index) in processSetList"
-        :key="index"
-        :ref="`${index}SetRef`"
-        :class="index > 0 ? 'set-margin-left' : ''"
-        :cur-value="item.process_id"
-        :title="item.title"
-        :list="processData[item.type]"
-        @selected="handleSelected(...arguments, item, index)" />
-    </section>
-    <section :class="['iam-approval-process-set-content-wrapper', { 'set-style': isSuperManager }]">
-      <bk-tab
-        :active.sync="active"
-        type="unborder-card"
-        ext-cls="iam-approval-process-set-tab-cls">
-        <bk-tab-panel
-          v-for="(panel, index) in panels"
-          v-bind="panel"
-          :key="index">
-        </bk-tab-panel>
-        <component
-          :is="active"
-          :list="processData[activeMap[active]]" />
-      </bk-tab>
-    </section>
+  <div>
+    <div class="iam-approval-process-set-wrapper">
+      <section class="iam-approval-process-set-item-wrapper" v-if="isShowProcessSelect">
+        <render-set-item
+          v-for="(item, index) in processSetList"
+          :key="index"
+          :ref="`${index}SetRef`"
+          :class="index > 0 ? 'set-margin-left' : ''"
+          :cur-value="item.process_id"
+          :title="item.title"
+          :list="processData[item.type]"
+          @selected="handleSelected(...arguments, item, index)" />
+      </section>
+      <section
+        :class="[
+          'iam-approval-process-set-content-wrapper',
+          { 'set-style': isShowProcessSelect },
+          { 'hide-process-table': isShowProcessTable },
+          { 'show-notice-alert': showNoticeAlert && showNoticeAlert() }
+        ]"
+      >
+        <bk-tab
+          :active.sync="active"
+          type="unborder-card"
+          ext-cls="iam-approval-process-set-tab-cls">
+          <bk-tab-panel
+            v-for="(panel, index) in panels"
+            v-bind="panel"
+            :key="index">
+          </bk-tab-panel>
+          <component
+            :is="active"
+            :list="processData[activeMap[active]]" />
+        </bk-tab>
+      </section>
+    </div>
+    <div class="approval-process-group-setting" v-if="!['subset_manager'].includes(user.role.type)">
+      <UserGroupSetting />
+    </div>
   </div>
 </template>
+
 <script>
   import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
@@ -37,6 +50,7 @@
   import CustomPermProcess from './components/custom-perm-process';
   import CreateRateManagerProcess from './components/create-rate-manager-process';
   import { formatCodeData } from '@/common/util';
+  import UserGroupSetting from '@/views/user-group-setting';
 
   /**
    * ACTIVE_COMPONENT_MAP
@@ -49,12 +63,14 @@
   };
 
   export default {
+    inject: ['reload', 'showNoticeAlert'],
     components: {
       RenderSetItem,
       JoinRateManagerProcess,
       JoinGroupProcess,
       CustomPermProcess,
-      CreateRateManagerProcess
+      CreateRateManagerProcess,
+      UserGroupSetting
     },
     data () {
       return {
@@ -82,7 +98,7 @@
           { name: 'CustomPermProcess', label: this.$t(`m.approvalProcess['自定义权限审批流程']`) },
           { name: 'JoinGroupProcess', label: this.$t(`m.approvalProcess['加入用户组审批流程']`) }
         ],
-        active: 'CustomPermProcess',
+        active: 'JoinGroupProcess',
         curRole: 'staff',
         processData: {
           'grant_action': [],
@@ -100,13 +116,19 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            /**
-             * isSuperManager
-             */
-            isSuperManager () {
-                return this.curRole === 'super_manager';
-            }
+      ...mapGetters(['user', 'index']),
+      isSuperManager () {
+        return ['super_manager'].includes(this.curRole);
+      },
+      isShowProcessSelect () {
+        if (this.index !== 1 && this.isSuperManager) {
+          return true;
+        }
+        return false;
+      },
+      isShowProcessTable () {
+        return ![1].includes(Number(this.index));
+      }
     },
     watch: {
       /**
@@ -118,6 +140,17 @@
           this.getFilterPanels();
         },
         immediate: true
+      },
+      index: {
+        async handler (newValue, oldValue) {
+          // 处理不同导航栏下相同路由切换不刷新
+          if (newValue !== oldValue) {
+            this.curRole = this.user.role.type || 'staff';
+            this.getFilterPanels();
+            await this.fetchPageData();
+          }
+        },
+        deep: true
       }
     },
     created () {
@@ -125,9 +158,6 @@
       this.getFilterPanels();
     },
     methods: {
-      /**
-       * 111
-       */
       async fetchPageData () {
         const roleItem = {
           system_manager: async () => {
@@ -165,9 +195,7 @@
           this.processData[type] = Object.freeze(data);
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         }
       },
@@ -180,22 +208,20 @@
           const { code, data } = await this.$store.dispatch('approvalProcess/getDefaultProcesses');
           const defaultProcesses = data || [];
           const grantAction = defaultProcesses.find(item => item.type === 'grant_action');
+          const joinGroup = defaultProcesses.find(item => item.type === 'join_group');
+          const createRatingManager = defaultProcesses.find(item => item.type === 'create_rating_manager');
           if (grantAction) {
             this.processSetList[0].process_id = grantAction.process_id;
           }
-          const joinGroup = defaultProcesses.find(item => item.type === 'join_group');
           if (joinGroup) {
             this.processSetList[1].process_id = joinGroup.process_id;
           }
-          const createRatingManager = defaultProcesses.find(item => item.type === 'create_rating_manager');
           if (createRatingManager) {
             this.processSetList[2].process_id = createRatingManager.process_id;
           }
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         }
       },
@@ -205,6 +231,10 @@
        */
       getFilterPanels () {
         const roleItem = {
+          super_manager: () => {
+            this.panels = this.panels.filter(item => ['CustomPermProcess', 'JoinRateManagerProcess', 'JoinGroupProcess'].includes(item.name));
+            this.active = 'CustomPermProcess';
+          },
           system_manager: () => {
             this.panels = this.panels.filter(item => ['CustomPermProcess', 'JoinGroupProcess'].includes(item.name));
             this.active = 'CustomPermProcess';
@@ -218,7 +248,9 @@
             this.active = 'JoinGroupProcess';
           }
         };
-        return roleItem[this.curRole] ? roleItem[this.curRole]() : 'CustomPermProcess';
+        if (roleItem[this.curRole]) {
+          roleItem[this.curRole]();
+        }
       },
 
       /**
@@ -244,9 +276,9 @@
     }
   };
 </script>
+
 <style lang="postcss">
     .iam-approval-process-set-wrapper {
-        padding: 20px;
         .iam-approval-process-set-item-wrapper {
             display: flex;
             justify-content: flex-start;
@@ -255,14 +287,18 @@
             }
         }
         .iam-approval-process-set-content-wrapper {
-            min-height: calc(100vh - 101px);
-            background: #fff;
+            background: #ffffff;
             border-radius: 2px;
             box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, .05);
             &.set-style {
                 margin-top: 20px;
-                min-height: calc(100vh - 250px);
             }
+            &.hide-process-table {
+              display: none;
+            }
+            /* &.show-notice-alert {
+              max-height: calc(100vh - 340px);
+            } */
             .iam-approval-process-set-tab-cls {
                 .bk-tab-header {
                     height: 60px;
@@ -280,5 +316,9 @@
                 }
             }
         }
+    }
+    .approval-process-group-setting {
+      padding-top: 24px;
+      padding-bottom: 48px;
     }
 </style>

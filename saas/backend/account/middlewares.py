@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -16,7 +16,6 @@ from django import forms
 from django.contrib import auth
 from django.http import HttpResponseForbidden, JsonResponse
 from django.utils import timezone
-from django.utils.deprecation import MiddlewareMixin
 from django.utils.translation import gettext as _
 
 from backend.biz.subject import SubjectBiz
@@ -42,17 +41,25 @@ def is_in_blacklist(username: str) -> bool:
     except Exception:  # pylint: disable=broad-except
         logger.exception("failed to get blacklist, so the blacklist check will not working")
 
-    for subject in blacklist:
-        if subject.id == username and subject.type == SubjectType.USER.value:
-            return True
-    return False
+    return any(subject.id == username and subject.type == SubjectType.USER.value for subject in blacklist)
 
 
-class LoginMiddleware(MiddlewareMixin):
-    def process_view(self, request, view, *args, **kwargs):
-        if getattr(view, "login_exempt", False):
-            return None
+class LoginMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
 
+    @staticmethod
+    def _is_web_request(request):
+        """
+        Check if the request is a web request based on the path.
+        """
+        if "/api/v1/" not in request.path:
+            return False
+
+        exempt_paths = ["/api/v1/open/", "/api/v1/iam/"]
+        return not any(p in request.path for p in exempt_paths)
+
+    def __call__(self, request):
         form = AuthenticationForm(request.COOKIES)
 
         if form.is_valid():
@@ -60,14 +67,18 @@ class LoginMiddleware(MiddlewareMixin):
             try:
                 user = auth.authenticate(request=request, bk_token=bk_token)
             except PermissionForbidden as e:
-                return JsonResponse(
-                    {"result": False, "code": e.code, "message": e.message, "data": None}, status=e.status_code
-                )
+                # 仅 Web 请求时，对于无登录访问权限，才响应错误码，让前端提示，避免因无权限而反复重定向到登录
+                if self._is_web_request(request):
+                    return JsonResponse(
+                        {"result": False, "code": e.code, "message": e.message, "data": None}, status=e.status_code
+                    )
+                # 非 web 请求，直接返回 None，表示未登录，由后续的程序根据是否需要认证等进行处理
+                user = None
 
             if user:
                 # NOTE: block the user in blacklist
                 if is_in_blacklist(request.user.username):
-                    return HttpResponseForbidden(_("用户账号已被冻结, 禁止使用权限中心相关功能"))
+                    return HttpResponseForbidden(_("用户账号已被冻结，禁止使用权限中心相关功能"))
 
                 # Succeed to login, recall self to exit process
                 if user.username != request.user.username:
@@ -77,10 +88,7 @@ class LoginMiddleware(MiddlewareMixin):
         else:
             auth.logout(request)
 
-        return None
-
-    def process_response(self, request, response):
-        return response
+        return self.get_response(request)
 
 
 class RoleAuthenticationMiddleware(object):
@@ -88,12 +96,12 @@ class RoleAuthenticationMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        # 获取session当前选择的角色ID
+        # 获取 session 当前选择的角色 ID
         role_id = request.session.get(role_auth.ROLE_SESSION_KEY) or 0
         # 认证用户与角色关系
         role = role_auth.authenticate(request=request, role_id=role_id)
         # 设置当前登录角色
-        setattr(request, "role", role)
+        request.role = role
         return self.get_response(request)
 
 
