@@ -691,7 +691,11 @@
             this.handleRefreshTabData('emptyCustomData');
           }
         };
-        return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+        // return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+        if (typeMap.hasOwnProperty(this.active) && typeof typeMap[this.active] === 'function') {
+          return typeMap[this.active]();
+        }
+        return typeMap['GroupPerm']();
       },
 
       async handleRemoteTable (payload) {
