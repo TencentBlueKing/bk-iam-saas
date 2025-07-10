@@ -100,7 +100,8 @@
             ],
             host: [
               { required: true, message: this.$t(`m.verify['系统回调地址必填']`), trigger: 'blur' },
-              { regex: /^((https|http|ftp|rtsp|mms)?:\/\/)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(\/?[A-Za-z0-9]+(\/?))*$/, message: this.$t(`m.verify['请输入正确的系统回调地址']`), trigger: 'blur' }
+              // { regex: /^((https|http|ftp|rtsp|mms)?:\/\/)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(\/?[A-Za-z0-9]+(\/?))*$/, message: this.$t(`m.verify['请输入正确的系统回调地址']`), trigger: 'blur' }
+              { regex: /^((https|http|ftp|rtsp|mms)?:\/\/)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(?:\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})*(\/[A-Za-z0-9_-]*)*$/, message: this.$t(`m.verify['请输入正确的系统回调地址']`), trigger: 'blur' }
             ],
             healthz: [
               { required: true, message: this.$t(`m.verify['系统健康检查地址必填']`), trigger: 'blur' },
