@@ -313,6 +313,12 @@
       </div>
       <div class="groupPermissionQequest" v-if="isShowUserGroup">
         <render-horizontal-block>
+          <div v-if="!enableGroupInstanceSearch" class="pl20 pr30">
+            <bk-alert
+              type="warning"
+              :title="$t('当前未启用高级推荐功能，会导致用户组推荐的精准度下降。如需获得更精准的权限建议，请联系部署同学部署相关ES服务')"
+            />
+          </div>
           <div class="userGroup">
             <div class="requestRecommendText pl20">
               {{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组']`)}}
@@ -652,7 +658,7 @@
   import { mapGetters } from 'vuex';
   import { guid, formatCodeData } from '@/common/util';
   import { PERMANENT_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
-  import { bus } from '@/common/bus';
+  // import { bus } from '@/common/bus';
   import { buildURLParams } from '@/common/url';
   import RenderActionTag from '@/components/common-action';
   import ResourceInstanceTable from '../components/resource-instance-table';
@@ -971,12 +977,12 @@
             this.isShowHasUserGroup = true;
           }
           // 处理用户组权限申请默认页面场景下ENABLE_GROUP_INSTANCE_SEARCH为false需要展示FunctionalDependency组件
-          if (this.isNoPermissionsSet && this.isShowHasUserGroup && !this.enableGroupInstanceSearch) {
-            bus.$emit('show-function-dependency', {
-              routeName: this.$route.name,
-              show: true
-            });
-          }
+          // if (this.isNoPermissionsSet && this.isShowHasUserGroup && !this.enableGroupInstanceSearch) {
+          //   bus.$emit('show-function-dependency', {
+          //     routeName: this.$route.name,
+          //     show: true
+          //   });
+          // }
           this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
           this.$nextTick(() => {
             this.tableList.forEach(item => {

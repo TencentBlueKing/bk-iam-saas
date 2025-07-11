@@ -103,39 +103,6 @@
                   <span>{{$t(`m.common['系统']`)}}{{child.name}}</span>
                 </span>
                 <span v-else class="iam-menu-text single-hide" :title="child.name">{{ child.name }}</span>
-                <span v-if="['myManageSpace'].includes(child.rkey) && index === 0 && !noviceGuide['grade_manager_upgrade']" @click.stop>
-                  <iam-guide
-                    ref="popconfirm"
-                    type="grade_manager_upgrade"
-                    placement="left-end"
-                    popover-type="component"
-                    trigger="click"
-                    ext-cls="space-popconfirm"
-                    cancel-text=""
-                    :confirm-text="$t(`m.info['知道了']`)"
-                  >
-                    <div slot="popconfirm-header">
-                      <div class="content-header">
-                        <span class="content-title">{{ $t(`m.info['功能升级!']`) }}</span>
-                        <img src="@/images/boot-page/Upgrade@2x.png" width="50px" alt="">
-                      </div>
-                    </div>
-                    <div slot="popconfirm-content">
-                      <div class="content-desc">
-                        <span>{{ $t(`m.info['原来的']`) }}</span>
-                        <strong>{{ $t(`m.info['分级管理员']`) }}</strong>
-                        <span>{{ $t(`m.info['升级为']`) }}</span>
-                        <strong>{{ $t(`m.info['管理空间']`) }},</strong>
-                      </div>
-                      <div class="content-desc">
-                        {{ $t(`m.info['支持一级、二级管理空间，更加精细化管理。']`) }}
-                      </div>
-                    </div>
-                    <div slot="popconfirm-show">
-                      <img src="@/images/boot-page/Upgrade@2x.png" width="50px" style="vertical-align: middle;" alt="">
-                    </div>
-                  </iam-guide>
-                </span>
               </div>
             </template>
           </template>
@@ -169,13 +136,9 @@
   import { NEED_CONFIRM_DIALOG_ROUTER, MANAGE_SPACE_REDIRECT_ROUTES, ALL_ROUTES_LIST } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import { buildURLParams } from '@/common/url';
-  import IamGuide from '@/components/iam-guide/index.vue';
 
   export default {
     inject: ['reload'],
-    components: {
-      IamGuide
-    },
     data () {
       return {
         selectCls: 'iam-nav-select-dropdown-content',

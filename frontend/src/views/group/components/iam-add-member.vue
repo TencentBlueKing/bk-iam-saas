@@ -1914,8 +1914,10 @@
         // 通过bk_username反向查询display_name
         if (this.hasExistOrgData.length) {
           this.$store.dispatch('tenantConfig/getTenantDisplayName', { bk_usernames: this.hasExistOrgData.join() }).then(res => {
-            const displayNames = (res.data || []).map(v => v.display_name);
-            this.messageWarn(this.$t(`m.info['组织架构重复添加多个相同用户名']`, { value: [...new Set(displayNames)].join() }));
+            const results = res.data || [];
+            const displayNames = results.length ? results.map(v => v.display_name) : this.hasExistOrgData;
+            // 这里会存在批量成员重复情况，因此limit限制行数大一些
+            this.messageWarn(this.$t(`m.info['组织架构重复添加多个相同用户名']`, { value: [...new Set(displayNames)].join() }), 3000, 1000);
           });
         }
       },

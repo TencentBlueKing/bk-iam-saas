@@ -124,22 +124,21 @@
                 <div
                   v-if="row.type === 'user'"
                   class="user"
-                  :title="`${row.id}(${row.name})`"
                 >
                   <Icon type="personal-user" />
-                  <span class="name">{{ row.id }}</span
-                  ><span class="count" v-if="row.name">
-                    {{ "(" + row.name + ")" }}
-                  </span>
+                  <IamUserDisplayName :user-id="row.id" class="org-member" />
                 </div>
-                <div v-else
+                <div
+                  v-else
                   class="depart"
                   :title="row.full_name"
                 >
                   <Icon type="organization-fill" />
-                  <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">
-                    {{ row.name || "--" }}
-                  </span>
+                  <IamUserDisplayName
+                    class="org-member"
+                    :user-id="row.name"
+                    :style="{ maxWidth: curDisplaySet.customNameWidth }"
+                  />
                   <span class="count" v-if="row.member_count && enableOrganizationCount">
                     ({{ row.member_count }})
                   </span>
@@ -1629,5 +1628,17 @@
   text-decoration-style: dashed;
   text-underline-position: under;
   cursor: pointer;
+}
+
+/deep/ .org-member {
+  display: flex;
+  align-items: center;
+  min-width: calc(100% - 100px);
+
+  .tenant-display-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 </style>
