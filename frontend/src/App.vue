@@ -63,7 +63,8 @@
       </div>
     </main>
     <!-- <app-auth ref="bkAuth"></app-auth> -->
-    <template v-if="!enableGroupInstanceSearch && needShowInstanceSearchRoute && noInstanceSearchData.show">
+    <!-- 用户组推荐未开启高级设置改用message提示 -->
+    <!-- <template v-if="!enableGroupInstanceSearch && needShowInstanceSearchRoute && noInstanceSearchData.show">
       <FunctionalDependency
         v-model="noInstanceSearchData.show"
         :mode="noInstanceSearchData.mode"
@@ -74,7 +75,7 @@
         :guide-desc-list="noInstanceSearchData.guideDescList"
         @gotoMore="handleMoreInfo(noInstanceSearchData.url)"
       />
-    </template>
+    </template> -->
   </div>
 </template>
 
@@ -84,7 +85,7 @@
   import theHeader from '@/components/header/index.vue';
   import theNav from '@/components/nav/index.vue';
   import NoticeComponent from '@blueking/notice-component-vue2';
-  import FunctionalDependency from '@blueking/functional-dependency/vue2/index.umd.min.js';
+  // import FunctionalDependency from '@blueking/functional-dependency/vue2/index.umd.min.js';
   import '@blueking/functional-dependency/vue2/vue2.css';
   import '@blueking/notice-component-vue2/dist/style.css';
   // import IamGuide from '@/components/iam-guide/index.vue';
@@ -110,8 +111,8 @@
       theHeader,
       theNav,
       HeaderNav,
-      NoticeComponent,
-      FunctionalDependency
+      NoticeComponent
+      // FunctionalDependency
     },
     data () {
       return {
@@ -137,7 +138,7 @@
         showNoticeAlert: false,
         noticeApi: `${window.AJAX_URL_PREFIX}/notice/announcements/`,
         enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true',
-        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
+        // enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         // 需要展示FunctionalDependency组件的页面
         needShowInstanceSearchRoute: ['applyCustomPerm'],
         noInstanceSearchData: {
@@ -170,7 +171,7 @@
           }))}`);
         }
         this.$store.commit('updateRoute', from.name);
-        this.getRouteInstanceSearch({ routeName: to.name });
+        // this.getRouteInstanceSearch({ routeName: to.name });
       },
       user: {
         handler (value) {
