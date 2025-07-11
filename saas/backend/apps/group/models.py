@@ -42,6 +42,8 @@ class Group(BaseModel, BaseSystemHiddenModel):
 
 
 class GroupAuthorizeLock(models.Model):
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
     group_id = models.IntegerField("用户组 ID")
     template_id = models.IntegerField("模板 ID")
     system_id = models.CharField("系统 ID", max_length=32)
@@ -58,6 +60,8 @@ class GroupAuthorizeLock(models.Model):
 
 class GroupSaaSAttribute(TimestampedModel):
     """用户组产品属性，不用于鉴权，只用于产品上，比如 readonly=1，表示只可读，不可删除的用户组"""
+
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
 
     group_id = models.IntegerField("用户组 ID")
     key = models.CharField("属性的 Key", max_length=32)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -14,6 +14,7 @@ from typing import Dict, List
 
 from django.db import models
 
+from backend.common.constants import DEFAULT_TENANT_ID
 from backend.common.models import BaseModel, CompressedJSONField
 from backend.service.constants import SubjectType, TemplatePreUpdateStatus
 from backend.util.json import json_dumps
@@ -31,8 +32,10 @@ class PermTemplate(BaseModel):
     权限模板
     """
 
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
     name = models.CharField("模板名称", max_length=128)
-    system_id = models.CharField("系统ID", max_length=32)
+    system_id = models.CharField("系统 ID", max_length=32)
     description = models.CharField("描述", max_length=255, default="")
     subject_count = models.IntegerField("授权对象数量", default=0)
     _action_ids = models.TextField("操作列表", db_column="action_ids")
@@ -55,15 +58,15 @@ class PermTemplate(BaseModel):
 
     @classmethod
     def delete_action(cls, system_id: str, action_id: str) -> List[int]:
-        """模板里删除某个操作，并返回被变更的模板ID列表"""
+        """模板里删除某个操作，并返回被变更的模板 ID 列表"""
         templates = cls.objects.filter(system_id=system_id)
         should_updated_templates = []
         for template in templates:
             action_ids = template.action_ids
-            # 要删除的Action不在权限模板里，则忽略
+            # 要删除的 Action 不在权限模板里，则忽略
             if action_id not in action_ids:
                 continue
-            # 移除要删除Action，然后更新
+            # 移除要删除 Action，然后更新
             action_ids.remove(action_id)
             template.action_ids = action_ids
             # 添加到将更新的列表里
@@ -81,15 +84,17 @@ class PermTemplatePolicyAuthorized(BaseModel):
     权限模板授权
     """
 
-    template_id = models.IntegerField("模板ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    template_id = models.IntegerField("模板 ID")
     subject_type = models.CharField("授权对象类型", max_length=32, choices=SubjectType.get_choices())
-    subject_id = models.CharField("授权对象ID", max_length=64)
-    system_id = models.CharField("系统ID", max_length=32)
-    _data = models.TextField("授权数据", db_column="data")  # 调研压缩的json字段
+    subject_id = models.CharField("授权对象 ID", max_length=64)
+    system_id = models.CharField("系统 ID", max_length=32)
+    _data = models.TextField("授权数据", db_column="data")  # 调研压缩的 json 字段
     _auth_types = models.TextField(
         "模板授权策略的鉴权类型",
         db_column="auth_types",
-        help_text="JSON存储 {'action_id': auth_type, ...}",
+        help_text="JSON 存储 {'action_id': auth_type, ...}",
         default="{}",
     )
 
@@ -140,16 +145,18 @@ class PermTemplatePreUpdateLock(BaseModel):
     """
     模板的预提交信息锁
 
-    1. 获取已有的预提交信息时不能是running
-    2. 获取模板预更新的到用户组的预览信息只能是waiting
-    3. 模板预更新提交时, 需要从 waiting -> running
-    4. 如果模板存在预更新的信息锁, 不能授权到用户组
-    5. 删除预提交信息时, 不能是running
-    6. 提交用户组的更新信息, 锁只能是 waiting
-    7. 如果锁是running, 不能从新提交预更新信息
+    1. 获取已有的预提交信息时不能是 running
+    2. 获取模板预更新的到用户组的预览信息只能是 waiting
+    3. 模板预更新提交时，需要从 waiting -> running
+    4. 如果模板存在预更新的信息锁，不能授权到用户组
+    5. 删除预提交信息时，不能是 running
+    6. 提交用户组的更新信息，锁只能是 waiting
+    7. 如果锁是 running, 不能从新提交预更新信息
     """
 
-    template_id = models.IntegerField("模板ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    template_id = models.IntegerField("模板 ID")
     status = models.CharField(
         "类型",
         max_length=32,
@@ -168,8 +175,10 @@ class PermTemplatePreUpdateLock(BaseModel):
 
 
 class PermTemplatePreGroupSync(BaseModel):
-    template_id = models.IntegerField("模板ID")
-    group_id = models.IntegerField("模板ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    template_id = models.IntegerField("模板 ID")
+    group_id = models.IntegerField("模板 ID")
     status = models.CharField(
         "类型",
         max_length=32,

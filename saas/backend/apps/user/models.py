@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -15,6 +15,7 @@ from django.db import models
 
 from backend.apps.user.constants import UserPermissionCleanupRecordStatusEnum
 from backend.apps.user.managers import UserProfileManager
+from backend.common.constants import DEFAULT_TENANT_ID
 from backend.common.models import BaseModel
 from backend.util.json import json_dumps
 
@@ -23,6 +24,8 @@ class UserProfile(BaseModel):
     """
     记录与用户个人相关的配置等信息：新手指引已读内容
     """
+
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
 
     username = models.CharField("用户名", max_length=255, unique=True, db_index=True)
     _newbie = models.TextField("新手指引", db_column="newbie", default="{}")
@@ -55,6 +58,8 @@ class UserPermissionCleanupRecord(BaseModel):
     """
     用户权限清理记录
     """
+
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
 
     username = models.CharField("用户名", max_length=255, unique=True, db_index=True)
     status = models.CharField(

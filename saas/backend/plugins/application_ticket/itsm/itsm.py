@@ -14,7 +14,7 @@ from typing import Dict, List, Optional
 from django.conf import settings
 from rest_framework.request import Request
 
-from backend.component.client.itsm import BkITSMClient
+from backend.component.client.bk_itsm import BkITSMClient
 from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource
 from backend.service.models import (
     ApplicationTicket,

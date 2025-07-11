@@ -17,7 +17,7 @@ from django.utils.translation import gettext as _
 
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
-from backend.component.client.itsm import BkITSMClient
+from backend.component.client.bk_itsm import BkITSMClient
 from backend.service.constants import IAM_SUPPORT_PROCESSOR_TYPES, ApplicationType, ProcessorSource
 from backend.service.models import ApprovalProcess, ApprovalProcessNode, ApprovalProcessWithNode
 from backend.util.enum import ChoicesEnum

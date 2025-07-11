@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -33,12 +33,12 @@ class LockTypeEnum(LowerStrEnum):
 
 class RedisLock:
     """
-    基于redis实现的分布式锁
+    基于 redis 实现的分布式锁
     """
 
     def __init__(self, type_: str, suffix: Any = None, timeout: Optional[int] = None, blocking=True) -> None:
         """
-        type: 锁类型, LockTypeEnum 中的值
+        type: 锁类型，LockTypeEnum 中的值
         suffix: 实现__str__方法的对象
         """
         key = self._make_key(type_, suffix)
@@ -48,7 +48,7 @@ class RedisLock:
 
     def _make_key(self, type_: str, suffix: Any) -> str:
         """
-        生成key
+        生成 key
         """
         return f"{type_}:{suffix}" if suffix is not None else type_
 
@@ -74,8 +74,8 @@ def gen_permission_handover_lock(key: str) -> RedisLock:
     return RedisLock(LockTypeEnum.PERMISSION_HANDOVER.value, suffix=key, blocking=False)
 
 
-def gen_organization_sync_lock() -> RedisLock:
-    return RedisLock(LockTypeEnum.ORGANIZATION_SYNC.value, timeout=10)
+def gen_organization_sync_lock(tenant_id: str) -> RedisLock:
+    return RedisLock(LockTypeEnum.ORGANIZATION_SYNC.value, suffix=tenant_id, timeout=10)
 
 
 def gen_policy_alter_lock(template_id: int, system_id: str, subject_type: str, subject_id: str) -> RedisLock:

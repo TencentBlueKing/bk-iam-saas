@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -31,7 +31,6 @@ from backend.biz.org_sync.iam_user import IAMBackendUserSyncService
 from backend.biz.org_sync.iam_user_department import IAMBackendUserDepartmentSyncService
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.org_sync.user import DBUserSyncService
-from backend.biz.org_sync.user_leader import DBUserLeaderSyncService
 from backend.common.lock import gen_organization_sync_lock
 from backend.component import iam, usermgr
 from backend.service.constants import SubjectType
@@ -43,17 +42,19 @@ logger = logging.getLogger("celery")
 
 
 @shared_task(ignore_result=True)
-def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
+def sync_organization(tenant_id: str, executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     try:
-        # 分布式锁，避免同一时间该任务多个worker执行
-        with gen_organization_sync_lock():  # type: ignore[attr-defined]
-            # Note: 虽然拿到锁了，但是还是得确定没有正在运行的任务才可以（因为10秒后锁自动释放了）
-            record = SyncRecord.objects.filter(type=SyncType.Full.value, status=SyncTaskStatus.Running.value).first()
+        # 分布式锁，避免同一时间该任务多个 worker 执行
+        with gen_organization_sync_lock(tenant_id):  # type: ignore[attr-defined]
+            # Note: 虽然拿到锁了，但是还是得确定没有正在运行的任务才可以（因为 10 秒后锁自动释放了）
+            record = SyncRecord.objects.filter(
+                tenant_id=tenant_id, type=SyncType.Full.value, status=SyncTaskStatus.Running.value
+            ).first()
             if record is not None:
                 return record.id
             # 添加执行记录
             record = SyncRecord.objects.create(
-                executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Running.value
+                tenant_id=tenant_id, executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Running.value
             )
 
     except Exception:  # pylint: disable=broad-except
@@ -62,38 +63,31 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
         logger.exception(exception_msg)
         # 获取分布式锁失败时，需要创建一条失败记录
         record = SyncRecord.objects.create(
-            executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Failed.value
+            tenant_id=tenant_id, executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Failed.value
         )
-        SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
+        SyncErrorLog.objects.create_error_log(tenant_id, record.id, exception_msg, traceback_msg)
         return record.id
 
     try:
         # 1. SaaS 从用户管理同步组织架构
         # 用户
-        user_sync_service = DBUserSyncService()
+        user_sync_service = DBUserSyncService(tenant_id)
         # 部门
-        department_sync_service = DBDepartmentSyncService()
+        department_sync_service = DBDepartmentSyncService(tenant_id)
         # 部门与用户关系
-        department_member_sync_service = DBDepartmentMemberSyncService()
-        # 用户与Leader关系
-        user_leader_service = DBUserLeaderSyncService()
+        department_member_sync_service = DBDepartmentMemberSyncService(tenant_id)
 
         # 开始执行同步变更
-        with transaction.atomic():
-            services = [
-                user_sync_service,
-                department_sync_service,
-                department_member_sync_service,
-                user_leader_service,
-            ]
-            # 执行DB变更
-            for service in services:
-                service.sync_to_db()
+        services = [user_sync_service, department_sync_service, department_member_sync_service]
+        # 执行 DB 变更
+        for service in services:
+            service.sync_to_db()
 
-            # 计算和同步部门的冗余数据
-            DBDepartmentSyncExactInfo().sync_to_db()
+        # 计算和同步部门的冗余数据
+        DBDepartmentSyncExactInfo(tenant_id).sync_to_db()
 
-        # 2. SaaS 将DB存储的组织架构同步给IAM后台
+        # FIXME(tenant): 这里需要等后台改造支持用户的租户才能按照租户来同步用户
+        # 2. SaaS 将 DB 存储的组织架构同步给 IAM 后台
         iam_backend_user_sync_service = IAMBackendUserSyncService()
         iam_backend_department_sync_service = IAMBackendDepartmentSyncService()
         iam_backend_user_department_sync_service = IAMBackendUserDepartmentSyncService()
@@ -115,7 +109,7 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
 
     SyncRecord.objects.filter(id=record.id).update(status=sync_status, updated_time=timezone.now())
     if sync_status == SyncTaskStatus.Failed.value:
-        SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
+        SyncErrorLog.objects.create_error_log(tenant_id, record.id, exception_msg, traceback_msg)
 
     return record.id
 
@@ -142,11 +136,11 @@ def clean_subject_to_delete():
     max_create_time = timezone.now() - timezone.timedelta(days=settings.SUBJECT_DELETE_DAYS)
     subjects = list(SubjectToDelete.objects.filter(created_time__lt=max_create_time))
 
-    # 分割对应的subject
+    # 分割对应的 subject
     usernames = [one.subject_id for one in subjects if one.subject_type == SubjectType.USER.value]
     department_ids = [one.subject_id for one in subjects if one.subject_type == SubjectType.DEPARTMENT.value]
 
-    # 校验用户管理是不是真的已经删除对应的subject
+    # 校验用户管理是不是真的已经删除对应的 subject
     if usernames:
         usermgr_users = usermgr.list_profile()
         # 排除存在的用户名
@@ -174,21 +168,21 @@ def clean_subject_to_delete():
             # 批量删除部门关系数据
             batch_delete_subject_relations(SubjectType.DEPARTMENT.value, department_ids)
 
-        # 更新role的subject授权范围
+        # 更新 role 的 subject 授权范围
         update_role_subject_scope(usernames, department_ids)
 
         if subjects:
-            # 删除待删除的subject
+            # 删除待删除的 subject
             SubjectToDelete.objects.filter(id__in=[one.id for one in subjects]).delete()
 
-            # 清理后台subject数据
+            # 清理后台 subject 数据
             deleted_subjects = [{"type": SubjectType.USER.value, "id": one} for one in usernames]
             deleted_subjects.extend([{"type": SubjectType.DEPARTMENT.value, "id": one} for one in department_ids])
             iam.delete_subjects_by_auto_paging(deleted_subjects)
 
 
 def batch_delete_subject_relations(subject_type: str, subject_ids: List[str]):
-    # 删除用户的subject template group关系
+    # 删除用户的 subject template group 关系
     SubjectTemplateRelation.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).delete()
 
     # 删除冗余用户组关系表

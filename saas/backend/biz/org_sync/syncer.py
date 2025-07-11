@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -27,21 +27,21 @@ class Syncer:
 
     def sync_single_user(self, username):
         """
-        单一用户同步（后续可以添加with_relation=True参数同步用户的相关部门和leader等）
-        # NOTE：被migration(organization.0004_auto_20201230_1653)调用到了
-        # 如果有调整，需要注意是否需要调整migration，避免出现循环依赖导致migrate失败
-        # 目前依赖1张表：User
+        单一用户同步（后续可以添加 with_relation=True 参数同步用户的相关部门和 leader 等）
+        # NOTE：被 migration(organization.0004_auto_20201230_1653) 调用到了
+        # 如果有调整，需要注意是否需要调整 migration，避免出现循环依赖导致 migrate 失败
+        # 目前依赖 1 张表：User
         """
-        # 1. 查询用户是否在DB
+        # 1. 查询用户是否在 DB
         if User.objects.filter(username=username).exists():
             # 已存在则不需要再同步
             return
         # TODO: 考虑并发情况，需要添加分布式锁
-        # 2. 查询UserMgr API
+        # 2. 查询 UserMgr API
         user_info = usermgr.retrieve_user(
             username, fields="id,username,display_name,staff_status,category_id,departments"
         )
-        # 3. 同步到DB
+        # 3. 同步到 DB
         user, is_created = User.objects.get_or_create(
             id=user_info["id"],
             defaults={
@@ -54,7 +54,7 @@ class Syncer:
         if not is_created:
             return
 
-        # 4. 同步到IAM后台
+        # 4. 同步到 IAM 后台
         iam.create_subjects([{"type": "user", "id": user.username, "name": user.display_name}])
 
         # 5. 同步部门
@@ -84,10 +84,10 @@ class Syncer:
         """
         执行新增用户同步
         1. 获取需要新增的用户列表
-        2. 如果用户列表大于一定数量，则使用全量同步的方式（评估1分钟内最多同步多少个用户）
+        2. 如果用户列表大于一定数量，则使用全量同步的方式（评估 1 分钟内最多同步多少个用户）
         3. 小于一定数量的新增用户，则直接单用户同步
         """
-        # 查询5分钟内新增用户
+        # 查询 5 分钟内新增用户
         users = usermgr.list_new_user(datetime.datetime.utcnow(), 20)
         # 如果没有则无需执行
         if not users:
@@ -125,7 +125,3 @@ class Syncer:
             from backend.apps.organization.tasks import sync_organization
 
             sync_organization.delay()
-
-    # def sync_full_organization(self):
-    #     # TODO: 重构时将 backend.apps.organization.tasks里的全量同步迁移到这里
-    #     pass

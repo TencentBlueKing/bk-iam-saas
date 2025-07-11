@@ -30,7 +30,6 @@ from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
-from backend.biz.constants import StaffStatus
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
@@ -186,9 +185,6 @@ class ApprovedPassApplicationBiz:
         user = UserModel.objects.filter(username=subject.id).first()
         if not user:
             return False, f"user [{subject.id}] not exists"
-
-        if user.staff_status != StaffStatus.IN.value:
-            return False, f"user [{subject.id}] staff status [{user.staff_status}]"
 
         return True, ""
 

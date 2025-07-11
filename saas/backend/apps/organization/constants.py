@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,13 +13,6 @@ from aenum import LowerStrEnum, StrEnum, auto, skip
 from django.utils.translation import gettext as _
 
 from backend.util.enum import ChoicesEnum
-
-
-class StaffStatus(ChoicesEnum, StrEnum):
-    IN = auto()
-    OUT = auto()
-
-    _choices_labels = skip(((IN, _("在职")), (OUT, _("离职"))))
 
 
 class SyncType(ChoicesEnum, LowerStrEnum):
@@ -42,7 +35,7 @@ class SyncTaskStatus(ChoicesEnum, StrEnum):
 
 
 class SyncTaskLockKey(ChoicesEnum):
-    """同步任务锁的Key"""
+    """同步任务锁的 Key"""
 
     Full = f"sync_task_{SyncType.Full.value}"
     SingleUser = f"sync_task_{SyncType.SingleUser.value}"

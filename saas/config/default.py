@@ -546,3 +546,7 @@ ITSM_APIGW_NAME = env.str("ITSM_APIGW_NAME", default="cw-aitsm")
 ITSM_APIGW_STAGE = env.str("ITSM_APIGW_STAGE", default="prod")
 # 流程模板文件（用于初始化每个租户的默认流程）
 ITSM_WORKERFLOW_TEMPLATE_FILE = os.path.join(BASE_DIR, "backend/plugins/approval_process/itsm/workflow_template.json")
+
+# 蓝鲸用户管理网关
+BK_USER_APIGW_NAME = env.str("BK_USER_APIGW_NAME", default="bk-user")
+BK_USER_APIGW_STAGE = env.str("BK_USER_APIGW_STAGE", default="prod")
