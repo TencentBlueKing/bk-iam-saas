@@ -117,19 +117,20 @@ class AdminTemplateIdSLZ(TemplateIdSLZ):
 
 
 class SubjectActionSLZ(serializers.Serializer):
-    name = serializers.CharField(label="操作名称")
     action_id = serializers.CharField(label="操作ID")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)", allow_null=True)
-    expired_at_display = serializers.CharField(label="过期时间显示", allow_null=True)
 
 
 class SubjectSystemSLZ(serializers.Serializer):
-    name = serializers.CharField(label="系统名称")
     system_id = serializers.CharField(label="系统ID")
 
 
 class SystemActionSLZ(SubjectSystemSLZ):
-    action = serializers.ListField(label="操作列表", child=SubjectActionSLZ(label="操作"))
+    actions = serializers.CharField(label="操作列表")
+
+
+class CustomSystemActionSLZ(SubjectSystemSLZ):
+    actions = serializers.ListField(label="操作列表", child=SubjectActionSLZ(label="操作"))
 
 
 class GradeManagementSLZ(serializers.Serializer):
@@ -143,7 +144,6 @@ class GroupPermissionSLZ(serializers.Serializer):
     grade_management = GradeManagementSLZ(label="分级管理空间")
     description = serializers.CharField(label="用户组描述", default="")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
-    expired_at_display = serializers.CharField(label="过期时间显示")
     permissions = serializers.ListField(label="权限列表", child=SystemActionSLZ(label="系统"))
 
 
@@ -152,11 +152,11 @@ class SubjectGroupPermissionSLZ(serializers.Serializer):
 
 
 class SubjectCustomPermissionSLZ(serializers.Serializer):
-    systems = serializers.ListField(label="系统列表", child=SystemActionSLZ(label="系统"))
+    systems = serializers.ListField(label="系统列表", child=CustomSystemActionSLZ(label="系统"))
 
 
 class SubjectManagementPermissionSLZ(serializers.Serializer):
     is_system_manager = serializers.BooleanField(label="是否系统管理员")
-    systems = serializers.ListField(label="系统列表", child=serializers.CharField(label="系统名称"))
+    systems = serializers.ListField(label="系统列表", child=serializers.CharField(label="系统id"))
     is_grade_manager = serializers.BooleanField(label="是否分级管理员")
-    grade_managements = serializers.ListField(label="分级管理空间列表", child=serializers.CharField(label="分级管理空间名称"))
+    grade_managements = serializers.ListField(label="分级管理空间列表", child=serializers.IntegerField(label="分级管理空间id"))

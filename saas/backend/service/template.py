@@ -340,3 +340,19 @@ class TemplateService:
 
             if update_pre_commits:
                 PermTemplatePreGroupSync.objects.bulk_update(update_pre_commits, ["data"], batch_size=100)
+
+    def _get_template_id_by_group_system(self, group: Subject, system_id: str) -> int:
+        """
+        查询用户组有权限的模板ID列表
+        """
+        return (
+            PermTemplatePolicyAuthorized.objects.filter_by_subject(group)
+            .filter(system_id=system_id)
+            .values_list("template_id", flat=True)
+            .first()
+        )
+
+    def get_actions_by_group_system(self, group: Subject, system_id: str) -> List[str]:
+        """查询用户组有权限的模板的操作列表"""
+        template_id = self._get_template_id_by_group_system(group, system_id)
+        return PermTemplate.objects.get(id=template_id).action_ids

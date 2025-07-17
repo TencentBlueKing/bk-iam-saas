@@ -135,7 +135,7 @@ class RoleSystemManagementBean(BaseModel):
     is_system_manager: bool = False
     systems: List[str]
     is_grade_manager: bool = False
-    grade_managements: List[str]
+    grade_managements: List[int]
 
 
 class RoleBiz:
@@ -448,10 +448,10 @@ class RoleBiz:
         for role in roles:
             if role.type == RoleType.SYSTEM_MANAGER.value:
                 role_system_management_bean.is_system_manager = True
-                role_system_management_bean.systems.append(role.name)
+                role_system_management_bean.systems.append(self.svc.get_system_id_role_id(role.id))
             if role.type == RoleType.GRADE_MANAGER.value or role.type == RoleType.SUBSET_MANAGER.value:
                 role_system_management_bean.is_grade_manager = True
-                role_system_management_bean.grade_managements.append(role.name)
+                role_system_management_bean.grade_managements.append(role.id)
         return role_system_management_bean
 
 

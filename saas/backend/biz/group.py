@@ -127,24 +127,16 @@ class GroupTemplateGrantBean(BaseModel):
     policies: List[PolicyBean]
 
 
-class GroupActionBean(BaseModel):
-    name: str
-    action_id: str
-
-
 class GroupSystemBean(BaseModel):
     system_id: str
-    name: str
-    actions: List[GroupActionBean]
+    actions: List[str]
 
 
 class GroupPermissionBean(BaseModel):
     id: str
-    name: str
-    grade_management: Dict[str, str]
+    grade_management_id: int
     description: str
     expired_at: int
-    expired_at_display: str
     permissions: List[GroupSystemBean]
 
 
@@ -1071,23 +1063,24 @@ class GroupBiz:
                 raise error_codes.NOT_FOUND_ERROR.format(_("用户组对应的分级管理空间不存在"))
             group_permission_bean = GroupPermissionBean(
                 id=group.id,
-                name=group.name,
-                grade_management={"name": role.name, "id": role.id},  # noqa
+                grade_management_id=role.id,
                 description=group.description,
                 expired_at=group.expired_at,
-                expired_at_display=group.expired_at_display,
                 permissions=[],
             )
+            group_subject = Subject.from_group_id(group.id)
             systems = self.list_system_counter(group.id)
             for system in systems:
-                group_permission_bean.permissions.append(
-                    GroupSystemBean(system_id=system.id, name=system.name, actions=[])
-                )
-                policies = self.policy_query_biz.list_by_subject(system.id, subject)
-                for policy in policies:
-                    group_permission_bean.permissions[-1].actions.append(
-                        GroupActionBean(action_id=policy.action_id, name=policy.name)
-                    )
+                group_system_bean = GroupSystemBean(system_id=system.id, actions=[])
+                if system.custom_policy_count:
+                    policies = self.policy_query_biz.list_by_subject(system.id, group_subject)
+                    for policy in policies:
+                        group_system_bean.actions.append(policy.action_id)
+                if system.template_count:
+                    actions = self.template_svc.get_actions_by_group_system(group_subject, system_id=system.id)
+                    group_system_bean.actions.extend(actions)
+
+                group_permission_bean.permissions.append(group_system_bean)
             result.append(group_permission_bean)
         return result
 

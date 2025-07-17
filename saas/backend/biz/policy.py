@@ -990,13 +990,10 @@ class PolicyBean(Policy):
 
 class ActionBean(BaseModel):
     id: str
-    name: str
     expired_at: int
-    expired_at_display: str
 
 
 class SystemPolicyBean(BaseModel):
-    name: str
     system_id: str
     actions: List[ActionBean]
 
@@ -1563,12 +1560,10 @@ class PolicyQueryBiz:
                 actions.append(
                     ActionBean(
                         id=action.id,
-                        name=action.name,
                         expired_at=policy.expired_at,
-                        expired_at_display=expired_at_display(policy.expired_at),
                     )
                 )
-            result.append(SystemPolicyBean(system_id=system.id, name=system.name, actions=actions))
+            result.append(SystemPolicyBean(system_id=system.id, actions=actions))
         return count, result
 
 

@@ -656,3 +656,11 @@ class RoleService:
                 RoleRelatedObject.objects.filter(
                     object_type=RoleRelatedObjectType.TEMPLATE.value, object_id__in=template_ids
                 ).update(role_id=role_id)
+
+    def get_system_id_role_id(self, role_id: int):
+        """
+        获取系统管理员角色对应的系统ID
+        """
+        return (
+            Role.objects.filter(id=role_id, type=RoleType.SYSTEM_MANAGER.value).values_list("code", flat=True).first()
+        )
