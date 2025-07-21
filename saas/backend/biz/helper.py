@@ -54,8 +54,10 @@ class RoleWithPermGroupBiz:
     角色同步权限用户组操作
     """
 
-    role_biz = RoleBiz()
-    group_biz = GroupBiz()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.role_biz = RoleBiz(self.tenant_id)
+        self.group_biz = GroupBiz(self.tenant_id)
 
     def delete_role_member(self, role: Role, username: str, operator: str = ADMIN_USER):
         """
@@ -102,11 +104,6 @@ class RoleDeleteHelper:
     8. 删除分级管理员的人员模版
     """
 
-    role_biz = RoleBiz()
-    group_biz = GroupBiz()
-    template_biz = TemplateBiz()
-    subject_template_biz = SubjectTemplateBiz()
-
     def __init__(self, role_id: int) -> None:
         # 1. 校验是否为分级管理员/子集管理员
         role = Role.objects.filter(
@@ -116,6 +113,11 @@ class RoleDeleteHelper:
             raise error_codes.NOT_FOUND_ERROR.format(f"role[{role_id}] not exists")
 
         self._role = role
+        self.tenant_id = role.tenant_id
+        self.role_biz = RoleBiz(self.tenant_id)
+        self.group_biz = GroupBiz(self.tenant_id)
+        self.template_biz = TemplateBiz(self.tenant_id)
+        self.subject_template_biz = SubjectTemplateBiz(self.tenant_id)
 
     def delete(self):
         """
@@ -206,7 +208,7 @@ def get_role_expired_group_members(role: Role, expired_at_before: int, expired_a
     """
     获取角色已过期或即将过期的用户组成员
     """
-    group_biz = GroupBiz()
+    group_biz = GroupBiz(role.tenant_id)
 
     group_members: List[Dict[str, Any]] = []
 
@@ -299,8 +301,10 @@ def get_user_expired_groups_policies(
     """
     获取用户已过期或即将过期的用户组与权限策略
     """
-    group_biz = GroupBiz()
-    policy_biz = PolicyQueryBiz()
+    tenant_id = user.tenant_id
+
+    group_biz = GroupBiz(tenant_id)
+    policy_biz = PolicyQueryBiz(tenant_id)
 
     username = user.username
     subject = Subject.from_username(username)

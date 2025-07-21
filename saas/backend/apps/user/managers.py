@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -17,8 +17,10 @@ from backend.apps.user.constants import NewbieSceneEnum
 
 
 class UserProfileManager(models.Manager):
-    def update_newbie(self, username: str, scene: str, status: bool):
-        profile, _ = self.get_or_create(username=username, defaults={"_newbie": "{}", "_favorite_systems": "[]"})
+    def update_newbie(self, tenant_id, username: str, scene: str, status: bool):
+        profile, _ = self.get_or_create(
+            tenant_id=tenant_id, username=username, defaults={"_newbie": "{}", "_favorite_systems": "[]"}
+        )
         # 存在则修改数据后再保存
         newbie_dict = profile.newbie
         newbie_dict[scene] = status
@@ -27,7 +29,7 @@ class UserProfileManager(models.Manager):
 
     def list_newbie(self, username: str) -> List[Dict]:
         """列出某个用户的所有场景的新手指引状态"""
-        # DB查询，由于未读过任何一个新手指引，所以可能不存在记录
+        # DB 查询，由于未读过任何一个新手指引，所以可能不存在记录
         profile = self.filter(username=username).first()
         newbie_dict = profile.newbie if profile else {}
 
@@ -41,8 +43,10 @@ class UserProfileManager(models.Manager):
             return []
         return profile.favorite_systems
 
-    def add_favorite_systems(self, username: str, systems: List[str]):
-        profile, _ = self.get_or_create(username=username, defaults={"_newbie": "{}", "_favorite_systems": "[]"})
+    def add_favorite_systems(self, tenant_id: str, username: str, systems: List[str]):
+        profile, _ = self.get_or_create(
+            tenant_id=tenant_id, username=username, defaults={"_newbie": "{}", "_favorite_systems": "[]"}
+        )
         favorite_systems = profile.favorite_systems
         for system in systems:
             if system not in favorite_systems:

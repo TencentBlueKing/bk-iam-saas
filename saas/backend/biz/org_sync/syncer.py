@@ -7,16 +7,11 @@ You may obtain a copy of the License at http://opensource.org/licenses/MIT
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
-
-所有组织架构同步操作 统一处理
 """
 
-import datetime
-
-from backend.apps.organization.models import Department, DepartmentMember, SubjectToDelete, User
-from backend.biz.constants import NEW_USER_AUTO_SYNC_COUNT_LIMIT
-from backend.component import iam, usermgr
-from backend.service.constants import SubjectType
+from backend.apps.organization.models import Department, DepartmentMember, User
+from backend.component import iam
+from backend.component.client.bk_user import BkUserClient
 
 
 class Syncer:
@@ -24,6 +19,10 @@ class Syncer:
     组织架构同步
     需要特别注意同步任务间是否有冲突
     """
+
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.client = BkUserClient(tenant_id=tenant_id)
 
     def sync_single_user(self, username):
         """
@@ -36,19 +35,17 @@ class Syncer:
         if User.objects.filter(username=username).exists():
             # 已存在则不需要再同步
             return
+
         # TODO: 考虑并发情况，需要添加分布式锁
         # 2. 查询 UserMgr API
-        user_info = usermgr.retrieve_user(
-            username, fields="id,username,display_name,staff_status,category_id,departments"
-        )
+        user_info = self.client.retrieve_user_or_virtual_user(username)
         # 3. 同步到 DB
         user, is_created = User.objects.get_or_create(
-            id=user_info["id"],
+            username=user_info["bk_username"],
             defaults={
-                "username": user_info["username"],
-                "display_name": user_info["display_name"] or user_info["username"],
-                "staff_status": user_info["staff_status"],
-                "category_id": user_info["category_id"],
+                "tenant_id": self.tenant_id,
+                "display_name": user_info["display_name"],
+                "full_name": user_info["full_name"],
             },
         )
         if not is_created:
@@ -58,17 +55,21 @@ class Syncer:
         iam.create_subjects([{"type": "user", "id": user.username, "name": user.display_name}])
 
         # 5. 同步部门
-        department_ids = [one["id"] for one in user_info["departments"]]
+        department_ids = [d["id"] for d in self.client.list_user_department(username)]
         if not department_ids:
             return
 
+        # 只建立存在的部门与用户的关系，不存在的部门就等全量同步时处理
         departments = Department.objects.filter(id__in=department_ids)
         if not departments:
             return
 
         # 创建用户与部门关系
         DepartmentMember.objects.bulk_create(
-            [DepartmentMember(department_id=department.id, user_id=user_info["id"]) for department in departments]
+            [
+                DepartmentMember(tenant_id=self.tenant_id, department_id=dept.id, username=username)
+                for dept in departments
+            ]
         )
 
         department_id_set = set(department_ids)
@@ -79,49 +80,3 @@ class Syncer:
         iam.create_subject_departments_by_auto_paging(
             [{"id": user.username, "departments": [str(_id) for _id in department_id_set]}]
         )
-
-    def sync_new_users(self):
-        """
-        执行新增用户同步
-        1. 获取需要新增的用户列表
-        2. 如果用户列表大于一定数量，则使用全量同步的方式（评估 1 分钟内最多同步多少个用户）
-        3. 小于一定数量的新增用户，则直接单用户同步
-        """
-        # 查询 5 分钟内新增用户
-        users = usermgr.list_new_user(datetime.datetime.utcnow(), 20)
-        # 如果没有则无需执行
-        if not users:
-            return
-
-        # 去除已存在的用户
-        exist_users = set(User.objects.filter(id__in=[u["id"] for u in users]).values_list("id", flat=True))
-        users = [u for u in users if u["id"] not in exist_users]
-        # 执行用户同步
-        created_users = [
-            User(
-                id=user["id"],
-                username=user["username"],
-                display_name=user["display_name"],
-                staff_status=user["staff_status"],
-                category_id=user["category_id"],
-            )
-            for user in users
-        ]
-        # 没有需要新建的，直接返回
-        if len(created_users) == 0:
-            return
-        # 对于新增用户，执行对应变更
-        User.objects.bulk_create(created_users, batch_size=1000)
-        # 后台新建
-        iam.create_subjects([{"type": "user", "id": user["username"], "name": user["display_name"]} for user in users])
-
-        # 移除待删除的用户
-        SubjectToDelete.objects.filter(
-            subject_type=SubjectType.USER.value, subject_id__in=[u.username for u in created_users]
-        ).delete()
-
-        # 如果用户大于一定量，则直接全量同步
-        if len(created_users) > NEW_USER_AUTO_SYNC_COUNT_LIMIT:
-            from backend.apps.organization.tasks import sync_organization
-
-            sync_organization.delay()

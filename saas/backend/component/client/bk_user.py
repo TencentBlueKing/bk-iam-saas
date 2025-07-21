@@ -214,3 +214,30 @@ class BkUserClient(BkApigwBaseClient):
         user["full_name"] = user["display_name"]
 
         return user
+
+    def list_user_department(self, bk_username: str, with_ancestors: bool = False) -> List[Dict]:
+        """获取用户所在的部门
+
+        :param bk_username: 用户名
+        :param with_ancestors: 是否包含祖先部门
+        :return: [
+            {
+                "id": 1,
+                "name": "部门 A",
+                "ancestors": [
+                    {
+                        "id": 1,
+                        "name": "部门 A"
+                    },
+                    {
+                        "id": 2,
+                        "name": "部门 B"
+                    }
+                ]
+            },
+            ...
+        ]
+        """
+        url_path = f"/api/v3/open/tenant/users/{bk_username}/departments/"
+        params = {"with_ancestors": with_ancestors}
+        return self._call(http_get_20x, url_path, params=params)

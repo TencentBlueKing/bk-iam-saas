@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -18,42 +18,39 @@ from backend.util.json import json_dumps
 
 def init_super_manager(apps, schema_editor):
     """初始化超级管理员"""
-    Role = apps.get_model('role', 'Role')
-    RoleScope = apps.get_model('role', 'RoleScope')
-
-    with transaction.atomic():
-        # 创建超级管理员
-        role, is_created = Role.objects.get_or_create(
-            type=RoleType.SUPER_MANAGER.value,
-            defaults={
-                "name": "超级管理员",
-                "name_en": "super administrator",
-                "creator": "admin",
-                "updater": "admin",
-            }
-        )
-        if is_created:
-            # 创建超级管理员的授权范围
-            RoleScope.objects.bulk_create([
-                RoleScope(
-                    role_id=role.id,
-                    type=RoleScopeType.AUTHORIZATION.value,
-                    content=json_dumps([{"system_id": "*", "actions": [{"id": "*", "related_resource_types": []}]}])
-                ),
-                RoleScope(
-                    role_id=role.id,
-                    type=RoleScopeType.SUBJECT.value,
-                    content=json_dumps([{"type": "*", "id": "*"}])
-                )
-            ])
+    # Role = apps.get_model('role', 'Role')
+    # RoleScope = apps.get_model('role', 'RoleScope')
+    #
+    # with transaction.atomic():
+    #     # 创建超级管理员
+    #     role, is_created = Role.objects.get_or_create(
+    #         type=RoleType.SUPER_MANAGER.value,
+    #         defaults={
+    #             "name": "超级管理员",
+    #             "name_en": "super administrator",
+    #             "creator": "admin",
+    #             "updater": "admin",
+    #         }
+    #     )
+    #     if is_created:
+    #         # 创建超级管理员的授权范围
+    #         RoleScope.objects.bulk_create([
+    #             RoleScope(
+    #                 role_id=role.id,
+    #                 type=RoleScopeType.AUTHORIZATION.value,
+    #                 content=json_dumps([{"system_id": "*", "actions": [{"id": "*", "related_resource_types": []}]}])
+    #             ),
+    #             RoleScope(
+    #                 role_id=role.id,
+    #                 type=RoleScopeType.SUBJECT.value,
+    #                 content=json_dumps([{"type": "*", "id": "*"}])
+    #             )
+    #         ])
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('role', '0005_auto_20201029_2028'),
+        ("role", "0005_auto_20201029_2028"),
     ]
 
-    operations = [
-        migrations.RunPython(init_super_manager)
-    ]
+    operations = [migrations.RunPython(init_super_manager)]

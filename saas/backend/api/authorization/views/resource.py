@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -14,16 +14,19 @@ from rest_framework import serializers, status
 from rest_framework.views import APIView
 
 from backend.api.authentication import ESBAuthentication
+from backend.api.authorization.audit import SubjectPolicyGrantOrRevokeAuditProvider
+from backend.api.authorization.constants import AuthorizationAPIEnum, OperateEnum, VerifyApiParamLocationEnum
+from backend.api.authorization.mixins import AuthViewMixin
+from backend.api.authorization.permissions import AuthorizationAPIPermission
+from backend.api.authorization.serializers import (
+    ActionAttributeSLZ,
+    AuthBatchInstanceSLZ,
+    AuthBatchPathSLZ,
+    AuthInstanceSLZ,
+    AuthPathSLZ,
+)
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.resource_creator_action import ResourceCreatorActionBiz
 from backend.service.models import Subject
-from backend.trans.open_authorization import AuthorizationTrans
-
-from ..audit import SubjectPolicyGrantOrRevokeAuditProvider
-from ..constants import AuthorizationAPIEnum, OperateEnum, VerifyApiParamLocationEnum
-from ..mixins import AuthViewMixin
-from ..permissions import AuthorizationAPIPermission
-from ..serializers import ActionAttributeSLZ, AuthBatchInstanceSLZ, AuthBatchPathSLZ, AuthInstanceSLZ, AuthPathSLZ
 
 
 class AuthInstanceView(AuthViewMixin, APIView):
@@ -36,8 +39,6 @@ class AuthInstanceView(AuthViewMixin, APIView):
     authorization_api_permission = {
         "post": (VerifyApiParamLocationEnum.ACTION_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
     }
-
-    trans = AuthorizationTrans()
 
     @swagger_auto_schema(
         operation_description="单个资源授权回收",
@@ -60,7 +61,7 @@ class AuthInstanceView(AuthViewMixin, APIView):
         resources = data["resources"]
 
         # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_instance(system_id, action_id, resources, expired_at)
+        policy_list = self.authorization_trans.to_policy_list_for_instance(system_id, action_id, resources, expired_at)
 
         # 授权或回收
         policies = self.grant_or_revoke(operate, subject, policy_list)
@@ -80,8 +81,6 @@ class AuthPathView(AuthViewMixin, APIView):
     authorization_api_permission = {
         "post": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
     }
-
-    trans = AuthorizationTrans()
 
     @swagger_auto_schema(
         operation_description="单个拓扑层级授权/回收",
@@ -104,7 +103,7 @@ class AuthPathView(AuthViewMixin, APIView):
         resources = data["resources"]
 
         # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_path(system_id, action_id, resources, expired_at)
+        policy_list = self.authorization_trans.to_policy_list_for_path(system_id, action_id, resources, expired_at)
 
         # 授权或回收
         policies = self.grant_or_revoke(operate, subject, policy_list)
@@ -124,8 +123,6 @@ class AuthBatchInstanceView(AuthViewMixin, APIView):
     authorization_api_permission = {
         "post": (VerifyApiParamLocationEnum.ACTIONS_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
     }
-
-    trans = AuthorizationTrans()
 
     @swagger_auto_schema(
         operation_description="批量操作批量资源授权回收",
@@ -148,7 +145,9 @@ class AuthBatchInstanceView(AuthViewMixin, APIView):
         resources = data["resources"]
 
         # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_instances(system_id, action_ids, resources, expired_at)
+        policy_list = self.authorization_trans.to_policy_list_for_instances(
+            system_id, action_ids, resources, expired_at
+        )
 
         # 授权或回收
         policies = self.grant_or_revoke(operate, subject, policy_list)
@@ -168,8 +167,6 @@ class AuthBatchPathView(AuthViewMixin, APIView):
     authorization_api_permission = {
         "post": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
     }
-
-    trans = AuthorizationTrans()
 
     @swagger_auto_schema(
         operation_description="批量操作批量拓扑层级授权/回收",
@@ -192,7 +189,7 @@ class AuthBatchPathView(AuthViewMixin, APIView):
         resources = data["resources"]
 
         # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_paths(system_id, action_ids, resources, expired_at)
+        policy_list = self.authorization_trans.to_policy_list_for_paths(system_id, action_ids, resources, expired_at)
 
         # 授权或回收
         policies = self.grant_or_revoke(operate, subject, policy_list)
@@ -214,9 +211,6 @@ class AuthAttributeView(AuthViewMixin, APIView):
         ),
     }
 
-    biz = ResourceCreatorActionBiz()
-    trans = AuthorizationTrans()
-
     @swagger_auto_schema(
         operation_description="属性授权",
         request_body=ActionAttributeSLZ,
@@ -237,7 +231,7 @@ class AuthAttributeView(AuthViewMixin, APIView):
         attributes = data["attributes"]
 
         # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_attributes_of_creator(
+        policy_list = self.authorization_trans.to_policy_list_for_attributes_of_creator(
             system_id,
             [
                 action_id,

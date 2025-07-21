@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -36,9 +36,8 @@ from backend.apps.subject.views import (
 from backend.apps.user.serializers import SubjectTemplateGroupSLZ
 from backend.apps.user.views import SubjectGroupSearchMixin
 from backend.audit.audit import audit_context_setter, log_api_event
-from backend.biz.group import GroupBiz
 from backend.biz.role import RoleObjectRelationChecker
-from backend.biz.subject_template import SubjectTemplateBiz
+from backend.mixins import BizMixin
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, SubjectType
 
 logger = logging.getLogger("app")
@@ -59,11 +58,11 @@ class RoleSubjectGroupSearchMixin(SubjectGroupSearchMixin):
                 if k in ["id", "name", "description", "hidden"]
                 if isinstance(v, bool) or v
             },
-            queryset=Group.objects.all(),
+            queryset=Group.objects.filter(tenant_id=request.tenant_id),
         )
         queryset = f.qs
 
-        # 查询role关联的所有用户组
+        # 查询 role 关联的所有用户组
         role_ids = RoleObjectRelationChecker(request.role).list_relation_role_id()
         ids = list(
             RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type=RoleRelatedObjectType.GROUP.value)
@@ -140,7 +139,7 @@ class RoleGroupMemberTemplateGroupViewSet(SubjectTemplateGroupViewSet):
     }
 
     @swagger_auto_schema(
-        operation_description="角色用户组成员-人员模版用户组列表",
+        operation_description="角色用户组成员 - 人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
         tags=["role"],
@@ -151,7 +150,7 @@ class RoleGroupMemberTemplateGroupViewSet(SubjectTemplateGroupViewSet):
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
         search_group_ids = super().search_group_ids(request, kwargs, data)
 
-        # 查询subject 在角色下关联的用户组
+        # 查询 subject 在角色下关联的用户组
         subject = self.get_subject(request, kwargs)
         group_ids = list(
             RoleGroupMember.objects.filter(
@@ -174,7 +173,7 @@ class RoleGroupMemberDepartmentTemplateGroupViewSet(DepartmentSubjectTemplateGro
     }
 
     @swagger_auto_schema(
-        operation_description="角色用户组成员-部门人员模版用户组列表",
+        operation_description="角色用户组成员 - 部门人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
         tags=["role"],
@@ -183,7 +182,7 @@ class RoleGroupMemberDepartmentTemplateGroupViewSet(DepartmentSubjectTemplateGro
         return super().list(request, *args, **kwargs)
 
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
-        # 查询subject 在角色下关联的用户组
+        # 查询 subject 在角色下关联的用户组
         subject = self.get_subject(request, kwargs)
         if subject.type != SubjectType.USER.value:
             return []
@@ -217,7 +216,7 @@ class RoleGroupMemberGroupViewSet(SubjectGroupSearchViewSet):
     }
 
     @swagger_auto_schema(
-        operation_description="角色用户组成员-用户组列表",
+        operation_description="角色用户组成员 - 用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["role"],
@@ -228,7 +227,7 @@ class RoleGroupMemberGroupViewSet(SubjectGroupSearchViewSet):
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
         search_group_ids = super().search_group_ids(request, kwargs, data)
 
-        # 查询subject 在角色下关联的用户组
+        # 查询 subject 在角色下关联的用户组
         subject = self.get_subject(request, kwargs)
         group_ids = list(
             RoleGroupMember.objects.filter(
@@ -243,10 +242,8 @@ class RoleGroupMemberGroupViewSet(SubjectGroupSearchViewSet):
 
 
 class RoleGroupMemberDepartmentGroupViewSet(SubjectDepartmentGroupSearchViewSet):
-    subject_template_biz = SubjectTemplateBiz()
-
     @swagger_auto_schema(
-        operation_description="角色用户组成员-部门用户组列表",
+        operation_description="角色用户组成员 - 部门用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["role"],
@@ -255,7 +252,7 @@ class RoleGroupMemberDepartmentGroupViewSet(SubjectDepartmentGroupSearchViewSet)
         return super().search(request, *args, **kwargs)
 
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
-        # 查询subject 在角色下关联的用户组
+        # 查询 subject 在角色下关联的用户组
         subject = self.get_subject(request, kwargs)
         if subject.type != SubjectType.USER.value:
             return []
@@ -281,13 +278,11 @@ class RoleGroupMemberDepartmentGroupViewSet(SubjectDepartmentGroupSearchViewSet)
         return list(set(group_ids) & set(search_group_ids))
 
 
-class RoleGroupMemberCleanViewSet(GenericViewSet):
+class RoleGroupMemberCleanViewSet(BizMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_ROLE_GROUP_MEMBER.value,
     }
-
-    group_biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="批量清理用户组成员",
@@ -303,10 +298,10 @@ class RoleGroupMemberCleanViewSet(GenericViewSet):
 
         members_data = data["members"]
 
-        # 成员Dict结构转换为Subject结构，并去重
+        # 成员 Dict 结构转换为 Subject 结构，并去重
         members, _ = split_members_to_subject_and_template(members_data)
 
-        # 查询出role以及所有的子集管理员id
+        # 查询出 role 以及所有的子集管理员 id
         role_ids = RoleObjectRelationChecker(request.role).list_relation_role_id()
 
         group_id_set = set()

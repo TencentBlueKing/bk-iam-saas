@@ -81,12 +81,14 @@ class ApprovalProcessService:
 
         # 检查是否有默认审批流程
         try:
-            process_config = ApprovalProcessGlobalConfig.objects.get(application_type=application_type)
+            process_config = ApprovalProcessGlobalConfig.objects.get(
+                tenant_id=self.tenant_id, application_type=application_type
+            )
         except ApprovalProcessGlobalConfig.DoesNotExist:
             # 没有默认审批流程，则需要从流程提供方获取并设置
             process = self.provider.get_default_process(application_type)
             process_config = ApprovalProcessGlobalConfig.objects.create(
-                application_type=application_type, process_id=process.id
+                tenant_id=self.tenant_id, application_type=application_type, process_id=process.id
             )
 
         return DefaultApprovalProcess(
@@ -96,10 +98,10 @@ class ApprovalProcessService:
             ),
         )
 
-    @staticmethod
-    def create_or_update_default_process(application_type: ApplicationType, process_id: int, operator: str):
+    def create_or_update_default_process(self, application_type: ApplicationType, process_id: int, operator: str):
         """更新或创建默认流程配置"""
         ApprovalProcessGlobalConfig.objects.update_or_create(
+            tenant_id=self.tenant_id,
             application_type=application_type,
             defaults={
                 "creator": operator,
@@ -130,8 +132,9 @@ class ApprovalProcessService:
 
         return action_processes
 
-    @staticmethod
-    def batch_create_or_update_action_process(system_id: str, action_ids: List[str], process_id: int, operator: str):
+    def batch_create_or_update_action_process(
+        self, system_id: str, action_ids: List[str], process_id: int, operator: str
+    ):
         """批量创建或更新操作的审批流程，对已存在的进行更新，对未存在的进行创建
         默认情况下操作与流程的绑定都是存储在权限中心的
         """
@@ -147,7 +150,12 @@ class ApprovalProcessService:
         if not_exist_ids:
             action_process_relations = [
                 ActionProcessRelation(
-                    system_id=system_id, action_id=aid, process_id=process_id, creator=operator, updater=operator
+                    tenant_id=self.tenant_id,
+                    system_id=system_id,
+                    action_id=aid,
+                    process_id=process_id,
+                    creator=operator,
+                    updater=operator,
                 )
                 for aid in not_exist_ids
             ]
@@ -176,6 +184,7 @@ class ApprovalProcessService:
         if not_exist_ids:
             action_process_relations = [
                 ActionProcessRelation(
+                    tenant_id=self.tenant_id,
                     system_id=system_id,
                     action_id=aid,
                     process_id=default_process.id,
@@ -214,8 +223,7 @@ class ApprovalProcessService:
 
         return group_processes
 
-    @staticmethod
-    def batch_create_or_update_group_process(group_ids: List[int], process_id: int, operator: str):
+    def batch_create_or_update_group_process(self, group_ids: List[int], process_id: int, operator: str):
         """批量创建或更新用户组的审批流程，对已存在的进行更新，对未存在的进行创建
         默认情况下操作与流程的绑定都是存储在权限中心的
         """
@@ -226,7 +234,9 @@ class ApprovalProcessService:
         not_exist_ids = set(group_ids) - exist_ids
         if not_exist_ids:
             group_process_relations = [
-                GroupProcessRelation(group_id=gid, process_id=process_id, creator=operator, updater=operator)
+                GroupProcessRelation(
+                    tenant_id=self.tenant_id, group_id=gid, process_id=process_id, creator=operator, updater=operator
+                )
                 for gid in not_exist_ids
             ]
             GroupProcessRelation.objects.bulk_create(group_process_relations)

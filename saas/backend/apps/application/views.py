@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from functools import cached_property, wraps
+from functools import wraps
 from typing import List
 
 from django.utils.translation import gettext as _
@@ -28,17 +28,15 @@ from backend.biz.application import (
     GradeManagerApplicationDataBean,
     GroupApplicationDataBean,
 )
-from backend.biz.group import GroupBiz
-from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
-from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
-from backend.biz.role import RoleBiz, RoleCheckBiz, can_user_manage_role
+from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.policy_tag import ConditionTagBean
+from backend.biz.role import can_user_manage_role
 from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
+from backend.mixins import BizMixin, TenantMixin, TransMixin
 from backend.service.constants import ADMIN_USER, ApplicationType, RoleType, SubjectType
 from backend.service.models import Applicant, Subject
-from backend.trans.application import ApplicationDataTrans
-from backend.trans.role import RoleTrans
 
 from .filters import ApplicationFilter
 from .serializers import (
@@ -72,15 +70,11 @@ def admin_not_need_apply_check(func):
     return wrapper
 
 
-class ApplicationViewSet(GenericViewSet):
-    queryset = Application.objects.all()
+class ApplicationViewSet(BizMixin, TransMixin, GenericViewSet):
     filterset_class = ApplicationFilter
 
-    trans = ApplicationDataTrans()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
+    def get_queryset(self):
+        return Application.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="提交权限申请",
@@ -97,9 +91,9 @@ class ApplicationViewSet(GenericViewSet):
         user_id = request.user.username
 
         # 将 Dict 数据转换为创建单据所需的数据结构
-        application_data = self.trans.from_grant_policy_application(user_id, data)
+        application_data = self.application_data_trans.from_grant_policy_application(user_id, data)
         # 创建单据
-        self.biz.create_for_policy(ApplicationType.GRANT_ACTION.value, application_data)
+        self.application_biz.create_for_policy(ApplicationType.GRANT_ACTION.value, application_data)
 
         return Response({}, status=status.HTTP_201_CREATED)
 
@@ -128,7 +122,7 @@ class ApplicationViewSet(GenericViewSet):
         instance = self.get_object()
         if instance.applicant != request.user.username:
             raise exceptions.PermissionDenied
-        serializer = ApplicationDetailSLZ(instance, context={"tenant_id": self.request.tenant_id})
+        serializer = ApplicationDetailSLZ(instance, context={"tenant_id": self.tenant_id})
         return Response(serializer.data)
 
     @swagger_auto_schema(
@@ -140,7 +134,7 @@ class ApplicationViewSet(GenericViewSet):
         user_id = request.user.username
         application = self.get_object()
 
-        self.biz.cancel_application(application, user_id)
+        self.application_biz.cancel_application(application, user_id)
 
         return Response({})
 
@@ -166,13 +160,10 @@ class ApplicationApprovalView(views.APIView):
         return Response({})
 
 
-class ConditionView(views.APIView):
+class ConditionView(BizMixin, views.APIView):
     """
     条件对比，对比申请的数据与已有数据的差异
     """
-
-    policy_biz = PolicyQueryBiz()
-    condition_biz = ConditionTagBiz()
 
     @swagger_auto_schema(
         operation_description="条件差异对比",
@@ -188,7 +179,7 @@ class ConditionView(views.APIView):
 
         # 1. 查询用户已有的 policy 的 condition
         related_resource_type = data["related_resource_type"]
-        old_condition = self.policy_biz.get_policy_resource_type_conditions(
+        old_condition = self.policy_query_biz.get_policy_resource_type_conditions(
             Subject.from_username(request.user.username),
             data["policy_id"],
             data["resource_group_id"],
@@ -205,16 +196,10 @@ class ConditionView(views.APIView):
         return Response([c.dict() for c in conditions])
 
 
-class ApplicationByGroupView(views.APIView):
+class ApplicationByGroupView(BizMixin, views.APIView):
     """
     申请加入用户组
     """
-
-    group_biz = GroupBiz()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="加入用户组申请",
@@ -240,7 +225,7 @@ class ApplicationByGroupView(views.APIView):
         applicant_infos = SubjectInfoList([Subject.parse_obj(one) for one in applicants]).subjects
 
         # 创建申请
-        self.biz.create_for_group(
+        self.application_biz.create_for_group(
             ApplicationType.JOIN_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user_id,
@@ -254,17 +239,10 @@ class ApplicationByGroupView(views.APIView):
         return Response({}, status=status.HTTP_201_CREATED)
 
 
-class ApplicationByGradeManagerView(views.APIView):
+class ApplicationByGradeManagerView(BizMixin, TransMixin, views.APIView):
     """
     申请创建分级管理员
     """
-
-    role_check_biz = RoleCheckBiz()
-    role_trans = RoleTrans()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="申请创建分级管理员",
@@ -282,11 +260,11 @@ class ApplicationByGradeManagerView(views.APIView):
         # 结构转换
         info = self.role_trans.from_role_data(data)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
-            self.biz.create_for_grade_manager(
+            self.application_biz.create_for_grade_manager(
                 ApplicationType.CREATE_GRADE_MANAGER.value,
                 GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
             )
@@ -294,18 +272,10 @@ class ApplicationByGradeManagerView(views.APIView):
         return Response({}, status=status.HTTP_201_CREATED)
 
 
-class ApplicationByGradeManagerUpdatedView(views.APIView):
+class ApplicationByGradeManagerUpdatedView(BizMixin, TransMixin, views.APIView):
     """
     申请修改分级管理员
     """
-
-    role_biz = RoleBiz()
-    role_check_biz = RoleCheckBiz()
-    role_trans = RoleTrans()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="申请修改分级管理员",
@@ -323,7 +293,7 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
         role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=data["id"])
 
         # 必须是分级管理员的成员才可以申请修改
-        if not can_user_manage_role(user_id, role.id):
+        if not can_user_manage_role(self.tenant_id, user_id, role.id):
             raise error_codes.FORBIDDEN.format(
                 message=_("非分级管理员 ({}) 的成员，无权限申请修改").format(role.name), replace=True
             )
@@ -332,17 +302,17 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
         old_scopes = self.role_biz.list_auth_scope(role.id)
         # 查询旧的数据
         old_system_policy_list = {
-            one.system_id: PolicyBeanList(one.system_id, parse_obj_as(List[PolicyBean], one.actions))
+            one.system_id: PolicyBeanList(self.tenant_id, one.system_id, parse_obj_as(List[PolicyBean], one.actions))
             for one in old_scopes
         }
 
         info = self.role_trans.from_role_data(data, old_system_policy_list=old_system_policy_list)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
-            self.biz.create_for_grade_manager(
+            self.application_biz.create_for_grade_manager(
                 ApplicationType.UPDATE_GRADE_MANAGER,
                 GradeManagerApplicationDataBean(
                     role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info
@@ -352,14 +322,10 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
         return Response({}, status=status.HTTP_201_CREATED)
 
 
-class ApplicationByRenewGroupView(views.APIView):
+class ApplicationByRenewGroupView(BizMixin, views.APIView):
     """
     申请续期用户组
     """
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="续期用户组申请",
@@ -377,7 +343,7 @@ class ApplicationByRenewGroupView(views.APIView):
         user = UserModel.objects.get(username=request.user.username)
 
         # 创建申请
-        self.biz.create_for_group(
+        self.application_biz.create_for_group(
             ApplicationType.RENEW_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user.username,
@@ -391,14 +357,10 @@ class ApplicationByRenewGroupView(views.APIView):
         return Response({}, status=status.HTTP_201_CREATED)
 
 
-class ApplicationByRenewPolicyView(views.APIView):
+class ApplicationByRenewPolicyView(TenantMixin, views.APIView):
     """
     申请续期权限
     """
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="申请续期权限",
@@ -413,21 +375,15 @@ class ApplicationByRenewPolicyView(views.APIView):
         data = serializer.validated_data
 
         # 异步处理避免超时
-        create_policies_renew_applications.delay(data, request.user.username)
+        create_policies_renew_applications.delay(self.tenant_id, data, request.user.username)
 
         return Response({}, status=status.HTTP_201_CREATED)
 
 
-class ApplicationByTemporaryPolicyView(views.APIView):
+class ApplicationByTemporaryPolicyView(BizMixin, TransMixin, views.APIView):
     """
     申请临时权限
     """
-
-    trans = ApplicationDataTrans()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="提交临时权限申请",
@@ -444,8 +400,8 @@ class ApplicationByTemporaryPolicyView(views.APIView):
         user_id = request.user.username
 
         # 将 Dict 数据转换为创建单据所需的数据结构
-        application_data = self.trans.from_grant_temporary_policy_application(user_id, data)
+        application_data = self.application_data_trans.from_grant_temporary_policy_application(user_id, data)
         # 创建单据
-        self.biz.create_for_policy(ApplicationType.GRANT_TEMPORARY_ACTION.value, application_data)
+        self.application_biz.create_for_policy(ApplicationType.GRANT_TEMPORARY_ACTION.value, application_data)
 
         return Response({}, status=status.HTTP_201_CREATED)

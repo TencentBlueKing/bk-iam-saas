@@ -398,6 +398,7 @@ class RoleConfig(BaseModel):
 
 
 class AnonymousRole:
+    tenant_id = ""
     id = 0
     pk = 0
     name = "STAFF"

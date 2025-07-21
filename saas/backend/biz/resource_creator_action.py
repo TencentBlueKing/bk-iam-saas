@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -19,7 +19,7 @@ from backend.service.resource_creator_action import ResourceCreatorActionService
 
 
 class ResourceCreatorActionBean(BaseModel):
-    id: str  # 资源类型ID
+    id: str  # 资源类型 ID
     action_ids: List[str]  # 该资源类型的实例被创建时，对应创建者需要的该资源实例的操作权限
 
 

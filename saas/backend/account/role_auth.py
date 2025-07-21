@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -24,11 +24,11 @@ def authenticate(request=None, role_id=0):
     if not user:
         return AnonymousRole()
 
-    # 2. 用户的角色不存在, 返回staff
-    if role_id == 0 or not can_user_manage_role(request.user.username, role_id):
+    # 2. 用户的角色不存在，返回 staff
+    if role_id == 0 or not can_user_manage_role(request.tenant_id, request.user.username, role_id):
         return AnonymousRole()
 
-    # 3. 对于用户与角色关系认证通过的，返回对应的分级管理员(超级管理员和系统管理员是两类特殊的分级管理员)
+    # 3. 对于用户与角色关系认证通过的，返回对应的分级管理员 (超级管理员和系统管理员是两类特殊的分级管理员)
     role = Role.objects.filter(id=role_id).first()
     if not role:
         return AnonymousRole()

@@ -14,7 +14,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from backend.biz.resource import ResourceBiz
+from backend.mixins import BizMixin
 
 from .serializers import (
     BaseInfoSLZ,
@@ -25,9 +25,7 @@ from .serializers import (
 )
 
 
-class ResourceViewSet(ViewSet):
-    biz = ResourceBiz()
-
+class ResourceViewSet(BizMixin, ViewSet):
     @swagger_auto_schema(
         operation_description="资源实例列表",
         request_body=ResourceQuerySLZ(label="资源查询参数"),
@@ -53,7 +51,7 @@ class ResourceViewSet(ViewSet):
         #  那么相当于用户访问 iam saas 就可以访问到接入系统所有资源，是否合理？如何鉴权？
         # 是否有 keyword，如果有，则是搜索
         if keyword:
-            count, results = self.biz.search_instance_for_topology(
+            count, results = self.resource_biz.search_instance_for_topology(
                 system_id,
                 resource_type_id,
                 keyword,
@@ -64,7 +62,7 @@ class ResourceViewSet(ViewSet):
                 action_id,
             )
         else:
-            count, results = self.biz.list_instance_for_topology(
+            count, results = self.resource_biz.list_instance_for_topology(
                 system_id, resource_type_id, ancestors, limit, offset, action_system_id, action_id
             )
 
@@ -87,7 +85,7 @@ class ResourceViewSet(ViewSet):
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
-        attrs = self.biz.list_attr(system_id, resource_type_id)
+        attrs = self.resource_biz.list_attr(system_id, resource_type_id)
 
         count, results = len(attrs), attrs[offset : offset + limit]
 
@@ -112,14 +110,12 @@ class ResourceViewSet(ViewSet):
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
-        count, results = self.biz.list_attr_value(system_id, resource_type_id, attr, keyword, limit, offset)
+        count, results = self.resource_biz.list_attr_value(system_id, resource_type_id, attr, keyword, limit, offset)
 
         return Response({"count": count, "results": [i.dict() for i in results]})
 
 
-class ResourceListFilterByDisplayNameViewSet(ViewSet):
-    biz = ResourceBiz()
-
+class ResourceListFilterByDisplayNameViewSet(BizMixin, ViewSet):
     @swagger_auto_schema(
         operation_description="资源实例名称筛选列表",
         request_body=ResourceQueryByDisplayNameSLZ(label="资源查询参数"),
@@ -137,7 +133,7 @@ class ResourceListFilterByDisplayNameViewSet(ViewSet):
         action_system_id = slz.validated_data.get("action_system_id") or ""
         action_id = slz.validated_data.get("action_id") or ""
 
-        count, results = self.biz.list_instance_by_display_names(
+        count, results = self.resource_biz.list_instance_by_display_names(
             system_id, resource_type_id, display_names, action_system_id, action_id
         )
 

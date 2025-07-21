@@ -34,10 +34,11 @@ class AuthenticationForm(forms.Form):
 
 
 @cached(timeout=60)
-def is_in_blacklist(username: str) -> bool:
+def is_in_blacklist(tenant_id: str, username: str) -> bool:
     blacklist = []
     try:
-        blacklist = SubjectBiz().list_freezed_subjects()
+        # FIXME(tenant): 待后台支持租户后，需将租户信息传入，只过滤当前租户的黑名单
+        blacklist = SubjectBiz(tenant_id).list_freezed_subjects()
     except Exception:  # pylint: disable=broad-except
         logger.exception("failed to get blacklist, so the blacklist check will not working")
 
@@ -77,7 +78,7 @@ class LoginMiddleware:
 
             if user:
                 # NOTE: block the user in blacklist
-                if is_in_blacklist(request.user.username):
+                if is_in_blacklist(user.get_property("tenant_id"), request.user.username):
                     return HttpResponseForbidden(_("用户账号已被冻结，禁止使用权限中心相关功能"))
 
                 # Succeed to login, recall self to exit process

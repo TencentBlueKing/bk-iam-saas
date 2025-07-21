@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from backend.apps.handover.models import HandoverTask
+from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.audit.audit import log_group_event, log_role_event, log_subject_template_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
@@ -51,8 +52,6 @@ class BaseHandoverHandler(ABC):
 
 
 class GroupHandoverHandler(BaseHandoverHandler):
-    biz = GroupBiz()
-
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
 
@@ -62,10 +61,14 @@ class GroupHandoverHandler(BaseHandoverHandler):
         self.group_id = object_detail["id"]
         self.expired_at = object_detail["expired_at"]
 
+        user = User.objects.get(username=handover_from)
+
+        self.biz = GroupBiz(user.tenant_id)
+
     def grant_permission(self):
         # TODO 需不需要校验？
         # GroupCheckBiz().check_member_count(group_id, len(grant_subject))    # 检查用户组成员数量未超限
-        # GroupCheckBiz().check_subject_group_limit()   # 检查subject授权的group数量是否超限
+        # GroupCheckBiz().check_subject_group_limit()   # 检查 subject 授权的 group 数量是否超限
         self.biz.add_members(group_id=int(self.group_id), members=[self.grant_subject], expired_at=self.expired_at)
 
         # 审计
@@ -82,9 +85,6 @@ class GroupHandoverHandler(BaseHandoverHandler):
 
 
 class CustomHandoverHandler(BaseHandoverHandler):
-    query_biz = PolicyQueryBiz()
-    operation_biz = PolicyOperationBiz()
-
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
 
@@ -93,6 +93,10 @@ class CustomHandoverHandler(BaseHandoverHandler):
 
         self.system_id = object_detail["id"]
         self.policy_ids = object_detail["policy_ids"]
+
+        user = User.objects.get(username=handover_from)
+        self.query_biz = PolicyQueryBiz(user.tenant_id)
+        self.operation_biz = PolicyOperationBiz(user.tenant_id)
 
     def _get_subject_policies(self):
         policies = self.query_biz.list_by_subject(self.system_id, self.remove_subject)
@@ -119,9 +123,6 @@ class CustomHandoverHandler(BaseHandoverHandler):
 
 
 class RoleHandoverHandler(BaseHandoverHandler):
-    biz = RoleBiz()
-    role_with_perm_group_biz = RoleWithPermGroupBiz()
-
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
         self.handover_from = handover_from
@@ -131,6 +132,9 @@ class RoleHandoverHandler(BaseHandoverHandler):
         self.role_type = object_detail["type"]
 
         self.role = Role.objects.get(id=self.role_id)
+
+        self.biz = RoleBiz(self.role.tenant_id)
+        self.role_with_perm_group_biz = RoleWithPermGroupBiz(self.role.tenant_id)
 
     def grant_permission(self):
         if self.role_type == RoleType.SUPER_MANAGER.value:
@@ -171,8 +175,6 @@ class RoleHandoverHandler(BaseHandoverHandler):
 
 
 class SubjectTemplateHandoverHandler(BaseHandoverHandler):
-    biz = SubjectTemplateBiz()
-
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
 
@@ -180,6 +182,9 @@ class SubjectTemplateHandoverHandler(BaseHandoverHandler):
         self.remove_subject = Subject.from_username(handover_from)
 
         self.template_id = object_detail["id"]
+
+        user = User.objects.get(username=handover_from)
+        self.biz = SubjectTemplateBiz(user.tenant_id)
 
     def grant_permission(self):
         self.biz.add_members(self.template_id, members=[self.grant_subject])

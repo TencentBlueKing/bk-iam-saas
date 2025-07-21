@@ -17,13 +17,12 @@ from rest_framework.response import Response
 
 from backend.api.constants import ALLOW_ANY
 from backend.biz.org_sync.syncer import Syncer
-from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz
+from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
+from backend.mixins import BizMixin, TransMixin
 from backend.service.constants import ADMIN_USER, SubjectType
 from backend.service.models import Subject
-from backend.trans.role import RoleAuthScopeTrans
 
 from .constants import ALLOW_LIST_OBJECT_OPERATION_STEP, AllowListMatchOperationEnum, AuthorizationAPIEnum, OperateEnum
 from .models import AuthAPIAllowListConfig
@@ -96,14 +95,8 @@ class AuthorizationAPIAllowListCheckMixin:
             self.verify_api(system_id, object_id, api)
 
 
-class AuthViewMixin:
+class AuthViewMixin(BizMixin, TransMixin):
     """所有授权 API 的一些公共处理函数"""
-
-    role_biz = RoleBiz()
-
-    policy_query_biz = PolicyQueryBiz()
-    policy_operation_biz = PolicyOperationBiz()
-    role_auth_scope_trans = RoleAuthScopeTrans()
 
     def grant_or_revoke(self, operate: OperateEnum, subject: Subject, policy_list: PolicyBeanList) -> List[PolicyBean]:
         """授权或回收权限"""
@@ -138,7 +131,7 @@ class AuthViewMixin:
         检测用户是否存在，不存在则同步用户
         """
         try:
-            Syncer().sync_single_user(username)
+            Syncer(self.tenant_id).sync_single_user(username)
         except Exception:  # pylint: disable=broad-except
             logger.exception(f"[OpenAPI] authorize user[{username}] check_or_sync fail")
             raise error_codes.VALIDATE_ERROR.format(f"user[{username}] not exists")

@@ -22,7 +22,7 @@ logger = logging.getLogger("app")
 @receiver(user_logged_in, dispatch_uid="backend.account.sync_user")
 def sync_user(sender, user, **kwargs):
     try:
-        Syncer().sync_single_user(user.username)
+        Syncer(user.get_property("tenant_id")).sync_single_user(user.username)
     except Exception:  # pylint: disable=broad-except
         # 异常仅仅记录日志，不报错，不影响登录逻辑
         logger.exception("sync single user fail when user %s logged in", user.username)

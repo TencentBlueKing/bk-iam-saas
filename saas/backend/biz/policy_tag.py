@@ -248,8 +248,8 @@ class PolicyTagBean(TagNoneMixin, PolicyBean):
 
 
 class PolicyTagBeanList(PolicyBeanList):
-    def __init__(self, system_id: str, policies: List[PolicyTagBean]) -> None:
-        super().__init__(system_id, policies)
+    def __init__(self, tenant_id: str, system_id: str, policies: List[PolicyTagBean]) -> None:
+        super().__init__(tenant_id, system_id, policies)
 
     def set_tag(self, tag: str):
         for p in self.policies:

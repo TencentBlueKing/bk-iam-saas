@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -47,16 +47,22 @@ class GroupSLZ(SubjectGroupSLZ):
         self.subject_template_count_dict = None
         if isinstance(self.instance, list) and self.instance:
             group_ids = [int(group.id) for group in self.instance]
-
-            self.group_role_dict = GroupBiz().get_group_role_dict_by_ids(group_ids)
-            # 查询涉及到的用户组的属性
-            self.group_attrs_dict = GroupAttributeService().batch_get_attributes(group_ids)
-            # 人员模版数量
-            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict(group_ids)
+            if self.instance:
+                tenant_id = self.instance[0].tenant_id
+                self.group_role_dict = GroupBiz(tenant_id).get_group_role_dict_by_ids(group_ids)
+                # 查询涉及到的用户组的属性
+                self.group_attrs_dict = GroupAttributeService(tenant_id).batch_get_attributes(group_ids)
+                # 人员模版数量
+                self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(
+                    group_ids
+                )
         elif isinstance(self.instance, Group):
-            self.group_attrs_dict = GroupAttributeService().batch_get_attributes([self.instance.id])
+            tenant_id = self.instance.tenant_id
+            self.group_attrs_dict = GroupAttributeService(tenant_id).batch_get_attributes([self.instance.id])
             # 人员模版数量
-            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict([self.instance.id])
+            self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(
+                [self.instance.id]
+            )
 
     def get_role(self, obj):
         if not self.group_role_dict:
@@ -96,19 +102,19 @@ class QueryRoleSLZ(serializers.Serializer):
 
 
 class QueryGroupSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统id", required=False, allow_blank=True, default="")
+    system_id = serializers.CharField(label="系统 id", required=False, allow_blank=True, default="")
 
 
 class UserPolicySearchSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
-    action_id = serializers.CharField(label="操作ID", required=False, default="", allow_blank=True)
+    system_id = serializers.CharField(label="系统 ID")
+    action_id = serializers.CharField(label="操作 ID", required=False, default="", allow_blank=True)
     resource_instances = serializers.ListField(
         label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
     )
 
 
 class SubjectTemplateGroupSLZ(GroupSLZ):
-    template_id = serializers.IntegerField(label="模板ID")
+    template_id = serializers.IntegerField(label="模板 ID")
     template_name = serializers.SerializerMethodField(label="模板名称")
     created_time = serializers.SerializerMethodField(label="创建时间")
 
@@ -130,6 +136,6 @@ class SubjectTemplateGroupSLZ(GroupSLZ):
 
 
 class SubjectTemplateGroupQuerySLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID", required=False, allow_blank=True, default="")
-    limit = serializers.IntegerField(label="分页Limit", required=False, default=10, min_value=1, max_value=100)
-    offset = serializers.IntegerField(label="分页offset", required=False, default=0, min_value=0)
+    system_id = serializers.CharField(label="系统 ID", required=False, allow_blank=True, default="")
+    limit = serializers.IntegerField(label="分页 Limit", required=False, default=10, min_value=1, max_value=100)
+    offset = serializers.IntegerField(label="分页 offset", required=False, default=0, min_value=0)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -55,12 +55,14 @@ ActionGroupWithIDBean.update_forward_refs()
 
 
 class ActionGroupBiz:
-    action_svc = ActionService()
-    action_group_svc = ActionGroupService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.action_svc = ActionService(self.tenant_id)
+        self.action_group_svc = ActionGroupService()
 
     def list_by_actions(self, system_id: str, actions: List[ActionBean]) -> List[ActionGroupBean]:
         """
-        获取ActionGroup列表
+        获取 ActionGroup 列表
         """
         if not actions:
             return []
@@ -94,7 +96,7 @@ class ActionGroupBiz:
         """
         生成单个操作组
 
-        1. 填充所有操作为ActionBean
+        1. 填充所有操作为 ActionBean
         2. 递归生成子操作组
         """
         action_group_bean = ActionGroupBean(name=action_group.name, name_en=action_group.name_en)
@@ -130,8 +132,8 @@ class ActionGroupBiz:
 
     def _fill_frontend_id(self, action_groups: List[ActionGroupWithIDBean], start_id: int = 1) -> int:
         """
-        填充action_group_id, 这里的ID仅仅为了前端过滤而已，无其它后台用途
-        使用深度遍历方式填充ID
+        填充 action_group_id, 这里的 ID 仅仅为了前端过滤而已，无其它后台用途
+        使用深度遍历方式填充 ID
         """
         for ag in action_groups:
             ag.id = start_id
@@ -144,7 +146,7 @@ class ActionGroupBiz:
         self, system_id: str, actions: List[ActionBean], action_group_id: int
     ) -> List[ActionBean]:
         """
-        获取操作分组里的Action
+        获取操作分组里的 Action
         """
         action_groups = self.list_with_frontend_id_by_actions(system_id, actions)
         for ag in action_groups:
@@ -156,7 +158,7 @@ class ActionGroupBiz:
     def _find_by_frontend_id(
         self, action_group: ActionGroupWithIDBean, action_group_id: int
     ) -> Optional[ActionGroupWithIDBean]:
-        """根据ID查询对应的action_group"""
+        """根据 ID 查询对应的 action_group"""
         if action_group.id == action_group_id:
             return action_group
         # 递归查找是否有符合的
@@ -171,7 +173,7 @@ class ActionGroupBiz:
         生成相同操作分组字典
 
         result = {
-            action_id: [action_id, action_id, ...] # 同一个分组的action_id
+            action_id: [action_id, action_id, ...] # 同一个分组的 action_id
         }
         """
         action_groups = self.action_group_svc.list(system_id)
@@ -182,7 +184,7 @@ class ActionGroupBiz:
 
     def _find_action_same_group(self, action_groups: List[ActionGroup], action_ids: List[str]) -> Dict[str, List[str]]:
         """
-        查找action_id在同一个分组中的其他操作
+        查找 action_id 在同一个分组中的其他操作
         """
         result: Dict[str, List[str]] = defaultdict(list)
         for action_group in action_groups:

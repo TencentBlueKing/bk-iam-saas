@@ -104,8 +104,8 @@ def gen_template_upsert_lock(role_id: int, name: str) -> RedisLock:
     return RedisLock(LockTypeEnum.TEMPLATE_UPSERT.value, suffix=key, timeout=10)
 
 
-def gen_role_upsert_lock(name: str) -> RedisLock:
-    return RedisLock(LockTypeEnum.TEMPLATE_UPSERT.value, suffix=name, timeout=10)
+def gen_role_upsert_lock(tenant_id: str, name: str) -> RedisLock:
+    return RedisLock(LockTypeEnum.TEMPLATE_UPSERT.value, suffix=f"{tenant_id}-{name}", timeout=10)
 
 
 def gen_bcs_manager_lock() -> RedisLock:

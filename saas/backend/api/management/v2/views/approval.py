@@ -9,8 +9,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from functools import cached_property
-
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import views
@@ -20,10 +18,10 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLo
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.apps.application.models import Application
 from backend.apps.role.models import Role
-from backend.biz.application import ApplicationBiz
+from backend.mixins import BizMixin
 
 
-class ManagementApplicationApprovalView(views.APIView):
+class ManagementApplicationApprovalView(BizMixin, views.APIView):
     """
     审批后回调权限中心
     """
@@ -37,10 +35,6 @@ class ManagementApplicationApprovalView(views.APIView):
         ),
     }
 
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
-
     # Note: 这里会回调第三方处理，所以不定义参数
     def post(self, request, *args, **kwargs):
         source_system_id = kwargs["system_id"]
@@ -49,7 +43,7 @@ class ManagementApplicationApprovalView(views.APIView):
         # 校验系统与 callback_id 对应的审批存在
         application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
 
-        obj = self.biz.handle_approval_callback_request(callback_id, request)
+        obj = self.application_biz.handle_approval_callback_request(callback_id, request)
 
         if isinstance(obj, Role):
             return Response({"id": application.id, "role_id": obj.id})

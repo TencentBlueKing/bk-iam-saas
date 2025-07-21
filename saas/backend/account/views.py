@@ -17,9 +17,9 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.apps.organization.models import User
-from backend.biz.role import RoleBiz, can_user_manage_role
+from backend.biz.role import can_user_manage_role
 from backend.common.error_codes import error_codes
+from backend.mixins import TenantMixin
 
 from .role_auth import ROLE_SESSION_KEY
 from .serializers import AccountRoleSwitchSLZ, AccountUserSLZ
@@ -36,8 +36,6 @@ class UserViewSet(GenericViewSet):
         role = request.role
         timestamp = int(time.time())
 
-        u = User.objects.filter(username=user.username).only("display_name").first()
-
         return Response(
             {
                 "timestamp": timestamp,
@@ -45,14 +43,12 @@ class UserViewSet(GenericViewSet):
                 "role": {"type": role.type, "id": role.id, "name": role.name, "code": role.code},
                 "timezone": user.get_property("time_zone"),
                 "tenant_id": user.get_property("tenant_id"),
-                "name": u.display_name if u else "",
+                "name": user.get_property("display_name"),
             }
         )
 
 
-class RoleViewSet(GenericViewSet):
-    role_biz = RoleBiz()
-
+class RoleViewSet(TenantMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户角色切换",
         request_body=AccountRoleSwitchSLZ(label="角色切换"),
@@ -65,7 +61,7 @@ class RoleViewSet(GenericViewSet):
         role_id = serializer.validated_data["id"]
 
         # 切换为管理员时，如果不存在对应的关系，越权
-        if role_id != 0 and not can_user_manage_role(request.user.username, role_id):
+        if role_id != 0 and not can_user_manage_role(self.tenant_id, request.user.username, role_id):
             raise error_codes.FORBIDDEN.format(_("您没有该角色权限，无法切换到该角色"), True)
 
         # 修改 session

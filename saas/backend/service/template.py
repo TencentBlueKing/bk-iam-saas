@@ -37,8 +37,10 @@ class TemplateGroupPreCommit(BaseModel):
 
 
 class TemplateService:
-    backend_svc = BackendPolicyOperationService()
-    analyzer = UniversalPolicyChangedContentAnalyzer()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.backend_svc = BackendPolicyOperationService()
+        self.analyzer = UniversalPolicyChangedContentAnalyzer()
 
     def _cal_changed_policies(
         self,
@@ -105,7 +107,11 @@ class TemplateService:
         模板增加成员
         """
         authorized_template = PermTemplatePolicyAuthorized(
-            template_id=template_id, subject_type=subject.type, subject_id=subject.id, system_id=system_id
+            tenant_id=self.tenant_id,
+            template_id=template_id,
+            subject_type=subject.type,
+            subject_id=subject.id,
+            system_id=system_id,
         )
         authorized_template.data = {"actions": [p.dict() for p in policies]}
 
@@ -330,7 +336,9 @@ class TemplateService:
                 db_pre_commit.data = {"actions": pre_commit.convert_policies_to_dict()}
                 update_pre_commits.append(db_pre_commit)
             else:
-                db_pre_commit = PermTemplatePreGroupSync(template_id=template_id, group_id=group_id)
+                db_pre_commit = PermTemplatePreGroupSync(
+                    tenant_id=self.tenant_id, template_id=template_id, group_id=group_id
+                )
                 db_pre_commit.data = {"actions": pre_commit.convert_policies_to_dict()}  # type: ignore
                 create_pre_commits.append(db_pre_commit)
 

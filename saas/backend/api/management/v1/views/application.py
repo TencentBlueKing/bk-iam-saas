@@ -9,8 +9,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from functools import cached_property
-
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -21,13 +19,13 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLo
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
 from backend.apps.organization.models import User as UserModel
-from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
-from backend.biz.group import GroupBiz
+from backend.biz.application import ApplicationGroupInfoBean, GroupApplicationDataBean
+from backend.mixins import BizMixin
 from backend.service.constants import ApplicationType, SubjectType
 from backend.service.models import Applicant, Subject
 
 
-class ManagementGroupApplicationViewSet(GenericViewSet):
+class ManagementGroupApplicationViewSet(BizMixin, GenericViewSet):
     """用户组申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -38,12 +36,6 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
             ManagementAPIEnum.GROUP_APPLICATION_CREATE.value,
         ),
     }
-
-    group_biz = GroupBiz()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="创建用户组申请单",
@@ -69,7 +61,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         user = UserModel.objects.get(username=user_id)
 
         # 创建申请
-        applications = self.biz.create_for_group(
+        applications = self.application_biz.create_for_group(
             ApplicationType.JOIN_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user_id,

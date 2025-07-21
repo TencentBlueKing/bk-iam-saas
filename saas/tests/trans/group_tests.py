@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 
 import mock
+from django.conf import settings
 from mock import MagicMock, patch
 
 from backend.biz.action import ActionBean, ActionBeanList, RelatedResourceTypeBean
@@ -19,7 +20,7 @@ from backend.trans.group import GroupTrans
 
 class TestGroupTrans:
     def test_from_group_grant_data(self):
-        trans = GroupTrans()
+        trans = GroupTrans(settings.BK_APP_TENANT_ID)
 
         trans.policy_trans.action_check_biz.check_action_resource_group = mock.Mock(return_value=None)
         trans.policy_trans._get_action_list = mock.Mock(

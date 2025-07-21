@@ -52,7 +52,8 @@ class PolicyProcessHandler(ABC):
     处理 policy - process 的管道
     """
 
-    def __init__(self, system_id: str) -> None:
+    def __init__(self, tenant_id: str, system_id: str) -> None:
+        self.tenant_id = tenant_id
         self.system_id = system_id
 
     @abstractmethod
@@ -65,7 +66,9 @@ class InstanceApproverHandler(PolicyProcessHandler):
     实例审批人处理管道
     """
 
-    resource_biz = ResourceBiz()
+    def __init__(self, tenant_id: str, system_id: str) -> None:
+        super().__init__(tenant_id, system_id)
+        self.resource_biz = ResourceBiz(self.tenant_id)
 
     def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
         # 返回的结果
@@ -335,8 +338,8 @@ def copy_policy_by_instance_path(policy, resource_group, rrt, instance, path):
 class GradeManagerApproverHandler(PolicyProcessHandler):
     """分级管理员审批人"""
 
-    def __init__(self, system_id: str) -> None:
-        super().__init__(system_id)
+    def __init__(self, tenant_id: str, system_id: str) -> None:
+        super().__init__(tenant_id, system_id)
 
         # for cache
         self._resource_role_ids: Dict[ResourceNodeBean, List[int]] = {}

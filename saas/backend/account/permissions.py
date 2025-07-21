@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -39,7 +39,7 @@ class RolePermission(permissions.BasePermission):
             return False
 
         if hasattr(view, "action_permission") and hasattr(view, "action"):
-            # 没有在 action_permission 中配置的的 action 不需要鉴权, 直接通过
+            # 没有在 action_permission 中配置的的 action 不需要鉴权，直接通过
             if view.action not in view.action_permission:
                 return True
 
@@ -47,7 +47,7 @@ class RolePermission(permissions.BasePermission):
 
         if hasattr(view, "method_permission"):
             method = request.method.lower()
-            # 没有在 method_permission 中配置的的 method 不需要鉴权, 直接通过
+            # 没有在 method_permission 中配置的的 method 不需要鉴权，直接通过
             if method not in view.method_permission:
                 return True
 

@@ -126,20 +126,23 @@ class RoleScopeSystemActions(BaseModel):
 
 
 class RoleBiz:
-    svc = RoleService()
-    system_svc = SystemService()
-
     get_role_by_group_id = RoleService.__dict__["get_role_by_group_id"]
     list_system_common_actions = RoleService.__dict__["list_system_common_actions"]
     list_user_role = RoleService.__dict__["list_user_role"]
     list_paging_user_role = RoleService.__dict__["list_paging_user_role"]
     list_user_role_for_system = RoleService.__dict__["list_user_role_for_system"]
     list_subject_scope = RoleService.__dict__["list_subject_scope"]
-    list_auth_scope = RoleService.__dict__["list_auth_scope"]
     list_by_ids = RoleService.__dict__["list_by_ids"]
     list_members_by_role_id = RoleService.__dict__["list_members_by_role_id"]
 
     transfer_groups_role = RoleService.__dict__["transfer_groups_role"]
+
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = RoleService(self.tenant_id)
+        self.system_svc = SystemService()
+
+        self.list_auth_scope = self.svc.list_auth_scope
 
     def get_role_scope_include_user(self, role_id: int, username: str) -> Optional[Role]:
         """
@@ -249,7 +252,9 @@ class RoleBiz:
             if auth_system_bean.is_any_action():
                 continue
             # 尝试更新
-            policy_list = PolicyBeanList(system_id=system_id, policies=auth_system_bean.actions)
+            policy_list = PolicyBeanList(
+                tenant_id=self.tenant_id, system_id=system_id, policies=auth_system_bean.actions
+            )
             updated_policies = policy_list.auto_update_resource_name()
             # 需要更新
             if len(updated_policies) > 0:
@@ -312,6 +317,7 @@ class RoleBiz:
             policies = [PolicyBean.parse_obj(auth_system.actions[0])]
         else:
             policies = PolicyBeanList(
+                self.tenant_id,
                 auth_system.system_id,
                 parse_obj_as(List[PolicyBean], auth_system.actions),
                 need_fill_empty_fields=True,
@@ -395,16 +401,20 @@ class RoleBiz:
         合并授权范围
         """
         # 转为 PolicyList，便于进行数据合并操作
-        policy_list = PolicyBeanList(system_id=system_id, policies=policies, need_fill_empty_fields=True)
+        policy_list = PolicyBeanList(
+            tenant_id=self.tenant_id, system_id=system_id, policies=policies, need_fill_empty_fields=True
+        )
 
         # 遍历，查找需要修改的数据和对应位置
-        need_modified_policy_list = PolicyBeanList(system_id=system_id, policies=[])
+        need_modified_policy_list = PolicyBeanList(tenant_id=self.tenant_id, system_id=system_id, policies=[])
         index = -1
         for idx, auth_scope in enumerate(auth_scopes):
             if auth_scope.system_id == system_id:
                 index = idx
                 need_modified_policy_list = PolicyBeanList(
-                    system_id=system_id, policies=parse_obj_as(List[PolicyBean], auth_scope.actions)
+                    tenant_id=self.tenant_id,
+                    system_id=system_id,
+                    policies=parse_obj_as(List[PolicyBean], auth_scope.actions),
                 )
                 break
 
@@ -430,6 +440,9 @@ class RoleBiz:
 
 
 class RoleCheckBiz:
+    def __init__(self, tenant_id: int):
+        self.tenant_id = tenant_id
+
     def check_grade_manager_unique_name(self, new_name: str, old_name: str = ""):
         """
         检查分级管理员名称唯一性
@@ -442,6 +455,7 @@ class RoleCheckBiz:
 
         # 新名称已经有对应的分级管理员，则不可以
         if Role.objects.filter(
+            tenant_id=self.tenant_id,
             name=new_name,
             type__in=[RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.GRADE_MANAGER.value],
         ).exists():
@@ -449,6 +463,7 @@ class RoleCheckBiz:
 
         # 检测是否已经有正在申请中的
         applications = Application.objects.filter(
+            tenant_id=self.tenant_id,
             type__in=[
                 ApplicationType.CREATE_GRADE_MANAGER.value,
                 ApplicationType.UPDATE_GRADE_MANAGER.value,
@@ -558,12 +573,12 @@ class RoleCheckBiz:
 
 
 class RoleListQuery:
-    system_svc = SystemService()
-    role_svc = RoleService()
-
     def __init__(self, role: Role, user: Optional[User] = None) -> None:
         self.role = role
         self.user = User.objects.filter(username=user.username).first() if user else None
+        self.tenant_id = role.tenant_id
+        self.system_svc = SystemService()
+        self.role_svc = RoleService(self.tenant_id)
 
     def list_system(self) -> List[System]:
         """
@@ -663,12 +678,12 @@ class RoleListQuery:
         查询用户组列表
         """
         if self.role.type == RoleType.STAFF.value:
-            return Group.objects.filter(hidden=False)
+            return Group.objects.filter(tenant_id=self.tenant_id, hidden=False)
 
         group_ids = self._get_role_related_object_ids(
             RoleRelatedObjectType.GROUP.value, inherit=inherit, only_inherit=only_inherit
         )
-        return Group.objects.filter(id__in=group_ids)
+        return Group.objects.filter(tenant_id=self.tenant_id, id__in=group_ids)
 
     def _get_role_related_object_ids(
         self, object_type: str, inherit: bool = True, only_inherit: bool = False
@@ -726,6 +741,7 @@ class RoleListQuery:
             LEFT JOIN role_scopesubject b ON a.id = b.role_id
             WHERE
             a.hidden = 0
+            AND a.tenant_id = %s
             AND (
                 (
                 b.subject_id IN %s
@@ -743,13 +759,15 @@ class RoleListQuery:
         )
 
         with connection.cursor() as cursor:
-            cursor.execute(sql, (tuple(department_ids), self.user.username))
+            cursor.execute(sql, (self.tenant_id, tuple(department_ids), self.user.username))
             grade_mgr_ids = [row[0] for row in cursor.fetchall()]
 
         # 3. 查询 超级管理员 + 系统管理员的 ids
-        super_ids = Role.objects.filter(
-            Q(type=RoleType.SUPER_MANAGER.value) | Q(type=RoleType.SYSTEM_MANAGER.value)
-        ).values_list("id", flat=True)
+        super_ids = (
+            Role.objects.filter(tenant_id=self.tenant_id)
+            .filter(Q(type=RoleType.SUPER_MANAGER.value) | Q(type=RoleType.SYSTEM_MANAGER.value))
+            .values_list("id", flat=True)
+        )
 
         return list(grade_mgr_ids) + list(super_ids)
 
@@ -766,7 +784,9 @@ class RoleListQuery:
         """
         查询分级管理员列表
         """
-        queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+        queryset = Role.objects.filter(tenant_id=self.tenant_id, type=RoleType.GRADE_MANAGER.value).order_by(
+            "-updated_time"
+        )
         if with_super:
             type_order = Case(
                 When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
@@ -775,7 +795,8 @@ class RoleListQuery:
             )
             queryset = (
                 Role.objects.filter(
-                    type__in=[RoleType.SUPER_MANAGER, RoleType.SYSTEM_MANAGER, RoleType.GRADE_MANAGER.value]
+                    tenant_id=self.tenant_id,
+                    type__in=[RoleType.SUPER_MANAGER, RoleType.SYSTEM_MANAGER, RoleType.GRADE_MANAGER.value],
                 )
                 .alias(type_order=type_order)
                 .order_by("type_order", "-updated_time")
@@ -799,8 +820,10 @@ class RoleListQuery:
 
     @cached(timeout=5 * 60, key_function=lambda _, user: str(user.id))
     def is_user_super_manager(self, user: User):
-        super_manager = get_super_manager()
-        return RoleUser.objects.filter(username=user.username, role_id=super_manager.id).exists()
+        super_manager = get_super_manager(self.tenant_id)
+        return RoleUser.objects.filter(
+            tenant_id=self.tenant_id, username=user.username, role_id=super_manager.id
+        ).exists()
 
     def query_subset_manager(self):
         """
@@ -816,7 +839,7 @@ class RoleListQuery:
             role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=role_ids)
         if self.role.type == RoleType.SUPER_MANAGER.value:
-            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, tenant_id=self.tenant_id)
 
         return Role.objects.none()
 
@@ -915,10 +938,9 @@ class RoleAuthorizationScopeChecker:
     TODO 结构变更重点修改
     """
 
-    svc = RoleService()
-
     def __init__(self, role: Role):
         self.role = role
+        self.svc = RoleService(role.tenant_id)
         if self.role.type == RoleType.STAFF.value:
             raise error_codes.FORBIDDEN  # 普通用户不能授权
 
@@ -1062,10 +1084,9 @@ class RoleSubjectScopeChecker:
     角色用户组授权范围检查
     """
 
-    svc = RoleService()
-
     def __init__(self, role: Role):
         self.role = role
+        self.svc = RoleService(role.tenant_id)
 
     # TODO 代码优化，圈复杂度 28, 规范要求 20 以下
     def check(self, subjects: List[Subject], raise_exception: bool = True) -> List[Subject]:  # noqa: C901, PLR0912
@@ -1275,11 +1296,11 @@ class ActionScopeDiffer:
 
 
 @cached(timeout=60 * 60)  # 1 hour
-def get_super_manager() -> Role:
-    return Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
+def get_super_manager(tenant_id: str) -> Role:
+    return Role.objects.filter(type=RoleType.SUPER_MANAGER.value, tenant_id=tenant_id).first()
 
 
-def can_user_manage_role(username: str, role_id: int) -> bool:
+def can_user_manage_role(tenant_id: str, username: str, role_id: int) -> bool:
     """是否用户能管理角色"""
     role_ids = [role_id]
 
@@ -1287,7 +1308,7 @@ def can_user_manage_role(username: str, role_id: int) -> bool:
     if relation:
         role_ids.append(relation.parent_id)
 
-    super_manager = get_super_manager()
+    super_manager = get_super_manager(tenant_id)
     if super_manager:
         role_ids.append(super_manager.id)
 
@@ -1297,10 +1318,10 @@ def can_user_manage_role(username: str, role_id: int) -> bool:
 class RoleResourceRelationHelper:
     """分析变更角色的资源关系"""
 
-    svc = RoleService()
-
     def __init__(self, role: Role) -> None:
         self.role = role
+        self.tenant_id = role.tenant_id
+        self.svc = RoleService(self.tenant_id)
 
     def handle(self):
         resource_nodes = set()
@@ -1340,7 +1361,11 @@ class RoleResourceRelationHelper:
 
         labels = [
             RoleResourceRelation(
-                role_id=self.role.id, system_id=node.system_id, resource_type_id=node.type, resource_id=node.id
+                tenant_id=self.tenant_id,
+                role_id=self.role.id,
+                system_id=node.system_id,
+                resource_type_id=node.type,
+                resource_id=node.id,
             )
             for node in resource_nodes
         ]
@@ -1348,10 +1373,10 @@ class RoleResourceRelationHelper:
 
 
 @cached(timeout=600)
-def get_global_notification_config() -> Dict[str, Any]:
+def get_global_notification_config(tenant_id: str) -> Dict[str, Any]:
     """获取全局通知配置"""
-    role = get_super_manager()
-    notification_config = RolePolicyExpiredNotificationConfig.objects.filter(role_id=role.id).get()
+    role = get_super_manager(tenant_id)
+    notification_config = RolePolicyExpiredNotificationConfig.objects.get(tenant_id=tenant_id, role_id=role.id)
     return notification_config.config
 
 

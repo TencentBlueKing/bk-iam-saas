@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -15,13 +15,11 @@ from backend.biz.system import SystemBiz
 
 
 class SystemClientCheckMixin:
-    system_biz = SystemBiz()
-
     def verify_system_client(self, system_id: str, app_code: str):
         """
-        验证app_code是否能访问系统
+        验证 app_code 是否能访问系统
         """
-        clients = self.system_biz.list_client(system_id)
+        clients = SystemBiz().list_client(system_id)
 
         if app_code not in clients:
             raise exceptions.PermissionDenied(

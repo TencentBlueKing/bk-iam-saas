@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -42,17 +42,17 @@ from backend.apps.group.views import check_readonly_group
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean
-from backend.biz.role import RoleBiz
+from backend.biz.group import GroupCreationBean
+from backend.biz.role import get_super_manager
 from backend.biz.utils import remove_not_exist_subject
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
+from backend.mixins import BizMixin, TransMixin
 from backend.service.constants import GroupSaaSAttributeEnum, RoleType
 from backend.service.models import Subject
-from backend.trans.group import GroupTrans
 
 
-class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
+class AdminGroupViewSet(BizMixin, mixins.ListModelMixin, GenericViewSet):
     """用户组"""
 
     authentication_classes = [ESBAuthentication]
@@ -60,13 +60,12 @@ class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
 
     admin_api_permission = {"list": AdminAPIEnum.GROUP_LIST.value, "create": AdminAPIEnum.GROUP_BATCH_CREATE.value}
 
-    queryset = Group.objects.all()
     serializer_class = AdminGroupBasicSLZ
     filterset_class = GroupFilter
     pagination_class = CompatiblePagination
 
-    group_biz = GroupBiz()
-    group_check_biz = GroupCheckBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组列表",
@@ -79,11 +78,11 @@ class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量创建用户组",
         request_body=AdminGroupCreateSLZ(label="用户组"),
-        responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组ID"))},
+        responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组 ID"))},
         tags=["admin.group"],
     )
     def create(self, request, *args, **kwargs):
-        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+        role = get_super_manager(self.tenant_id)
 
         serializer = AdminGroupCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -115,7 +114,7 @@ class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
             )
 
         # 添加审计信息
-        # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
+        # TODO: 后续其他地方也需要批量添加审计时再抽象出一个 batch_add_audit 方法，将 for 循环逻辑放到方法里
         for g in groups:
             add_audit(GroupCreateAuditProvider, request, group=g)
 
@@ -134,7 +133,7 @@ class AdminGroupInfoViewSet(ManagementGroupViewSet):
     }
 
 
-class AdminGroupMemberViewSet(GenericViewSet):
+class AdminGroupMemberViewSet(BizMixin, GenericViewSet):
     """用户组成员"""
 
     authentication_classes = [ESBAuthentication]
@@ -146,12 +145,11 @@ class AdminGroupMemberViewSet(GenericViewSet):
         "destroy": AdminAPIEnum.GROUP_MEMBER_DELETE.value,
     }
 
-    queryset = Group.objects.all()
     lookup_field = "id"
     pagination_class = CompatiblePagination
 
-    biz = GroupBiz()
-    group_check_biz = GroupCheckBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
@@ -164,7 +162,7 @@ class AdminGroupMemberViewSet(GenericViewSet):
         # 分页参数
         limit, offset = CompatiblePagination().get_limit_offset_pair(request)
 
-        count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
+        count, group_members = self.group_biz.list_paging_thin_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
         return Response({"count": count, "results": results})
 
@@ -184,7 +182,7 @@ class AdminGroupMemberViewSet(GenericViewSet):
 
         members_data = data["members"]
         expired_at = data["expired_at"]
-        # 成员Dict结构转换为Subject结构，并去重
+        # 成员 Dict 结构转换为 Subject 结构，并去重
         members = list(set(parse_obj_as(List[Subject], members_data)))
 
         # 检测成员是否满足管理的授权范围
@@ -196,7 +194,7 @@ class AdminGroupMemberViewSet(GenericViewSet):
         members = remove_not_exist_subject(members)
         if members:
             # 添加成员
-            self.biz.add_members(group.id, members, expired_at)
+            self.group_biz.add_members(group.id, members, expired_at)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=[m.dict() for m in members])
@@ -218,14 +216,14 @@ class AdminGroupMemberViewSet(GenericViewSet):
         members = data["members"]
         subjects = parse_obj_as(List[Subject], members)
         if subjects:
-            self.biz.remove_members(str(group.id), subjects)
+            self.group_biz.remove_members(str(group.id), subjects)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=data["members"])
         return Response({})
 
 
-class AdminGroupPolicyViewSet(GenericViewSet):
+class AdminGroupPolicyViewSet(BizMixin, TransMixin, GenericViewSet):
     """用户组授权"""
 
     authentication_classes = [ESBAuthentication]
@@ -233,14 +231,11 @@ class AdminGroupPolicyViewSet(GenericViewSet):
 
     admin_api_permission = {"create": AdminAPIEnum.GROUP_POLICY_GRANT.value}
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
-    queryset = Group.objects.all()
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
     lookup_field = "id"
 
-    group_biz = GroupBiz()
-    role_biz = RoleBiz()
-
-    group_trans = GroupTrans()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组添加权限",

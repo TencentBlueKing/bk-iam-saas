@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -14,6 +14,7 @@ from typing import Any, List
 
 from django.db import models
 
+from backend.common.constants import DEFAULT_TENANT_ID
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_long_task_create_lock
 from backend.common.models import BaseModel
@@ -28,17 +29,19 @@ class TaskDetail(BaseModel):
     长时任务
     """
 
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
     type = models.CharField("任务类型", max_length=32)  # NOTE 提供任务执行时在上层提供阻止哪些操作的规则方式
     # title = models.CharField("任务标题")  # 可能需要界面上的展示
     _args = models.TextField("参数", db_column="args")
     _params = models.TextField("子任务参数集", db_column="params", default="")  # List[Dict]
-    unique_sign = models.CharField("任务唯一标识", max_length=64, default="")  # 运行中的任务, 不允许重新创建
+    unique_sign = models.CharField("任务唯一标识", max_length=64, default="")  # 运行中的任务，不允许重新创建
     status = models.IntegerField(
         "任务状态",
         choices=TaskStatus.get_choices(),
         default=TaskStatus.PENDING.value,  # type: ignore[attr-defined]
     )
-    celery_id = models.CharField("celery任务id", max_length=36, default="")
+    celery_id = models.CharField("celery 任务 id", max_length=36, default="")
     _results = models.TextField("结果集", db_column="results", default="")
 
     class Meta:
@@ -58,7 +61,7 @@ class TaskDetail(BaseModel):
     def results(self):
         results = json.loads(self._results) if self._results else []
 
-        # 运行中的任务, 实时从redis中取结果
+        # 运行中的任务，实时从 redis 中取结果
         if self.status == TaskStatus.RUNNING.value:
             from .tasks import ResultStore
 
@@ -68,23 +71,28 @@ class TaskDetail(BaseModel):
         return results
 
     @classmethod
-    def create(cls, type_: str, args: List[Any], sign: str = ""):
-        # 如果同一时间有运行中的任务, 则阻止新的任务
+    def create(cls, tenant_id: str, type_: str, args: List[Any], sign: str = ""):
+        # 如果同一时间有运行中的任务，则阻止新的任务
         if sign:
             if cls.exists(type_, sign):
                 raise EXISTS_TASK_ERROR
 
             with gen_long_task_create_lock(cls._gen_unique_sign(type_, sign)):
                 if not cls.exists(type_, sign):
-                    return cls._create(type_, args, sign)
+                    return cls._create(tenant_id, type_, args, sign)
 
                 raise EXISTS_TASK_ERROR
 
-        return cls._create(type_, args, sign)
+        return cls._create(tenant_id, type_, args, sign)
 
     @classmethod
-    def _create(cls, type_: str, args: List[Any], sign: str = ""):
-        task = cls(type=type_, _args=json.dumps(args), unique_sign=cls._gen_unique_sign(type_, sign) if sign else sign)
+    def _create(cls, tenant_id: str, type_: str, args: List[Any], sign: str = ""):
+        task = cls(
+            tenant_id=tenant_id,
+            type=type_,
+            _args=json.dumps(args),
+            unique_sign=cls._gen_unique_sign(type_, sign) if sign else sign,
+        )
 
         task.save(force_insert=True)
 
@@ -112,8 +120,10 @@ class TaskDetail(BaseModel):
 
 
 class SubTaskState(models.Model):
-    task_id = models.IntegerField("父亲任务id")
-    celery_id = models.CharField("celery任务id", max_length=36)
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    task_id = models.IntegerField("父亲任务 id")
+    celery_id = models.CharField("celery 任务 id", max_length=36)
     index = models.IntegerField("子任务索引")
     status = models.IntegerField(
         "任务状态",

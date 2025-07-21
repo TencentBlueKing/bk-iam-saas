@@ -8,29 +8,30 @@ from backend.util.json import json_dumps
 
 def init_super_manager_notification_config(apps, schema_editor):
     """初始化超级管理员通知设置"""
-    Role = apps.get_model('role', 'Role')
-    RolePolicyExpiredNotificationConfig = apps.get_model('role', 'RolePolicyExpiredNotificationConfig')
-
-    role = Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
-    if not role:
-        return
-
-    config = RolePolicyExpiredNotificationConfig(role_id=role.id)
-    config._config = json_dumps({
-        "enable": True,
-        "notification_types": ["mail", "rtx"],
-        "send_time": "10:00",
-        "expire_days_before": 15,
-        "expire_days_after": 1,
-        "send_days": ["monday"],
-    })
-    config.save()
+    # Role = apps.get_model('role', 'Role')
+    # RolePolicyExpiredNotificationConfig = apps.get_model('role', 'RolePolicyExpiredNotificationConfig')
+    #
+    # role = Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
+    # if not role:
+    #     return
+    #
+    # config = RolePolicyExpiredNotificationConfig(role_id=role.id)
+    # config._config = json_dumps({
+    #     "enable": True,
+    #     "notification_types": ["mail", "rtx"],
+    #     "send_time": "10:00",
+    #     "expire_days_before": 15,
+    #     "expire_days_after": 1,
+    #     "send_days": ["monday"],
+    # })
+    # config.save()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('role', '0025_rolepolicyexpirednotificationconfig'),
+        ("role", "0025_rolepolicyexpirednotificationconfig"),
     ]
 
-    operations = [migrations.RunPython(init_super_manager_notification_config),]
+    operations = [
+        migrations.RunPython(init_super_manager_notification_config),
+    ]

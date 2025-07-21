@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -14,16 +14,17 @@ from rest_framework import serializers, status
 from rest_framework.views import APIView
 
 from backend.api.authentication import ESBAuthentication
+from backend.api.authorization.audit import SubjectPolicyGrantOrRevokeAuditProvider
+from backend.api.authorization.constants import AuthorizationAPIEnum, OperateEnum, VerifyApiParamLocationEnum
+from backend.api.authorization.mixins import AuthViewMixin
+from backend.api.authorization.permissions import AuthorizationAPIPermission
+from backend.api.authorization.serializers import (
+    BatchResourceCreatorActionSLZ,
+    ResourceCreatorActionAttributeSLZ,
+    ResourceCreatorActionSLZ,
+)
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.resource_creator_action import ResourceCreatorActionBiz
 from backend.service.models import Subject
-from backend.trans.open_authorization import AuthorizationTrans
-
-from ..audit import SubjectPolicyGrantOrRevokeAuditProvider
-from ..constants import AuthorizationAPIEnum, OperateEnum, VerifyApiParamLocationEnum
-from ..mixins import AuthViewMixin
-from ..permissions import AuthorizationAPIPermission
-from ..serializers import BatchResourceCreatorActionSLZ, ResourceCreatorActionAttributeSLZ, ResourceCreatorActionSLZ
 
 
 class ResourceCreatorActionView(AuthViewMixin, APIView):
@@ -39,9 +40,6 @@ class ResourceCreatorActionView(AuthViewMixin, APIView):
             AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
         ),
     }
-
-    biz = ResourceCreatorActionBiz()
-    trans = AuthorizationTrans()
 
     @swagger_auto_schema(
         operation_description="新建关联授权",
@@ -61,11 +59,11 @@ class ResourceCreatorActionView(AuthViewMixin, APIView):
         resource_type_id = data["type"]
         instances = [{"id": data["id"], "name": data["name"], "ancestors": data.get("ancestors")}]
 
-        # 查询出对应资源类型需要授予哪些ActionID
-        action_ids = self.biz.list_action_id(system_id, resource_type_id)
+        # 查询出对应资源类型需要授予哪些 ActionID
+        action_ids = self.resource_creator_action_biz.list_action_id(system_id, resource_type_id)
 
         # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_instances_of_creator(
+        policy_list = self.authorization_trans.to_policy_list_for_instances_of_creator(
             system_id, action_ids, resource_type_id, instances
         )
 
@@ -91,9 +89,6 @@ class BatchResourceCreatorActionView(AuthViewMixin, APIView):
         ),
     }
 
-    biz = ResourceCreatorActionBiz()
-    trans = AuthorizationTrans()
-
     @swagger_auto_schema(
         operation_description="新建关联授权",
         request_body=BatchResourceCreatorActionSLZ,
@@ -112,11 +107,11 @@ class BatchResourceCreatorActionView(AuthViewMixin, APIView):
         resource_type_id = data["type"]
         instances = data["instances"]
 
-        # 查询出对应资源类型需要授予哪些ActionID
-        action_ids = self.biz.list_action_id(system_id, resource_type_id)
+        # 查询出对应资源类型需要授予哪些 ActionID
+        action_ids = self.resource_creator_action_biz.list_action_id(system_id, resource_type_id)
 
         # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_instances_of_creator(
+        policy_list = self.authorization_trans.to_policy_list_for_instances_of_creator(
             system_id, action_ids, resource_type_id, instances
         )
 
@@ -142,11 +137,8 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
         ),
     }
 
-    biz = ResourceCreatorActionBiz()
-    trans = AuthorizationTrans()
-
     @swagger_auto_schema(
-        operation_description="新建关联授权-属性授权",
+        operation_description="新建关联授权 - 属性授权",
         request_body=ResourceCreatorActionAttributeSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["open"],
@@ -163,11 +155,11 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
         resource_type_id = data["type"]
         attributes = data["attributes"]
 
-        # 查询出对应资源类型需要授予哪些ActionID
-        action_ids = self.biz.list_action_id(system_id, resource_type_id)
+        # 查询出对应资源类型需要授予哪些 ActionID
+        action_ids = self.resource_creator_action_biz.list_action_id(system_id, resource_type_id)
 
         # 转换为策略列表
-        policy_list = self.trans.to_policy_list_for_attributes_of_creator(
+        policy_list = self.authorization_trans.to_policy_list_for_attributes_of_creator(
             system_id, action_ids, resource_type_id, attributes
         )
 

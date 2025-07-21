@@ -29,10 +29,10 @@ from backend.biz.org_sync.department_member import DBDepartmentMemberSyncService
 from backend.biz.org_sync.iam_department import IAMBackendDepartmentSyncService
 from backend.biz.org_sync.iam_user import IAMBackendUserSyncService
 from backend.biz.org_sync.iam_user_department import IAMBackendUserDepartmentSyncService
-from backend.biz.org_sync.syncer import Syncer
 from backend.biz.org_sync.user import DBUserSyncService
 from backend.common.lock import gen_organization_sync_lock
-from backend.component import iam, usermgr
+from backend.component import iam
+from backend.component.client.bk_user import BkUserClient
 from backend.service.constants import SubjectType
 from backend.util.json import json_dumps
 
@@ -115,26 +115,17 @@ def sync_organization(tenant_id: str, executor: str = SYNC_TASK_DEFAULT_EXECUTOR
 
 
 @shared_task(ignore_result=True)
-def sync_new_users():
-    """
-    定时同步新增用户
-    """
-    # 已有全量任务在执行，则无需再执行单用户同步
-    if SyncRecord.objects.filter(type=SyncType.Full.value, status=SyncTaskStatus.Running.value).exists():
-        return
-    try:
-        Syncer().sync_new_users()
-    except Exception:  # pylint: disable=broad-except
-        logger.exception("sync_new_users error")
-
-
-@shared_task(ignore_result=True)
 def clean_subject_to_delete():
     """
     定时清理被删除的用户
     """
+    for tenant in BkUserClient(settings.BK_APP_TENANT_ID).list_tenant():
+        _clean_subject_to_delete(tenant["id"])
+
+
+def _clean_subject_to_delete(tenant_id: str):
     max_create_time = timezone.now() - timezone.timedelta(days=settings.SUBJECT_DELETE_DAYS)
-    subjects = list(SubjectToDelete.objects.filter(created_time__lt=max_create_time))
+    subjects = list(SubjectToDelete.objects.filter(tenant_id=tenant_id, created_time__lt=max_create_time))
 
     # 分割对应的 subject
     usernames = [one.subject_id for one in subjects if one.subject_type == SubjectType.USER.value]
@@ -142,12 +133,12 @@ def clean_subject_to_delete():
 
     # 校验用户管理是不是真的已经删除对应的 subject
     if usernames:
-        usermgr_users = usermgr.list_profile()
+        usermgr_users = BkUserClient(tenant_id).list_user()
         # 排除存在的用户名
-        usernames = list(set(usernames) - {user["username"] for user in usermgr_users})
+        usernames = list(set(usernames) - {user["bk_username"] for user in usermgr_users})
 
     if department_ids:
-        usermgr_departments = usermgr.list_department()
+        usermgr_departments = BkUserClient(tenant_id).list_department()
         # 排除存在的部门
         department_ids = list(set(department_ids) - {str(department["id"]) for department in usermgr_departments})
 
@@ -155,7 +146,7 @@ def clean_subject_to_delete():
         # 清理用户相关数据
         if usernames:
             # 删除用户所属角色的成员
-            RoleUser.objects.filter(username__in=usernames).delete()
+            RoleUser.objects.filter(tenant_id=tenant_id, username__in=usernames).delete()
 
             # 批量删除用户关系数据
             batch_delete_subject_relations(SubjectType.USER.value, usernames)

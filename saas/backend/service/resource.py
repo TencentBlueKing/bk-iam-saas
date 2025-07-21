@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -29,7 +29,7 @@ from .models import (
     SystemProviderConfig,
 )
 
-# 只暴露ResourceProvider，其他只是辅助ResourceProvider的
+# 只暴露 ResourceProvider，其他只是辅助 ResourceProvider 的
 __all__ = ["ResourceProvider"]
 
 logger = logging.getLogger("app")
@@ -38,9 +38,9 @@ logger = logging.getLogger("app")
 class SystemProviderConfigService:
     """提供系统配置"""
 
-    @cachedmethod(timeout=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存 1 分钟
     def get_provider_config(self, system_id) -> SystemProviderConfig:
-        """获取接入系统的回调信息，包括鉴权和Host"""
+        """获取接入系统的回调信息，包括鉴权和 Host"""
         system_info = iam.get_system(system_id, fields="provider_config")
         provider_config = system_info["provider_config"]
         return SystemProviderConfig(**provider_config)
@@ -49,10 +49,10 @@ class SystemProviderConfigService:
 class ResourceTypeProviderConfigService:
     """提供资源类型配置"""
 
-    # TODO: 这里需要由后台提供查询某个系统某个资源类型的API，而不是使用批量查询系统资源类型
+    # TODO: 这里需要由后台提供查询某个系统某个资源类型的 API，而不是使用批量查询系统资源类型
     @cachedmethod(timeout=60)  # 一分钟
     def _list_resource_type_provider_config(self, system_id: str) -> Dict[str, Dict]:
-        """提供给provider_config使用的获取某个系统所有资源类型"""
+        """提供给 provider_config 使用的获取某个系统所有资源类型"""
         resource_types = iam.list_resource_type([system_id], fields="id,provider_config")[system_id]
         return {i["id"]: i["provider_config"] for i in resource_types}
 
@@ -72,12 +72,12 @@ class ResourceProviderConfig:
         self.path = self._get_path()
 
     def _get_auth_info_and_host(self) -> Tuple[Dict[str, str], str]:
-        """iam后台获取系统的provider config"""
+        """iam 后台获取系统的 provider config"""
         provider_config = SystemProviderConfigService().get_provider_config(self.system_id)
         return {"auth": provider_config.auth, "token": provider_config.token}, provider_config.host
 
     def _get_path(self) -> str:
-        """iam后台获取请求该资源类型所需的URL Path"""
+        """iam 后台获取请求该资源类型所需的 URL Path"""
         provider_config = ResourceTypeProviderConfigService().get_provider_config(
             self.system_id, self.resource_type_id
         )
@@ -85,18 +85,19 @@ class ResourceProviderConfig:
 
 
 class ResourceIDNameCache:
-    """资源的ID和Name缓存"""
+    """资源的 ID 和 Name 缓存"""
 
-    def __init__(self, system_id: str, resource_type_id: str):
+    def __init__(self, tenant_id: str, system_id: str, resource_type_id: str):
+        self.tenant_id = tenant_id
         self.system_id = system_id
         self.resource_type_id = resource_type_id
         self.cache = Cache(CacheEnum.REDIS.value, CacheKeyPrefixEnum.CALLBACK_RESOURCE_NAME.value)
 
     def _make_key(self, resource_id: str) -> str:
         """
-        生成Key
+        生成 Key
         """
-        return f"{self.system_id}:{self.resource_type_id}:{resource_id}"
+        return f"{self.tenant_id}:{self.system_id}:{self.resource_type_id}:{resource_id}"
 
     def set(self, id_name_map: Dict[str, str]):
         """
@@ -113,7 +114,7 @@ class ResourceIDNameCache:
     def get(self, ids: List[str]) -> Dict[str, Optional[str]]:
         """
         获取缓存内容，对于缓存不存在的，则返回为空
-        无法获取到的缓存的ID，则不包含在返回Dict里
+        无法获取到的缓存的 ID，则不包含在返回 Dict 里
         """
         map_keys = {self._make_key(id_): id_ for id_ in ids}
 
@@ -140,17 +141,20 @@ class ResourceProvider:
     name_attribute = "display_name"
     approver_attribute = "_bk_iam_approver_"
 
-    def __init__(self, system_id: str, resource_type_id: str):
+    def __init__(self, tenant_id: str, system_id: str, resource_type_id: str):
         """初始化：认证信息、请求客户端"""
+        self.tenant_id = tenant_id
         self.system_id = system_id
         self.resource_type_id = resource_type_id
-        # 根据系统和资源类型获取相关认证信息和Host、URL_PATH
+        # 根据系统和资源类型获取相关认证信息和 Host、URL_PATH
         provider_config = ResourceProviderConfig(system_id, resource_type_id)
         auth_info, host, url_path = provider_config.auth_info, provider_config.host, provider_config.path
         url = url_join(host, url_path)
-        self.client = resource_provider.ResourceProviderClient(system_id, resource_type_id, url, auth_info)
+        self.client = resource_provider.ResourceProviderClient(
+            self.tenant_id, system_id, resource_type_id, url, auth_info
+        )
         # 缓存服务
-        self.id_name_cache = ResourceIDNameCache(system_id, resource_type_id)
+        self.id_name_cache = ResourceIDNameCache(self.tenant_id, system_id, resource_type_id)
 
     def _get_page_params(self, limit: int, offset: int) -> Dict[str, int]:
         """生成分页参数"""
@@ -167,7 +171,7 @@ class ResourceProvider:
         return [
             ResourceAttribute(**i)
             for i in self.client.list_attr()
-            # 由于存在接入系统将内置属性_bk_xxx，包括_bk_iam_path_或将id的返回，防御性过滤掉
+            # 由于存在接入系统将内置属性_bk_xxx，包括_bk_iam_path_或将 id 的返回，防御性过滤掉
             if not i["id"].startswith("_bk_") and i["id"] != "id"
         ]
 
@@ -240,8 +244,8 @@ class ResourceProvider:
         action_system_id: str = "",
         action_id: str = "",
     ) -> Tuple[int, List[ResourceInstanceBaseInfo]]:
-        """根据上级资源和Keyword搜索某个资源实例列表"""
-        # Note: 虽然与list_instance很相似，但在制定回调接口协议时特意分开为两个API，这样方便后续搜索的扩展
+        """根据上级资源和 Keyword 搜索某个资源实例列表"""
+        # Note: 虽然与 list_instance 很相似，但在制定回调接口协议时特意分开为两个 API，这样方便后续搜索的扩展
         filter_condition: Dict = {"keyword": keyword}
         if ancestors:
             filter_condition["ancestors"] = ancestors
@@ -262,7 +266,7 @@ class ResourceProvider:
     def fetch_instance_info(
         self, ids: List[str], attributes: Optional[List[str]] = None
     ) -> List[ResourceInstanceInfo]:
-        """批量查询资源实例属性，包括display_name等"""
+        """批量查询资源实例属性，包括 display_name 等"""
         # fetch_instance_info 接口的批量限制
         # 分页查询资源实例属性
         results = []
@@ -272,7 +276,7 @@ class ResourceProvider:
             page_results = self.client.fetch_instance_info(filter_condition)
             results.extend(page_results)
 
-        # Dict转为struct
+        # Dict 转为 struct
         instance_results = []
         for i in results:
             if "id" not in i:
@@ -289,12 +293,12 @@ class ResourceProvider:
                 )
             )
 
-        # IDNameCache，对于查询所有属性或者包括name属性，则进行缓存
+        # IDNameCache，对于查询所有属性或者包括 name 属性，则进行缓存
         if instance_results and (not attributes or self.name_attribute in attributes):
             self.id_name_cache.set(
                 {
                     i.id: i.attributes[self.name_attribute]
-                    # 只有包括name属性才进行缓存
+                    # 只有包括 name 属性才进行缓存
                     for i in instance_results
                     if self.name_attribute in i.attributes
                 }
@@ -303,7 +307,7 @@ class ResourceProvider:
         return instance_results
 
     def fetch_instance_name(self, ids: List[str]) -> List[ResourceInstanceBaseInfo]:
-        """批量查询资源实例的Name属性"""
+        """批量查询资源实例的 Name 属性"""
         # 先从缓存取，取不到的则再查询
         cache_id_name_map = self.id_name_cache.get(ids)
         results = [ResourceInstanceBaseInfo(id=_id, display_name=name) for _id, name in cache_id_name_map.items()]

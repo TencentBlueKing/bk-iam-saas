@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 
 import time
-from functools import cached_property
 from typing import List
 from urllib.parse import urlencode
 
@@ -30,14 +29,13 @@ from backend.apps.application.tasks import create_policies_renew_applications
 from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
-from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
-from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
+from backend.biz.application import ApplicationGroupInfoBean, GroupApplicationDataBean
+from backend.biz.group import GroupMemberExpiredAtBean
 from backend.biz.helper import get_role_expired_group_members, get_user_expired_groups_policies
-from backend.biz.open import ApplicationPolicyListCache
 from backend.common.time import DAY_SECONDS
+from backend.mixins import BizMixin, TenantMixin, TransMixin
 from backend.service.constants import ApplicationType, GroupMemberType, SubjectType
 from backend.service.models.subject import Applicant
-from backend.trans.open_application import AccessSystemApplicationTrans
 from backend.util.url import url_join
 
 from .serializers import (
@@ -51,16 +49,13 @@ from .serializers import (
 )
 
 
-class ApplicationView(views.APIView):
+class ApplicationView(BizMixin, TransMixin, views.APIView):
     """
     接入系统申请
     """
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [IsAuthenticated]
-
-    access_system_application_trans = AccessSystemApplicationTrans()
-    application_policy_list_cache = ApplicationPolicyListCache()
 
     @swagger_auto_schema(
         operation_description="接入系统权限申请",
@@ -75,6 +70,7 @@ class ApplicationView(views.APIView):
 
         data = serializer.validated_data
         system_id = data["system"]
+        # FIXME(tenant): 校验系统是否本租户或全租户
 
         # 将申请的数据转换为 PolicyBeanList 数据结构，同时需要进行数据检查
         policy_list = self.access_system_application_trans.to_policy_list(data)
@@ -90,7 +86,7 @@ class ApplicationView(views.APIView):
         return Response({"url": url})
 
 
-class ApplicationDetailView(GenericViewSet):
+class ApplicationDetailView(TenantMixin, GenericViewSet):
     """
     接入系统申请详情
     """
@@ -98,8 +94,10 @@ class ApplicationDetailView(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [IsAuthenticated]
 
-    queryset = Application.objects.all()
     lookup_field = "sn"
+
+    def get_queryset(self):
+        return Application.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="权限申请详情",
@@ -108,23 +106,17 @@ class ApplicationDetailView(GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = ApplicationDetailSLZ(instance, context={"tenant_id": self.request.tenant_id})
+        serializer = ApplicationDetailSLZ(instance, context={"tenant_id": self.tenant_id})
         return Response(serializer.data)
 
 
-class ApplicationCustomPolicyView(views.APIView):
+class ApplicationCustomPolicyView(BizMixin, TransMixin, views.APIView):
     """
     创建自定义权限申请单
     """
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [IsAuthenticated]
-
-    access_system_application_trans = AccessSystemApplicationTrans()
-
-    @cached_property
-    def application_biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="创建自定义权限申请单",
@@ -148,17 +140,13 @@ class ApplicationCustomPolicyView(views.APIView):
         return Response({"id": applications[0].id, "sn": applications[0].sn})
 
 
-class ApprovalBotUserCallbackView(views.APIView):
+class ApprovalBotUserCallbackView(BizMixin, views.APIView):
     """
     审批机器人用户续期回调
     """
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ApprovalBotPermission]
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="审批机器人用户续期回调",
@@ -174,7 +162,7 @@ class ApprovalBotUserCallbackView(views.APIView):
         data = serializer.validated_data
         username = data["username"]
 
-        user = User.objects.filter(username=username).first()
+        user = User.objects.filter(username=username, tenant_id=self.tenant_id).first()
         if not user:
             return Response({})
 
@@ -211,7 +199,7 @@ class ApprovalBotUserCallbackView(views.APIView):
                 }
                 for g in groups
             ]
-            self.biz.create_for_group(
+            self.application_biz.create_for_group(
                 ApplicationType.RENEW_GROUP.value,
                 GroupApplicationDataBean(
                     applicant=username,
@@ -225,15 +213,13 @@ class ApprovalBotUserCallbackView(views.APIView):
         return Response({})
 
 
-class ApprovalBotRoleCallbackView(views.APIView):
+class ApprovalBotRoleCallbackView(BizMixin, views.APIView):
     """
     审批机器人角色回调
     """
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ApprovalBotPermission]
-
-    group_biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="审批机器人角色回调",
@@ -293,19 +279,13 @@ class ApprovalBotRoleCallbackView(views.APIView):
         return Response({})
 
 
-class ApplicationCustomPolicyWithCustomTicketView(views.APIView):
+class ApplicationCustomPolicyWithCustomTicketView(BizMixin, TransMixin, views.APIView):
     """
     创建自定义权限申请单 - 允许单据自定义审批内容
     """
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [IsAuthenticated]
-
-    access_system_application_trans = AccessSystemApplicationTrans()
-
-    @cached_property
-    def application_biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="创建自定义权限申请单 - 允许单据自定义审批内容",

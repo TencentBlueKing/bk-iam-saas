@@ -9,7 +9,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from functools import cached_property
 from typing import List
 
 from django.shortcuts import get_object_or_404
@@ -34,21 +33,18 @@ from backend.apps.application.models import Application
 from backend.apps.organization.models import User as UserModel
 from backend.apps.role.models import Role
 from backend.biz.application import (
-    ApplicationBiz,
     ApplicationGroupInfoBean,
     GradeManagerApplicationDataBean,
     GroupApplicationDataBean,
 )
-from backend.biz.group import GroupBiz
-from backend.biz.role import RoleCheckBiz
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
+from backend.mixins import BizMixin, TransMixin
 from backend.service.constants import ApplicationType, RoleType, SubjectType
 from backend.service.models import Applicant, Subject
-from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementGroupApplicationViewSet(GenericViewSet):
+class ManagementGroupApplicationViewSet(BizMixin, GenericViewSet):
     """用户组申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -59,12 +55,6 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
             ManagementAPIEnum.V2_GROUP_APPLICATION_CREATE.value,
         ),
     }
-
-    group_biz = GroupBiz()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="创建用户组申请单",
@@ -94,7 +84,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
         # 创建申请
-        applications = self.biz.create_for_group(
+        applications = self.application_biz.create_for_group(
             ApplicationType.JOIN_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user_id,
@@ -114,7 +104,9 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         return Response({"ids": [a.id for a in applications]})
 
 
-class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+class ManagementGradeManagerApplicationViewSet(
+    BizMixin, TransMixin, ManagementAPIPermissionCheckMixin, GenericViewSet
+):
     """分级管理员创建申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -125,13 +117,6 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
             ManagementAPIEnum.V2_GRADE_MANAGER_APPLICATION_CREATE.value,
         ),
     }
-
-    role_check_biz = RoleCheckBiz()
-    trans = GradeManagerTrans()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="分级管理员创建申请单",
@@ -158,13 +143,13 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
         data["members"] = [{"username": username} for username in data["members"]]
 
         # 结构转换
-        info = self.trans.to_role_info(data, source_system_id=source_system_id)
+        info = self.grade_manager_trans.to_role_info(data, source_system_id=source_system_id)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
-            applications = self.biz.create_for_grade_manager(
+            applications = self.application_biz.create_for_grade_manager(
                 ApplicationType.CREATE_GRADE_MANAGER.value,
                 GradeManagerApplicationDataBean(
                     applicant=user_id, reason=data["reason"], role_info=info, group_name=data["group_name"]
@@ -179,7 +164,9 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
         return Response({"id": applications[0].id, "sn": applications[0].sn})
 
 
-class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+class ManagementGradeManagerUpdatedApplicationViewSet(
+    BizMixin, TransMixin, ManagementAPIPermissionCheckMixin, GenericViewSet
+):
     """分级管理员更新申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -192,13 +179,6 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
     }
 
     lookup_field = "id"
-
-    role_check_biz = RoleCheckBiz()
-    trans = GradeManagerTrans()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="分级管理员更新申请单",
@@ -226,13 +206,13 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
         # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
 
-        info = self.trans.to_role_info(data, source_system_id=source_system_id)
+        info = self.grade_manager_trans.to_role_info(data, source_system_id=source_system_id)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
-            applications = self.biz.create_for_grade_manager(
+            applications = self.application_biz.create_for_grade_manager(
                 ApplicationType.UPDATE_GRADE_MANAGER,
                 GradeManagerApplicationDataBean(
                     role_id=role.id,
@@ -251,7 +231,7 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
         return Response({"id": applications[0].id, "sn": applications[0].sn})
 
 
-class ManagementApplicationCancelView(views.APIView):
+class ManagementApplicationCancelView(BizMixin, views.APIView):
     """
     申请单取消
     """
@@ -265,10 +245,6 @@ class ManagementApplicationCancelView(views.APIView):
         ),
     }
 
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
-
     # Note: 这里会回调第三方处理，所以不定义参数
     def put(self, request, *args, **kwargs):
         source_system_id = kwargs["system_id"]
@@ -278,12 +254,12 @@ class ManagementApplicationCancelView(views.APIView):
         application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
 
         # 接入系统自行 cancel itsm 单据
-        self.biz.cancel_application(application, application.applicant, need_cancel_ticket=False)
+        self.application_biz.cancel_application(application, application.applicant, need_cancel_ticket=False)
 
         return Response({})
 
 
-class ManagementGroupRenewApplicationViewSet(GenericViewSet):
+class ManagementGroupRenewApplicationViewSet(BizMixin, GenericViewSet):
     """用户组续期申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -294,12 +270,6 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
             ManagementAPIEnum.V2_GROUP_APPLICATION_RENEW.value,
         ),
     }
-
-    group_biz = GroupBiz()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组续期申请单",
@@ -329,7 +299,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
         # 创建申请
-        applications = self.biz.create_for_group(
+        applications = self.application_biz.create_for_group(
             ApplicationType.RENEW_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user.username,
@@ -346,7 +316,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         return Response({"ids": [a.id for a in applications]})
 
 
-class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
+class ManagementGroupBatchExpiredAtRenewApplicationViewSet(BizMixin, GenericViewSet):
     """用户组批量续期申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -357,12 +327,6 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
             ManagementAPIEnum.V2_GROUP_APPLICATION_BATCH_EXPIRED_AT_RENEW.value,
         ),
     }
-
-    group_biz = GroupBiz()
-
-    @cached_property
-    def biz(self):
-        return ApplicationBiz(self.request.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组批量续期申请单",
@@ -393,7 +357,7 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), group_ids)
 
         # 创建申请
-        applications = self.biz.create_for_group(
+        applications = self.application_biz.create_for_group(
             ApplicationType.RENEW_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user.username,

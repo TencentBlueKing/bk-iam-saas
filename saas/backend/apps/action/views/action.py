@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -14,21 +14,13 @@ from rest_framework import exceptions, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.biz.action import ActionBiz
-from backend.biz.action_group import ActionGroupBiz
-from backend.biz.open import ApplicationPolicyListCache
+from backend.apps.action.serializers import ActionSLZ, GroupActionQuerySLZ
+from backend.mixins import BizMixin
 from backend.service.models import Subject
 
-from ..serializers import ActionSLZ, GroupActionQuerySLZ
 
-
-class ActionViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = ActionBiz()
-    action_group_biz = ActionGroupBiz()
-
-    application_policy_list_cache = ApplicationPolicyListCache()
+class ActionViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="用户的操作列表",
@@ -49,26 +41,30 @@ class ActionViewSet(GenericViewSet):
 
         # 1. 获取用户的权限列表
         if user_id != "" and user_id == request.user.username:
-            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_username(user_id), hidden=hidden)
+            actions = self.action_biz.list_by_subject(
+                system_id, request.role, Subject.from_username(user_id), hidden=hidden
+            )
         elif user_id not in ("", request.user.username):
             raise exceptions.PermissionDenied
         elif group_id != -1:
-            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_group_id(group_id), hidden=hidden)
+            actions = self.action_biz.list_by_subject(
+                system_id, request.role, Subject.from_group_id(group_id), hidden=hidden
+            )
         # 3. 获取的预申请的权限列表
         elif cache_id != "":
-            # 从缓存里获取预申请的操作ID列表
+            # 从缓存里获取预申请的操作 ID 列表
             policy_list = self.application_policy_list_cache.get(cache_id)
-            # 根据预申请的操作ID列表，获取对应的操作列表
-            actions = self.biz.list_pre_application_actions(
+            # 根据预申请的操作 ID 列表，获取对应的操作列表
+            actions = self.action_biz.list_pre_application_actions(
                 system_id, request.role, request.user.username, [p.action_id for p in policy_list.policies]
             )
         # 4. 查询所有的操作
         elif all:
-            actions = self.biz.list(system_id).actions
+            actions = self.action_biz.list(system_id).actions
         else:
-            actions = self.biz.list_by_role(system_id, request.role, hidden=hidden)
+            actions = self.action_biz.list_by_role(system_id, request.role, hidden=hidden)
 
-        # 对操作分组, 填入到分组的数据中
+        # 对操作分组，填入到分组的数据中
         action_groups = self.action_group_biz.list_by_actions(system_id, actions)
 
         return Response([one.dict() for one in action_groups])

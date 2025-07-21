@@ -80,18 +80,23 @@ class GroupSLZ(serializers.ModelSerializer):
         self.subject_template_count_dict = None
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
             group_ids = [group.id for group in self.instance]
-            self.group_role_dict = GroupBiz().get_group_role_dict_by_ids(group_ids)
-
-            # 查询涉及到的用户组的属性
-            self.group_attrs_dict = GroupAttributeService().batch_get_attributes(group_ids)
-
-            # 人员模版数量
-            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict(group_ids)
+            if self.instance:
+                tenant_id = self.instance[0].tenant_id
+                self.group_role_dict = GroupBiz(tenant_id).get_group_role_dict_by_ids(group_ids)
+                # 查询涉及到的用户组的属性
+                self.group_attrs_dict = GroupAttributeService(tenant_id).batch_get_attributes(group_ids)
+                # 人员模版数量
+                self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(
+                    group_ids
+                )
         elif isinstance(self.instance, Group):
-            self.group_attrs_dict = GroupAttributeService().batch_get_attributes([self.instance.id])
+            tenant_id = self.instance.tenant_id
+            self.group_attrs_dict = GroupAttributeService(tenant_id).batch_get_attributes([self.instance.id])
 
             # 人员模版数量
-            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict([self.instance.id])
+            self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(
+                [self.instance.id]
+            )
 
     def get_role(self, obj):
         if not self.group_role_dict:
@@ -219,7 +224,9 @@ class GroupTemplateDetailSLZ(GroupTemplateSLZ):
 
     def __init__(self, *args, **kwargs):
         serializers.ModelSerializer.__init__(self, *args, **kwargs)
-        self._template_name_dict = TemplateBiz().get_template_name_dict_by_ids([self.instance.id])
+        self._template_name_dict = TemplateBiz(self.context["tenant_id"]).get_template_name_dict_by_ids(
+            [self.instance.id]
+        )
         self._system_list = SystemBiz().new_system_list()
 
     class Meta:
@@ -228,11 +235,14 @@ class GroupTemplateDetailSLZ(GroupTemplateSLZ):
 
     def get_actions(self, obj):
         policy_list = PolicyBeanList(
-            obj.system_id, parse_obj_as(List[PolicyBean], obj.data["actions"]), need_fill_empty_fields=True
+            self.context["tenant_id"],
+            obj.system_id,
+            parse_obj_as(List[PolicyBean], obj.data["actions"]),
+            need_fill_empty_fields=True,
         )
 
         # ResourceNameAutoUpdate
-        updated_policies = GroupBiz().update_template_due_to_renamed_resource(
+        updated_policies = GroupBiz(self.context["tenant_id"]).update_template_due_to_renamed_resource(
             int(obj.subject_id), obj.template_id, policy_list
         )
 

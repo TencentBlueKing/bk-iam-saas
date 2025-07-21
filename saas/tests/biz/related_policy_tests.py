@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import uuid
 
 import mock
+from django.conf import settings
 from django.test import TestCase
 
 from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBean, PolicyBean, RelatedResourceBean
@@ -24,7 +25,7 @@ from backend.service.models.instance_selection import ChainNode
 
 class DependingActionCheckPathTests(TestCase):
     def test_check_path_same_type_1(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         path = [
             PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
         ]
@@ -49,7 +50,7 @@ class DependingActionCheckPathTests(TestCase):
         )
 
     def test_check_path_same_type_2(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         path = [
             PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
             PathNodeBean(system_id="bk_cmdb", type="set", id="set1"),
@@ -72,7 +73,7 @@ class DependingActionCheckPathTests(TestCase):
         self.assertEqual(svc._check_path_by_instance_selection(path, selections), None)
 
     def test_check_path_same_type_4(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         path = [
             PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
             PathNodeBean(system_id="bk_cmdb", type="set", id="set1"),
@@ -105,7 +106,7 @@ class DependingActionCheckPathTests(TestCase):
         )
 
     def test_check_path_same_type_5(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         path = [
             PathNodeBean(system_id="bk_job", type="biz", id="biz1"),
             PathNodeBean(system_id="bk_cmdb", type="set", id="set1"),
@@ -130,7 +131,7 @@ class DependingActionCheckPathTests(TestCase):
         self.assertEqual(svc._check_path_by_instance_selection(path, selections), None)
 
     def test_check_path_same_type_6(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         path = [
             PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
             PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
@@ -170,7 +171,7 @@ class DependingActionCheckPathTests(TestCase):
         )
 
     def test_check_path_different_type_1(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         path = [
             PathNodeBean(system_id="bk_cmdb", type="biz", id="biz1"),
             PathNodeBean(system_id="bk_cmdb", type="host", id="host1"),
@@ -209,7 +210,7 @@ class FilterResourceTypeSameTypeTests(TestCase):
         uuid.uuid4 = mock.Mock(return_value=uuid.UUID("fa17b2cbf38141d7a5a0591573fc0f82"))
 
     def test_attribute(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         policy_rrt = RelatedResourceBean(
             system_id="bk_cmdb",
             type="host",
@@ -265,7 +266,7 @@ class FilterResourceTypeSameTypeTests(TestCase):
         )
 
     def test_instance(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         policy_rrt = RelatedResourceBean(
             system_id="bk_cmdb",
             type="host",
@@ -350,7 +351,7 @@ class FilterResourceTypeSameTypeTests(TestCase):
         )
 
     def test_all(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         policy_rrt = RelatedResourceBean(
             system_id="bk_cmdb",
             type="host",
@@ -445,7 +446,7 @@ class FilterResourceTypeSameTypeTests(TestCase):
         )
 
     def test_none(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         policy_rrt = RelatedResourceBean(
             system_id="bk_cmdb",
             type="host",
@@ -482,7 +483,7 @@ class FilterResourceTypeSameTypeTests(TestCase):
 
 class FilterConditionDifferentTypeTests(TestCase):
     def test_right_1(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         conditions = [ConditionBean(instances=[], attributes=[])]
         selections = []
         self.assertEqual(svc._filter_condition_of_different_type_by_instance_selection(conditions, selections), [])
@@ -492,7 +493,7 @@ class FilterConditionDifferentTypeTests(TestCase):
 
         uuid.uuid4 = mock.Mock(return_value=uuid.UUID("fa17b2cbf38141d7a5a0591573fc0f82"))
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         conditions = [
             ConditionBean(
                 instances=[
@@ -569,7 +570,7 @@ class FilterConditionDifferentTypeTests(TestCase):
 
 class FilterResourceTypeDifferentTypeTests(TestCase):
     def test_attribute(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         policy_rrt = RelatedResourceBean(system_id="bk_cmdb", type="host", condition=[])
         action_rrt = RelatedResourceType(
             id="biz",
@@ -585,7 +586,7 @@ class FilterResourceTypeDifferentTypeTests(TestCase):
 
         uuid.uuid4 = mock.Mock(return_value=uuid.UUID("fa17b2cbf38141d7a5a0591573fc0f82"))
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         policy_rrt = RelatedResourceBean(
             system_id="bk_cmdb",
             type="host",
@@ -659,7 +660,7 @@ class FilterResourceTypeDifferentTypeTests(TestCase):
 
         uuid.uuid4 = mock.Mock(return_value=uuid.UUID("fa17b2cbf38141d7a5a0591573fc0f82"))
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         policy_rrts = [
             RelatedResourceBean(
                 system_id="bk_cmdb",
@@ -752,7 +753,7 @@ class FilterResourceTypeDifferentTypeTests(TestCase):
         )
 
     def test_multi_rrt_none(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         policy_rrts = [
             RelatedResourceBean(
                 system_id="bk_cmdb",
@@ -826,7 +827,7 @@ class FilterResourceTypeDifferentTypeTests(TestCase):
 
 class MergeMultiConditionsTests(TestCase):
     def test_empty(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         rrt_conditions = [
             [
                 ConditionBean(
@@ -862,7 +863,7 @@ class MergeMultiConditionsTests(TestCase):
         self.assertEqual(svc._merge_multi_conditions(rrt_conditions), [])
 
     def test_right(self):
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         rrt_conditions = [
             [
                 ConditionBean(
@@ -967,7 +968,7 @@ class CreateDependingPolicyTests(TestCase):
             related_actions=[],
         )
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         self.assertEqual(svc._create_related_policy(policy, action), None)
 
     def test_branch_2(self):
@@ -988,7 +989,7 @@ class CreateDependingPolicyTests(TestCase):
             related_actions=[],
         )
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         self.assertEqual(
             svc._create_related_policy(policy, action),
             PolicyBean(
@@ -1024,7 +1025,7 @@ class CreateDependingPolicyTests(TestCase):
             related_actions=[],
         )
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         self.assertEqual(svc._create_related_policy(policy, action), None)
 
     def test_branch_4(self):
@@ -1062,7 +1063,7 @@ class CreateDependingPolicyTests(TestCase):
             related_actions=[],
         )
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         self.assertEqual(
             svc._create_related_policy(policy, action),
             PolicyBean(
@@ -1146,7 +1147,7 @@ class CreateDependingPolicyTests(TestCase):
             related_actions=[],
         )
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         self.assertEqual(
             svc._create_related_policy(policy, action),
             PolicyBean(
@@ -1242,7 +1243,7 @@ class CreateDependingPolicyTests(TestCase):
             related_actions=[],
         )
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         self.assertEqual(
             svc._create_related_policy(policy, action),
             PolicyBean(
@@ -1328,7 +1329,7 @@ class CreateDependingPolicyTests(TestCase):
             related_actions=[],
         )
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         self.assertEqual(svc._create_related_policy(policy, action), None)
 
     def test_create_recommend_policies(self):
@@ -1391,7 +1392,7 @@ class CreateDependingPolicyTests(TestCase):
 
         uuid.uuid4 = mock.Mock(return_value=uuid.UUID(DEFAULT_RESOURCE_GROUP_ID))
 
-        svc = RelatedPolicyBiz()
+        svc = RelatedPolicyBiz(settings.BK_APP_TENANT_ID)
         recommend_policies = svc.create_recommend_policies(policy, ActionList([action, action1]), ["view_host"])
 
         self.assertEqual(len(recommend_policies), 1)

@@ -985,17 +985,18 @@ class PolicyBean(Policy):
 
 
 class PolicyBeanListMixin:
-    action_svc = ActionService()
-    resource_type_svc = ResourceTypeService()
-    resource_biz = ResourceBiz()
-
     def __init__(
         self,
+        tenant_id: str,
         system_id: str,
         policies: List[PolicyBean],
     ) -> None:
+        self.tenant_id = tenant_id
         self.system_id = system_id
         self.policies = policies
+        self.action_svc = ActionService(self.tenant_id)
+        self.resource_type_svc = ResourceTypeService()
+        self.resource_biz = ResourceBiz(self.tenant_id)
 
     def get_system_id_set(self) -> Set[str]:
         """
@@ -1146,6 +1147,7 @@ class PolicyBeanListMixin:
 class PolicyBeanList(PolicyBeanListMixin):
     def __init__(
         self,
+        tenant_id: str,
         system_id: str,
         policies: List[PolicyBean],
         need_fill_empty_fields: bool = False,
@@ -1157,8 +1159,7 @@ class PolicyBeanList(PolicyBeanListMixin):
         need_fill_empty_fields: 是否需要填充空白字段，默认否
         need_check_instance_selection: 是否需要检查实例视图，默认否
         """
-        self.system_id = system_id
-        self.policies = policies
+        super().__init__(tenant_id, system_id, policies)
 
         self._policy_dict = {policy.action_id: policy for policy in policies}
 
@@ -1214,7 +1215,9 @@ class PolicyBeanList(PolicyBeanListMixin):
                 old_policy.set_expired_at(p.expired_at)
             update_policies.append(old_policy)
 
-        return PolicyBeanList(self.system_id, create_policies), PolicyBeanList(self.system_id, update_policies)
+        return PolicyBeanList(self.tenant_id, self.system_id, create_policies), PolicyBeanList(
+            self.tenant_id, self.system_id, update_policies
+        )
 
     def split_to_update_and_delete_for_revoke(
         self, delete_policy_list: "PolicyBeanList"
@@ -1240,7 +1243,9 @@ class PolicyBeanList(PolicyBeanListMixin):
             except PolicyEmptyException:
                 delete_policies.append(p)
 
-        return PolicyBeanList(self.system_id, update_policies), PolicyBeanList(self.system_id, delete_policies)
+        return PolicyBeanList(self.tenant_id, self.system_id, update_policies), PolicyBeanList(
+            self.tenant_id, self.system_id, delete_policies
+        )
 
     def add(self, policy_list: "PolicyBeanList") -> "PolicyBeanList":
         """
@@ -1273,7 +1278,7 @@ class PolicyBeanList(PolicyBeanListMixin):
                 subtraction.append(deepcopy(p).remove_resource_group_list(old_policy.resource_groups))
             except PolicyEmptyException:
                 pass
-        return PolicyBeanList(self.system_id, subtraction)
+        return PolicyBeanList(self.tenant_id, self.system_id, subtraction)
 
     def contains_policy(self, policy: PolicyBean):
         """是否包含策略"""
@@ -1288,12 +1293,12 @@ class PolicyBeanList(PolicyBeanListMixin):
 class TemporaryPolicyBeanList(PolicyBeanListMixin):
     def __init__(
         self,
+        tenant_id: str,
         system_id: str,
         policies: List[PolicyBean],
         need_fill_empty_fields: bool = False,
     ) -> None:
-        self.system_id = system_id
-        self.policies = policies
+        super().__init__(tenant_id, system_id, policies)
 
         if need_fill_empty_fields:
             self.fill_empty_fields()
@@ -1374,11 +1379,12 @@ class ExpiredPolicy(BackendThinPolicy, ExcludeModel):
 
 
 class PolicyQueryBiz:
-    system_svc = SystemService()
-    action_svc = ActionService()
-    resource_type_svc = ResourceTypeService()
-
-    svc = PolicyQueryService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.system_svc = SystemService()
+        self.action_svc = ActionService(self.tenant_id)
+        self.resource_type_svc = ResourceTypeService()
+        self.svc = PolicyQueryService()
 
     def list_by_subject(
         self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
@@ -1392,14 +1398,18 @@ class PolicyQueryBiz:
     def list_temporary_by_subject(self, system_id: str, subject: Subject) -> List[PolicyBean]:
         """查询 subject 指定系统的临时权限策略"""
         policies = self.svc.list_temporary_by_subject(system_id, subject)
-        pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        pl = TemporaryPolicyBeanList(
+            self.tenant_id, system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True
+        )
         return pl.policies
 
     def new_policy_list(
         self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
     ) -> PolicyBeanList:
         policies = self.svc.list_by_subject(system_id, subject, action_ids)
-        return PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        return PolicyBeanList(
+            self.tenant_id, system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True
+        )
 
     def query_policy_list_by_policy_ids(
         self, system_id: str, subject: Subject, policy_ids: List[int]
@@ -1408,7 +1418,9 @@ class PolicyQueryBiz:
         通过 policy_ids 查询 policy list
         """
         policies = self.svc.list_by_policy_ids(system_id, subject, policy_ids)
-        return PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        return PolicyBeanList(
+            self.tenant_id, system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True
+        )
 
     def list_temporary_by_policy_ids(
         self, system_id: str, subject: Subject, policy_ids: List[int]
@@ -1417,7 +1429,9 @@ class PolicyQueryBiz:
         通过 policy_ids 查询临时权限
         """
         policies = self.svc.list_temporary_by_policy_ids(system_id, subject, policy_ids)
-        pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        pl = TemporaryPolicyBeanList(
+            self.tenant_id, system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True
+        )
         return pl.policies
 
     def list_system_counter_by_subject(self, subject: Subject, hidden: bool = True) -> List[SystemCounterBean]:
@@ -1517,7 +1531,9 @@ class PolicyQueryBiz:
         获取指定的 Policy
         """
         system_id, policy = self.svc.get_policy_by_id(policy_id, subject)
-        policy_list = PolicyBeanList(system_id, [PolicyBean.parse_obj(policy)], need_fill_empty_fields=True)
+        policy_list = PolicyBeanList(
+            self.tenant_id, system_id, [PolicyBean.parse_obj(policy)], need_fill_empty_fields=True
+        )
         return policy_list.policies[0]
 
     def get_policy_system_by_id(self, subject: Subject, policy_id: int) -> str:
@@ -1549,10 +1565,11 @@ def custom_policy_change_lock(func):
 
 
 class PolicyOperationBiz:
-    query_biz = PolicyQueryBiz()
-
-    svc = PolicyOperationService()
-    action_svc = ActionService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.query_biz = PolicyQueryBiz(tenant_id)
+        self.svc = PolicyOperationService(tenant_id)
+        self.action_svc = ActionService(tenant_id)
 
     @method_decorator(custom_policy_change_lock)
     def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
@@ -1644,7 +1661,7 @@ class PolicyOperationBiz:
         覆盖更新，返回更新后的策略
         """
         old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in policies])
-        update_policy_list = PolicyBeanList(system_id, policies, need_fill_empty_fields=True)
+        update_policy_list = PolicyBeanList(self.tenant_id, system_id, policies, need_fill_empty_fields=True)
         for policy in update_policy_list.policies:
             old_policy = old_policy_list.get(policy.action_id)
             if not old_policy:
@@ -1670,7 +1687,7 @@ class PolicyOperationBiz:
         变更 subject 权限策略
         """
         old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in policies])
-        new_policy_list = PolicyBeanList(system_id, policies)
+        new_policy_list = PolicyBeanList(self.tenant_id, system_id, policies)
 
         create_policy_list, update_policy_list = old_policy_list.split_to_creation_and_update_for_grant(
             new_policy_list
@@ -1695,7 +1712,7 @@ class PolicyOperationBiz:
         返回受影响的策略
         """
         old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in delete_policies])
-        deleted_policy_list = PolicyBeanList(system_id, delete_policies)
+        deleted_policy_list = PolicyBeanList(self.tenant_id, system_id, delete_policies)
 
         # 获取需要更新和整条删除的策略
         update_policy_list, whole_delete_policy_list = old_policy_list.split_to_update_and_delete_for_revoke(
@@ -1720,7 +1737,7 @@ class PolicyOperationBiz:
         更新策略，这里只是更新策略里的资源实例名称，并不会影响策略本身鉴权相关的
         返回的是所有策略，包括未被更新的
         """
-        policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies))
+        policy_list = PolicyBeanList(self.tenant_id, system_id, parse_obj_as(List[PolicyBean], policies))
         updated_policies = policy_list.auto_update_resource_name()
         if len(updated_policies) > 0:
             # 只需要修改 DB，且只修改有更新的策略

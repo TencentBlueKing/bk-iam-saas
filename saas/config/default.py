@@ -89,7 +89,6 @@ INSTALLED_APPS = [
     "backend.apps.organization",
     "backend.apps.role",
     "backend.apps.user",
-    "backend.apps.model_builder",
     "backend.apps.handover",
     "backend.apps.mgmt",
     "backend.apps.temporary_policy",
@@ -97,7 +96,6 @@ INSTALLED_APPS = [
     "backend.api.authorization",
     "backend.api.admin",
     "backend.api.management",
-    "backend.api.bkci",
 ]
 
 # 登录中间件

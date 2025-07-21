@@ -7,27 +7,26 @@ from backend.service.constants import RoleType
 
 
 def add_admin_to_super_manager_member(apps, schema_editor):
-    """将admin添加到超级管理员里"""
-    # Note：这里不能调用add_super_manager_member方法给超级管理员添加admin，因为该方法里会自动向IAM后台同步admin为super role
-    #  但有admin用户后台可能还未存在，所以会失败
-    #  由于admin的特殊性，IAM后台判断super permission时是先判断是否super user，然后再判断是否super role
-    #  所以不向后台将admin添加为super role并不会影响admin的鉴权（admin在后台代码里默认初始化为super user）
+    """将 admin 添加到超级管理员里"""
+    # Note：这里不能调用 add_super_manager_member 方法给超级管理员添加 admin，因为该方法里会自动向 IAM 后台同步 admin 为 super role
+    #  但有 admin 用户后台可能还未存在，所以会失败
+    #  由于 admin 的特殊性，IAM 后台判断 super permission 时是先判断是否 super user，然后再判断是否 super role
+    #  所以不向后台将 admin 添加为 super role 并不会影响 admin 的鉴权（admin 在后台代码里默认初始化为 super user）
 
-    username = "admin"
-    role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-    # 判断是否已存在
-    if username in role.members:
-        return
-
-    # 添加成员
-    RoleUser.objects.create(role_id=role.id, username=username)
-
-    # 拥有所有系统的权限
-    RoleUserSystemPermission.add_enabled_users(role.id, username)
+    # username = "admin"
+    # role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+    # # 判断是否已存在
+    # if username in role.members:
+    #     return
+    #
+    # # 添加成员
+    # RoleUser.objects.create(role_id=role.id, username=username)
+    #
+    # # 拥有所有系统的权限
+    # RoleUserSystemPermission.add_enabled_users(role.id, username)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("role", "0012_auto_20221110_1511"),
     ]

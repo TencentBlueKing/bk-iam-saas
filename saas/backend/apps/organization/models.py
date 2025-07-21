@@ -94,7 +94,7 @@ class Department(TimestampMPTTModel):
     tree_objects = TreeManager()
 
     class Meta:
-        ordering = ["order"]
+        ordering = ["id"]
         verbose_name = "部门表"
         verbose_name_plural = "部门表"
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -54,7 +54,7 @@ class ResourceInfoDictBean(BaseModel):
         return _id in self.data
 
     def get_attributes(self, _id: str, ignore_none_value=False):
-        """默认忽略属性里的None值"""
+        """默认忽略属性里的 None 值"""
         attrs = self.data[_id].list_attr()
         return {k: v for k, v in attrs.items() if not ignore_none_value or v is not None}
 
@@ -88,8 +88,11 @@ class ResourceNodeAttributeDictBean(BaseModel):
 class ResourceBiz:
     """资源实例各种业务场景的调用"""
 
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+
     def new_resource_provider(self, system_id: str, resource_type_id: str):
-        return ResourceProvider(system_id, resource_type_id)
+        return ResourceProvider(self.tenant_id, system_id, resource_type_id)
 
     def list_attr(self, system_id: str, resource_type_id: str) -> List[ResourceAttributeBean]:
         """查询某个资源类型可用于配置权限的属性列表"""
@@ -144,7 +147,7 @@ class ResourceBiz:
         action_system_id: str = "",
         action_id: str = "",
     ) -> Tuple[int, List[ResourceInstanceBaseInfo]]:
-        """拓扑树的场景下，根据上级资源和Keyword搜索某个资源实例列表"""
+        """拓扑树的场景下，根据上级资源和 Keyword 搜索某个资源实例列表"""
         rp = self.new_resource_provider(system_id, resource_type_id)
         count, results = rp.search_instance(keyword, ancestors, limit, offset, action_system_id, action_id)
         return count, parse_obj_as(List[ResourceInstanceBaseInfoBean], results)
@@ -152,10 +155,10 @@ class ResourceBiz:
     def fetch_resource_name(
         self, resource_node_beans: List[ResourceNodeBean], raise_not_found_exception=False
     ) -> ResourceNodeAttributeDictBean:
-        """获取资源实例名称, 默认查询不到的资源不会有异常"""
+        """获取资源实例名称，默认查询不到的资源不会有异常"""
         resource_name_dict: Dict[ResourceNodeBean, str] = {}
 
-        # 按system_id、resource_type_id 分组批量查询
+        # 按 system_id、resource_type_id 分组批量查询
         resource_ids_dict = defaultdict(list)
         for r in resource_node_beans:
             # 任意实例不需要查询
@@ -178,9 +181,9 @@ class ResourceBiz:
 
         name_dict_bean = ResourceNodeAttributeDictBean(data=resource_name_dict)
 
-        # 默认对于查询不到的资源实例Name，需要抛异常
+        # 默认对于查询不到的资源实例 Name，需要抛异常
         if raise_not_found_exception:
-            # 校验每个资源是否都能查询到对应的资源Name
+            # 校验每个资源是否都能查询到对应的资源 Name
             for r in resource_node_beans:
                 if not name_dict_bean.has(r.system_id, r.type, r.id):
                     raise error_codes.INVALID_ARGS.format(
@@ -193,10 +196,10 @@ class ResourceBiz:
     def fetch_resource_approver(
         self, resource_node_beans: List[ResourceNodeBean], raise_not_found_exception=False
     ) -> ResourceNodeAttributeDictBean:
-        """获取资源实例审批人, 默认查询不到的资源不会有异常"""
+        """获取资源实例审批人，默认查询不到的资源不会有异常"""
         resource_attribute_dict: Dict[ResourceNodeBean, Any] = {}
 
-        # 按system_id、resource_type_id 分组批量查询
+        # 按 system_id、resource_type_id 分组批量查询
         resource_ids_dict = defaultdict(list)
         for r in resource_node_beans:
             # 任意实例不需要查询
@@ -219,9 +222,9 @@ class ResourceBiz:
 
         attribute_dict_bean = ResourceNodeAttributeDictBean(data=resource_attribute_dict)
 
-        # 默认对于查询不到的资源实例Name，需要抛异常
+        # 默认对于查询不到的资源实例 Name，需要抛异常
         if raise_not_found_exception:
-            # 校验每个资源是否都能查询到对应的资源Name
+            # 校验每个资源是否都能查询到对应的资源 Name
             for r in resource_node_beans:
                 if not attribute_dict_bean.has(r.system_id, r.type, r.id):
                     raise error_codes.INVALID_ARGS.format(

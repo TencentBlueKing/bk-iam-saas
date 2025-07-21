@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -36,6 +36,7 @@ from backend.common.time import DAY_SECONDS, get_expired_at, need_run_expired_re
 from backend.component import esb
 from backend.component.bcs import list_project_for_iam
 from backend.component.bkbot import send_iam_ticket
+from backend.component.client.bk_user import BkUserClient
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
 from backend.service.action import ActionService
@@ -57,38 +58,44 @@ def sync_system_manager():
     """
     创建系统管理员
     """
-    # 查询后端所有的系统信息
-    biz = SystemBiz()
-    systems = {system.id: system for system in biz.list()}
+    # 查询所有租户
+    tenants = BkUserClient(settings.BK_APP_TENANT_ID).list_tenant()
+    for tenant in tenants:
+        # 查询后端所有的系统信息
+        biz = SystemBiz()
+        # FIXME(tenant): 待后台支持系统标识租户后，只过滤出当前租户和全租户的系统
+        systems = {system.id: system for system in biz.list()}
 
-    # 查询已创建的系统管理员的系统id
-    exists_system_ids = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value).values_list("code", flat=True)
+        # 查询已创建的系统管理员的系统 id
+        exists_system_ids = Role.objects.filter(
+            type=RoleType.SYSTEM_MANAGER.value, tenant_id=tenant["id"]
+        ).values_list("code", flat=True)
 
-    # 遍历创建还未创建的系统管理员
-    for system_id in set(systems.keys()) - set(exists_system_ids):
-        system = systems[system_id]
-        logger.info("create system_manager for system_id: %s", system_id)
+        # 遍历创建还未创建的系统管理员
+        for system_id in set(systems.keys()) - set(exists_system_ids):
+            system = systems[system_id]
+            logger.info("create system_manager for system_id: %s", system_id)
 
-        # 查询系统管理员配置
-        members = biz.list_system_manger(system_id)
+            # 查询系统管理员配置
+            members = biz.list_system_manger(system_id)
 
-        data = {
-            "type": RoleType.SYSTEM_MANAGER.value,
-            "code": system_id,
-            "name": f"{system.name}",
-            "name_en": f"{system.name_en}",
-            "description": "",
-            "members": [{"username": username} for username in members],
-            "authorization_scopes": [{"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}],
-            "subject_scopes": [{"type": "*", "id": "*"}],
-        }
-        RoleBiz().create_grade_manager(RoleInfoBean.parse_obj(data), "admin")
+            data = {
+                "type": RoleType.SYSTEM_MANAGER.value,
+                "code": system_id,
+                "name": f"{system.name}",
+                "name_en": f"{system.name_en}",
+                "description": "",
+                "members": [{"username": username} for username in members],
+                "authorization_scopes": [
+                    {"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}
+                ],
+                "subject_scopes": [{"type": "*", "id": "*"}],
+            }
+            RoleBiz(tenant["id"]).create_grade_manager(RoleInfoBean.parse_obj(data), "admin")
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
     name = "backend.apps.role.tasks.SendRoleGroupExpireRemindMailTask"
-
-    group_biz = GroupBiz()
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
 
@@ -131,7 +138,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
                 "refuse_data": {"action": "refse"},
                 "actions": [
                     {
-                        "name": "3个月",
+                        "name": "3 个月",
                         "callback_url": url_join(
                             settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
                             "/api/v1/open/application/approval_bot/role/",
@@ -142,10 +149,10 @@ class SendRoleGroupExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 3,
                         },
-                        "confirm_button_info": "你已成功续期3个月",
+                        "confirm_button_info": "你已成功续期 3 个月",
                     },
                     {
-                        "name": "6个月",
+                        "name": "6 个月",
                         "callback_url": url_join(
                             settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
                             "/api/v1/open/application/approval_bot/role/",
@@ -156,10 +163,10 @@ class SendRoleGroupExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 6,
                         },
-                        "confirm_button_info": "你已成功续期6个月",
+                        "confirm_button_info": "你已成功续期 6 个月",
                     },
                     {
-                        "name": "1年",
+                        "name": "1 年",
                         "callback_url": url_join(
                             settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
                             "/api/v1/open/application/approval_bot/role/",
@@ -170,7 +177,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 12,
                         },
-                        "confirm_button_info": "你已成功续期1年",
+                        "confirm_button_info": "你已成功续期 1 年",
                     },
                 ],
             }
@@ -255,13 +262,17 @@ class ResourceInstance(BaseModel):
 
 class BaseAuthScopeActionHandler(ABC):
     @abstractmethod
-    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+    def handle(
+        self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance
+    ) -> Optional[AuthScopeAction]:
         pass
 
 
 class DefaultAuthScopeActionHandler(BaseAuthScopeActionHandler):
-    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
-        # 校验实例视图, 如果校验不过, 需要跳过, 避免错误数据
+    def handle(
+        self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance
+    ) -> Optional[AuthScopeAction]:
+        # 校验实例视图，如果校验不过，需要跳过，避免错误数据
         for rrt in action.related_resource_types:
             for selection in rrt.instance_selections:
                 if selection.match_path([PathResourceType(system_id=instance.system_id, id=instance.type)]):
@@ -309,7 +320,9 @@ class DefaultAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
 
 class AnyAuthScopeActionHandler(BaseAuthScopeActionHandler):
-    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+    def handle(
+        self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance
+    ) -> Optional[AuthScopeAction]:
         return AuthScopeAction.parse_obj(
             {
                 "id": action.id,
@@ -330,9 +343,9 @@ class AnyAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
 
 class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
-    resource_biz = ResourceBiz()
-
-    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+    def handle(
+        self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance
+    ) -> Optional[AuthScopeAction]:
         return AuthScopeAction.parse_obj(
             {
                 "id": action.id,
@@ -377,7 +390,7 @@ class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
                                                     [
                                                         {
                                                             "id": self._query_cmdb_sys_resource_pool_directory_id(
-                                                                "空闲机"
+                                                                tenant_id, "空闲机"
                                                             ),
                                                             "name": "空闲机",
                                                             "system_id": instance.system_id,
@@ -397,9 +410,9 @@ class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
             }
         )
 
-    def _query_cmdb_sys_resource_pool_directory_id(self, name: str) -> str:
-        # 查询cmdb主机池id
-        _, resources = self.resource_biz.search_instance_for_topology(
+    def _query_cmdb_sys_resource_pool_directory_id(self, tenant_id: str, name: str) -> str:
+        # 查询 cmdb 主机池 id
+        _, resources = ResourceBiz(tenant_id).search_instance_for_topology(
             "bk_cmdb", "sys_resource_pool_directory", name, []
         )
         for r in resources:
@@ -410,19 +423,23 @@ class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
 
 class LogSpaceAuthScopeActionHandler(DefaultAuthScopeActionHandler):
-    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
-        auth_scope_action = super().handle(system_id, action, instance)
+    def handle(
+        self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance
+    ) -> Optional[AuthScopeAction]:
+        auth_scope_action = super().handle(tenant_id, system_id, action, instance)
         if auth_scope_action:
             return auth_scope_action
 
         space_instance = ResourceInstance(
             system_id="bk_monitorv3", type="space", id=instance.id, name="[业务] " + instance.name
         )
-        return super().handle(system_id, action, space_instance)
+        return super().handle(tenant_id, system_id, action, space_instance)
 
 
 class JobExecutePublicScriptAuthScopeActionHandler(BaseAuthScopeActionHandler):
-    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+    def handle(
+        self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance
+    ) -> Optional[AuthScopeAction]:
         return AuthScopeAction.parse_obj(
             {
                 "id": action.id,
@@ -467,7 +484,9 @@ class JobExecutePublicScriptAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
 
 class SopsCommonFlowCreateTaskAuthScopeActionHandler(BaseAuthScopeActionHandler):
-    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+    def handle(
+        self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance
+    ) -> Optional[AuthScopeAction]:
         return AuthScopeAction.parse_obj(
             {
                 "id": action.id,
@@ -512,7 +531,9 @@ class SopsCommonFlowCreateTaskAuthScopeActionHandler(BaseAuthScopeActionHandler)
 
 
 class ActionWithoutResourceAuthScopeActionHandler(BaseAuthScopeActionHandler):
-    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+    def handle(
+        self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance
+    ) -> Optional[AuthScopeAction]:
         return AuthScopeAction(id=action.id, resource_groups=ResourceGroupList(__root__=[]))
 
 
@@ -525,14 +546,15 @@ class AuthScopeActionGenerator:
         ("bk_job", "execute_public_script"): JobExecutePublicScriptAuthScopeActionHandler,
     }
 
-    def __init__(self, system_id: str, action: Action, instance: ResourceInstance) -> None:
+    def __init__(self, tenant_id: str, system_id: str, action: Action, instance: ResourceInstance) -> None:
+        self._tenant_id = tenant_id
         self._system_id = system_id
         self._action = action
         self._instance = instance
 
     def generate(self) -> Optional[AuthScopeAction]:
         handler = self._get_handler()
-        return handler.handle(self._system_id, self._action, self._instance)
+        return handler.handle(self._tenant_id, self._system_id, self._action, self._instance)
 
     def _get_handler(self) -> BaseAuthScopeActionHandler:
         if len(self._action.related_resource_types) == 0:
@@ -546,65 +568,63 @@ class AuthScopeActionGenerator:
 class InitBizGradeManagerTask(Task):
     name = "backend.apps.role.tasks.InitBizGradeManagerTask"
 
-    biz = RoleBiz()
-    role_check_biz = RoleCheckBiz()
-    group_biz = GroupBiz()
-    action_svc = ActionService()
-
     _exist_names: Set[str] = set()
 
     def run(self):
         if not settings.ENABLE_INIT_GRADE_MANAGER:
             return
 
-        with gen_init_grade_manager_lock():
-            biz_info = list_biz()
-            biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
+        for tenant in BkUserClient(settings.BK_APP_TENANT_ID).list_tenant():
+            tenant_id = tenant["id"]
 
-            projects = list_project()
-            for project in projects:
-                if project["bk_biz_id"] in biz_dict:
-                    biz = biz_dict[project["bk_biz_id"]]
+            with gen_init_grade_manager_lock():
+                biz_info = list_biz()
+                biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
 
-                    maintainers = (biz.get("bk_biz_maintainer") or "").split(",")  # 业务的负责人
-                    viewers = list(
-                        set(
-                            (biz.get("bk_biz_developer") or "").split(",")
-                            + (biz.get("bk_biz_productor") or "").split(",")
-                            + (biz.get("bk_biz_tester") or "").split(",")
+                projects = list_project()
+                for project in projects:
+                    if project["bk_biz_id"] in biz_dict:
+                        biz = biz_dict[project["bk_biz_id"]]
+
+                        maintainers = (biz.get("bk_biz_maintainer") or "").split(",")  # 业务的负责人
+                        viewers = list(
+                            set(
+                                (biz.get("bk_biz_developer") or "").split(",")
+                                + (biz.get("bk_biz_productor") or "").split(",")
+                                + (biz.get("bk_biz_tester") or "").split(",")
+                            )
+                        )  # 业务的查看人
+
+                        self._create_grade_manager(tenant_id, project, maintainers, viewers)
+                    else:
+                        logger.debug(
+                            "init grade manager: bk_sops project [%s] biz_id [%d] not exists in bk_cmdb",
+                            project["name"],
+                            project["bk_biz_id"],
                         )
-                    )  # 业务的查看人
 
-                    self._create_grade_manager(project, maintainers, viewers)
-                else:
-                    logger.debug(
-                        "init grade manager: bk_sops project [%s] biz_id [%d] not exists in bk_cmdb",
-                        project["name"],
-                        project["bk_biz_id"],
-                    )
-
-    def _create_grade_manager(self, project, maintainers, viewers):
+    def _create_grade_manager(self, tenant_id, project, maintainers, viewers):
         biz_name = project["name"]
         if biz_name in self._exist_names:
             return
 
         try:
-            self.role_check_biz.check_grade_manager_unique_name(biz_name)
+            RoleCheckBiz(tenant_id).check_grade_manager_unique_name(biz_name)
         except APIError:
             # 缓存结果
             self._exist_names.add(biz_name)
             return
 
-        role_info = self._init_role_info(project, maintainers)
+        role_info = self._init_role_info(tenant_id, project, maintainers)
 
-        role = self.biz.create_grade_manager(role_info, ADMIN_USER)
+        role = RoleBiz(tenant_id).create_grade_manager(role_info, ADMIN_USER)
 
         # 创建用户组并授权
-        self._create_groups(role, role_info, maintainers, viewers, biz_name)
+        self._create_groups(tenant_id, role, role_info, maintainers, viewers, biz_name)
 
         self._exist_names.add(biz_name)
 
-    def _create_groups(self, role, role_info, maintainers, viewers, biz_name):
+    def _create_groups(self, tenant_id, role, role_info, maintainers, viewers, biz_name):
         expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年
 
         authorization_scopes = role_info.dict()["authorization_scopes"]
@@ -615,7 +635,7 @@ class InitBizGradeManagerTask(Task):
 
             members = maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers
             users = User.objects.filter(username__in=members)  # 筛选出已同步存在的用户
-            group = self.group_biz.create_and_add_members(
+            group = GroupBiz(tenant_id).create_and_add_members(
                 role,
                 biz_name + name_suffix,
                 description=description,
@@ -624,16 +644,16 @@ class InitBizGradeManagerTask(Task):
                 expired_at=expired_at,  # 过期时间半年
             )
 
-            templates = self._init_group_auth_info(authorization_scopes, name_suffix)
-            self.group_biz.grant(role, group, templates, need_check=False)
+            templates = self._init_group_auth_info(tenant_id, authorization_scopes, name_suffix)
+            GroupBiz(tenant_id).grant(role, group, templates, need_check=False)
 
-    def _init_role_info(self, data, maintainers):
+    def _init_role_info(self, tenant_id, data, maintainers):
         """
         创建初始化分级管理员数据
 
         1. 遍历各个需要初始化的系统
-        2. 查询系统的常用操作与系统的操作信息, 拼装出授权范围
-        3. 返回role info
+        2. 查询系统的常用操作与系统的操作信息，拼装出授权范围
+        3. 返回 role info
         """
         role_info = RoleInfoBean(
             name=data["name"],
@@ -658,7 +678,7 @@ class InitBizGradeManagerTask(Task):
                 )
 
             # 生成系统的授权范围
-            auth_scope = self._init_system_auth_scope(system_id, instance)
+            auth_scope = self._init_system_auth_scope(tenant_id, system_id, instance)
 
             # 组合授权范围
             if auth_scope.actions:
@@ -666,11 +686,13 @@ class InitBizGradeManagerTask(Task):
 
         return role_info
 
-    def _init_system_auth_scope(self, system_id, instance):
+    def _init_system_auth_scope(self, tenant_id, system_id, instance):
         auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
 
         # 1. 查询常用操作
-        common_action = self.biz.get_common_action_by_name(system_id, ManagementCommonActionNameEnum.OPS.value)
+        common_action = RoleBiz(tenant_id).get_common_action_by_name(
+            system_id, ManagementCommonActionNameEnum.OPS.value
+        )
         if not common_action:
             logger.debug(
                 "init grade manager: system [%s] is not configured common action [%s]",
@@ -680,7 +702,7 @@ class InitBizGradeManagerTask(Task):
             return auth_scope
 
         # 2. 查询操作信息
-        action_list = self.action_svc.new_action_list(system_id)
+        action_list = ActionService(tenant_id).new_action_list(system_id)
 
         # 3. 生成授权范围
         for action_id in common_action.action_ids:
@@ -695,20 +717,20 @@ class InitBizGradeManagerTask(Task):
                 continue
 
             # 分发者模式
-            auth_scope_action = AuthScopeActionGenerator(system_id, action, instance).generate()
+            auth_scope_action = AuthScopeActionGenerator(tenant_id, system_id, action, instance).generate()
 
             if auth_scope_action:
                 auth_scope.actions.append(auth_scope_action)
 
         return auth_scope
 
-    def _init_group_auth_info(self, authorization_scopes, name_suffix: str):
+    def _init_group_auth_info(self, tenant_id, authorization_scopes, name_suffix: str):
         templates = []
         for auth_scope in authorization_scopes:
             system_id = auth_scope["system_id"]
             actions = auth_scope["actions"]
             if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
-                common_action = self.biz.get_common_action_by_name(
+                common_action = RoleBiz(tenant_id).get_common_action_by_name(
                     system_id, ManagementCommonActionNameEnum.READ.value
                 )
                 if not common_action:
@@ -723,6 +745,7 @@ class InitBizGradeManagerTask(Task):
 
             policies = [PolicyBean.parse_obj(action) for action in actions]
             policy_list = PolicyBeanList(
+                tenant_id=tenant_id,
                 system_id=system_id,
                 policies=policies,
                 need_fill_empty_fields=True,  # 填充相关字段
@@ -730,7 +753,7 @@ class InitBizGradeManagerTask(Task):
 
             template = GroupTemplateGrantBean(
                 system_id=system_id,
-                template_id=0,  # 自定义权限template_id为0
+                template_id=0,  # 自定义权限 template_id 为 0
                 policies=policy_list.policies,
             )
 
@@ -804,11 +827,11 @@ class AuthScopeMerger:
 
 class InitBcsProjectManagerTask(InitBizGradeManagerTask):
     """
-    BCS初始化
+    BCS 初始化
 
-    1. 初始化BCS项目的二级管理员
-    2. 初始化BCS项目对应业务的一级管理员
-    3. 初始化BCS项目对应的用户组并授权
+    1. 初始化 BCS 项目的二级管理员
+    2. 初始化 BCS 项目对应业务的一级管理员
+    3. 初始化 BCS 项目对应的用户组并授权
     """
 
     name = "backend.apps.role.tasks.InitBcsProjectManagerTask"
@@ -885,7 +908,7 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
         # 创建二级管理员
         subset_manager_info = RoleInfoBean(
             name=subset_manager_name,
-            description="管理员可授予他人{}BCS项目的权限".format(subset_manager_name),
+            description="管理员可授予他人{}BCS 项目的权限".format(subset_manager_name),
             type=RoleType.SUBSET_MANAGER.value,
             members=[RoleMember(username=username) for username in maintainers or [ADMIN_USER]],
             subject_scopes=[Subject(type="*", id="*")],
@@ -956,7 +979,8 @@ current_app.register_task(InitBcsProjectManagerTask())
 
 @shared_task(ignore_result=True)
 def sync_subset_manager_subject_scope(role_id: int):
-    RoleBiz().sync_subset_manager_subject_scope(role_id)
+    role = Role.objects.get(id=role_id)
+    RoleBiz(role.tenant_id).sync_subset_manager_subject_scope(role_id)
 
 
 @shared_task(ignore_result=True)

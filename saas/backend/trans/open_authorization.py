@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -22,9 +22,12 @@ from .open import OpenCommonTrans, OpenPolicy
 
 
 class AuthorizationTrans(OpenCommonTrans):
-    """授权API的数据转换"""
+    """授权 API 的数据转换"""
 
-    action_biz = ActionBiz()
+    def __init__(self, tenant_id: str):
+        super().__init__(tenant_id)
+        self.tenant_id = tenant_id
+        self.action_biz = ActionBiz(tenant_id)
 
     def to_policy_list_for_instance(
         self, system_id: str, action_id: str, resources: List[Dict], expired_at=0
@@ -39,7 +42,7 @@ class AuthorizationTrans(OpenCommonTrans):
             }
         ]
         """
-        # 将数据转换为OpenPolicy用于后续处理
+        # 将数据转换为 OpenPolicy 用于后续处理
         related_resource_types = [{"system_id": i["system"], "type": i["type"], "paths": [[i]]} for i in resources]
         open_policy = OpenPolicy.parse_obj(
             {"system_id": system_id, "action_id": action_id, "related_resource_types": related_resource_types}
@@ -64,7 +67,7 @@ class AuthorizationTrans(OpenCommonTrans):
             }
         ]
         """
-        # 将数据转换为OpenPolicy用于后续处理
+        # 将数据转换为 OpenPolicy 用于后续处理
         related_resource_types = [
             {
                 "system_id": i["system"],
@@ -94,7 +97,7 @@ class AuthorizationTrans(OpenCommonTrans):
                 type,
                 path: [
                     {
-                        type,  # 缺少对应资源类型的system_id
+                        type,  # 缺少对应资源类型的 system_id
                         id,
                         name
                     },
@@ -103,15 +106,15 @@ class AuthorizationTrans(OpenCommonTrans):
             }
         ]
         """
-        # 将数据转换为OpenPolicy用于后续处理
+        # 将数据转换为 OpenPolicy 用于后续处理
         related_resource_types = [
             {"system_id": i["system"], "type": i["type"], "paths": [i["path"]]} for i in resources
         ]
         open_policy = OpenPolicy.parse_obj(
             {"system_id": system_id, "action_id": action_id, "related_resource_types": related_resource_types}
         )
-        # 填充路径上资源实例缺少的system_id
-        open_policy.fill_instance_system()
+        # 填充路径上资源实例缺少的 system_id
+        open_policy.fill_instance_system(self.tenant_id)
 
         return self._to_policy_list(system_id, [open_policy], expired_at)
 
@@ -126,7 +129,7 @@ class AuthorizationTrans(OpenCommonTrans):
                 paths: [
                     [
                         {
-                            type,  # 缺少对应资源类型的system_id
+                            type,  # 缺少对应资源类型的 system_id
                             id,
                             name
                         },
@@ -137,15 +140,15 @@ class AuthorizationTrans(OpenCommonTrans):
             }
         ]
         """
-        # 将数据转换为OpenPolicy用于后续处理
+        # 将数据转换为 OpenPolicy 用于后续处理
         actions = [
             {"system_id": system_id, "action_id": action_id, "related_resource_types": resources}
             for action_id in action_ids
         ]
         open_policies = parse_obj_as(List[OpenPolicy], actions)
-        # 填充路径上资源实例缺少的system_id
+        # 填充路径上资源实例缺少的 system_id
         for open_policy in open_policies:
-            open_policy.fill_instance_system()
+            open_policy.fill_instance_system(self.tenant_id)
 
         return self._to_policy_list(system_id, open_policies, expired_at)
 
@@ -153,14 +156,14 @@ class AuthorizationTrans(OpenCommonTrans):
         self, system_id: str, action_ids: List[str], resources: List[Any]
     ) -> List[Dict]:
         """
-        生成Action结构，用于后续转换为OpenPolicy
+        生成 Action 结构，用于后续转换为 OpenPolicy
         """
-        # 查询Action信息，组装出实际Action结构
+        # 查询 Action 信息，组装出实际 Action 结构
         action_list = self.action_biz.list(system_id)
         actions = []
         for action_id in action_ids:
             action = action_list.get(action_id)
-            # 对于新建关联配置里有，但实际action不存在，则说明权限模型注册有问题，直接报错
+            # 对于新建关联配置里有，但实际 action 不存在，则说明权限模型注册有问题，直接报错
             if not action:
                 raise error_codes.VALIDATE_ERROR.format(f"system({system_id}) has not action({action_id})")
 
@@ -194,7 +197,7 @@ class AuthorizationTrans(OpenCommonTrans):
             ...
         ]
         """
-        # 将instances转换为resources结构
+        # 将 instances 转换为 resources 结构
         paths = []
         for ist in instances:
             # 获取祖先
@@ -204,14 +207,14 @@ class AuthorizationTrans(OpenCommonTrans):
             paths.append(path)
         resources = [{"system": system_id, "type": resource_type_id, "paths": paths}]
 
-        # 组装出实际Action结构
+        # 组装出实际 Action 结构
         actions = self._gen_action_for_resources_of_creator(system_id, action_ids, resources)
 
-        # 将数据转换为OpenPolicy用于后续处理
+        # 将数据转换为 OpenPolicy 用于后续处理
         open_policies = parse_obj_as(List[OpenPolicy], actions)
         # 填充路径上祖先实例缺少的名称
         for open_policy in open_policies:
-            open_policy.fill_instance_name()
+            open_policy.fill_instance_name(self.tenant_id)
 
         return self._to_policy_list(system_id, open_policies, expired_at=PERMANENT_SECONDS)
 
@@ -236,10 +239,10 @@ class AuthorizationTrans(OpenCommonTrans):
         """
         resources = [{"system": system_id, "type": resource_type_id, "attributes": attributes}]
 
-        # 组装出实际Action结构
+        # 组装出实际 Action 结构
         actions = self._gen_action_for_resources_of_creator(system_id, action_ids, resources)
 
-        # 将数据转换为OpenPolicy用于后续处理
+        # 将数据转换为 OpenPolicy 用于后续处理
         open_policies = parse_obj_as(List[OpenPolicy], actions)
 
         return self._to_policy_list(system_id, open_policies, expired_at=PERMANENT_SECONDS)

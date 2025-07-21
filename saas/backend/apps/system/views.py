@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -16,22 +16,19 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
 from backend.apps.user.models import UserProfile
-from backend.biz.resource_type import ResourceTypeBiz
 from backend.biz.role import RoleListQuery
-from backend.biz.system import SystemBiz
 from backend.component import iam
+from backend.mixins import BizMixin
 
 from .serializers import QueryResourceTypeSLZ, SystemQuerySLZ, SystemResourceTypeSLZ, SystemSLZ
 
 
-class SystemViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = SystemBiz()
+class SystemViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="系统列表",
-        query_serializer=SystemQuerySLZ(label="系统ID"),
+        query_serializer=SystemQuerySLZ(label="系统 ID"),
         responses={status.HTTP_200_OK: SystemSLZ(label="系统", many=True)},
         tags=["system"],
     )
@@ -41,7 +38,7 @@ class SystemViewSet(GenericViewSet):
 
         all = slz.validated_data["all"]
         if all:
-            systems = self.biz.list()
+            systems = self.system_biz.list()
         else:
             systems = RoleListQuery(request.role).list_system()
 
@@ -61,26 +58,24 @@ class SystemViewSet(GenericViewSet):
             else:
                 i["is_favorite"] = False
 
-        # 把is_favorite系统排序到前面
+        # 把 is_favorite 系统排序到前面
         data.sort(key=lambda x: x["is_favorite"], reverse=True)
 
         return Response(data)
 
 
-class ResourceTypeViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = ResourceTypeBiz()
+class ResourceTypeViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="资源类别列表",
-        query_serializer=QueryResourceTypeSLZ(label="系统ID"),
+        query_serializer=QueryResourceTypeSLZ(label="系统 ID"),
         responses={status.HTTP_200_OK: SystemResourceTypeSLZ(label="资源类别", many=True)},
         tags=["system"],
     )
     def list_resource_types(self, request, *args, **kwargs):
         system_id = request.query_params["system_id"]
-        data = self.biz.list_resource_types_by_system_id(system_id=system_id)
+        data = self.resource_type_biz.list_resource_types_by_system_id(system_id=system_id)
         return Response(data)
 
 

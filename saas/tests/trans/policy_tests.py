@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 
 import pytest
 from blue_krill.web.std_error import APIError
+from django.conf import settings
 from mock import MagicMock, Mock, patch
 
 from backend.biz.action import ActionBean, ActionBeanList, RelatedResourceTypeBean
@@ -20,7 +21,7 @@ from backend.trans.policy import PolicyTrans
 
 class TestPolicyTrans:
     def test_gen_instance_condition_by_aggregate_resources(self):
-        trans = PolicyTrans()
+        trans = PolicyTrans(settings.BK_APP_TENANT_ID)
         condition = trans._gen_instance_condition_by_aggregate_resources(
             [
                 {
@@ -36,7 +37,7 @@ class TestPolicyTrans:
         assert len(condition.instances) == 1
 
     def test_gen_policy_by_action_and_condition(self):
-        trans = PolicyTrans()
+        trans = PolicyTrans(settings.BK_APP_TENANT_ID)
         policy = trans._gen_policy_by_action_and_condition(
             ActionBean(
                 id="action1",
@@ -55,7 +56,7 @@ class TestPolicyTrans:
         assert policy.expired_at == 0
 
     def test_get_action(self):
-        trans = PolicyTrans()
+        trans = PolicyTrans(settings.BK_APP_TENANT_ID)
         trans._get_action_list = Mock(
             return_value=ActionBeanList(
                 [
@@ -79,7 +80,7 @@ class TestPolicyTrans:
             trans._get_action("system", "action2")
 
     def test_from_aggregate_actions(self):
-        trans = PolicyTrans()
+        trans = PolicyTrans(settings.BK_APP_TENANT_ID)
         trans._get_action_list = Mock(
             return_value=ActionBeanList(
                 [
@@ -126,7 +127,7 @@ class TestPolicyTrans:
         assert len(policy_list_dict["system"].policies) == 1
 
     def test_from_actions(self):
-        trans = PolicyTrans()
+        trans = PolicyTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check_action_resource_group = Mock(return_value=None)
         with patch.object(
             PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
@@ -147,7 +148,7 @@ class TestPolicyTrans:
         assert len(policy_list.policies) == 1
 
     def test_from_aggregate_actions_and_actions(self):
-        trans = PolicyTrans()
+        trans = PolicyTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check_action_resource_group = Mock(return_value=None)
         trans._get_action_list = Mock(
             return_value=ActionBeanList(

@@ -16,7 +16,7 @@ from django.contrib.auth.backends import ModelBackend
 from rest_framework import status
 
 from backend.account import get_user_model
-from backend.component import login
+from backend.component.client.bk_login import BkLoginClient
 
 logger = logging.getLogger("app")
 
@@ -60,7 +60,7 @@ class TokenBackend(ModelBackend):
         :return: 是否获取成功，用户信息
         """
         try:
-            data = login.get_user_info(bk_token)
+            data = BkLoginClient().get_user_info(bk_token)
         except Exception as error:  # pylint: disable=broad-except
             logger.exception("Abnormal error in get_user_info, bk_token=%s", bk_token)
             self._handle_exception(error)

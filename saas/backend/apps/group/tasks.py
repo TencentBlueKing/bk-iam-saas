@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -21,6 +21,7 @@ from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyOperationBiz
 from backend.biz.template import TemplateBiz
 from backend.common.time import db_time
+from backend.component.client.bk_user import BkUserClient
 from backend.long_task.constants import TaskType
 from backend.long_task.tasks import StepTask, register_handler
 from backend.service.models import Subject
@@ -33,34 +34,37 @@ def group_cleanup_expired_member():
     """
     用户组清理长时间过期的成员
     """
-    biz = GroupBiz()
+    # 按租户遍历
+    for tenant in BkUserClient(settings.BK_APP_TENANT_ID).list_tenant():
+        tenant_id = tenant["id"]
+        biz = GroupBiz(tenant_id)
 
-    expired_at = int(db_time()) - settings.MAX_EXPIRED_POLICY_DELETE_TIME
-    task_id = group_cleanup_expired_member.request.id
-    limit = 100
+        expired_at = int(db_time()) - settings.MAX_EXPIRED_POLICY_DELETE_TIME
+        task_id = group_cleanup_expired_member.request.id
+        limit = 100
 
-    # 分页遍历所有的用户组
-    qs = Group.objects.all()
-    paginator = Paginator(qs, limit)
+        # 分页遍历所有的用户组
+        qs = Group.objects.filter(tenant_id=tenant_id)
+        paginator = Paginator(qs, limit)
 
-    if not paginator.count:
-        return
+        if not paginator.count:
+            return
 
-    for i in paginator.page_range:
-        for group in paginator.page(i):
-            # 查询指定过期时间之前的成员数量
-            count = biz.get_member_count_before_expired_at(group.id, expired_at)
-            if count == 0:
-                continue
+        for i in paginator.page_range:
+            for group in paginator.page(i):
+                # 查询指定过期时间之前的成员数量
+                count = biz.get_member_count_before_expired_at(group.id, expired_at)
+                if count == 0:
+                    continue
 
-            # 分页删除过期的成员
-            for offset in range(0, count, limit):
-                _, members = biz.list_paging_members_before_expired_at(group.id, expired_at, limit, offset)
-                subjects = parse_obj_as(List[Subject], members)
-                biz.remove_members(str(group.id), subjects)
+                # 分页删除过期的成员
+                for offset in range(0, count, limit):
+                    _, members = biz.list_paging_members_before_expired_at(group.id, expired_at, limit, offset)
+                    subjects = parse_obj_as(List[Subject], members)
+                    biz.remove_members(str(group.id), subjects)
 
-                # 记审计信息
-                log_group_cleanup_member_audit_event(task_id, group, subjects)
+                    # 记审计信息
+                    log_group_cleanup_member_audit_event(task_id, group, subjects)
 
 
 @register_handler(TaskType.GROUP_AUTHORIZATION.value)
@@ -68,9 +72,6 @@ class GroupAuthorizationTask(StepTask):
     """
     权限模板授权
     """
-
-    template_biz = TemplateBiz()
-    policy_biz = PolicyOperationBiz()
 
     def __init__(self, subject, key):
         self.subject = Subject.parse_obj(subject)
@@ -82,15 +83,17 @@ class GroupAuthorizationTask(StepTask):
 
     def run(self, item: Any):
         lock = GroupAuthorizeLock.objects.get(id=item)
+        template_biz = TemplateBiz(lock.tenant_id)
+        policy_biz = PolicyOperationBiz(lock.tenant_id)
 
         template_id = lock.template_id
         system_id = lock.system_id
         policies = parse_obj_as(List[PolicyBean], lock.data["actions"])
         # 授权
         if template_id != 0:
-            self.template_biz.grant_subject(system_id, template_id, self.subject, policies)
+            template_biz.grant_subject(system_id, template_id, self.subject, policies)
         else:
-            self.policy_biz.alter(system_id, self.subject, policies)
+            policy_biz.alter(system_id, self.subject, policies)
 
         lock.delete()
 

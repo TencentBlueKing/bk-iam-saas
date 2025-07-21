@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 
 import pytest
 from blue_krill.web.std_error import APIError
+from django.conf import settings
 from mock import MagicMock, Mock, patch
 
 from backend.biz.action import ActionBean, ActionBeanList, RelatedResourceTypeBean
@@ -21,7 +22,7 @@ from backend.trans.open_authorization import AuthorizationTrans
 
 class TestAuthorizationTrans:
     def test_to_policy_list_for_instance(self):
-        trans = AuthorizationTrans()
+        trans = AuthorizationTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check = Mock(return_value=None)
 
         with (
@@ -53,7 +54,7 @@ class TestAuthorizationTrans:
         assert policy_list.policies[0].action_id == "action1"
 
     def test_to_policy_list_for_instances(self):
-        trans = AuthorizationTrans()
+        trans = AuthorizationTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check = Mock(return_value=None)
 
         with (
@@ -89,7 +90,7 @@ class TestAuthorizationTrans:
         assert policy_list.policies[0].action_id == "action1"
 
     def test_to_policy_list_for_path(self):
-        trans = AuthorizationTrans()
+        trans = AuthorizationTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check = Mock(return_value=None)
 
         with (
@@ -100,7 +101,7 @@ class TestAuthorizationTrans:
                 PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
             ) as fake_check_instance_selection,
             patch.object(
-                OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda: None)
+                OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda tenant_id: None)
             ) as fake_fill_instance_system,
         ):
             policy_list = trans.to_policy_list_for_path(
@@ -131,7 +132,7 @@ class TestAuthorizationTrans:
         assert policy_list.policies[0].action_id == "action1"
 
     def test_to_policy_list_for_paths(self):
-        trans = AuthorizationTrans()
+        trans = AuthorizationTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check = Mock(return_value=None)
 
         with (
@@ -142,7 +143,7 @@ class TestAuthorizationTrans:
                 PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
             ) as fake_check_instance_selection,
             patch.object(
-                OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda: None)
+                OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda tenant_id: None)
             ) as fake_fill_instance_system,
         ):
             policy_list = trans.to_policy_list_for_paths(
@@ -174,7 +175,7 @@ class TestAuthorizationTrans:
         assert policy_list.policies[1].action_id == "action2"
 
     def test_gen_action_for_resources_of_creator(self):
-        trans = AuthorizationTrans()
+        trans = AuthorizationTrans(settings.BK_APP_TENANT_ID)
         trans.action_biz.list = Mock(
             return_value=ActionBeanList(
                 [
@@ -201,7 +202,7 @@ class TestAuthorizationTrans:
         assert actions[0]["action_id"] == "action1"
 
     def test_to_policy_list_for_instances_of_creator(self):
-        trans = AuthorizationTrans()
+        trans = AuthorizationTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check = Mock(return_value=None)
         trans.action_biz.list = Mock(
             return_value=ActionBeanList(
@@ -228,10 +229,10 @@ class TestAuthorizationTrans:
                 PolicyBeanList, "check_instance_selection", MagicMock(side_effect=lambda: None)
             ) as fake_check_instance_selection,
             patch.object(
-                OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda: None)
+                OpenPolicy, "fill_instance_system", MagicMock(side_effect=lambda tenant_id: None)
             ) as fake_fill_instance_system,
             patch.object(
-                OpenPolicy, "fill_instance_name", MagicMock(side_effect=lambda: None)
+                OpenPolicy, "fill_instance_name", MagicMock(side_effect=lambda tenant_id: None)
             ) as fake_fill_instance_name,
         ):
             policy_list = trans.to_policy_list_for_instances_of_creator(
@@ -269,7 +270,7 @@ class TestAuthorizationTrans:
         )
 
     def test_to_policy_list_for_attributes_of_creator(self):
-        trans = AuthorizationTrans()
+        trans = AuthorizationTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check = Mock(return_value=None)
         trans.action_biz.list = Mock(
             return_value=ActionBeanList(

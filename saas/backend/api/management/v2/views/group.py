@@ -57,26 +57,21 @@ from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplat
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
 from backend.biz.group import (
-    GroupBiz,
-    GroupCheckBiz,
     GroupCreationBean,
     GroupMemberExpiredAtBean,
     GroupTemplateGrantBean,
 )
-from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz, RoleListQuery
-from backend.biz.subject_template import SubjectTemplateBiz
+from backend.biz.role import RoleListQuery
 from backend.biz.utils import remove_not_exist_subject
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
+from backend.mixins import BizMixin, TenantMixin, TransMixin
 from backend.service.constants import GroupSaaSAttributeEnum, RoleType, SubjectType
 from backend.service.models import Subject
-from backend.trans.group import GroupTrans
-from backend.trans.open_management import ManagementCommonTrans
 
 
-class ManagementGradeManagerGroupViewSet(GenericViewSet):
+class ManagementGradeManagerGroupViewSet(BizMixin, GenericViewSet):
     """分级管理员下用户组"""
 
     authentication_classes = [ESBAuthentication]
@@ -88,14 +83,13 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]).order_by(
-        "-updated_time"
-    )
     filterset_class = GroupFilter
     filter_backends = [NoCheckModelFilterBackend]
 
-    group_biz = GroupBiz()
-    group_check_biz = GroupCheckBiz()
+    def get_queryset(self):
+        return Role.objects.filter(
+            tenant_id=self.tenant_id, type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]
+        ).order_by("-updated_time")
 
     @swagger_auto_schema(
         operation_description="批量创建用户组",
@@ -105,9 +99,11 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     )
     def create(self, request, *args, **kwargs):
         if "id" not in kwargs:
-            role = get_object_or_404(Role, type=RoleType.SYSTEM_MANAGER.value, code=kwargs["system_id"])
+            role = get_object_or_404(
+                Role, tenant_id=self.tenant_id, type=RoleType.SYSTEM_MANAGER.value, code=kwargs["system_id"]
+            )
         else:
-            role = get_object_or_404(self.queryset, id=kwargs["id"])
+            role = get_object_or_404(self.get_queryset(), id=kwargs["id"])
 
         serializer = ManagementGradeManagerGroupCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -161,7 +157,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         inherit = slz.validated_data["inherit"]
         only_inherit = slz.validated_data["only_inherit"]
 
-        role = get_object_or_404(self.queryset, id=kwargs["id"])
+        role = get_object_or_404(self.get_queryset(), id=kwargs["id"])
 
         queryset = RoleListQuery(role).query_group(inherit=inherit, only_inherit=only_inherit)
         queryset = self.filter_queryset(queryset)
@@ -252,7 +248,11 @@ class ManagementSystemManagerGroupViewSet(ManagementGradeManagerGroupViewSet):
 
     lookup_field = "code"
     lookup_url_kwarg = "system_id"
-    queryset = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value).order_by("-updated_time")
+
+    def get_queryset(self):
+        return Role.objects.filter(tenant_id=self.tenant_id, type=RoleType.SYSTEM_MANAGER.value).order_by(
+            "-updated_time"
+        )
 
     @swagger_auto_schema(
         operation_description="系统管理员下批量创建用户组",
@@ -264,7 +264,7 @@ class ManagementSystemManagerGroupViewSet(ManagementGradeManagerGroupViewSet):
         return super().create(request, *args, **kwargs)
 
 
-class ManagementGroupViewSet(GenericViewSet):
+class ManagementGroupViewSet(BizMixin, GenericViewSet):
     """用户组"""
 
     authentication_classes = [ESBAuthentication]
@@ -276,11 +276,9 @@ class ManagementGroupViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
 
-    biz = GroupBiz()
-    group_check_biz = GroupCheckBiz()
-    role_biz = RoleBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="修改用户组",
@@ -309,7 +307,7 @@ class ManagementGroupViewSet(GenericViewSet):
             self.group_check_biz.check_role_group_name_unique(role.id, name, group.id)
 
             # 更新
-            group = self.biz.update(group, name, description, group.apply_disable, user_id)
+            group = self.group_biz.update(group, name, description, group.apply_disable, user_id)
 
         # 写入审计上下文
         audit_context_setter(group=group)
@@ -325,7 +323,7 @@ class ManagementGroupViewSet(GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         group = self.get_object()
 
-        self.biz.delete(group.id)
+        self.group_biz.delete(group.id)
 
         # 写入审计上下文
         audit_context_setter(group=group)
@@ -333,7 +331,7 @@ class ManagementGroupViewSet(GenericViewSet):
         return Response({})
 
 
-class ManagementGroupMemberViewSet(GenericViewSet):
+class ManagementGroupMemberViewSet(BizMixin, GenericViewSet):
     """用户组成员"""
 
     authentication_classes = [ESBAuthentication]
@@ -346,13 +344,10 @@ class ManagementGroupMemberViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
     pagination_class = CompatiblePagination
 
-    biz = GroupBiz()
-    group_check_biz = GroupCheckBiz()
-    role_biz = RoleBiz()
-    subject_template_biz = SubjectTemplateBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
@@ -365,7 +360,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         # 分页参数
         limit, offset = CompatiblePagination().get_limit_offset_pair(request)
 
-        count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
+        count, group_members = self.group_biz.list_paging_thin_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at", "created_time"}) for one in group_members]
         for result in results:
             result["created_at"] = int(result.pop("created_time").timestamp())
@@ -402,11 +397,11 @@ class ManagementGroupMemberViewSet(GenericViewSet):
 
         if members:
             # 添加成员
-            self.biz.add_members(group.id, members, expired_at)
+            self.group_biz.add_members(group.id, members, expired_at)
 
         # 增加人员模版授权操作
         for _id in subject_template_ids:
-            self.biz.grant_subject_template(group.id, _id, expired_at, request.user.username)
+            self.group_biz.grant_subject_template(group.id, _id, expired_at, request.user.username)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=members_data)
@@ -432,7 +427,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         members, subject_template_ids = split_members_to_subject_and_template(members_data)
 
         if members:
-            self.biz.remove_members(str(group.id), members)
+            self.group_biz.remove_members(str(group.id), members)
 
         for _id in subject_template_ids:
             self.subject_template_biz.delete_group(_id, group.id)
@@ -443,7 +438,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         return Response({})
 
 
-class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
+class ManagementGroupMemberExpiredAtViewSet(BizMixin, GenericViewSet):
     """用户组成员有效期"""
 
     authentication_classes = [ESBAuthentication]
@@ -457,9 +452,9 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
 
-    biz = GroupBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组成员有效期更新",
@@ -481,7 +476,7 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
         ]
 
         # 更新有效期
-        self.biz.update_members_expired_at(group.id, members)
+        self.group_biz.update_members_expired_at(group.id, members)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=data["members"])
@@ -489,7 +484,7 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
         return Response({})
 
 
-class ManagementGroupMemberBatchExpiredAtViewSet(GenericViewSet):
+class ManagementGroupMemberBatchExpiredAtViewSet(BizMixin, GenericViewSet):
     """用户组成员批量续期"""
 
     authentication_classes = [ESBAuthentication]
@@ -503,9 +498,9 @@ class ManagementGroupMemberBatchExpiredAtViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
 
-    biz = GroupBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组成员有效期批量更新",
@@ -526,7 +521,7 @@ class ManagementGroupMemberBatchExpiredAtViewSet(GenericViewSet):
         ]
 
         # 更新有效期
-        self.biz.update_members_expired_at(group.id, members)
+        self.group_biz.update_members_expired_at(group.id, members)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=data["members"])
@@ -534,7 +529,7 @@ class ManagementGroupMemberBatchExpiredAtViewSet(GenericViewSet):
         return Response({})
 
 
-class ManagementGroupSubjectTemplateViewSet(GenericViewSet):
+class ManagementGroupSubjectTemplateViewSet(TenantMixin, GenericViewSet):
     """用户组类型为人员模板的成员"""
 
     authentication_classes = [ESBAuthentication]
@@ -548,8 +543,10 @@ class ManagementGroupSubjectTemplateViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
     pagination_class = CompatiblePagination
+
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组人员模板成员列表",
@@ -578,7 +575,7 @@ class ManagementGroupSubjectTemplateViewSet(GenericViewSet):
         return self.get_paginated_response(serializer.data)
 
 
-class ManagementGroupPolicyViewSet(GenericViewSet):
+class ManagementGroupPolicyViewSet(BizMixin, TransMixin, GenericViewSet):
     """用户组权限 - 自定义权限"""
 
     authentication_classes = [ESBAuthentication]
@@ -593,13 +590,9 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
 
-    group_biz = GroupBiz()
-    role_biz = RoleBiz()
-    policy_operation_biz = PolicyOperationBiz()
-    policy_query_biz = PolicyQueryBiz()
-    trans = ManagementCommonTrans()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组授权",
@@ -620,7 +613,9 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         resources = data["resources"]
 
         # 将授权的权限数据转为 PolicyBeanList
-        policy_list = self.trans.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
+        policy_list = self.management_common_trans.to_policy_list_for_batch_action_and_resources(
+            system_id, action_ids, resources
+        )
 
         # 组装数据进行对用户组权限处理
         template = GroupTemplateGrantBean(
@@ -695,7 +690,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         return Response([p.dict() for p in updated_policies])
 
 
-class ManagementGroupActionPolicyViewSet(GenericViewSet):
+class ManagementGroupActionPolicyViewSet(BizMixin, GenericViewSet):
     """用户组权限 - 自定义权限 - 操作级别变更"""
 
     authentication_classes = [ESBAuthentication]
@@ -706,11 +701,9 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
 
-    group_biz = GroupBiz()
-    policy_query_biz = PolicyQueryBiz()
-    policy_operation_biz = PolicyOperationBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组权限删除",
@@ -742,7 +735,7 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         return Response({})
 
 
-class ManagementGroupPolicyActionViewSet(GenericViewSet):
+class ManagementGroupPolicyActionViewSet(BizMixin, GenericViewSet):
     """用户组自定义权限 - 操作"""
 
     authentication_classes = [ESBAuthentication]
@@ -753,10 +746,9 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
 
-    group_biz = GroupBiz()
-    policy_query_biz = PolicyQueryBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="查询用户组有权限的 Action 列表",
@@ -775,7 +767,7 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
         return Response([{"id": p.action_id} for p in policies])
 
 
-class ManagementGroupPolicyTemplateViewSet(GenericViewSet):
+class ManagementGroupPolicyTemplateViewSet(BizMixin, TransMixin, GenericViewSet):
     """用户组授权"""
 
     authentication_classes = [ESBAuthentication]
@@ -788,14 +780,9 @@ class ManagementGroupPolicyTemplateViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Group.objects.all()
 
-    group_biz = GroupBiz()
-    group_trans = GroupTrans()
-    role_biz = RoleBiz()
-    policy_operation_biz = PolicyOperationBiz()
-    policy_query_biz = PolicyQueryBiz()
-    trans = ManagementCommonTrans()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组权限模版授权",

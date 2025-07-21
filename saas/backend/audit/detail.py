@@ -34,6 +34,7 @@ from .constants import AuditObjectType, AuditType
 class BaseProvider:
     def __init__(self, event: Event):
         self.event = event
+        self.tenant_id = event.tenant_id
 
     @property
     def description(self) -> str:
@@ -282,8 +283,10 @@ class ApprovalGlobalProvider(ApprovalNameMixin, BaseProvider):
 
 
 class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
-    system_biz = SystemBiz()
-    action_svc = ActionService()
+    def __init__(self, event: Event):
+        super().__init__(event)
+        self.system_biz = SystemBiz()
+        self.action_svc = ActionService(event.tenant_id)
 
     @property
     def description(self) -> str:
@@ -302,8 +305,10 @@ class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
 
 
 class ActionSensitivityLevelProvider(BaseProvider):
-    system_biz = SystemBiz()
-    action_svc = ActionService()
+    def __init__(self, event: Event):
+        super().__init__(event)
+        self.system_biz = SystemBiz()
+        self.action_svc = ActionService(event.tenant_id)
 
     @property
     def description(self) -> str:

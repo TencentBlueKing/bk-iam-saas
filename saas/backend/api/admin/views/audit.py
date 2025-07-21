@@ -15,9 +15,10 @@ from backend.api.authentication import ESBAuthentication
 from backend.audit.models import get_event_model
 from backend.audit.views import EventViewSet
 from backend.common.pagination import CustomPageNumberPagination
+from backend.mixins import TenantMixin
 
 
-class AdminAuditEventViewSet(EventViewSet):
+class AdminAuditEventViewSet(TenantMixin, EventViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
     admin_api_permission = {"list": AdminAPIEnum.AUDIT_EVENT_LIST.value}
@@ -27,4 +28,4 @@ class AdminAuditEventViewSet(EventViewSet):
     def get_queryset(self):
         month = self.request.query_params.get("month", "")
         Event = get_event_model(month)  # noqa: N806
-        return Event.objects.order_by("-created_time")
+        return Event.objects.filter(tenant_id=self.tenant_id).order_by("-created_time")

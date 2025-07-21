@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -20,19 +20,22 @@ from backend.apps.mgmt.serializers import LongTaskSLZ, SubTaskSLZ
 from backend.long_task.constants import TaskStatus
 from backend.long_task.models import SubTaskState, TaskDetail
 from backend.long_task.tasks import TaskFactory
+from backend.mixins import TenantMixin
 from backend.service.constants import PermissionCodeEnum
 
 
-class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
+class LongTaskViewSet(TenantMixin, mixins.ListModelMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_LONG_TASK.value,
         "retrieve": PermissionCodeEnum.MANAGE_LONG_TASK.value,
         "retry": PermissionCodeEnum.MANAGE_LONG_TASK.value,
     }
-    queryset = TaskDetail.objects.all()
     serializer_class = LongTaskSLZ
     filterset_class = LongTaskFilter
+
+    def get_queryset(self):
+        return TaskDetail.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="长时任务列表",
@@ -49,7 +52,7 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         task_id = kwargs["id"]
-        sub_task = SubTaskState.objects.filter(task_id=task_id)
+        sub_task = SubTaskState.objects.filter(tenant_id=self.tenant_id, task_id=task_id)
 
         return Response(SubTaskSLZ(sub_task, many=True).data)
 
@@ -60,7 +63,7 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
     )
     def retry(self, request, *args, **kwargs):
         task_id = kwargs["id"]
-        task = TaskDetail.objects.filter(id=task_id).first()
+        task = TaskDetail.objects.filter(tenant_id=self.tenant_id, id=task_id).first()
         if task.status == TaskStatus.FAILURE.value:
             TaskFactory().run(task.id)
 

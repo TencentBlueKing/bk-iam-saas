@@ -55,7 +55,6 @@ urlpatterns = [
                 re_path(r"^organizations/", include("backend.apps.organization.urls")),
                 re_path(r"^roles/", include("backend.apps.role.urls")),
                 re_path(r"^users/", include("backend.apps.user.urls")),
-                re_path(r"^modeling/", include("backend.apps.model_builder.urls")),
                 re_path(r"^audits/", include("backend.audit.urls")),
                 re_path(r"^debug/", include("backend.debug.urls")),
                 re_path(r"^handover/", include("backend.apps.handover.urls")),

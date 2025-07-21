@@ -86,6 +86,7 @@ def log_user_cleanup_policy_audit_event(task_id: str, user: User, system_id: str
     Event = get_event_model()  # noqa: N806
 
     event = Event(
+        tenant_id=user.tenant_id,
         source_type=AuditSourceType.TASK.value,
         type=AuditType.USER_POLICY_UPDATE.value,
         source_data_task_id=task_id,

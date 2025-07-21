@@ -64,14 +64,14 @@ def check_or_update_application_status():
 
 
 @shared_task(ignore_result=True)
-def create_policies_renew_applications(data, username):
+def create_policies_renew_applications(tenant_id, data, username):
     """
     创建用户自定义权限续期申请
 
     由于用户可能一次 renew 很多个权限，并且单个操作有很多的资源实例，查询资源审批人可能会很慢，需要异步处理
     """
     # FIXME(tenant): 需要按照用户的租户进行创建
-    biz = ApplicationBiz()
+    biz = ApplicationBiz(tenant_id)
     biz.create_for_renew_policy(
         parse_obj_as(List[ApplicationRenewPolicyInfoBean], data["policies"]), username, data["reason"]
     )

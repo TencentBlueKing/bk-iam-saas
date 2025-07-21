@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -42,7 +42,7 @@ class DataProvider(ABC):
 
     def __init__(self, request: Request):
         """
-        初始化会在view调用之前, 允许做一些前置的查询
+        初始化会在 view 调用之前，允许做一些前置的查询
         """
         self.request = request
 
@@ -106,6 +106,7 @@ def log_api_event(request, provider: DataProvider):
     Event = get_event_model()
 
     event = Event(
+        tenant_id=request.tenant_id,
         source_data_request_id=request.request_id,
         type=provider.type,
         username=request.user.username,
@@ -133,7 +134,7 @@ def _parse_request_audit_type(request):
 
 def audit_context_setter(**kwargs):
     """
-    设置audit context到请求对象
+    设置 audit context 到请求对象
     """
     # Django Request
     request = local.request
@@ -147,9 +148,9 @@ def audit_context_setter(**kwargs):
 
 def audit_context_getter(request: Request, key: str):
     """
-    获取请求audit context的属性
+    获取请求 audit context 的属性
     """
-    # 从DRF Request获取Django Request
+    # 从 DRF Request 获取 Django Request
     _request = request._request
 
     if not hasattr(_request, "_audit_context"):
@@ -161,8 +162,9 @@ def add_audit(provider_cls: Type[DataProvider], request: Request, **kwargs):
     """
     直接记录审计信息（非通过装饰器方式）
     """
-    # 设置审计对象和额外信息，直接覆盖，避免传递过来的request对象重复使用导致_audit_context存储了上次调用的信息
-    # 这里使用的是Django Request，provider_cls获取相关内容时使用的audit_context_getter方法也是从Django Request里获取
+    # 设置审计对象和额外信息，直接覆盖，避免传递过来的 request 对象重复使用导致_audit_context 存储了上次调用的信息
+    # 这里使用的是 Django Request，provider_cls 获取相关内容时使用的
+    # audit_context_getter 方法也是从 Django Request 里获取
     request._request._audit_context = kwargs
     # 实例化审计信息提供者
     provider = provider_cls(request)
@@ -187,12 +189,13 @@ def log_user_event(
     """
     记录用户相关的审批事件
     """
-    user = User.objects.filter(username=subject.id).only("display_name").first()
+    user = User.objects.filter(username=subject.id).only("display_name", "tenant_id").first()
     username = username or subject.id
 
     Event = get_event_model()
 
     event = Event(
+        tenant_id=user.tenant_id if user else "",
         type=_type,
         username=subject.id,
         system_id=system_id,
@@ -228,6 +231,7 @@ def log_group_event(
     events = []
     for group in groups:
         event = Event(
+            tenant_id=group.tenant_id,
             type=_type,
             username=username,
             object_type=AuditObjectType.GROUP.value,
@@ -243,7 +247,7 @@ def log_group_event(
         events.append(event)
 
     Event.objects.bulk_create(events)
-    # NOTE: 由于bulk_create不能触发信号，手动触发信号
+    # NOTE: 由于 bulk_create 不能触发信号，手动触发信号
     send_bulk_create_signal(Event, events)
 
 
@@ -260,6 +264,7 @@ def log_role_event(
     """
     Event = get_event_model()
     event = Event(
+        tenant_id=role.tenant_id,
         type=_type,
         username=subject.id,
         object_type=AuditObjectType.ROLE.value,
@@ -285,8 +290,11 @@ def log_user_blacklist_event(
     """
     记录角色相关的审批事件
     """
+    user = User.objects.filter(username=subject.id).only("tenant_id").first()
+
     Event = get_event_model()
     event = Event(
+        tenant_id=user.tenant_id if user else "",
         type=_type,
         username=subject.id,
         object_type=AuditObjectType.USER_BLACK_LIST.value,
@@ -311,8 +319,11 @@ def log_user_permission_clean_event(
     """
     记录角色相关的审批事件
     """
+    user = User.objects.filter(username=subject.id).only("tenant_id").first()
+
     Event = get_event_model()
     event = Event(
+        tenant_id=user.tenant_id if user else "",
         type=AuditType.USER_PERMISSION_CLEAN.value,
         username=subject.id,
         object_type=AuditObjectType.USER_PERMISSION_CLEAN.value,
@@ -347,6 +358,7 @@ def log_subject_template_event(
     events = []
     for template in templates:
         event = Event(
+            tenant_id=template.tenant_id,
             type=_type,
             username=username,
             object_type=AuditObjectType.SUBJECT_TEMPLATE.value,
@@ -362,5 +374,5 @@ def log_subject_template_event(
         events.append(event)
 
     Event.objects.bulk_create(events)
-    # NOTE: 由于bulk_create不能触发信号，手动触发信号
+    # NOTE: 由于 bulk_create 不能触发信号，手动触发信号
     send_bulk_create_signal(Event, events)

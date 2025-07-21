@@ -307,9 +307,14 @@ class Policy(BaseModel):
         return obj
 
     def to_db_model(
-        self, system_id: str, subject: Subject, model: Union[Type[PolicyModel], Type[TemporaryPolicy]] = PolicyModel
+        self,
+        tenant_id: str,
+        system_id: str,
+        subject: Subject,
+        model: Union[Type[PolicyModel], Type[TemporaryPolicy]] = PolicyModel,
     ) -> Union[PolicyModel, TemporaryPolicy]:
         p = model(
+            tenant_id=tenant_id,
             subject_type=subject.type,
             subject_id=subject.id,
             system_id=system_id,

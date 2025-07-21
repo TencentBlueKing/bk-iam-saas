@@ -35,23 +35,20 @@ from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthori
 from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
 from backend.audit.audit import audit_context_setter, log_api_event, view_audit_decorator
 from backend.biz.constants import PermissionTypeEnum
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupMemberExpiredAtBean
+from backend.biz.group import GroupMemberExpiredAtBean
 from backend.biz.permission_audit import QueryAuthorizedSubjects
-from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
-from backend.biz.role import AuthScopeAction, AuthScopeSystem, RoleBiz, RoleListQuery, RoleObjectRelationChecker
-from backend.biz.subject_template import SubjectTemplateBiz
-from backend.biz.template import TemplateBiz
+from backend.biz.policy import PolicyBean
+from backend.biz.policy_tag import ConditionTagBean
+from backend.biz.role import AuthScopeAction, AuthScopeSystem, RoleListQuery, RoleObjectRelationChecker
 from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.serializers import HiddenSLZ, SystemQuerySLZ
 from backend.common.time import PERMANENT_SECONDS, get_soon_expire_ts
+from backend.mixins import BizMixin, TransMixin
 from backend.service.constants import GroupMemberType, PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
 from backend.service.models.subject import SubjectType
-from backend.trans.group import GroupTrans
-from backend.trans.role import RoleAuthScopeTrans
 
 from .audit import (
     GroupCreateAuditProvider,
@@ -139,7 +136,7 @@ def split_members_to_subject_and_template(members):
     return subjects, subject_template_ids
 
 
-class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
+class GroupViewSet(BizMixin, TransMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -147,16 +144,9 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         "destroy": PermissionCodeEnum.MANAGE_GROUP.value,
     }
 
-    queryset = Group.objects.all()
     serializer_class = GroupSLZ
     filterset_class = GroupFilter
     lookup_field = "id"
-
-    group_biz = GroupBiz()
-    group_check_biz = GroupCheckBiz()
-    role_biz = RoleBiz()
-
-    group_trans = GroupTrans()
 
     @swagger_auto_schema(
         operation_description="创建用户组",
@@ -294,21 +284,17 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         return Response({})
 
 
-class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
+class GroupMemberViewSet(BizMixin, GroupPermissionMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_GROUP.value,
         "create": PermissionCodeEnum.MANAGE_GROUP.value,
         "destroy": PermissionCodeEnum.MANAGE_GROUP.value,
     }
-
-    queryset = Group.objects.all()
     lookup_field = "id"
 
-    group_biz = GroupBiz()
-    role_biz = RoleBiz()
-    group_check_biz = GroupCheckBiz()
-    subject_template_biz = SubjectTemplateBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
@@ -317,7 +303,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     def list(self, request, *args, **kwargs):
-        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        group = self.get_object()
 
         # 校验权限
         checker = RoleObjectRelationChecker(request.role)
@@ -416,14 +402,9 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         return Response({})
 
 
-class GroupsMemberViewSet(GenericViewSet):
+class GroupsMemberViewSet(BizMixin, GenericViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupsAddMemberSLZ
-
-    group_biz = GroupBiz()
-    role_biz = RoleBiz()
-    group_check_biz = GroupCheckBiz()
-    subject_template_biz = SubjectTemplateBiz()
 
     @swagger_auto_schema(
         operation_description="批量用户组添加成员",
@@ -564,9 +545,7 @@ class GroupsMemberViewSet(GenericViewSet):
         raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
 
 
-class GroupsMemberRenewViewSet(GenericViewSet):
-    group_biz = GroupBiz()
-
+class GroupsMemberRenewViewSet(BizMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量用户组成员续期",
         request_body=BatchGroupMemberUpdateExpiredAtSLZ(label="成员"),
@@ -606,14 +585,13 @@ class GroupsMemberRenewViewSet(GenericViewSet):
         return Response({})
 
 
-class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
+class GroupMemberUpdateExpiredAtViewSet(BizMixin, GroupPermissionMixin, GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GROUP.value)]
 
-    queryset = Group.objects.all()
     lookup_field = "id"
 
-    # service
-    group_biz = GroupBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组成员续期",
@@ -648,17 +626,17 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
         return Response({})
 
 
-class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
+class GroupTemplateViewSet(BizMixin, GroupPermissionMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {"create": PermissionCodeEnum.MANAGE_GROUP.value}
 
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
-    queryset = Group.objects.all()
     filterset_class = GroupTemplateSystemFilter
     filter_backends = [NoCheckModelFilterBackend]
     lookup_field = "id"
 
-    template_biz = TemplateBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组拥有的权限模板列表",
@@ -666,7 +644,7 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     def list(self, request, *args, **kwargs):
-        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
         subject = Subject.from_group_id(group.id)
         queryset = PermTemplatePolicyAuthorized.objects.filter_by_subject(subject).defer("_data")
 
@@ -679,12 +657,12 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     def retrieve(self, request, *args, **kwargs):
-        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
         template_id = kwargs["template_id"]
 
         subject = Subject.from_group_id(group.id)
         authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, int(template_id))
-        return Response(GroupTemplateDetailSLZ(authorized_template).data)
+        return Response(GroupTemplateDetailSLZ(authorized_template, context={"tenant_id": self.tenant_id}).data)
 
     @swagger_auto_schema(
         operation_description="删除用户组模板授权",
@@ -693,7 +671,7 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
     )
     @view_audit_decorator(TemplateMemberDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
-        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
         template_id = kwargs["template_id"]
         template = get_object_or_404(PermTemplate.objects.all(), pk=template_id)
 
@@ -708,7 +686,7 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         return Response({})
 
 
-class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
+class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_GROUP.value,
@@ -717,16 +695,10 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
     }
 
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
-    queryset = Group.objects.all()
     lookup_field = "id"
 
-    policy_query_biz = PolicyQueryBiz()
-    policy_operation_biz = PolicyOperationBiz()
-    group_biz = GroupBiz()
-    role_biz = RoleBiz()
-
-    group_trans = GroupTrans()
-    role_auth_scope_trans = RoleAuthScopeTrans()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组添加权限",
@@ -763,7 +735,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组自定义权限列表",
-        query_serializer=SystemQuerySLZ,
+        query_serializer=SystemQuerySLZ(),
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
         tags=["group"],
     )
@@ -837,16 +809,16 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         return Response({})
 
 
-class GroupSystemViewSet(GenericViewSet):
+class GroupSystemViewSet(BizMixin, GenericViewSet):
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
-    queryset = Group.objects.all()
     lookup_field = "id"
 
-    biz = GroupBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组有权限的所有系统列表",
-        query_serializer=HiddenSLZ,
+        query_serializer=HiddenSLZ(),
         responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
         tags=["group"],
     )
@@ -856,18 +828,16 @@ class GroupSystemViewSet(GenericViewSet):
         hidden = slz.validated_data["hidden"]
 
         group = self.get_object()
-        data = self.biz.list_system_counter(group.id, hidden=hidden)
+        data = self.group_biz.list_system_counter(group.id, hidden=hidden)
         return Response([one.dict() for one in data])
 
 
-class GroupTransferView(views.APIView):
+class GroupTransferView(BizMixin, views.APIView):
     """
     用户组转出
     """
 
     permission_classes = [role_perm_class(PermissionCodeEnum.TRANSFER_GROUP.value)]
-
-    role_biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="用户组批量转出",
@@ -890,12 +860,11 @@ class GroupTransferView(views.APIView):
         return Response({})
 
 
-class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
-    condition_biz = ConditionTagBiz()
-    template_biz = TemplateBiz()
-
-    queryset = Group.objects.all()
+class GroupTemplateConditionCompareView(BizMixin, GroupPermissionMixin, GenericViewSet):
     lookup_field = "id"
+
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="权限模板操作条件对比",
@@ -940,12 +909,11 @@ class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
         raise error_codes.VALIDATE_ERROR.format(_("模板：{} 没有操作：{} 的权限").format(template_id, action_id))
 
 
-class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet):
-    policy_biz = PolicyQueryBiz()
-    condition_biz = ConditionTagBiz()
-
-    queryset = Group.objects.all()
+class GroupCustomPolicyConditionCompareView(BizMixin, GroupPermissionMixin, GenericViewSet):
     lookup_field = "id"
+
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="条件差异对比",
@@ -964,7 +932,7 @@ class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet
 
         # 1. 查询 policy 的 condition
         related_resource_type = data["related_resource_type"]
-        old_condition = self.policy_biz.get_policy_resource_type_conditions(
+        old_condition = self.policy_query_biz.get_policy_resource_type_conditions(
             subject,
             data["policy_id"],
             data["resource_group_id"],
@@ -982,7 +950,7 @@ class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet
         return Response([c.dict() for c in conditions])
 
 
-class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
+class GroupRoleTemplatesViewSet(BizMixin, GroupQueryMixin, GenericViewSet):
     """
     用户组对应的角色的模板列表
     """
@@ -992,8 +960,6 @@ class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
     serializer_class = TemplateListSLZ
     filterset_class = TemplateFilter
     filter_backends = [NoCheckModelFilterBackend]
-
-    role_biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="用户组对应的角色的模板列表",
@@ -1039,7 +1005,7 @@ class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
         return set(exists_template_ids)
 
 
-class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
+class GradeManagerGroupTransferView(BizMixin, GroupQueryMixin, GenericViewSet):
     """
     分级管理员用户组转出到子集管理员
 
@@ -1049,12 +1015,10 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
     """
 
     permission_classes = [role_perm_class(PermissionCodeEnum.TRANSFER_GROUP_BY_GRADE_MANAGER.value)]
-    queryset = Group.objects.all()
     lookup_field = "id"
 
-    role_biz = RoleBiz()
-    group_biz = GroupBiz()
-    policy_query_biz = PolicyQueryBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="分级管理员用户组转出",
@@ -1122,11 +1086,8 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         return auth_scope_systems
 
 
-class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
-    queryset = Group.objects.all()
+class GroupSearchViewSet(BizMixin, mixins.ListModelMixin, GenericViewSet):
     serializer_class = GroupSLZ
-
-    role_biz = RoleBiz()
 
     def get_queryset(self):
         request = self.request
@@ -1161,7 +1122,7 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         # 通过实例或操作查询用户组
         data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
         data["limit"] = 10000
-        subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+        subjects = QueryAuthorizedSubjects(self.tenant_id, data).query_by_resource_instance(subject_type="group")
         if not subjects:
             queryset = queryset.none()
         else:
@@ -1176,11 +1137,13 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response(serializer.data)
 
 
-class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
-    queryset = Group.objects.all()
+class GroupSubjectTemplateViewSet(BizMixin, GroupPermissionMixin, GenericViewSet):
     filterset_class = GroupSubjectTemplateFilter
     filter_backends = [NoCheckModelFilterBackend]
     lookup_field = "id"
+
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组拥有的权限模板列表",
@@ -1188,7 +1151,7 @@ class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     def list(self, request, *args, **kwargs):
-        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
 
         # 查询用户组拥有的权限模板
         subject_template_qs = SubjectTemplateGroup.objects.filter(group_id=group.id).values(
@@ -1211,16 +1174,16 @@ class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         return self.get_paginated_response(serializer.data)
 
 
-class GroupTemplateMemberViewSet(GroupPermissionMixin, GenericViewSet):
+class GroupTemplateMemberViewSet(BizMixin, GroupPermissionMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_GROUP.value,
     }
 
-    queryset = Group.objects.all()
     lookup_field = "id"
 
-    group_biz = GroupBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="模版用户组成员列表",
@@ -1229,7 +1192,7 @@ class GroupTemplateMemberViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     def list(self, request, *args, **kwargs):
-        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
 
         slz = SearchTemplateGroupMemberSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
