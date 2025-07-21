@@ -166,7 +166,9 @@ class SubjectTemplateViewSet(BizMixin, SubjectTemplateQueryMixin, ModelViewSet):
 
         page = self.paginate_queryset(queryset)
         serializer = SubjectTemplateListSLZ(
-            page, many=True, context={"group_count_dict": self.biz.get_group_count_dict([t.id for t in page])}
+            page,
+            many=True,
+            context={"group_count_dict": self.subject_template_biz.get_group_count_dict([t.id for t in page])},
         )
         return self.get_paginated_response(serializer.data)
 
@@ -178,7 +180,7 @@ class SubjectTemplateViewSet(BizMixin, SubjectTemplateQueryMixin, ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = SubjectTemplateListSLZ(
-            instance, context={"group_count_dict": self.biz.get_group_count_dict([instance.id])}
+            instance, context={"group_count_dict": self.subject_template_biz.get_group_count_dict([instance.id])}
         )
         return Response(serializer.data)
 

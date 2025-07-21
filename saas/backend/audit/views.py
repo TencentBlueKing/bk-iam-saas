@@ -17,13 +17,14 @@ from rest_framework.viewsets import GenericViewSet, mixins
 from backend.account.permissions import role_perm_class
 from backend.audit.models import get_event_model
 from backend.common.filters import NoCheckModelFilterBackend
+from backend.mixins import TenantMixin
 from backend.service.constants import PermissionCodeEnum, RoleType
 
 from .filters import EventFilter
 from .serializers import EventDetailSchemaSLZ, EventDetailSLZ, EventListSchemaSLZ, EventListSLZ, EventQuerySLZ
 
 
-class EventViewSet(mixins.ListModelMixin, GenericViewSet):
+class EventViewSet(TenantMixin, mixins.ListModelMixin, GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.AUDIT.value)]
 
     lookup_field = "id"
@@ -34,7 +35,7 @@ class EventViewSet(mixins.ListModelMixin, GenericViewSet):
     def get_queryset(self):
         month = self.request.query_params.get("month", "")
         Event = get_event_model(month)  # noqa: N806
-        queryset = Event.objects.order_by("-created_time")
+        queryset = Event.objects.filter(tenant_id=self.tenant_id).order_by("-created_time")
 
         role = self.request.role
         if role.type == RoleType.SUPER_MANAGER.value:

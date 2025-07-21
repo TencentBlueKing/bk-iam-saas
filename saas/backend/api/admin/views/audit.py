@@ -15,10 +15,9 @@ from backend.api.authentication import ESBAuthentication
 from backend.audit.models import get_event_model
 from backend.audit.views import EventViewSet
 from backend.common.pagination import CustomPageNumberPagination
-from backend.mixins import TenantMixin
 
 
-class AdminAuditEventViewSet(TenantMixin, EventViewSet):
+class AdminAuditEventViewSet(EventViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
     admin_api_permission = {"list": AdminAPIEnum.AUDIT_EVENT_LIST.value}

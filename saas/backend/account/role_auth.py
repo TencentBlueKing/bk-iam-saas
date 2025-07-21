@@ -25,7 +25,7 @@ def authenticate(request=None, role_id=0):
         return AnonymousRole()
 
     # 2. 用户的角色不存在，返回 staff
-    if role_id == 0 or not can_user_manage_role(request.tenant_id, request.user.username, role_id):
+    if role_id == 0 or not can_user_manage_role(user.get_property("tenant_id"), request.user.username, role_id):
         return AnonymousRole()
 
     # 3. 对于用户与角色关系认证通过的，返回对应的分级管理员 (超级管理员和系统管理员是两类特殊的分级管理员)

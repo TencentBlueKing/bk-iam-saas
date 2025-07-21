@@ -576,7 +576,7 @@ class RoleListQuery:
     def __init__(self, role: Role, user: Optional[User] = None) -> None:
         self.role = role
         self.user = User.objects.filter(username=user.username).first() if user else None
-        self.tenant_id = role.tenant_id
+        self.tenant_id = role.tenant_id if role.tenant_id else self.user.tenant_id if self.user else ""
         self.system_svc = SystemService()
         self.role_svc = RoleService(self.tenant_id)
 
