@@ -97,7 +97,7 @@ class DBDepartmentSyncService(BaseSyncDBService):
         SubjectToDelete.objects.filter(
             tenant_id=self.tenant_id,
             subject_type=SubjectType.DEPARTMENT.value,
-            subject_id__in=[str(i.id) for i in new_ids - old_ids],
+            subject_id__in=[str(i) for i in new_ids - old_ids],
         ).delete()
 
         # 旧部门，需要添加到待删除列表

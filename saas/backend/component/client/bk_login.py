@@ -30,7 +30,7 @@ class BkLoginClient(BkApigwBaseClient):
         # Note: 登录接口，基本上都无法提前知道租户信息，所以这里使用 IAM 本身所属租户
         self.tenant_id = settings.BK_APP_TENANT_ID
         self.api_url = url_join(
-            settings.BK_API_TMPL.format(api_name=settings.BK_LOGIN_APIGW_NAME), settings.BK_LOGIN_APIGW_STAGE
+            settings.BK_API_URL_TMPL.format(api_name=settings.BK_LOGIN_APIGW_NAME), settings.BK_LOGIN_APIGW_STAGE
         )
         self.headers = {
             **self.request_id_headers,
@@ -42,6 +42,7 @@ class BkLoginClient(BkApigwBaseClient):
 
     def _call(self, http_func_only_20x, url_path, **kwargs):
         url = url_join(self.api_url, url_path)
+        kwargs.setdefault("headers", {}).update(self.headers)
         ok, resp_data = http_func_only_20x(url, **kwargs)
 
         if not ok:

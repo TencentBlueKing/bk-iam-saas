@@ -84,10 +84,11 @@ class LoginMiddleware:
                 # Succeed to login, recall self to exit process
                 if user.username != request.user.username:
                     auth.login(request, user)
-                    # [多租户] 用户登录完必须有租户信息
-                    tenant_id = user.get_property("tenant_id") or ""
-                    assert tenant_id != ""
-                    request.tenant_id = tenant_id
+
+                # [多租户] 用户登录完必须有租户信息
+                tenant_id = user.get_property("tenant_id") or ""
+                assert tenant_id != ""
+                request.tenant_id = tenant_id
             else:
                 auth.logout(request)
         else:

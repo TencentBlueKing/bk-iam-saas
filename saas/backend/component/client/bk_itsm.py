@@ -47,6 +47,7 @@ class BkITSMClient(BkApigwBaseClient):
 
     def _call(self, http_func_only_20x, url_path, **kwargs):
         url = url_join(self.api_url, url_path)
+        kwargs.setdefault("headers", {}).update(self.headers)
         ok, resp_data = http_func_only_20x(url, **kwargs)
 
         if not ok:
