@@ -9,10 +9,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterUniqueTogether(
-            name="groupprocessrelation",
-            unique_together=set(),
-        ),
         migrations.AddField(
             model_name="actionprocessrelation",
             name="tenant_id",
@@ -79,9 +75,5 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name="approvalprocessglobalconfig",
             unique_together={("tenant_id", "application_type")},
-        ),
-        migrations.AlterUniqueTogether(
-            name="groupprocessrelation",
-            unique_together={("group_id", "tenant_id")},
         ),
     ]
