@@ -66,4 +66,4 @@ class GroupProcessRelation(BaseModel):
         verbose_name = "用户组与审批流程关联"
         verbose_name_plural = "用户组与审批流程关联"
         # 任何一个用户组只能配置一个审批流程
-        unique_together = ["group_id", "tenant_id"]
+        unique_together = ["group_id"]
