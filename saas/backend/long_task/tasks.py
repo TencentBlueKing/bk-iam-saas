@@ -101,8 +101,8 @@ class ResultStore:
     def __init__(self, task_id: int):
         self._task_id = task_id
 
-    def create(self, celery_id: str, index: int):
-        SubTaskState.objects.create(task_id=self._task_id, celery_id=celery_id, index=index)
+    def create(self, tenant_id: str, celery_id: str, index: int):
+        SubTaskState.objects.create(tenant_id=tenant_id, task_id=self._task_id, celery_id=celery_id, index=index)
 
     def update(self, index: int, status: int, exception=""):
         SubTaskState.objects.filter(task_id=self._task_id, index=index).update(status=status, exception=exception)
@@ -144,7 +144,7 @@ class SubTask(Task):
             retry_run = Retry(handler.run, handler.retry)
             celery_id = self.request.id
 
-            store.create(celery_id, index)
+            store.create(task_detail.tenant_id, celery_id, index)
             try:
                 retry_run(param)
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 
 from typing import List
 
+from django.conf import settings
 from django.db import transaction
 from pydantic import parse_obj_as
 
@@ -27,7 +28,7 @@ from backend.service.policy.operation import PolicyOperationService
 
 
 class ModelEventBean(ModelEvent):
-    """继承ModelEvent的数据属性"""
+    """继承 ModelEvent 的数据属性"""
 
 
 class BaseEventExecutor:
@@ -43,7 +44,7 @@ class BaseEventExecutor:
         raise NotImplementedError("subclasses of BaseEventExecutor must provide an execute() method")
 
     def finish(self):
-        """事件执行结束后执行-更新状态"""
+        """事件执行结束后执行 - 更新状态"""
         ModelEventService().update_status(self.event.id, ModelChangeEventStatus.Finished.value)
 
 
@@ -59,20 +60,21 @@ class DeleteActionPolicyEventExecutor(BaseEventExecutor):
             # 1. 用户或用户组自定义权限删除
             PolicyModel.delete_by_action(system_id=system_id, action_id=action_id)
 
-            # 2. 权限模板：变更权限模板里的action_ids及其授权的数据
+            # 2. 权限模板：变更权限模板里的 action_ids 及其授权的数据
             template_ids = PermTemplate.delete_action(system_id, action_id)
             PermTemplatePolicyAuthorized.delete_action(system_id, action_id, template_ids)
 
-            # 3. 调用后台根据action_id删除Policy的API, 实际测试在150万策略里删除10万+策略，大概需要3秒多
-            PolicyOperationService().delete_backend_policy_by_action(system_id, action_id)
+            # FIXME(tenant): 应该按照租户来遍历删除
+            # 3. 调用后台根据 action_id 删除 Policy 的 API, 实际测试在 150 万策略里删除 10 万 + 策略，大概需要 3 秒多
+            PolicyOperationService(settings.BK_APP_TENANT_ID).delete_backend_policy_by_action(system_id, action_id)
 
         # 4. 分级管理员授权范围
         RoleScope.delete_action_from_scope(system_id, action_id)
 
-        # 5. Action的审批流程配置
+        # 5. Action 的审批流程配置
         ActionProcessRelation.delete_by_action(system_id=system_id, action_id=action_id)
 
-        # 6. API白名单授权撤销
+        # 6. API 白名单授权撤销
         AuthAPIAllowListConfig.delete_by_action(system_id, action_id)
 
 
@@ -80,7 +82,7 @@ class DeleteActionEventExecutor(BaseEventExecutor):
     """删除操作"""
 
     def execute(self):
-        """删除Action权限模型"""
+        """删除 Action 权限模型"""
         ActionService().delete(self.event.system_id, self.event.model_id)
 
 

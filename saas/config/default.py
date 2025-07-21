@@ -8,13 +8,12 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from __future__ import absolute_import
-
 import os
 import ssl
 
 import environ
 import pymysql
+import urllib3
 from celery.schedules import crontab
 from django.db.backends.mysql.features import DatabaseFeatures
 from django.utils.functional import cached_property
@@ -24,12 +23,14 @@ pymysql.install_as_MySQLdb()
 
 # environ
 env = environ.Env()
+# load environment variables from .env file
+environ.Env.read_env()
+
+# no more useless warning
+urllib3.disable_warnings()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# load environment variables from .env file
-environ.Env.read_env()
 
 
 # 定义一个补丁来兼容 MySQL 5.7
@@ -88,14 +89,13 @@ INSTALLED_APPS = [
     "backend.apps.organization",
     "backend.apps.role",
     "backend.apps.user",
-    "backend.apps.model_builder",
     "backend.apps.handover",
     "backend.apps.mgmt",
     "backend.apps.temporary_policy",
+    "backend.apps.tenant",
     "backend.api.authorization",
     "backend.api.admin",
     "backend.api.management",
-    "backend.api.bkci",
 ]
 
 # 登录中间件
@@ -465,6 +465,8 @@ BK_IAM_BACKEND_SVC = env.str("BK_IAM_BACKEND_SVC", default="bkiam-web")
 BK_IAM_SAAS_API_SVC = env.str("BK_IAM_SAAS_API_SVC", default="bkiam-saas-api")
 BK_IAM_ENGINE_SVC = env.str("BK_IAM_ENGINE_SVC", default="bkiam-search-engine")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
+# [多租户] 全租户网关、全租户消息通知系统都需要声明所属租户 ID
+BK_APP_TENANT_ID = "sysetm"
 
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
@@ -530,11 +532,19 @@ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED
 # 问题反馈地址
 BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
 
-# 在itsm v4中的系统id
-BK_ITSM_V4_SYSTEM_ID = env.str("BK_ITSM_V4_SYSTEM_ID", default="bk_iam")
-# 在itsm v4中的租户id
-BK_APP_TENANT_ID = env.str("BK_APP_TENANT_ID", default="")
-# 在itsm v4中注册系统时的token
-BK_ITSM_V4_SYSTEM_TOKEN = env.str("BK_ITSM_V4_SYSTEM_TOKEN", "bk_iam")
-# itsm v4 api网关地址
-BK_ITSM_V4_APIGW_URL = env.str("BK_ITSM_V4_APIGW_URL", "")
+# 登录网关
+BK_LOGIN_APIGW_NAME = env.str("BK_LOGIN_APIGW_NAME", default="bk-login")
+BK_LOGIN_APIGW_STAGE = env.str("BK_LOGIN_APIGW_STAGE", "prod")
+
+# 在 ITSM 中的系统 id 和 token
+ITSM_SYSTEM_ID = env.str("ITSM_SYSTEM_ID", default="bk_iam")
+ITSM_SYSTEM_TOKEN = env.str("ITSM_SYSTEM_TOKEN", default="bk_iam")
+# ITSM API 网关名称和网关环境
+ITSM_APIGW_NAME = env.str("ITSM_APIGW_NAME", default="cw-aitsm")
+ITSM_APIGW_STAGE = env.str("ITSM_APIGW_STAGE", default="prod")
+# 流程模板文件（用于初始化每个租户的默认流程）
+ITSM_WORKERFLOW_TEMPLATE_FILE = os.path.join(BASE_DIR, "backend/plugins/approval_process/itsm/workflow_template.json")
+
+# 蓝鲸用户管理网关
+BK_USER_APIGW_NAME = env.str("BK_USER_APIGW_NAME", default="bk-user")
+BK_USER_APIGW_STAGE = env.str("BK_USER_APIGW_STAGE", default="prod")

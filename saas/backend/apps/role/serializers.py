@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -39,15 +39,15 @@ from backend.service.constants import (
 
 class RoleScopeSubjectSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=RoleScopeSubjectType.get_choices())
-    id = serializers.CharField(label="成员id")
+    id = serializers.CharField(label="成员 id")
 
     def validate(self, attrs):
-        """校验type和id"""
+        """校验 type 和 id"""
         _id, _type = attrs["id"], attrs["type"]
-        # 当id为*时，type必须为*
+        # 当 id 为*时，type 必须为*
         if _id == SUBJECT_ALL and _type != SUBJECT_TYPE_ALL:
             raise serializers.ValidationError("type must be * when id is *")
-        # 当type为部门时，id必须是数字字符串或*
+        # 当 type 为部门时，id 必须是数字字符串或*
         if _type == RoleScopeSubjectType.DEPARTMENT.value and _id != SUBJECT_ALL and not _id.isdigit():
             raise serializers.ValidationError("department id can only be a string consisting of numbers only")
 
@@ -68,7 +68,7 @@ class RoleInstanceSLZ(InstanceSLZ):
 
     def validate(self, data):
         """
-        分级管理员的auth scope资源链路的最后一级忽略任意
+        分级管理员的 auth scope 资源链路的最后一级忽略任意
         """
         paths = data["path"]
         for i in range(len(paths)):
@@ -93,12 +93,12 @@ class RoleResourceGroupSLZ(ResourceGroupSLZ):
 
 
 class GradeManagerActionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="操作ID")
+    id = serializers.CharField(label="操作 ID")
     resource_groups = serializers.ListField(label="资源条件组", child=RoleResourceGroupSLZ(label="资源条件组"))
 
 
 class RoleScopeAuthorizationSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统id", max_length=32)
+    system_id = serializers.CharField(label="系统 id", max_length=32)
     actions = serializers.ListField(label="操作策略", child=GradeManagerActionSLZ(label="策略"))
     aggregations = serializers.ListField(
         label="聚合操作", child=BaseAggActionListSLZ(label="聚合操作"), required=False, default=list
@@ -114,7 +114,7 @@ class RoleScopeAuthorizationSLZ(serializers.Serializer):
 
 
 class RoleMember(serializers.Serializer):
-    username = serializers.CharField(label="用户ID", max_length=128)
+    username = serializers.CharField(label="用户 ID", max_length=128)
     readonly = serializers.BooleanField(default=False)
 
 
@@ -145,10 +145,10 @@ class GradeMangerCreateSLZ(GradeMangerBaseInfoSLZ):
 
 class RoleIdSLZ(serializers.Serializer):
     """
-    角色ID
+    角色 ID
     """
 
-    id = serializers.IntegerField(label="角色ID")
+    id = serializers.IntegerField(label="角色 ID")
 
 
 class BaseGradeMangerSchemaSLZ(serializers.Serializer):
@@ -248,11 +248,11 @@ class GradeManagerListSLZ(BaseGradeMangerSLZ):
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
             role_ids = [role.id for role in self.instance]
 
-            # 查询role_users
+            # 查询 role_users
             for one in RoleUser.objects.filter(role_id__in=role_ids):
                 self.role_users[one.role_id].append({"username": one.username, "readonly": one.readonly})
 
-            # 查询role_subset_managers
+            # 查询 role_subset_managers
             for one in RoleRelation.objects.filter(parent_id__in=role_ids):
                 self.role_subset_managers[one.parent_id].append(one.role_id)
 
@@ -273,7 +273,7 @@ class GradeManagerListSLZ(BaseGradeMangerSLZ):
         if not subset_manager_ids:
             return False
 
-        return self.get_is_member(obj)  # 如果是成员, 可以看到所有二级管理员
+        return self.get_is_member(obj)  # 如果是成员，可以看到所有二级管理员
 
 
 class GradeMangerDetailSLZ(BaseGradeMangerSLZ):
@@ -317,7 +317,7 @@ class SystemManagerSLZ(BaseGradeMangerSLZ):
 
 
 class SystemManagerMemberUpdateSLZ(serializers.Serializer):
-    members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户ID", max_length=128))
+    members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户 ID", max_length=128))
 
 
 class MemberSystemPermissionUpdateSLZ(serializers.Serializer):
@@ -345,9 +345,9 @@ class RoleCommonActionSLZ(serializers.ModelSerializer):
 
 
 class RoleCommonCreateSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统id", max_length=32)
+    system_id = serializers.CharField(label="系统 id", max_length=32)
     name = serializers.CharField(label="名称", max_length=128)
-    action_ids = serializers.ListField(label="操作ID", child=serializers.CharField(), allow_empty=False)
+    action_ids = serializers.ListField(label="操作 ID", child=serializers.CharField(), allow_empty=False)
 
     def validate(self, data):
         action_id_set = set(data["action_ids"])
@@ -359,6 +359,7 @@ class RoleCommonCreateSLZ(serializers.Serializer):
     def create(self, validated_data):
         action_ids = validated_data.pop("action_ids")
         instance = RoleCommonAction(**validated_data)
+        instance.tenant_id = self.context["tenant_id"]
         instance.action_ids = action_ids
         instance.save()
         return instance
@@ -366,9 +367,9 @@ class RoleCommonCreateSLZ(serializers.Serializer):
 
 class RoleGroupMemberRenewSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
-    id = serializers.CharField(label="成员id")
+    id = serializers.CharField(label="成员 id")
     parent_type = serializers.ChoiceField(label="父级类型", choices=[(SubjectType.GROUP.value, "用户组")])
-    parent_id = serializers.CharField(label="父级ID")
+    parent_id = serializers.CharField(label="父级 ID")
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
     def validate_expired_at(self, value):
@@ -385,8 +386,8 @@ class RoleGroupMembersRenewSLZ(serializers.Serializer):
 
 
 class QueryAuthorizedSubjectsSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
-    action_id = serializers.CharField(label="操作ID")
+    system_id = serializers.CharField(label="系统 ID")
+    action_id = serializers.CharField(label="操作 ID")
     limit = serializers.IntegerField(label="返回结果数", min_value=10, max_value=1000)
     resource_instances = serializers.ListField(
         label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
@@ -403,9 +404,9 @@ class QueryAuthorizedSubjectsSLZ(serializers.Serializer):
 
 
 class AuthorizedSubjectsSLZ(serializers.Serializer):
-    type = serializers.CharField(label="Subject对象类型")
-    id = serializers.CharField(label="Subject对象ID")
-    name = serializers.CharField(label="Subject对象名称")
+    type = serializers.CharField(label="Subject 对象类型")
+    id = serializers.CharField(label="Subject 对象 ID")
+    name = serializers.CharField(label="Subject 对象名称")
 
 
 class SubsetMangerCreateSLZ(GradeMangerCreateSLZ):
@@ -464,7 +465,7 @@ class RoleGroupConfigSLZ(serializers.Serializer):
 
 class RoleGroupSubjectSLZ(serializers.Serializer):
     type = serializers.CharField(label="用户类型", source="subject_type")
-    id = serializers.CharField(label="用户ID", source="subject_id")
+    id = serializers.CharField(label="用户 ID", source="subject_id")
     name = serializers.SerializerMethodField(label="名称")
 
     def __init__(self, *args, **kwargs):

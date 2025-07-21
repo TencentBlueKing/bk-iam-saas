@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -24,23 +24,20 @@ from backend.apps.group.models import Group
 from backend.apps.template import tasks  # noqa
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.action import ActionBiz, ActionCheckBiz, ActionResourceGroupForCheck
-from backend.biz.action_group import ActionGroupBiz
-from backend.biz.policy import PolicyBean, PolicyOperationBiz
+from backend.biz.action import ActionResourceGroupForCheck
+from backend.biz.policy import PolicyBean
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleObjectRelationChecker
 from backend.biz.subject import SubjectInfoList
 from backend.biz.template import (
-    TemplateBiz,
-    TemplateCheckBiz,
     TemplateCreateBean,
     TemplateGroupPreCommitBean,
-    TemplatePolicyCloneBiz,
 )
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_template_upsert_lock
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
+from backend.mixins import BizMixin
 from backend.service.constants import PermissionCodeEnum
 from backend.service.models import Subject
 
@@ -83,7 +80,7 @@ class TemplateQueryMixin:
 
 class TemplatePermissionMixin:
     def get_object(self):
-        queryset = PermTemplate.objects.all()
+        queryset = PermTemplate.objects.filter(tenant_id=self.request.tenant_id)
 
         template_id = self.kwargs["id"]
         obj = get_object_or_404(queryset, pk=template_id)
@@ -98,7 +95,7 @@ class TemplatePermissionMixin:
             self.permission_denied(request, message=f"{request.role.type} role can not access template {obj.id}")
 
 
-class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
+class TemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_TEMPLATE.value,
@@ -108,14 +105,8 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = PermTemplate.objects.all()
     serializer_class = TemplateListSLZ
     filterset_class = TemplateFilter
-
-    template_biz = TemplateBiz()
-    template_check_biz = TemplateCheckBiz()
-    action_biz = ActionBiz()
-    action_group_biz = ActionGroupBiz()
 
     @swagger_auto_schema(
         operation_description="模板列表",
@@ -126,18 +117,18 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         group_id = request.query_params.get("group_id", "")
         queryset = self.filter_queryset(self.get_queryset())
 
-        # 查询role的system-actions set
+        # 查询 role 的 system-actions set
         role_system_actions = RoleListQuery(request.role).get_scope_system_actions()
         page = self.paginate_queryset(queryset)
         if page is not None:
-            # 查询模板中对group_id中有授权的
+            # 查询模板中对 group_id 中有授权的
             exists_template_set = self._query_group_exists_template_set(group_id, page)
             serializer = TemplateListSLZ(
                 page, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
             )
             return self.get_paginated_response(serializer.data)
 
-        # 查询模板中对group_id中有授权的
+        # 查询模板中对 group_id 中有授权的
         exists_template_set = self._query_group_exists_template_set(group_id, queryset)
         serializer = TemplateListSLZ(
             queryset, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
@@ -146,7 +137,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
     def _query_group_exists_template_set(self, group_id: str, queryset) -> Set[int]:
         """
-        查询group已授权的模板集合
+        查询 group 已授权的模板集合
         """
         if group_id == "":
             return set()
@@ -160,7 +151,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="创建模板",
         request_body=TemplateCreateSLZ(label="模板"),
-        responses={status.HTTP_201_CREATED: TemplateIdSLZ(label="模板ID")},
+        responses={status.HTTP_201_CREATED: TemplateIdSLZ(label="模板 ID")},
         tags=["template"],
     )
     @view_audit_decorator(TemplateCreateAuditProvider)
@@ -199,9 +190,9 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
         grouping = slz.validated_data["grouping"]
 
-        # 查询role的system-actions set
+        # 查询 role 的 system-actions set
         role_system_actions = RoleListQuery(request.role).get_scope_system_actions()
-        template = get_object_or_404(self.queryset, pk=kwargs["id"])
+        template = self.get_object()
         serializer = TemplateListSLZ(instance=template, role_system_actions=role_system_actions)
         data = serializer.data
         template_action_set = set(template.action_ids)
@@ -260,7 +251,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         return Response({})
 
 
-class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
+class TemplateMemberViewSet(BizMixin, TemplatePermissionMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {
         "create": PermissionCodeEnum.MANAGE_TEMPLATE.value,
@@ -268,11 +259,10 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = PermTemplatePolicyAuthorized.objects.all().defer("_data")
     filterset_class = TemplateMemberFilter
 
-    template_biz = TemplateBiz()
-    template_check_biz = TemplateCheckBiz()
+    def get_queryset(self):
+        return PermTemplatePolicyAuthorized.objects.filter(tenant_id=self.tenant_id).defer("_data")
 
     @swagger_auto_schema(
         operation_description="模板成员",
@@ -281,7 +271,7 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         template = self.get_object()
-        queryset = self.filter_queryset(self.queryset).filter(template_id=template.id)
+        queryset = self.filter_queryset(self.get_queryset()).filter(template_id=template.id)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -325,7 +315,7 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
         return Response({})
 
 
-class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
+class TemplatePreUpdateViewSet(BizMixin, TemplatePermissionMixin, GenericViewSet):
     """
     预更新
     """
@@ -333,11 +323,7 @@ class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
     lookup_field = "id"
     queryset = PermTemplate.objects.all()
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    template_biz = TemplateBiz()
-    template_check_biz = TemplateCheckBiz()
-    template_policy_clone_biz = TemplatePolicyCloneBiz()
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="预更新",
@@ -394,17 +380,12 @@ class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
         return Response({})
 
 
-class TemplatePreGroupSyncViewSet(TemplatePermissionMixin, GenericViewSet):
+class TemplatePreGroupSyncViewSet(BizMixin, TemplatePermissionMixin, GenericViewSet):
     """
     用户组预提交同步
     """
 
     lookup_field = "id"
-    queryset = PermTemplate.objects.all()
-
-    template_biz = TemplateBiz()
-    template_check_biz = TemplateCheckBiz()
-    action_check_biz = ActionCheckBiz()
 
     @swagger_auto_schema(
         operation_description="用户组同步预提交",
@@ -436,15 +417,12 @@ class TemplatePreGroupSyncViewSet(TemplatePermissionMixin, GenericViewSet):
         return Response({})
 
 
-class TemplateGenerateCloneGroupPolicyViewSet(TemplatePermissionMixin, GenericViewSet):
+class TemplateGenerateCloneGroupPolicyViewSet(BizMixin, TemplatePermissionMixin, GenericViewSet):
     """
     生成克隆的用户组策略
     """
 
     lookup_field = "id"
-    queryset = PermTemplate.objects.all()
-
-    biz = TemplatePolicyCloneBiz()
 
     @swagger_auto_schema(
         operation_description="生成克隆的用户组策略",
@@ -460,18 +438,14 @@ class TemplateGenerateCloneGroupPolicyViewSet(TemplatePermissionMixin, GenericVi
         data = slz.validated_data
 
         # 生成每个用户组对应的策略
-        group_policies = self.biz.generate_template_groups_clone_policy(
+        group_policies = self.template_policy_clone_biz.generate_template_groups_clone_policy(
             template, data["group_ids"], data["action_id"], data["clone_from_action_id"], request.role
         )
         return Response([one.dict() for one in group_policies])
 
 
-class TemplateGroupSyncPreviewViewSet(TemplatePermissionMixin, GenericViewSet):
+class TemplateGroupSyncPreviewViewSet(BizMixin, TemplatePermissionMixin, GenericViewSet):
     lookup_field = "id"
-    queryset = PermTemplate.objects.all()
-
-    template_biz = TemplateBiz()
-    template_check_biz = TemplateCheckBiz()
 
     @swagger_auto_schema(
         operation_description="权限模板用户组更新预览",
@@ -492,30 +466,34 @@ class TemplateGroupSyncPreviewViewSet(TemplatePermissionMixin, GenericViewSet):
             group_ids = [one.subject_id for one in page]
             groups = Group.objects.filter(id__in=group_ids)
 
-            # 组合生成response信息
+            # 组合生成 response 信息
             serializer = TemplateGroupPreViewSLZ(
-                groups, many=True, authorized_templates=page, delete_action_ids=delete_action_set
+                groups,
+                many=True,
+                context={"tenant_id": self.tenant_id},
+                authorized_templates=page,
+                delete_action_ids=delete_action_set,
             )
             return self.get_paginated_response(serializer.data)
 
         group_ids = [one.subject_id for one in queryset]
         groups = Group.objects.filter(id__in=group_ids)
         serializer = TemplateGroupPreViewSLZ(
-            groups, many=True, authorized_templates=queryset, delete_action_ids=delete_action_set
+            groups,
+            many=True,
+            context={"tenant_id": self.tenant_id},
+            authorized_templates=queryset,
+            delete_action_ids=delete_action_set,
         )
         return Response(serializer.data)
 
 
-class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
+class TemplateUpdateCommitViewSet(BizMixin, TemplatePermissionMixin, GenericViewSet):
     """
     权限模板更新提交
     """
 
     lookup_field = "id"
-    queryset = PermTemplate.objects.all()
-
-    template_biz = TemplateBiz()
-    template_check_biz = TemplateCheckBiz()
 
     @swagger_auto_schema(
         operation_description="权限模板更新提交",
@@ -532,10 +510,10 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
 
         if not PermTemplatePreUpdateLock.objects.update_waiting_to_running(template.id):
             # 任务已经开始运行了
-            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在, 禁止提交!"))
+            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在，禁止提交！"))
 
         # 使用长时任务实现用户组授权更新
-        task = TaskDetail.create(TaskType.TEMPLATE_UPDATE.value, [template.id])
+        task = TaskDetail.create(self.tenant_id, TaskType.TEMPLATE_UPDATE.value, [template.id])
         TaskFactory().run(task.id)
 
         audit_context_setter(template=template)
@@ -543,16 +521,12 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
         return Response({})
 
 
-class TemplateConvertToCustomPolicyViewSet(TemplatePermissionMixin, GenericViewSet):
+class TemplateConvertToCustomPolicyViewSet(BizMixin, TemplatePermissionMixin, GenericViewSet):
     """
     转换成自定义权限
     """
 
     lookup_field = "id"
-    queryset = PermTemplate.objects.all()
-
-    policy_biz = PolicyOperationBiz()
-    template_biz = TemplateBiz()
 
     @swagger_auto_schema(
         operation_description="模版权限转换成自定义权限",
@@ -572,8 +546,8 @@ class TemplateConvertToCustomPolicyViewSet(TemplatePermissionMixin, GenericViewS
         authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, template.id)
         template_policies = parse_obj_as(List[PolicyBean], authorized_template.data["actions"])
 
-        # 合并权限, 重新授权自定义权限
-        self.policy_biz.alter(template.system_id, subject, template_policies)
+        # 合并权限，重新授权自定义权限
+        self.policy_operation_biz.alter(template.system_id, subject, template_policies)
 
         # 解除用户组与模版直接的关系
         self.template_biz.revoke_subjects(template.system_id, template.id, [subject])

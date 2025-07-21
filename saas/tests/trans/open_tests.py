@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 
 import pytest
 from blue_krill.web.std_error import APIError
+from django.conf import settings
 from mock import MagicMock, Mock, patch
 
 from backend.biz.instance_selection import ChainNodeBean, InstanceSelectionBean, InstanceSelectionBiz
@@ -21,7 +22,7 @@ from backend.trans.open import OpenCommonTrans, OpenPolicy, OpenRelatedResource,
 
 class TestOpenCommonTrans:
     def test_to_policies(self):
-        trans = OpenCommonTrans()
+        trans = OpenCommonTrans(settings.BK_APP_TENANT_ID)
         policies = trans._to_policies(
             [
                 OpenPolicy(
@@ -46,7 +47,7 @@ class TestOpenCommonTrans:
         )
 
     def test_to_policy_list(self):
-        trans = OpenCommonTrans()
+        trans = OpenCommonTrans(settings.BK_APP_TENANT_ID)
         trans.action_check_biz.check = Mock(return_value=None)
 
         with (
@@ -173,7 +174,7 @@ class TestOpenRelatedResource:
                 )
             ),
         ) as fake_fetch_resource_name:
-            rr.fill_instance_name()
+            rr.fill_instance_name(settings.BK_APP_TENANT_ID)
 
             fake_fetch_resource_name.assert_called()
 
@@ -210,7 +211,7 @@ class TestOpenPolicy:
                 ]
             ),
         ) as fake_list_by_action_resource_type:
-            p.fill_instance_system()
+            p.fill_instance_system(settings.BK_APP_TENANT_ID)
 
             fake_list_by_action_resource_type.assert_called()
 
@@ -238,7 +239,7 @@ class TestOpenPolicy:
                 )
             ),
         ) as fake_fetch_resource_name:
-            p.fill_instance_name()
+            p.fill_instance_name(settings.BK_APP_TENANT_ID)
 
             fake_fetch_resource_name.assert_called()
 

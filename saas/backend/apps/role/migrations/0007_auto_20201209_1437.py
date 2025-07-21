@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -17,47 +17,44 @@ from backend.service.constants import RoleRelatedObjectType, RoleType
 
 def migrate_group_template_relation(apps, schema_editor):
     """将未归属的用户组和模板统一归属到超级管理员下"""
-    Role = apps.get_model("role", "Role")
-    RoleRelatedObject = apps.get_model("role", "RoleRelatedObject")
-    Group = apps.get_model("group", "Group")
-    Template = apps.get_model("template", "PermTemplate")
-
-    # 查询超级管理员ID
-    super_manager = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-
-    # 查询所有已归属的用户组和权限模板
-    related_group_ids = RoleRelatedObject.objects.filter(
-        object_type=RoleRelatedObjectType.GROUP.value
-    ).values_list("object_id", flat=True)
-    related_template_ids = RoleRelatedObject.objects.filter(
-        object_type=RoleRelatedObjectType.TEMPLATE.value
-    ).values_list("object_id", flat=True)
-
-    # 查询所有未归属的用户组和权限模板
-    group_ids = Group.objects.exclude(id__in=list(related_group_ids)).values_list("id", flat=True)
-    template_ids = Template.objects.exclude(id__in=list(related_template_ids)).values_list("id", flat=True)
-
-    # 组装出需要关联到超级管理员的列表
-    related_objects = [
-        RoleRelatedObject(role_id=super_manager.id, object_id=gid, object_type=RoleRelatedObjectType.GROUP.value)
-        for gid in group_ids
-    ] + [
-        RoleRelatedObject(role_id=super_manager.id, object_id=tid, object_type=RoleRelatedObjectType.TEMPLATE.value)
-        for tid in template_ids
-    ]
-    # 批量创建
-    if related_objects:
-        RoleRelatedObject.objects.bulk_create(related_objects, batch_size=1000)
+    # Role = apps.get_model("role", "Role")
+    # RoleRelatedObject = apps.get_model("role", "RoleRelatedObject")
+    # Group = apps.get_model("group", "Group")
+    # Template = apps.get_model("template", "PermTemplate")
+    #
+    # # 查询超级管理员 ID
+    # super_manager = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+    #
+    # # 查询所有已归属的用户组和权限模板
+    # related_group_ids = RoleRelatedObject.objects.filter(
+    #     object_type=RoleRelatedObjectType.GROUP.value
+    # ).values_list("object_id", flat=True)
+    # related_template_ids = RoleRelatedObject.objects.filter(
+    #     object_type=RoleRelatedObjectType.TEMPLATE.value
+    # ).values_list("object_id", flat=True)
+    #
+    # # 查询所有未归属的用户组和权限模板
+    # group_ids = Group.objects.exclude(id__in=list(related_group_ids)).values_list("id", flat=True)
+    # template_ids = Template.objects.exclude(id__in=list(related_template_ids)).values_list("id", flat=True)
+    #
+    # # 组装出需要关联到超级管理员的列表
+    # related_objects = [
+    #     RoleRelatedObject(role_id=super_manager.id, object_id=gid, object_type=RoleRelatedObjectType.GROUP.value)
+    #     for gid in group_ids
+    # ] + [
+    #     RoleRelatedObject(role_id=super_manager.id, object_id=tid, object_type=RoleRelatedObjectType.TEMPLATE.value)
+    #     for tid in template_ids
+    # ]
+    # # 批量创建
+    # if related_objects:
+    #     RoleRelatedObject.objects.bulk_create(related_objects, batch_size=1000)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('role', '0006_auto_20201118_1914'),
-        ('group', '0006_auto_20201029_1526'),
-        ('template', '0006_auto_20200520_1437'),
+        ("role", "0006_auto_20201118_1914"),
+        ("group", "0006_auto_20201029_1526"),
+        ("template", "0006_auto_20200520_1437"),
     ]
 
-    operations = [
-        migrations.RunPython(migrate_group_template_relation)
-    ]
+    operations = [migrations.RunPython(migrate_group_template_relation)]

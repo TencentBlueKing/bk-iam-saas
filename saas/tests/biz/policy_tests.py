@@ -1,5 +1,5 @@
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,6 +13,7 @@ from typing import List
 
 import pytest
 from blue_krill.web.std_error import APIError
+from django.conf import settings
 from mock import Mock
 
 from backend.biz.policy import (
@@ -692,7 +693,7 @@ class TestPolicyBean:
 
 @pytest.fixture
 def policy_bean_list(policy_bean: PolicyBean):
-    return PolicyBeanList("system_id", [policy_bean])
+    return PolicyBeanList(settings.BK_APP_TENANT_ID, "system_id", [policy_bean])
 
 
 class TestPolicyBeanList:
@@ -1019,7 +1020,7 @@ class TestResourceGroupBean:
 
 @pytest.fixture
 def policy_bean_list_mixin(policy_bean: PolicyBean):
-    return PolicyBeanListMixin("system_id", [policy_bean.copy(deep=True)])
+    return PolicyBeanListMixin(settings.BK_APP_TENANT_ID, "system_id", [policy_bean.copy(deep=True)])
 
 
 class TestPolicyBeanListMixin:

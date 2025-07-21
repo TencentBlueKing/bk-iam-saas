@@ -79,8 +79,8 @@ class SubjectGroupBean(BaseModel):
     user_count: int = 0
     department_count: int = 0
 
-    def get_role_name(self) -> str:
-        return RoleService().get_role_by_group_id(self.id).name
+    # def get_role_name(self) -> str:
+    #     return RoleService().get_role_by_group_id(self.id).name
 
 
 class GroupMemberBean(BaseModel):
@@ -129,35 +129,40 @@ class GroupTemplateGrantBean(BaseModel):
 
 
 class GroupBiz:
-    policy_query_svc = PolicyQueryService()
-    template_svc = TemplateService()
-    system_svc = SystemService()
-    group_svc = GroupService()
-    group_attribute_svc = GroupAttributeService()
-    engine_svc = EngineService()
-    role_svc = RoleService()
-    action_svc = ActionService()
-    subject_template_svc = SubjectTemplateService()
+    def __init__(self, tenant_id):
+        self.tenant_id = tenant_id
 
-    # TODO 这里为什么是 biz?
-    action_check_biz = ActionCheckBiz()
-    policy_operation_biz = PolicyOperationBiz()
-    template_biz = TemplateBiz()
-    resource_biz = ResourceBiz()
-    template_check_biz = TemplateCheckBiz()
-    subject_template_biz = SubjectTemplateBiz()
+        self.policy_query_svc = PolicyQueryService()
+        self.template_svc = TemplateService(tenant_id)
+        self.system_svc = SystemService()
+        self.group_svc = GroupService(tenant_id)
+        self.group_attribute_svc = GroupAttributeService(tenant_id)
+        self.engine_svc = EngineService()
+        self.role_svc = RoleService(tenant_id)
+        self.action_svc = ActionService(tenant_id)
+        self.subject_template_svc = SubjectTemplateService(tenant_id)
 
-    # 直通的方法
-    check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
-    check_subject_groups_quota = GroupService.__dict__["check_subject_groups_quota"]
-    update = GroupService.__dict__["update"]
-    get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
-    list_group_subject_before_expired_at_by_ids = GroupService.__dict__["list_group_subject_before_expired_at_by_ids"]
-    list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
-    batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
-    convert_attr_value = GroupAttributeService.__dict__["convert_attr_value"]
-    list_all_group_member = GroupService.__dict__["list_all_group_member"]
-    list_rbac_group_by_resource = GroupService.__dict__["list_rbac_group_by_resource"]
+        # TODO 这里为什么是 biz?
+        self.action_check_biz = ActionCheckBiz(self.tenant_id)
+        self.policy_operation_biz = PolicyOperationBiz(self.tenant_id)
+        self.template_biz = TemplateBiz(self.tenant_id)
+        self.resource_biz = ResourceBiz(self.tenant_id)
+        self.template_check_biz = TemplateCheckBiz(self.tenant_id)
+        self.subject_template_biz = SubjectTemplateBiz(self.tenant_id)
+
+        # 直通的方法
+        self.check_subject_groups_belong = GroupService(tenant_id).check_subject_groups_belong
+        self.check_subject_groups_quota = GroupService(tenant_id).check_subject_groups_quota
+        self.update = GroupService(tenant_id).update
+        self.get_member_count_before_expired_at = GroupService(tenant_id).get_member_count_before_expired_at
+        self.list_group_subject_before_expired_at_by_ids = GroupService(
+            tenant_id
+        ).list_group_subject_before_expired_at_by_ids
+        self.list_group_subject_before_expired_at = GroupService(tenant_id).list_group_subject_before_expired_at
+        self.batch_get_attributes = GroupAttributeService(tenant_id).batch_get_attributes
+        self.convert_attr_value = GroupAttributeService(tenant_id).convert_attr_value
+        self.list_all_group_member = GroupService(tenant_id).list_all_group_member
+        self.list_rbac_group_by_resource = GroupService(tenant_id).list_rbac_group_by_resource
 
     def create_and_add_members(
         self,
@@ -184,7 +189,7 @@ class GroupBiz:
                 ),
                 creator,
             )
-            RoleRelatedObject.objects.create_group_relation(role.id, group.id)
+            RoleRelatedObject.objects.create_group_relation(self.tenant_id, role.id, group.id)
             if subjects:
                 self._add_members(group.id, subjects, expired_at)
 
@@ -213,6 +218,7 @@ class GroupBiz:
 
         role_group_members = [
             RoleGroupMember(
+                tenant_id=self.tenant_id,
                 role_id=role_id,
                 group_id=group_id,
                 subset_id=subset_id,
@@ -243,7 +249,9 @@ class GroupBiz:
             if attrs:
                 group_attrs = {group.id: attrs for group in groups}
                 self.group_attribute_svc.batch_set_attributes(group_attrs)
-            RoleRelatedObject.objects.batch_create_group_relation(role.id, [group.id for group in groups])
+            RoleRelatedObject.objects.batch_create_group_relation(
+                self.tenant_id, role.id, [group.id for group in groups]
+            )
 
         # 创建同步人员模版
         if sync_subject_template:
@@ -363,7 +371,9 @@ class GroupBiz:
             old_policies = parse_obj_as(List[PolicyBean], authorized_template.data["actions"])
 
         # 筛选出新增的策略数据
-        added_policy_list = PolicyBeanList(system_id, policies).sub(PolicyBeanList(system_id, old_policies))
+        added_policy_list = PolicyBeanList(self.tenant_id, system_id, policies).sub(
+            PolicyBeanList(self.tenant_id, system_id, old_policies)
+        )
 
         # 校验新增数据资源实例名称是否正确
         added_policy_list.check_resource_name()
@@ -649,7 +659,7 @@ class GroupBiz:
             # 填充资源实例的属性
             for pr in policy_resources:
                 if len(pr.resources) != 0:
-                    fill_resources_attribute(pr.resources)
+                    fill_resources_attribute(self.tenant_id, pr.resources)
 
             results = self.engine_svc.query_subjects_by_policy_resources(
                 system_id, policy_resources, SubjectType.GROUP.value
@@ -711,7 +721,9 @@ class GroupBiz:
             try:
                 # 校验资源的名称是否一致
                 if need_check_resource_name:
-                    template_policy_list = PolicyBeanList(system_id=template.system_id, policies=template.policies)
+                    template_policy_list = PolicyBeanList(
+                        tenant_id=self.tenant_id, system_id=template.system_id, policies=template.policies
+                    )
                     template_policy_list.check_resource_name()
                 # 检查策略是否在 role 的授权范围内
                 scope_checker = RoleAuthorizationScopeChecker(role)
@@ -742,7 +754,11 @@ class GroupBiz:
             p.set_expired_at(PERMANENT_SECONDS)
 
         lock = GroupAuthorizeLock(
-            template_id=template.template_id, group_id=int(subject.id), system_id=template.system_id, key=uuid
+            tenant_id=self.tenant_id,
+            template_id=template.template_id,
+            group_id=int(subject.id),
+            system_id=template.system_id,
+            key=uuid,
         )
         lock.data = {"actions": [p.dict() for p in template.policies]}  # type: ignore
         return lock
@@ -774,7 +790,7 @@ class GroupBiz:
 
         with transaction.atomic():
             GroupAuthorizeLock.objects.bulk_create(locks, batch_size=100)
-            task = TaskDetail.create(TaskType.GROUP_AUTHORIZATION.value, [subject.dict(), uuid])
+            task = TaskDetail.create(self.tenant_id, TaskType.GROUP_AUTHORIZATION.value, [subject.dict(), uuid])
 
         # 执行授权流程
         TaskFactory().run(task.id)
@@ -861,7 +877,11 @@ class GroupBiz:
                 self.group_attribute_svc.batch_set_attributes({group.id: attrs})
 
             RoleRelatedObject.objects.create(
-                role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=True
+                tenant_id=self.tenant_id,
+                role_id=role.id,
+                object_type=RoleRelatedObjectType.GROUP.value,
+                object_id=group.id,
+                sync_perm=True,
             )
             members = self.role_svc.list_members_by_role_id(role.id)
             subjects = Subject.from_usernames(members)
@@ -1039,8 +1059,10 @@ class GroupBiz:
 
 
 class GroupCheckBiz:
-    svc = GroupService()
-    policy_svc = PolicyQueryService()
+    def __init__(self, tenant_id):
+        self.tenant_id = tenant_id
+        self.svc = GroupService(tenant_id)
+        self.policy_svc = PolicyQueryService()
 
     def check_member_count(self, group_id: int, new_member_count: int):
         """
@@ -1105,7 +1127,7 @@ class GroupCheckBiz:
         """
         subject = Subject.from_group_id(group_id)
         policies = self.policy_svc.list_by_subject(system_id, subject)
-        policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies))
+        policy_list = PolicyBeanList(self.tenant_id, system_id, parse_obj_as(List[PolicyBean], policies))
         for p in policies:
             if policy_list.get(p.action_id):
                 raise error_codes.VALIDATE_ERROR.format(

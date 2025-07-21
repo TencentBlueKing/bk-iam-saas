@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,6 +13,7 @@ import json
 
 from django.db import models
 
+from backend.common.constants import DEFAULT_TENANT_ID
 from backend.common.models import BaseModel, BaseSystemHiddenModel
 from backend.service.constants import ApplicationStatus, ApplicationType
 from backend.util.json import json_dumps
@@ -23,6 +24,8 @@ class Application(BaseModel, BaseSystemHiddenModel):
     权限申请单
     """
 
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+    # 多租户时由于 ITSM 的 SN 会重复，所以这里存储的 SN 是 ITSM 的 ticket_id, 而不是 ITSM 的 SN
     sn = models.CharField("申请单号", max_length=64)
     type = models.CharField("申请单类型", max_length=64, choices=ApplicationType.get_choices())
     applicant = models.CharField("申请人", max_length=64)
@@ -31,9 +34,7 @@ class Application(BaseModel, BaseSystemHiddenModel):
     status = models.CharField(
         "单据状态", max_length=32, choices=ApplicationStatus.get_choices(), default=ApplicationStatus.PENDING.value
     )
-
-    callback_id = models.CharField("回调随机数ID", max_length=32, default="")
-    ticket_id = models.CharField(verbose_name="单据id", max_length=32, default="")
+    callback_id = models.CharField("回调随机数 ID", max_length=32, default="")
 
     class Meta:
         verbose_name = "权限申请"

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 
 import abc
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from rest_framework.request import Request
 
@@ -27,7 +27,7 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
     """申请单据提供方的抽象类"""
 
     @abc.abstractmethod
-    def list_by_sns(self, ticket_ids: List[str]) -> List[ApplicationTicket]:
+    def list_by_sns(self, sns: List[str]) -> List[ApplicationTicket]:
         """批量根据单据号查询单据信息"""
 
     @abc.abstractmethod
@@ -43,7 +43,7 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         approval_title_prefix: str = "",
         approval_content: Optional[Dict] = None,
         callback_token: str = "",
-    ) -> Tuple[str, str]:
+    ) -> str:
         """创建 - 申请或续期自定义权限单据"""
 
     @abc.abstractmethod
@@ -56,7 +56,7 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         approval_title_prefix: str = "",
         approval_content: Optional[Dict] = None,
         callback_token: str = "",
-    ) -> Tuple[str, str]:
+    ) -> str:
         """创建 - 申请加入或续期用户组单据"""
 
     @abc.abstractmethod
@@ -69,7 +69,7 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         approval_content: Optional[Dict] = None,
         tag: str = "",
         callback_token: str = "",
-    ) -> Tuple[str, str]:
+    ) -> str:
         """创建 - 创建或更新分级管理员"""
 
     @abc.abstractmethod
@@ -77,9 +77,5 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         """处理审批回调结果"""
 
     @abc.abstractmethod
-    def cancel_ticket(self, ticket_id: str):
+    def cancel_ticket(self, sn: str):
         """撤销单据"""
-
-    @abc.abstractmethod
-    def generate_callback_token(self) -> str:
-        """生成回调token"""

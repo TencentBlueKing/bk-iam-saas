@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -19,18 +19,16 @@ from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import SuperManagerMemberSLZ, SystemManagerWithMembersSLZ
 from backend.api.authentication import ESBAuthentication
 from backend.apps.role.models import Role
-from backend.biz.role import RoleBiz
+from backend.mixins import TenantMixin
 from backend.service.constants import RoleType
 
 
-class AdminSuperManagerMemberViewSet(GenericViewSet):
+class AdminSuperManagerMemberViewSet(TenantMixin, GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
     admin_api_permission = {"retrieve": AdminAPIEnum.ROLE_SUPER_MANAGER_MEMBER_LIST.value}
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = RoleBiz()
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="超级管理员成员列表",
@@ -38,18 +36,18 @@ class AdminSuperManagerMemberViewSet(GenericViewSet):
         tags=["admin.role"],
     )
     def retrieve(self, request, *args, **kwargs):
-        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value, tenant_id=self.tenant_id)
         enabled_users = set(role.system_permission_enabled_content.enabled_users)
         data = [{"username": i, "has_system_permission": i in enabled_users} for i in role.members]
         return Response(data)
 
 
-class AdminSystemManagerMemberViewSet(GenericViewSet):
+class AdminSystemManagerMemberViewSet(TenantMixin, GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
     admin_api_permission = {"retrieve": AdminAPIEnum.ROLE_SYSTEM_MANAGER_MEMBER_LIST.value}
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="系统管理员成员列表",
@@ -61,7 +59,9 @@ class AdminSystemManagerMemberViewSet(GenericViewSet):
 
         # TODO: check system_id exists
 
-        role = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value, code=system_id).first()
+        role = Role.objects.filter(
+            tenant_id=self.tenant_id, type=RoleType.SYSTEM_MANAGER.value, code=system_id
+        ).first()
 
         serializer = SystemManagerWithMembersSLZ(instance=role)
         data = serializer.data

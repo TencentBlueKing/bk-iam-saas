@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -17,6 +17,7 @@ from django.utils.functional import cached_property
 from rest_framework import serializers
 
 from backend.apps.group.models import Group
+from backend.apps.organization.models import User
 from backend.apps.role.models import Role, RoleUser
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateRelation
 from backend.biz.group import GroupBiz, SubjectGroupBean
@@ -37,11 +38,12 @@ class BaseHandoverDataProcessor(ABC):
 
 
 class GroupInfoProcessor(BaseHandoverDataProcessor):
-    biz = GroupBiz()
-
     def __init__(self, handover_from: str, group_ids: List[int]) -> None:
+        user = User.objects.get(username=handover_from)
+
         self.handover_from = handover_from
         self.group_ids = group_ids
+        self.biz = GroupBiz(user.tenant_id)
 
     def validate(self):
         # 校验用户是否在属于用户组
@@ -50,7 +52,7 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
 
         for _id in self.group_ids:
             if _id not in subject_group_id_set:
-                raise serializers.ValidationError("用户组: {} 不在当前用户的可交接范围内!".format(_id))
+                raise serializers.ValidationError("用户组：{} 不在当前用户的可交接范围内！".format(_id))
 
     def get_info(self):
         groups = Group.objects.filter(id__in=self.group_ids)
@@ -60,22 +62,23 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
     @cached_property
     def subject_groups(self) -> List[SubjectGroupBean]:
         subject = Subject.from_username(self.handover_from)
-        # NOTE: 可能会有性能问题, 这里需要查询用户的所有组列表
+        # NOTE: 可能会有性能问题，这里需要查询用户的所有组列表
         return self.biz.list_all_subject_group(subject)
 
 
 class GustomPolicyProcessor(BaseHandoverDataProcessor):
-    biz = PolicyQueryBiz()
-    system_biz = SystemBiz()
-
     def __init__(self, handover_from: str, custom_policies: List[Dict[str, Any]]) -> None:
+        user = User.objects.get(username=handover_from)
+
         self.handover_from = handover_from
         self.custom_policies = custom_policies
+        self.biz = PolicyQueryBiz(user.tenant_id)
+        self.system_biz = SystemBiz()
 
     def validate(self):
         """
         1. 查询用户的每个系统的自定义权限
-        2. 校验id是否在自定义权限中
+        2. 校验 id 是否在自定义权限中
         """
         subject = Subject.from_username(self.handover_from)
         for system_policy in self.custom_policies:
@@ -84,7 +87,7 @@ class GustomPolicyProcessor(BaseHandoverDataProcessor):
             for _id in system_policy["policy_ids"]:
                 if _id not in subject_policy_id_set:
                     raise serializers.ValidationError(
-                        "自定义权限: {}{} 不在当前用户的可交接范围内!".format(system_policy["system_id"], _id)
+                        "自定义权限：{}{} 不在当前用户的可交接范围内！".format(system_policy["system_id"], _id)
                     )
 
     def get_info(self):
@@ -111,7 +114,7 @@ class RoleInfoProcessor(BaseHandoverDataProcessor):
     def validate(self):
         for _id in self.role_ids:
             if not RoleUser.objects.user_role_exists(self.handover_from, _id):
-                raise serializers.ValidationError("角色: {} 不在当前用户的可交接范围内!".format(_id))
+                raise serializers.ValidationError("角色：{} 不在当前用户的可交接范围内！".format(_id))
 
     def get_info(self):
         roles = Role.objects.filter(id__in=self.role_ids)
@@ -128,7 +131,7 @@ class SubjectTemplateProcessor(BaseHandoverDataProcessor):
             if not SubjectTemplateRelation.objects.filter(
                 template_id=_id, subject_id=self.handover_from, subject_type=SubjectType.USER.value
             ).exists():
-                raise serializers.ValidationError("角色: {} 不在当前用户的可交接范围内!".format(_id))
+                raise serializers.ValidationError("角色：{} 不在当前用户的可交接范围内！".format(_id))
 
     def get_info(self):
         templates = SubjectTemplate.objects.filter(id__in=self.subject_template_ids)

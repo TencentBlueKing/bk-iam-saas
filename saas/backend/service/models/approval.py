@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,7 +13,12 @@ from typing import List
 
 from pydantic import BaseModel
 
-from ..constants import APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP, ApplicationType, ProcessorNodeType, ProcessorSource
+from backend.service.constants import (
+    APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP,
+    ApplicationType,
+    ProcessorNodeType,
+    ProcessorSource,
+)
 
 
 class ApprovalProcess(BaseModel):
@@ -24,10 +29,10 @@ class ApprovalProcess(BaseModel):
 class ApprovalProcessNode(BaseModel):
     """流程节点
     包含字段：唯一标识、节点名称、流程处理者来源、流程者类型
-    流程处理者来源：有IAM 和其他，目前默认非IAM都是其他，若后续IAM内置审批，则进行扩展
+    流程处理者来源：有 IAM 和其他，目前默认非 IAM 都是其他，若后续 IAM 内置审批，则进行扩展
     流程处理者类型：
-    1. 若来源是IAM,则包括IAM超级管理员、IAM分级管理员等，即[]
-    2. 若来源非IAM,则可能是第三方审批系统定义的角色，比如Leader/指定审批人等
+    1. 若来源是 IAM，则包括 IAM 超级管理员、IAM 分级管理员等，即 []
+    2. 若来源非 IAM，则可能是第三方审批系统定义的角色，比如 Leader/指定审批人等
     """
 
     id: str
@@ -48,7 +53,7 @@ class ApprovalProcessNode(BaseModel):
 
     def is_application_type_supported(self, application_type: ApplicationType) -> bool:
         """是否支持配置为某种申请类型的流程节点"""
-        # 非IAM来源的默认支持被所有类型的申请配置为审批流程的节点
+        # 非 IAM 来源的默认支持被所有类型的申请配置为审批流程的节点
         if not self.is_iam_source():
             return True
 
@@ -104,7 +109,7 @@ class ApprovalProcessNodeWithProcessor(ApprovalProcessNode):
 
 
 class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
-    """附带流程里的每个节点, 且每个节点都附带具体处理人"""
+    """附带流程里的每个节点，且每个节点都附带具体处理人"""
 
     nodes: List[ApprovalProcessNodeWithProcessor] = []
 

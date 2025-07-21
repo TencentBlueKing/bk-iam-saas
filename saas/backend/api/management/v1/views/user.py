@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -25,24 +25,21 @@ from backend.api.management.v1.serializers import (
 )
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleRelatedObject
-from backend.biz.group import GroupBiz
-from backend.biz.role import RoleBiz
+from backend.mixins import BizMixin
 from backend.service.constants import RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
 
 
-class ManagementUserGradeManagerViewSet(GenericViewSet):
+class ManagementUserGradeManagerViewSet(BizMixin, GenericViewSet):
     """用户加入的分级管理员"""
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "list": (VerifyApiParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.USER_ROLE_LIST.value),
     }
-
-    role_biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="用户加入的分级管理员列表",
@@ -61,10 +58,10 @@ class ManagementUserGradeManagerViewSet(GenericViewSet):
         return Response(resp_slz.data)
 
 
-class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
+class ManagementUserGradeManagerGroupViewSet(BizMixin, GenericViewSet):
     """用户在某个分级管理员下的用户组"""
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
@@ -73,9 +70,11 @@ class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
 
-    group_biz = GroupBiz()
+    def get_queryset(self):
+        return Role.objects.filter(type=RoleType.GRADE_MANAGER.value, tenant_id=self.tenant_id).order_by(
+            "-updated_time"
+        )
 
     @swagger_auto_schema(
         operation_description="用户在某个分级管理员下加入的用户组列表",
@@ -91,13 +90,13 @@ class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
         role = self.get_object()
 
         # 查询用户加入的用户组
-        # NOTE: 可能会有性能问题, 用户的组过多
+        # NOTE: 可能会有性能问题，用户的组过多
         relations = self.group_biz.list_all_subject_group(Subject.from_username(data["user_id"]))
 
         user_group_ids = [one.id for one in relations]
         # 查询分级管理员下的用户组列表
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role.id, RoleRelatedObjectType.GROUP.value)
-        # 取交集，即为用户在某个分级管理员下的用户组ID列表
+        # 取交集，即为用户在某个分级管理员下的用户组 ID 列表
         group_ids = set(user_group_ids) & set(role_group_ids)
         groups = Group.objects.filter(id__in=group_ids)
 

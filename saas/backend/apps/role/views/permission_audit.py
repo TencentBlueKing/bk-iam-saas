@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -18,11 +18,12 @@ from backend.account.permissions import RolePermission
 from backend.apps.role.serializers import AuthorizedSubjectsSLZ, QueryAuthorizedSubjectsSLZ
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.common import error_codes
+from backend.mixins import TenantMixin
 from backend.service.constants import PermissionCodeEnum, RoleType
 from backend.util.time import format_localtime
 
 
-class QueryAuthorizedSubjectsViewSet(GenericViewSet):
+class QueryAuthorizedSubjectsViewSet(TenantMixin, GenericViewSet):
     permission_classes = [RolePermission]
     method_permission = {
         "post": PermissionCodeEnum.VIEW_AUTHORIZED_SUBJECTS.value,
@@ -30,7 +31,7 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
     }
 
     @swagger_auto_schema(
-        operation_description="查询-权限所属成员列表",
+        operation_description="查询 - 权限所属成员列表",
         request_body=QueryAuthorizedSubjectsSLZ(label="权限信息"),
         responses={status.HTTP_200_OK: AuthorizedSubjectsSLZ(label="拥有权限的对象", many=True)},
         tags=["role"],
@@ -44,11 +45,11 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
         if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != data["system_id"]:
             raise error_codes.FORBIDDEN
 
-        subjects = QueryAuthorizedSubjects(data).query_by_permission_type()
+        subjects = QueryAuthorizedSubjects(self.tenant_id, data).query_by_permission_type()
         return Response(subjects)
 
     @swagger_auto_schema(
-        operation_description="导出-权限所属成员列表",
+        operation_description="导出 - 权限所属成员列表",
         request_body=QueryAuthorizedSubjectsSLZ(label="权限信息"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
@@ -63,4 +64,4 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
             raise error_codes.FORBIDDEN
 
         exported_file_name = f"{data['system_id']}_{format_localtime()}"
-        return QueryAuthorizedSubjects(data).export(exported_file_name)
+        return QueryAuthorizedSubjects(self.tenant_id, data).export(exported_file_name)

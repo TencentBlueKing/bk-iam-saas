@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -18,14 +18,16 @@ from .policy import PolicyTrans
 
 class GroupTrans:
     """
-    转换Group授权信息
+    转换 Group 授权信息
     """
 
-    policy_trans = PolicyTrans()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.policy_trans = PolicyTrans(self.tenant_id)
 
     def from_group_grant_data(self, data: List[Dict[str, Any]]) -> List[GroupTemplateGrantBean]:
         """
-        转换Group授权数据结构
+        转换 Group 授权数据结构
 
         data: [
             {

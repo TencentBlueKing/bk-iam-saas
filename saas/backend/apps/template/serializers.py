@@ -259,11 +259,13 @@ class TemplateGroupPreViewSLZ(serializers.ModelSerializer):
     def get_delete_actions(self, obj):
         authorized_template = self.authorized_template_dict[obj.id]
         policy_list = PolicyBeanList(
-            authorized_template.system_id, parse_obj_as(List[PolicyBean], authorized_template.data["actions"])
+            self.context["tenant_id"],
+            authorized_template.system_id,
+            parse_obj_as(List[PolicyBean], authorized_template.data["actions"]),
         )
         delete_policies = [p for p in policy_list.policies if p.action_id in self.delete_action_ids]
         delete_policy_list = PolicyBeanList(
-            authorized_template.system_id, delete_policies, need_fill_empty_fields=True
+            self.context["tenant_id"], authorized_template.system_id, delete_policies, need_fill_empty_fields=True
         )
         return [p.dict() for p in delete_policy_list.policies]
 

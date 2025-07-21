@@ -488,7 +488,7 @@
           }
         }
       },
-      
+
       // 监听当前已选中的角色是否有变更
       fetchRoleUpdate ({ role }) {
         const { id, type } = role;
@@ -541,7 +541,7 @@
             // if (this.openedItem === 'myManageSpaceNav' && this.curRole === 'super_manager') {
             //     this.openedItem = 'gradingAdminNav';
             // }
-            // 如果是从我的管理空间页面过来的，激活menu选中状态
+            // 如果是从我的管理空间页面过来的，激活 menu 选中状态
             if (this.openedItem === 'myManageSpaceNav') {
               const menuActive = {
                 rating_manager: () => {
@@ -652,12 +652,12 @@
       handleNavMenu (item) {
         this.$nextTick(() => {
           if (item.rkey === 'approval') {
-            const url = `${window.BK_ITSM_APP_URL}/#/workbench/ticket/approval`;
+            const url = `${window.BK_ITSM_APP_URL}/#/ticket/ticketList`;
             window.open(url);
             return;
           }
           if (item.path === this.$route.path) {
-            // 因为vuex是同步操作，需要从缓存里获取最新的位置处理多个标签页之间不同权限页面之间的切换场景
+            // 因为 vuex 是同步操作，需要从缓存里获取最新的位置处理多个标签页之间不同权限页面之间的切换场景
             const storageNavIndex = window.localStorage.getItem('index');
             if (this.index !== Number(storageNavIndex)) {
               return;
@@ -731,7 +731,7 @@
         return levelMap[level] ? levelMap[level]() : levelMap[0]();
       },
 
-      // 清除页面localstorage
+      // 清除页面 localstorage
       resetLocalStorage () {
         window.localStorage.removeItem('customPermProcessList');
         window.localStorage.removeItem('gradeManagerList');

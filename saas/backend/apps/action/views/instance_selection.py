@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,15 +13,12 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, views
 from rest_framework.response import Response
 
-from backend.biz.instance_selection import InstanceSelectionBiz
+from backend.apps.action.serializers import InstanceSelectionQuerySLZ, InstanceSelectionSLZ
+from backend.mixins import BizMixin
 
-from ..serializers import InstanceSelectionQuerySLZ, InstanceSelectionSLZ
 
-
-class InstanceSelectionView(views.APIView):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = InstanceSelectionBiz()
+class InstanceSelectionView(BizMixin, views.APIView):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="资源实例选择视图",
@@ -35,7 +32,7 @@ class InstanceSelectionView(views.APIView):
 
         slz_data = slz.validated_data
 
-        instance_selection = self.biz.list_by_action_resource_type(
+        instance_selection = self.instance_selection_biz.list_by_action_resource_type(
             slz_data["system_id"],
             slz_data["action_id"],
             slz_data["resource_type_system"],

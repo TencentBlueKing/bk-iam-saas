@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -27,15 +27,15 @@ from backend.api.management.v2.serializers import (
 )
 from backend.apps.group.models import Group
 from backend.apps.subject_template.models import SubjectTemplateGroup
-from backend.biz.group import GroupBiz
 from backend.common.error_codes import error_codes
 from backend.component.iam import list_subject_groups_detail
+from backend.mixins import BizMixin
 from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
 from backend.util.time import utc_string_to_timestamp
 
 
-class ManagementUserGroupBelongViewSet(GenericViewSet):
+class ManagementUserGroupBelongViewSet(BizMixin, GenericViewSet):
     """用户与用户组归属"""
 
     authentication_classes = [ESBAuthentication]
@@ -49,8 +49,6 @@ class ManagementUserGroupBelongViewSet(GenericViewSet):
 
     pagination_class = None
 
-    group_biz = GroupBiz()
-
     @swagger_auto_schema(
         operation_description="用户与用户组归属判断",
         query_serializer=ManagementSubjectGroupBelongSLZ("用户组所属判断"),
@@ -61,9 +59,9 @@ class ManagementUserGroupBelongViewSet(GenericViewSet):
         serializer = ManagementSubjectGroupBelongSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        group_ids_str = data["group_ids"]
 
         try:
-            group_ids_str = data["group_ids"]
             group_ids = list(map(int, group_ids_str.split(",")))
         except ValueError:
             raise error_codes.INVALID_ARGS.format(f"group_ids: {group_ids_str} valid error")
@@ -78,7 +76,7 @@ class ManagementUserGroupBelongViewSet(GenericViewSet):
         return Response(group_belongs)
 
 
-class ManagementDepartmentGroupBelongViewSet(GenericViewSet):
+class ManagementDepartmentGroupBelongViewSet(BizMixin, GenericViewSet):
     """部门与用户组归属"""
 
     authentication_classes = [ESBAuthentication]
@@ -91,8 +89,6 @@ class ManagementDepartmentGroupBelongViewSet(GenericViewSet):
     }
 
     pagination_class = None
-
-    group_biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="部门与用户组归属判断",

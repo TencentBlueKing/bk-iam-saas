@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -17,19 +17,13 @@ from rest_framework.viewsets import GenericViewSet
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
 from backend.apps.subject.audit import SubjectTemporaryPolicyDeleteAuditProvider
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.open import ApplicationPolicyListCache
-from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.serializers import SystemQuerySLZ
+from backend.mixins import BizMixin
 from backend.service.models import Subject
 
 
-class TemporaryPolicyViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    policy_query_biz = PolicyQueryBiz()
-    policy_operation_biz = PolicyOperationBiz()
-
-    application_policy_list_cache = ApplicationPolicyListCache()
+class TemporaryPolicyViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="用户的所有临时权限列表",
@@ -74,10 +68,8 @@ class TemporaryPolicyViewSet(GenericViewSet):
         return Response()
 
 
-class TemporaryPolicySystemViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = PolicyQueryBiz()
+class TemporaryPolicySystemViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="用户的有临时权限的所有系统列表",
@@ -87,6 +79,6 @@ class TemporaryPolicySystemViewSet(GenericViewSet):
     def list(self, request, *args, **kwargs):
         subject = Subject.from_username(request.user.username)
 
-        data = self.biz.list_temporary_system_counter_by_subject(subject)
+        data = self.policy_query_biz.list_temporary_system_counter_by_subject(subject)
 
         return Response([one.dict() for one in data])

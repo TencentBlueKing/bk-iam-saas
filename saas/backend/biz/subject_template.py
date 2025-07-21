@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -61,6 +61,9 @@ class SubjectTemplateGroupBean(BaseModel):
 
 
 class SubjectTemplateCheckBiz:
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+
     def check_member_count(self, subject_template_id: int, new_member_count: int):
         """
         检查人员模版成员数量未超限
@@ -105,9 +108,10 @@ class SubjectTemplateCheckBiz:
 
 
 class SubjectTemplateBiz:
-    svc = SubjectTemplateService()
-
-    role_svc = RoleService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = SubjectTemplateService(tenant_id)
+        self.role_svc = RoleService(self.tenant_id)
 
     def create(
         self,
@@ -120,7 +124,7 @@ class SubjectTemplateBiz:
         source_group_id: int = 0,
     ) -> SubjectTemplate:
         with transaction.atomic():
-            # 创建template
+            # 创建 template
             subject_template = self.svc.create(
                 name=name,
                 description=description,
@@ -131,7 +135,7 @@ class SubjectTemplateBiz:
             )
 
             # 关联角色
-            RoleRelatedObject.objects.create_subject_template_relation(role.id, subject_template.id)
+            RoleRelatedObject.objects.create_subject_template_relation(self.tenant_id, role.id, subject_template.id)
 
         return subject_template
 
@@ -150,16 +154,16 @@ class SubjectTemplateBiz:
     def delete_group(self, template_id: int, group_id: int):
         self.svc.delete_group(template_id, group_id)
 
-        # 同步删除role group member
+        # 同步删除 role group member
         RoleGroupMember.objects.filter(group_id=group_id, subject_template_id=template_id).delete()
 
     def add_members(self, template_id: int, members: List[Subject]):
         group_ids = self.svc.add_members(template_id, members)
 
-        # 同步添加role group member
+        # 同步添加 role group member
         role_group_members = []
         for group_id in group_ids:
-            # 添加role group member
+            # 添加 role group member
             role = self.role_svc.get_role_by_group_id(group_id)
             if role.type == RoleType.SUBSET_MANAGER.value:
                 role_id = self.role_svc.get_parent_id(role.id)
@@ -171,6 +175,7 @@ class SubjectTemplateBiz:
             role_group_members.extend(
                 [
                     RoleGroupMember(
+                        tenant_id=self.tenant_id,
                         role_id=role_id,
                         group_id=group_id,
                         subset_id=subset_id,
@@ -188,7 +193,7 @@ class SubjectTemplateBiz:
     def delete_members(self, template_id: int, members: List[Subject]):
         self.svc.delete_members(template_id, members)
 
-        # 同步删除role group member
+        # 同步删除 role group member
         user_ids = [one.id for one in members if one.type == SubjectType.USER.value]
         if user_ids:
             RoleGroupMember.objects.filter(

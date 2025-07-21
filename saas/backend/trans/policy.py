@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-主要是将API请求里的操作或操作组合等权限数据，转换为PolicyBean或List[PolicyBean]，便于进行下一步处理
+主要是将 API 请求里的操作或操作组合等权限数据，转换为 PolicyBean 或 List[PolicyBean]，便于进行下一步处理
 """
 
 from collections import defaultdict
@@ -32,14 +32,16 @@ from backend.util.uuid import gen_uuid
 
 
 class PolicyTrans:
-    action_biz = ActionBiz()
-    action_check_biz = ActionCheckBiz()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.action_biz = ActionBiz(self.tenant_id)
+        self.action_check_biz = ActionCheckBiz(self.tenant_id)
 
     def _gen_instance_condition_by_aggregate_resources(
         self, aggregate_resource_types: List[Dict]
     ) -> Optional[ConditionBean]:
         """
-        将操作聚合里选择的资源实例转换为Policy里资源的Condition
+        将操作聚合里选择的资源实例转换为 Policy 里资源的 Condition
         [{
             system_id,
             id,
@@ -75,7 +77,7 @@ class PolicyTrans:
     def _gen_policy_by_action_and_condition(
         self, action: ActionBean, condition: Optional[ConditionBean], expired_at: int
     ) -> PolicyBean:
-        """通过操作模型和选择里实例的Condition生成对应策略"""
+        """通过操作模型和选择里实例的 Condition 生成对应策略"""
         return PolicyBean(
             action_id=action.id,
             resource_groups=[
@@ -92,7 +94,7 @@ class PolicyTrans:
             expired_at=expired_at,
         )
 
-    @cachedmethod(timeout=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存 1 分钟
     def _get_action_list(self, system_id: str) -> ActionBeanList:
         """获取某个系统的操作列表"""
         return self.action_biz.list(system_id)
@@ -143,9 +145,10 @@ class PolicyTrans:
                 policy = self._gen_policy_by_action_and_condition(action, condition, expired_at)
                 system_policies_dict[a["system_id"]].append(policy)
 
-        # 将List[PolicyBean] 转换为PolicyBeanList
+        # 将 List[PolicyBean] 转换为 PolicyBeanList
         return {
             system_id: PolicyBeanList(
+                self.tenant_id,
                 system_id,
                 list(policies),
                 need_fill_empty_fields=False,
@@ -204,8 +207,9 @@ class PolicyTrans:
         self.action_check_biz.check_action_resource_group(
             system_id, parse_obj_as(List[ActionResourceGroupForCheck], actions)
         )
-        # 2. 转为PolicyBeanList
+        # 2. 转为 PolicyBeanList
         return PolicyBeanList(
+            self.tenant_id,
             system_id,
             parse_obj_as(List[PolicyBean], actions),
             need_fill_empty_fields=False,
@@ -215,7 +219,7 @@ class PolicyTrans:
 
     def from_aggregate_actions_and_actions(self, system_id: str, data: Dict[str, Any]) -> PolicyBeanList:
         """
-        转换前端数据为policies
+        转换前端数据为 policies
 
         {
             actions: [
@@ -284,7 +288,9 @@ class PolicyTrans:
         # 2. 聚合的操作权限处理
         agg_policy_list_dict = self.from_aggregate_actions(data["aggregations"])
         # NOTE 当前聚合只支持单一系统，所以直接取申请的系统的策略
-        agg_policy_list = agg_policy_list_dict.get(system_id, PolicyBeanList(system_id=system_id, policies=[]))
+        agg_policy_list = agg_policy_list_dict.get(
+            system_id, PolicyBeanList(self.tenant_id, system_id=system_id, policies=[])
+        )
 
         # 3. 合并策略
         return policy_list.add(agg_policy_list)

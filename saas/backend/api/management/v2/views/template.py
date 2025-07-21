@@ -1,5 +1,5 @@
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -27,16 +27,16 @@ from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.template.audit import TemplateCreateAuditProvider
 from backend.apps.template.filters import TemplateFilter
-from backend.apps.template.models import PermTemplate
 from backend.apps.template.views import TemplateQueryMixin
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery
-from backend.biz.template import TemplateBiz, TemplateCheckBiz, TemplateCreateBean
+from backend.biz.template import TemplateCreateBean
 from backend.common.lock import gen_template_upsert_lock
+from backend.mixins import BizMixin
 from backend.service.constants import RoleType
 
 
-class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
+class ManagementTemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
     """模板"""
 
     authentication_classes = [ESBAuthentication]
@@ -52,10 +52,7 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
             ManagementAPIEnum.V2_GRADE_MANAGER_TEMPLATE_CREATE.value,
         ),
     }
-    queryset = PermTemplate.objects.all()
     lookup_field = "id"
-    template_biz = TemplateBiz()
-    template_check_biz = TemplateCheckBiz()
     filterset_class = TemplateFilter
 
     @swagger_auto_schema(
@@ -64,8 +61,8 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         tags=["management.role.template"],
     )
     def list(self, request, *args, **kwargs):
-        role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
-        # 用户校验，默认用admin
+        role = get_object_or_404(Role, tenant_id=self.tenant_id, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
+        # 用户校验，默认用 admin
         user = User.objects.get(username="admin")
         queryset = self.filter_queryset(RoleListQuery(role, user).query_template())
         # 查询 role 的 system-actions set
@@ -87,7 +84,7 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="分级管理员创建模板",
         request_body=ManagementTemplateCreateSLZ(label="模板"),
-        responses={status.HTTP_201_CREATED: ManagementTemplateIdSLZ(label="模板ID")},
+        responses={status.HTTP_201_CREATED: ManagementTemplateIdSLZ(label="模板 ID")},
         tags=["management.role.template"],
     )
     @view_audit_decorator(TemplateCreateAuditProvider)
@@ -101,7 +98,7 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         user_id = request.user.username
         data = serializer.validated_data
-        role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=role_id)
+        role = get_object_or_404(Role, tenant_id=self.tenant_id, type=RoleType.GRADE_MANAGER.value, id=role_id)
 
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(role)

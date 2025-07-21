@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -29,8 +29,11 @@ logger = logging.getLogger("app")
 
 
 class GroupAttributeService:
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+
     def convert_attr_value(self, value_str: str, data_type: GroupAttributeValueType) -> Any:
-        """将属性值的数据类型从string转换为实际数据类型"""
+        """将属性值的数据类型从 string 转换为实际数据类型"""
         error_message = f"convert attr value from str to {data_type} fail, value_str: {value_str}"
 
         # 字符串
@@ -70,7 +73,7 @@ class GroupAttributeService:
             for attr_enum in GroupSaaSAttributeEnum:  # type: ignore[attr-defined]
                 attr = attr_enum.value
                 value_str = group_attr_values[(group_id, attr)]
-                # 若value为空字符串，则说明没有配置
+                # 若 value 为空字符串，则说明没有配置
                 if value_str == "":
                     continue
                 value = self.convert_attr_value(value_str, GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP[attr])
@@ -79,20 +82,20 @@ class GroupAttributeService:
 
             group_attrs[group_id] = GroupAttributes(attributes=attrs)
 
-        # Note: 以上仅仅是处理了Group SaaS属性，后续可添加鉴权所需属性
+        # Note: 以上仅仅是处理了 Group SaaS 属性，后续可添加鉴权所需属性
 
         return group_attrs
 
     def batch_delete_attributes(self, group_ids: List[int]):
         """批量删除用户组属性"""
-        # Note: 目前仅仅处理了Group SaaS属性，后续可删除鉴权属性
+        # Note: 目前仅仅处理了 Group SaaS 属性，后续可删除鉴权属性
         GroupSaaSAttribute.objects.filter(group_id__in=group_ids).delete()
 
     def batch_set_attributes(self, group_attrs: Dict[int, Dict[str, Any]]):
         """批量设置用户组属性，已存在将会进行覆盖
         group_attrs: {group_id: {attr: value, ...}, ...}
         """
-        # Note: 以下仅仅是处理了Group SaaS属性，后续可添加鉴权所需属性
+        # Note: 以下仅仅是处理了 Group SaaS 属性，后续可添加鉴权所需属性
 
         # 查询已存在的
         gsas = GroupSaaSAttribute.objects.filter(group_id__in=group_attrs.keys())
@@ -107,10 +110,10 @@ class GroupAttributeService:
             for attr, value in attrs.items():
                 # 若非支持的属性，则获取默认值时将异常
                 default_value = GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP[attr]
-                # DB保存所有都以字符串报错
+                # DB 保存所有都以字符串报错
                 value_str = str(value)
 
-                # 如果以存在key，则更新即可
+                # 如果以存在 key，则更新即可
                 if (group_id, attr) in group_attr_values:
                     group_saas_attribute = group_attr_values[(group_id, attr)]
                     # 判断是否与旧值一样，不一样才更新
@@ -122,7 +125,9 @@ class GroupAttributeService:
                 # 若与默认值相同，则无需存储
                 if default_value == value:
                     continue
-                created_group_saas_attrs.append(GroupSaaSAttribute(group_id=group_id, key=attr, value=value_str))
+                created_group_saas_attrs.append(
+                    GroupSaaSAttribute(tenant_id=self.tenant_id, group_id=group_id, key=attr, value=value_str)
+                )
 
         # 批量创建
         if created_group_saas_attrs:

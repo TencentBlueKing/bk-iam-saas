@@ -27,6 +27,10 @@ from .open import OpenCommonTrans, OpenPolicy
 class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
     """接入系统请求自定义权限的申请链接的请求数据"""
 
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        super().__init__(tenant_id)
+
     def to_policy_list(self, data: Dict) -> PolicyBeanList:
         """
         组装出申请的策略
@@ -84,9 +88,9 @@ class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
         # 2. 填充资源实例所需数据：（1）system_id（2）name
         for open_policy in open_policies:
             # 填充 system_id
-            open_policy.fill_instance_system()
+            open_policy.fill_instance_system(self.tenant_id)
             # 将给所有资源实例添加名字
-            open_policy.fill_instance_name()
+            open_policy.fill_instance_name(self.tenant_id)
 
         expired_at = data.get("expired_at", 0)
         return self._to_policy_list(system_id, open_policies, expired_at=expired_at)
@@ -116,7 +120,7 @@ class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
         """来着带自定义审批内容的自定义权限申请的数据转换"""
 
         # 1. 将多条策略按 Action 合并为标准的策略数据
-        policy_list = PolicyBeanList(system_id=data["system"], policies=[])
+        policy_list = PolicyBeanList(tenant_id=self.tenant_id, system_id=data["system"], policies=[])
         policy_ticket_contents = []
         for action in data["actions"]:
             one_policy_data = {

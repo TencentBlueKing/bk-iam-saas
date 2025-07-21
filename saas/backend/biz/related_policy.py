@@ -33,7 +33,9 @@ class RelatedPolicyBiz:
     依赖操作
     """
 
-    action_svc = ActionService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.action_svc = ActionService(self.tenant_id)
 
     def create_related_policies(self, system_id: str, policy: PolicyBean) -> List[PolicyBean]:
         """

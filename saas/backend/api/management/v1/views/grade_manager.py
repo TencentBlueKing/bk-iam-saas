@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -38,15 +38,13 @@ from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.helper import RoleWithPermGroupBiz
-from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.lock import gen_role_upsert_lock
 from backend.common.pagination import CustomPageNumberPagination
+from backend.mixins import BizMixin, TransMixin
 from backend.service.constants import RoleSourceType, RoleType
-from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+class ManagementGradeManagerViewSet(BizMixin, TransMixin, ManagementAPIPermissionCheckMixin, GenericViewSet):
     """分级管理员"""
 
     authentication_classes = [ESBAuthentication]
@@ -58,18 +56,18 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
     pagination_class = CustomPageNumberPagination
     filterset_class = GradeManagerFilter
 
-    biz = RoleBiz()
-    role_check_biz = RoleCheckBiz()
-    trans = GradeManagerTrans()
+    def get_queryset(self):
+        return Role.objects.filter(type=RoleType.GRADE_MANAGER.value, tenant_id=self.tenant_id).order_by(
+            "-updated_time"
+        )
 
     @swagger_auto_schema(
         operation_description="创建分级管理员",
         request_body=ManagementGradeManagerCreateSLZ(label="创建分级管理员"),
-        responses={status.HTTP_201_CREATED: RoleIdSLZ(label="分级管理员ID")},
+        responses={status.HTTP_201_CREATED: RoleIdSLZ(label="分级管理员 ID")},
         tags=["management.role"],
     )
     @view_audit_decorator(RoleCreateAuditProvider)
@@ -81,7 +79,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+        # API 里数据鉴权：不可超过接入系统可管控的授权系统范围
         source_system_id = data["system"]
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(source_system_id, auth_system_ids)
@@ -89,23 +87,26 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         # 检查该系统可创建的分级管理员数量是否超限
         self.role_check_biz.check_grade_manager_of_system_limit(source_system_id)
 
-        # 兼容member格式
+        # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
 
-        # 转换为RoleInfoBean，用于创建时使用
-        role_info = self.trans.to_role_info(data, source_system_id=source_system_id)
+        # 转换为 RoleInfoBean，用于创建时使用
+        role_info = self.grade_manager_trans.to_role_info(data, source_system_id=source_system_id)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
             with transaction.atomic():
                 # 创建角色
-                role = self.biz.create_grade_manager(role_info, request.user.username)
+                role = self.role_biz.create_grade_manager(role_info, request.user.username)
 
-                # 记录role创建来源信息
+                # 记录 role 创建来源信息
                 RoleSource.objects.create(
-                    role_id=role.id, source_type=RoleSourceType.API.value, source_system_id=source_system_id
+                    tenant_id=self.tenant_id,
+                    role_id=role.id,
+                    source_type=RoleSourceType.API.value,
+                    source_system_id=source_system_id,
                 )
 
         # 审计
@@ -123,7 +124,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     def update(self, request, *args, **kwargs):
         """
         更新分级管理员
-        Note: 这里可授权范围和可授权人员范围均是全覆盖的，只对body里传入的字段进行更新
+        Note: 这里可授权范围和可授权人员范围均是全覆盖的，只对 body 里传入的字段进行更新
         """
         role = self.get_object()
 
@@ -132,25 +133,25 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         data = serializer.validated_data
 
         if "authorization_scopes" in data:
-            # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+            # API 里数据鉴权：不可超过接入系统可管控的授权系统范围
             role_source = RoleSource.objects.get(source_type=RoleSourceType.API.value, role_id=role.id)
             auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
             self.verify_system_scope(role_source.source_system_id, auth_system_ids)
 
-        # 转换为RoleInfoBean
-        role_info = self.trans.to_role_info_for_update(data)
+        # 转换为 RoleInfoBean
+        role_info = self.grade_manager_trans.to_role_info_for_update(data)
 
         # 数据校验
         if "name" in data:
-            with gen_role_upsert_lock(data["name"]):
+            with gen_role_upsert_lock(self.tenant_id, data["name"]):
                 # 名称唯一性检查
                 self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
                 # 更新
-                self.biz.update(role, role_info, request.user.username)
+                self.role_biz.update(role, role_info, request.user.username)
         else:
             # 更新
-            self.biz.update(role, role_info, request.user.username)
+            self.role_biz.update(role, role_info, request.user.username)
 
         if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in role_info.get_partial_fields():
             sync_subset_manager_subject_scope.delay(role.id)
@@ -173,12 +174,13 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
 
         role_ids = list(
             RoleSource.objects.filter(
+                tenant_id=self.tenant_id,
                 source_system_id=data["system"],
                 source_type=RoleSourceType.API.value,
             ).values_list("role_id", flat=True)
         )
 
-        queryset = self.queryset.filter(id__in=role_ids)
+        queryset = self.get_queryset().filter(id__in=role_ids)
         queryset = self.filter_queryset(queryset)
 
         page = self.paginate_queryset(queryset)
@@ -190,10 +192,10 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         return Response(serializer.data)
 
 
-class ManagementGradeManagerMemberViewSet(GenericViewSet):
+class ManagementGradeManagerMemberViewSet(BizMixin, GenericViewSet):
     """分级管理员成员"""
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
@@ -207,11 +209,11 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
 
-    role_check_biz = RoleCheckBiz()
-
-    role_with_perm_group_biz = RoleWithPermGroupBiz()
+    def get_queryset(self):
+        return Role.objects.filter(type=RoleType.GRADE_MANAGER.value, tenant_id=self.tenant_id).order_by(
+            "-updated_time"
+        )
 
     @swagger_auto_schema(
         operation_description="分级管理员成员列表",
@@ -240,7 +242,7 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
         # 检查成员数量是否满足限制
         self.role_check_biz.check_member_count(role.id, len(members))
 
-        # 批量添加成员(添加时去重)
+        # 批量添加成员 (添加时去重)
         self.role_with_perm_group_biz.batch_add_grade_manager_member(role, members, request.user.username)
 
         # 审计

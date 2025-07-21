@@ -34,10 +34,11 @@ class AuthenticationForm(forms.Form):
 
 
 @cached(timeout=60)
-def is_in_blacklist(username: str) -> bool:
+def is_in_blacklist(tenant_id: str, username: str) -> bool:
     blacklist = []
     try:
-        blacklist = SubjectBiz().list_freezed_subjects()
+        # FIXME(tenant): 待后台支持租户后，需将租户信息传入，只过滤当前租户的黑名单
+        blacklist = SubjectBiz(tenant_id).list_freezed_subjects()
     except Exception:  # pylint: disable=broad-except
         logger.exception("failed to get blacklist, so the blacklist check will not working")
 
@@ -60,29 +61,33 @@ class LoginMiddleware:
         return not any(p in request.path for p in exempt_paths)
 
     def __call__(self, request):
-        form = AuthenticationForm(request.COOKIES)
+        if not self._is_web_request(request):
+            # Non-web requests do not require user authentication, directly return the response
+            return self.get_response(request)
 
+        form = AuthenticationForm(request.COOKIES)
         if form.is_valid():
             bk_token = form.cleaned_data["bk_token"]
             try:
                 user = auth.authenticate(request=request, bk_token=bk_token)
             except PermissionForbidden as e:
-                # 仅 Web 请求时，对于无登录访问权限，才响应错误码，让前端提示，避免因无权限而反复重定向到登录
-                if self._is_web_request(request):
-                    return JsonResponse(
-                        {"result": False, "code": e.code, "message": e.message, "data": None}, status=e.status_code
-                    )
-                # 非 web 请求，直接返回 None，表示未登录，由后续的程序根据是否需要认证等进行处理
-                user = None
+                # Web 请求时，对于无登录访问权限，才响应错误码，让前端提示，避免因无权限而反复重定向到登录
+                return JsonResponse(
+                    {"result": False, "code": e.code, "message": e.message, "data": None}, status=e.status_code
+                )
 
             if user:
                 # NOTE: block the user in blacklist
-                if is_in_blacklist(request.user.username):
+                if is_in_blacklist(user.get_property("tenant_id"), request.user.username):
                     return HttpResponseForbidden(_("用户账号已被冻结，禁止使用权限中心相关功能"))
 
                 # Succeed to login, recall self to exit process
                 if user.username != request.user.username:
                     auth.login(request, user)
+                    # [多租户] 用户登录完必须有租户信息
+                    tenant_id = user.get_property("tenant_id") or ""
+                    assert tenant_id != ""
+                    request.tenant_id = tenant_id
             else:
                 auth.logout(request)
         else:

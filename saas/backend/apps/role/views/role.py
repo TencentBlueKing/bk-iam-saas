@@ -84,12 +84,9 @@ from backend.apps.role.serializers import (
 from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.apps.subject_template.models import SubjectTemplateGroup
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
-from backend.biz.helper import RoleWithPermGroupBiz
+from backend.biz.group import GroupMemberExpiredAtBean
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import (
-    RoleBiz,
-    RoleCheckBiz,
     RoleInfoBean,
     RoleListQuery,
     RoleObjectRelationChecker,
@@ -102,6 +99,7 @@ from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
+from backend.mixins import BizMixin, TenantMixin, TransMixin
 from backend.service.constants import (
     GroupMemberType,
     GroupSaaSAttributeEnum,
@@ -111,10 +109,9 @@ from backend.service.constants import (
     RoleType,
 )
 from backend.service.models import Subject
-from backend.trans.role import RoleTrans
 
 
-class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
+class GradeManagerViewSet(BizMixin, TransMixin, mixins.ListModelMixin, GenericViewSet):
     """
     分级管理员
     """
@@ -129,12 +126,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
     serializer_class = GradeManagerListSLZ
     filterset_class = GradeMangerFilter
-
-    biz = RoleBiz()
-    group_biz = GroupBiz()
-    role_check_biz = RoleCheckBiz()
-
-    role_trans = RoleTrans()
 
     def get_queryset(self):
         request = self.request
@@ -162,11 +153,11 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 结构转换
         info = self.role_trans.from_role_data(data)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
-            role = self.biz.create_grade_manager(info, user_id)
+            role = self.role_biz.create_grade_manager(info, user_id)
 
         # 创建同步权限用户组
         if info.sync_perm:
@@ -222,10 +213,10 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 查询已有的策略范围
-        old_scopes = self.biz.list_auth_scope(role.id)
+        old_scopes = self.role_biz.list_auth_scope(role.id)
         # 查询旧的数据
         old_system_policy_list = {
-            one.system_id: PolicyBeanList(one.system_id, parse_obj_as(List[PolicyBean], one.actions))
+            one.system_id: PolicyBeanList(self.tenant_id, one.system_id, parse_obj_as(List[PolicyBean], one.actions))
             for one in old_scopes
         }
 
@@ -235,7 +226,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
-            self.biz.update(role, info, user_id)
+            self.role_biz.update(role, info, user_id)
 
         if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in info.get_partial_fields():
             sync_subset_manager_subject_scope.delay(role.id)
@@ -274,7 +265,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             # subject 加入的分级管理员数量不能超过最大值
             self.role_check_biz.check_subject_grade_manager_limit(Subject.from_username(member["username"]))
 
-        if not can_user_manage_role(user_id, role.id):
+        if not can_user_manage_role(self.tenant_id, user_id, role.id):
             raise error_codes.FORBIDDEN.format(
                 message=_("非分级管理员 ({}) 的成员，无权限修改").format(role.name), replace=True
             )
@@ -283,7 +274,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
-            self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
+            self.role_biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True)
@@ -293,12 +284,10 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response({})
 
 
-class RoleMemberView(views.APIView):
+class RoleMemberView(BizMixin, views.APIView):
     """
     角色退出
     """
-
-    role_with_perm_group_biz = RoleWithPermGroupBiz()
 
     @swagger_auto_schema(
         operation_description="退出角色",
@@ -323,15 +312,15 @@ class RoleMemberView(views.APIView):
     )
     def get(self, request, *args, **kwargs):
         role_id = kwargs["id"]
-        return Response(list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True)))
+        return Response(
+            list(RoleUser.objects.filter(tenant_id=self.tenant_id, role_id=role_id).values_list("username", flat=True))
+        )
 
 
-class RoleAuthorizationScopeView(views.APIView):
+class RoleAuthorizationScopeView(BizMixin, views.APIView):
     """
     角色的授权范围查询
     """
-
-    biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="角色的授权范围",
@@ -345,19 +334,17 @@ class RoleAuthorizationScopeView(views.APIView):
 
         system_id = slz.validated_data["system_id"]
         # ResourceNameAutoUpdate
-        scope_system = self.biz.get_auth_scope_bean_by_system(
+        scope_system = self.role_biz.get_auth_scope_bean_by_system(
             request.role.id, system_id, should_auto_update_resource_name=True
         )
         data = [one.dict() for one in scope_system.actions] if scope_system else []
         return Response(data)
 
 
-class RoleSubjectScopeView(views.APIView):
+class RoleSubjectScopeView(BizMixin, views.APIView):
     """
     角色的 subject 授权范围
     """
-
-    biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="角色的 subject 授权范围",
@@ -365,13 +352,13 @@ class RoleSubjectScopeView(views.APIView):
         tags=["role"],
     )
     def get(self, request, *args, **kwargs):
-        scopes = self.biz.list_subject_scope(request.role.id)
+        scopes = self.role_biz.list_subject_scope(request.role.id)
 
         subjects = SubjectInfoList(scopes).subjects if scopes else []
         return Response([one.dict() for one in subjects])
 
 
-class SystemManagerViewSet(GenericViewSet):
+class SystemManagerViewSet(TenantMixin, GenericViewSet):
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -380,7 +367,9 @@ class SystemManagerViewSet(GenericViewSet):
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
-        query_set = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value).order_by("-updated_time")
+        query_set = Role.objects.filter(tenant_id=self.tenant_id, type=RoleType.SYSTEM_MANAGER.value).order_by(
+            "-updated_time"
+        )
         role = request.role
         if role.type == RoleType.SYSTEM_MANAGER.value:
             query_set = query_set.filter(id=role.id)
@@ -388,10 +377,8 @@ class SystemManagerViewSet(GenericViewSet):
         return Response(serializer.data)
 
 
-class MemberSystemPermissionView(views.APIView):
+class MemberSystemPermissionView(BizMixin, views.APIView):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_MANAGER_MEMBER.value)]
-
-    biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="修改系统管理员成员拥有的权限",
@@ -404,6 +391,7 @@ class MemberSystemPermissionView(views.APIView):
         serializer = MemberSystemPermissionUpdateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # FIXME(tenant): 存在跨租户越权，特别是超级管理员身份可查询其他租户任意空间管理员
         role_id = int(kwargs["id"])
 
         role = request.role
@@ -412,17 +400,15 @@ class MemberSystemPermissionView(views.APIView):
 
         enabled = serializer.validated_data["system_permission_global_enabled"]
 
-        self.biz.modify_system_manager_member_system_permission(role_id, enabled)
+        self.role_biz.modify_system_manager_member_system_permission(role_id, enabled)
 
         audit_context_setter(role=Role.objects.filter(id=role_id).first(), enable=enabled)
 
         return Response({})
 
 
-class SystemManagerMemberView(views.APIView):
+class SystemManagerMemberView(BizMixin, views.APIView):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_MANAGER_MEMBER.value)]
-
-    biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="修改系统管理员成员",
@@ -435,6 +421,7 @@ class SystemManagerMemberView(views.APIView):
         serializer = SystemManagerMemberUpdateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # FIXME(tenant): 存在跨租户越权，特别是超级管理员身份可改其他租户任意空间管理员
         role_id = int(kwargs["id"])
 
         role = request.role
@@ -442,7 +429,7 @@ class SystemManagerMemberView(views.APIView):
             self.permission_denied(request, message=f"{request.role.id} role can not access role {role_id}")
 
         members = serializer.validated_data["members"]
-        self.biz.modify_system_manager_members(role_id, members)
+        self.role_biz.modify_system_manager_members(role_id, members)
 
         role = Role.objects.filter(id=role_id).first()
         audit_context_setter(role=role)
@@ -450,12 +437,10 @@ class SystemManagerMemberView(views.APIView):
         return Response({})
 
 
-class SuperManagerMemberViewSet(GenericViewSet):
+class SuperManagerMemberViewSet(BizMixin, GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SUPER_MANAGER_MEMBER.value)]
 
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
-
-    biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="超级管理员成员列表",
@@ -463,7 +448,7 @@ class SuperManagerMemberViewSet(GenericViewSet):
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
-        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value, tenant_id=self.tenant_id)
         enabled_users = set(role.system_permission_enabled_content.enabled_users)
         data = [{"username": i, "system_permission_enabled": i in enabled_users} for i in role.members]
         return Response(data)
@@ -481,7 +466,7 @@ class SuperManagerMemberViewSet(GenericViewSet):
 
         username = serializer.validated_data["username"]
         enabled = serializer.validated_data["system_permission_enabled"]
-        self.biz.add_super_manager_member(username, enabled)
+        self.role_biz.add_super_manager_member(username, enabled)
 
         audit_context_setter(role=request.role, members=[username])
 
@@ -499,7 +484,7 @@ class SuperManagerMemberViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         username = serializer.validated_data["username"]
-        self.biz.delete_super_manager_member(username)
+        self.role_biz.delete_super_manager_member(username)
 
         audit_context_setter(role=request.role, members=[username])
 
@@ -518,14 +503,14 @@ class SuperManagerMemberViewSet(GenericViewSet):
 
         username = serializer.validated_data["username"]
         enabled = serializer.validated_data["system_permission_enabled"]
-        self.biz.update_super_manager_member_system_permission(username, enabled)
+        self.role_biz.update_super_manager_member_system_permission(username, enabled)
 
         audit_context_setter(role=request.role, enable=enabled, username=username)
 
         return Response({})
 
 
-class RoleCommonActionViewSet(GenericViewSet):
+class RoleCommonActionViewSet(BizMixin, GenericViewSet):
     """
     常用操作
     """
@@ -534,16 +519,13 @@ class RoleCommonActionViewSet(GenericViewSet):
 
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
-    queryset = RoleCommonAction.objects.all()
     serializer_class = RoleCommonActionSLZ
     filterset_class = RoleCommonActionFilter
     lookup_field = "id"
 
-    biz = RoleBiz()
-
     def get_queryset(self):
         role_id = self.request.role.id
-        return super().get_queryset().filter(role_id=role_id)
+        return RoleCommonAction.objects.filter(role_id=role_id, tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="常用操作列表",
@@ -558,7 +540,7 @@ class RoleCommonActionViewSet(GenericViewSet):
 
         system_id = request.query_params.get("system_id")
         if system_id:
-            system_common_actions = self.biz.list_system_common_actions(system_id)
+            system_common_actions = self.role_biz.list_system_common_actions(system_id)
             data = [one.dict() for one in system_common_actions] + data
 
         return Response(data)
@@ -571,22 +553,26 @@ class RoleCommonActionViewSet(GenericViewSet):
     )
     @view_audit_decorator(CommonActionCreateAuditProvider)
     def create(self, request, *args, **kwargs):
-        serializer = RoleCommonCreateSLZ(data=request.data)
+        serializer = RoleCommonCreateSLZ(data=request.data, context={"tenant_id": self.tenant_id})
         serializer.is_valid(raise_exception=True)
 
         system_id = serializer.validated_data["system_id"]
 
         max_common_action = 20  # 常用操作最大值
-        if self.queryset.filter(system_id=system_id).count() >= max_common_action:
+        if RoleCommonAction.objects.filter(system_id=system_id, tenant_id=self.tenant_id).count() >= max_common_action:
             raise error_codes.INVALID_ARGS.format(
                 _("系统{}的常用操作不能超过{}个").format(system_id, max_common_action)
             )
 
         name = serializer.validated_data["name"]
-        if RoleCommonAction.objects.filter(role_id=request.role.id).filter(Q(name=name) | Q(name_en=name)).exists():
+        if (
+            RoleCommonAction.objects.filter(role_id=request.role.id, tenant_id=self.tenant_id)
+            .filter(Q(name=name) | Q(name_en=name))
+            .exists()
+        ):
             raise error_codes.INVALID_ARGS.format(_("名称：{} 已存在").format(name))
 
-        instance = serializer.save(role_id=request.role.id)
+        instance = serializer.save(role_id=request.role.id, tenant_id=self.tenant_id)
 
         audit_context_setter(role=request.role, commonaction=instance)
 
@@ -608,7 +594,7 @@ class RoleCommonActionViewSet(GenericViewSet):
         return Response({})
 
 
-class UserView(views.APIView):
+class UserView(TenantMixin, views.APIView):
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -623,7 +609,7 @@ class UserView(views.APIView):
 
         usernames = serializer.validated_data["usernames"]
 
-        users = User.objects.filter(username__in=usernames)
+        users = User.objects.filter(username__in=usernames, tenant_id=self.tenant_id)
 
         scope_checker = RoleSubjectScopeChecker(request.role)
         subjects = scope_checker.check([Subject.from_username(u.username) for u in users], False)
@@ -637,9 +623,7 @@ class UserView(views.APIView):
         return Response(data)
 
 
-class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
-    group_biz = GroupBiz()
-
+class RoleGroupRenewViewSet(BizMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSLZ
     filterset_class = GroupFilter
@@ -726,11 +710,11 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response({})
 
 
-class RoleGroupMembersRenewViewSet(GroupPermissionMixin, GenericViewSet):
-    queryset = Group.objects.all()
+class RoleGroupMembersRenewViewSet(BizMixin, GroupPermissionMixin, GenericViewSet):
     lookup_field = "id"
 
-    group_biz = GroupBiz()
+    def get_queryset(self):
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组即将过期成员列表",
@@ -738,7 +722,7 @@ class RoleGroupMembersRenewViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
-        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        group = self.get_object()
 
         pagination = LimitOffsetPagination()
         limit = pagination.get_limit(request)
@@ -767,7 +751,7 @@ class AuthScopeIncludeUserRoleView(views.APIView):
         return Response([one.dict() for one in roles])
 
 
-class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
+class SubsetManagerViewSet(BizMixin, TransMixin, mixins.ListModelMixin, GenericViewSet):
     """
     子集管理员
     """
@@ -779,15 +763,8 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
     serializer_class = BaseGradeMangerSLZ
     filterset_class = GradeMangerFilter
-
-    biz = RoleBiz()
-    group_biz = GroupBiz()
-    role_check_biz = RoleCheckBiz()
-
-    role_trans = RoleTrans()
 
     def get_queryset(self):
         request = self.request
@@ -815,7 +792,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response(data)
 
     def get_object(self):
-        queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
+        queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, tenant_id=self.tenant_id)
 
         # Perform the lookup filtering.
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -826,7 +803,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
         )
 
-        if not can_user_manage_role(self.request.user.username, int(self.kwargs[lookup_url_kwarg])):
+        if not can_user_manage_role(self.tenant_id, self.request.user.username, int(self.kwargs[lookup_url_kwarg])):
             queryset = queryset.none()
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
@@ -869,11 +846,11 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             # 检查人员范围
             self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
         else:
-            subject_scopes = self.biz.list_subject_scope(grade_manager.id)
+            subject_scopes = self.role_biz.list_subject_scope(grade_manager.id)
             info.subject_scopes = subject_scopes
 
         # 创建子集管理员，并创建分级管理员与子集管理员的关系
-        role = self.biz.create_subset_manager(grade_manager, info, user_id)
+        role = self.role_biz.create_subset_manager(grade_manager, info, user_id)
 
         # 创建同步权限用户组
         if info.sync_perm:
@@ -911,10 +888,10 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 查询已有的策略范围
-        old_scopes = self.biz.list_auth_scope(role.id)
+        old_scopes = self.role_biz.list_auth_scope(role.id)
         # 查询旧的数据
         old_system_policy_list = {
-            one.system_id: PolicyBeanList(one.system_id, parse_obj_as(List[PolicyBean], one.actions))
+            one.system_id: PolicyBeanList(self.tenant_id, one.system_id, parse_obj_as(List[PolicyBean], one.actions))
             for one in old_scopes
         }
 
@@ -930,10 +907,10 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             # 检查人员范围
             self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
         else:
-            subject_scopes = self.biz.list_subject_scope(grade_manager.id)
+            subject_scopes = self.role_biz.list_subject_scope(grade_manager.id)
             info.subject_scopes = subject_scopes
 
-        self.biz.update(role, info, user_id)
+        self.role_biz.update(role, info, user_id)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True, sync_prem=True)
@@ -965,12 +942,12 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 非分级管理员/子集管理员成员，则无法更新基本信息
-        if not can_user_manage_role(user_id, role.id):
+        if not can_user_manage_role(self.tenant_id, user_id, role.id):
             raise error_codes.FORBIDDEN.format(
                 message=_("非管理员 ({}) 的成员，无权限修改").format(role.name), replace=True
             )
 
-        self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
+        self.role_biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True)
@@ -980,26 +957,29 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response({})
 
 
-class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
+class UserSubsetManagerViewSet(TenantMixin, mixins.ListModelMixin, GenericViewSet):
     """
     用户加入的子集管理员列表
     """
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
     serializer_class = BaseGradeMangerSLZ
 
     def get_queryset(self):
         grade_manager_id = self.kwargs["id"]
         subset_manager_ids = list(
-            RoleRelation.objects.filter(parent_id=grade_manager_id).values_list("role_id", flat=True)
+            RoleRelation.objects.filter(tenant_id=self.tenant_id, parent_id=grade_manager_id).values_list(
+                "role_id", flat=True
+            )
         )
         if not subset_manager_ids:
             return Role.objects.none()
 
         # 如果用户是分级管理员成员返回所有的二级管理员
         if RoleUser.objects.user_role_exists(self.request.user.username, grade_manager_id):
-            return self.queryset.filter(id__in=subset_manager_ids)
+            return Role.objects.filter(
+                type=RoleType.SUBSET_MANAGER.value, id__in=subset_manager_ids, tenant_id=self.tenant_id
+            )
 
         # 筛选出用户加入的子集管理员 id
         role_ids = list(
@@ -1010,7 +990,7 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         if not role_ids:
             return Role.objects.none()
 
-        return self.queryset.filter(id__in=role_ids)
+        return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=role_ids, tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户加入的子集管理员列表",
@@ -1021,7 +1001,7 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         return super().list(request, *args, **kwargs)
 
 
-class RoleSubjectScopCheckView(views.APIView):
+class RoleSubjectScopCheckView(TenantMixin, views.APIView):
     @swagger_auto_schema(
         operation_description="检查角色成员范围是否满足条件",
         request_body=RoleSubjectCheckSLZ(label="授权对象"),
@@ -1043,26 +1023,29 @@ class RoleSubjectScopCheckView(views.APIView):
         return Response([one.dict() for one in exist_subjects])
 
 
-class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
+class RoleSearchViewSet(TenantMixin, mixins.ListModelMixin, GenericViewSet):
     """
     管理员搜索
     """
 
-    queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]).order_by(
-        "-updated_time"
-    )
     serializer_class = RoleSearchSLZ
     filterset_class = RoleSearchFilter
 
     def get_queryset(self):
-        queryset = self.queryset
+        queryset = Role.objects.filter(
+            type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value], tenant_id=self.tenant_id
+        ).order_by("-updated_time")
         if bool(self.request.query_params.get("with_super", False)):
             type_order = Case(
                 When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
                 When(type=RoleType.SYSTEM_MANAGER.value, then=Value(2)),
                 default=Value(3),
             )
-            queryset = Role.objects.alias(type_order=type_order).order_by("type_order", "-updated_time")
+            queryset = (
+                Role.objects.filter(tenant_id=self.tenant_id)
+                .alias(type_order=type_order)
+                .order_by("type_order", "-updated_time")
+            )
 
         # 作为超级管理员时，可以管理所有分级管理员
         if RoleListQuery(self.request.role, self.request.user).is_user_super_manager(self.request.user):
@@ -1084,7 +1067,7 @@ class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         return super().list(request, *args, **kwargs)
 
 
-class RoleGroupConfigView(views.APIView):
+class RoleGroupConfigView(TenantMixin, views.APIView):
     """分级管理员的用户组配置"""
 
     method_permission = {
@@ -1122,7 +1105,9 @@ class RoleGroupConfigView(views.APIView):
 
         role_config = RoleConfig.objects.filter(role_id=request.role.id, type=RoleConfigType.GROUP.value).first()
         if not role_config:
-            role_config = RoleConfig(role_id=request.role.id, type=RoleConfigType.GROUP.value)
+            role_config = RoleConfig(
+                tenant_id=self.tenant_id, role_id=request.role.id, type=RoleConfigType.GROUP.value
+            )
         role_config.config = data
         role_config.save()
 
@@ -1134,7 +1119,7 @@ class RoleGroupConfigView(views.APIView):
         return Response({})
 
 
-class RoleNotificationConfigView(views.APIView):
+class RoleNotificationConfigView(TenantMixin, views.APIView):
     """超级管理员的通知配置"""
 
     method_permission = {
@@ -1148,7 +1133,9 @@ class RoleNotificationConfigView(views.APIView):
         tags=["role"],
     )
     def get(self, request, *args, **kwargs):
-        notification_config = RolePolicyExpiredNotificationConfig.objects.filter(role_id=request.role.id).get()
+        notification_config = RolePolicyExpiredNotificationConfig.objects.filter(
+            tenant_id=self.tenant_id, role_id=request.role.id
+        ).get()
         return Response(notification_config.config)
 
     @swagger_auto_schema(
@@ -1164,7 +1151,9 @@ class RoleNotificationConfigView(views.APIView):
 
         data = serializer.validated_data
 
-        notification_config = RolePolicyExpiredNotificationConfig.objects.filter(role_id=request.role.id).get()
+        notification_config = RolePolicyExpiredNotificationConfig.objects.filter(
+            tenant_id=self.tenant_id, role_id=request.role.id
+        ).get()
         notification_config.config = data
         notification_config.save()
 

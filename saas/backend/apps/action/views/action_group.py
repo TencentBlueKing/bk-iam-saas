@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,19 +13,14 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, views
 from rest_framework.response import Response
 
-from backend.biz.action import ActionBiz
-from backend.biz.action_group import ActionGroupBiz
-
-from ..serializers import ActionGroupQuerySLZ, SubActionGroupSLZ
+from backend.apps.action.serializers import ActionGroupQuerySLZ, SubActionGroupSLZ
+from backend.mixins import BizMixin
 
 
-class ActionGroupView(views.APIView):
+class ActionGroupView(BizMixin, views.APIView):
     """
     操作分组
     """
-
-    biz = ActionGroupBiz()
-    action_biz = ActionBiz()
 
     @swagger_auto_schema(
         operation_description="获取操作分组",
@@ -40,6 +35,6 @@ class ActionGroupView(views.APIView):
         system_id = slz.validated_data["system_id"]
 
         action_list = self.action_biz.list(system_id)
-        action_groups = self.biz.list_with_frontend_id_by_actions(system_id, action_list.actions)
+        action_groups = self.action_group_biz.list_with_frontend_id_by_actions(system_id, action_list.actions)
 
         return Response([one.dict() for one in action_groups])

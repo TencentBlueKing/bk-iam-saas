@@ -30,12 +30,12 @@ from .policy import PolicyTrans
 class ApplicationDataTrans:
     """用于将申请请求里的 Dict 转换为调用 ApplicationBiz 模块创建申请单所需的数据结构"""
 
-    # 由于申请是更上层的业务逻辑，所以需要使用到策略的转换函数
-    policy_trans = PolicyTrans()
-
-    policy_query_biz = PolicyQueryBiz()
-
-    action_biz = ActionBiz()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        # 由于申请是更上层的业务逻辑，所以需要使用到策略的转换函数
+        self.policy_trans = PolicyTrans(tenant_id)
+        self.policy_query_biz = PolicyQueryBiz(tenant_id)
+        self.action_biz = ActionBiz(tenant_id)
 
     def _gen_need_apply_policy_list(
         self, applicant: str, system_id: str, policy_list: PolicyBeanList
@@ -85,7 +85,7 @@ class ApplicationDataTrans:
         if len(application_policies) == 0:
             raise error_codes.INVALID_ARGS.format(message=_("无新的权限申请，无需提交"), replace=True)
 
-        return PolicyBeanList(system_id, application_policies)
+        return PolicyBeanList(self.tenant_id, system_id, application_policies)
 
     def _check_application_policy_instance_count_limit(self, system_id: str, policy_list: PolicyBeanList):
         """

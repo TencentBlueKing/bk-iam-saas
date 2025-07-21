@@ -90,14 +90,16 @@ def _generate_http_auth(auth_info: Dict[str, str]) -> Union[None, auth.HTTPBasic
 class ResourceProviderClient:
     """资源提供者请求客户端"""
 
-    def __init__(self, system_id: str, resource_type_id: str, url: str, auth_info: Dict[str, str]):
+    def __init__(self, tenant_id: str, system_id: str, resource_type_id: str, url: str, auth_info: Dict[str, str]):
         """初始化请求需要的 HTTP 鉴权和其他 HEADER"""
+        self.tenant_id = tenant_id
         self.system_id = system_id
         self.resource_type_id = resource_type_id
         self.url = url
         self.request_id = local.request_id
         self.request_username = local.request_username
         self.headers = {
+            "X-Bk-Tenant-Id": tenant_id,
             "Content-Type": "application/json",
             "Request-Id": self.request_id,
             "Blueking-Language": get_bk_language(translation.get_language()),
@@ -333,13 +335,17 @@ class ResourceProviderClient:
 
     def search_instance(self, filter_condition: Dict, page: Dict[str, int]) -> Tuple[int, List[Dict[str, str]]]:
         """根据过滤条件且必须保证 keyword 不为空查询实例"""
-        return self._search_instance(self.system_id, self.resource_type_id, filter_condition, page)
+        return self._search_instance(self.tenant_id, self.system_id, self.resource_type_id, filter_condition, page)
 
     @cachedmethod(timeout=60)  # 缓存 1 分钟
     def _search_instance(
-        self, system_id: str, resource_type_id: str, filter_condition: Dict, page: Dict[str, int]
+        self, tenant_id: str, system_id: str, resource_type_id: str, filter_condition: Dict, page: Dict[str, int]
     ) -> Tuple[int, List[Dict[str, str]]]:
-        """根据过滤条件且必须保证 keyword 不为空查询实例"""
+        """根据过滤条件且必须保证 keyword 不为空查询实例
+
+        Q: 为什么 tenant_id 是参数传入的，而不是直接使用 self.tenant_id
+        A: 缓存 Key 是基于函数里的参数，不包括 self 属性，需要避免不同租户的缓存冲突
+        """
         if not filter_condition["keyword"]:
             raise error_codes.RESOURCE_PROVIDER_VALIDATE_ERROR.format(
                 f"search_instance[system:{system_id}] param keyword should not be empty"

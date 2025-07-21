@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -19,13 +19,13 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLo
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
 from backend.apps.organization.models import User as UserModel
-from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
-from backend.biz.group import GroupBiz
+from backend.biz.application import ApplicationGroupInfoBean, GroupApplicationDataBean
+from backend.mixins import BizMixin
 from backend.service.constants import ApplicationType, SubjectType
 from backend.service.models import Applicant, Subject
 
 
-class ManagementGroupApplicationViewSet(GenericViewSet):
+class ManagementGroupApplicationViewSet(BizMixin, GenericViewSet):
     """用户组申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -37,13 +37,10 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         ),
     }
 
-    biz = ApplicationBiz()
-    group_biz = GroupBiz()
-
     @swagger_auto_schema(
         operation_description="创建用户组申请单",
         request_body=ManagementGroupApplicationCreateSLZ(label="创建用户组申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据 ID 列表")},
         tags=["management.group.application"],
     )
     def create(self, request, *args, **kwargs):
@@ -60,11 +57,11 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         # 检查用户组数量是否超限
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.get(username=user_id)
 
         # 创建申请
-        applications = self.biz.create_for_group(
+        applications = self.application_biz.create_for_group(
             ApplicationType.JOIN_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user_id,

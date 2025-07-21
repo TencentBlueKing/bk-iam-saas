@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 
 from io import BytesIO
+from typing import Any, Dict
 
 import openpyxl
 from django.http import StreamingHttpResponse
@@ -30,12 +31,13 @@ from backend.service.utils.translate import translate_path
 
 class QueryAuthorizedSubjects(object):
     """
-    权限管理-审计权限成员
+    权限管理 - 审计权限成员
     """
 
     engine_svc = EngineService()
 
-    def __init__(self, data):
+    def __init__(self, tenant_id: str, data: Dict[str, Any]):
+        self.tenant_id = tenant_id
         self.system_id = data["system_id"]
         self.action_id = data["action_id"]
         self.resource_instances = data.get("resource_instances")
@@ -51,13 +53,13 @@ class QueryAuthorizedSubjects(object):
             "name": "admin"
         }]
         """
-        # 系统+操作+资源实例
+        # 系统 + 操作 + 资源实例
         if self.permission_type == PermissionTypeEnum.RESOURCE_INSTANCE.value:
             return self.query_by_resource_instance()
-        # 系统+操作+模板权限
+        # 系统 + 操作 + 模板权限
         if self.permission_type == PermissionTypeEnum.TEMPLATE.value:
             return self._query_subjects_by_template()
-        # 系统+操作+自定义权限
+        # 系统 + 操作 + 自定义权限
         if self.permission_type == PermissionTypeEnum.CUSTOM.value:
             return self._query_by_custom()
         return None
@@ -111,13 +113,13 @@ class QueryAuthorizedSubjects(object):
                 }
                 for resource_instance in self.resource_instances
             ]
-            # 填充attribute
-            fill_resources_attribute(resources=resources)
+            # 填充 attribute
+            fill_resources_attribute(self.tenant_id, resources=resources)
 
         else:
             resources = []
 
-        # 调用Engine后台API搜索
+        # 调用 Engine 后台 API 搜索
         query_data = {
             "system": self.system_id,
             "subject_type": subject_type,
@@ -130,14 +132,14 @@ class QueryAuthorizedSubjects(object):
 
     def _gen_resource_instance_info(self, resource_instances):
         """
-        根据用户资源实例信息生成导出文件中资源实例列所需显示的数据：类型:名称(路径A/路径B/路径C)
+        根据用户资源实例信息生成导出文件中资源实例列所需显示的数据：类型：名称 (路径 A/路径 B/路径 C)
         """
         resource_info_list = []
         for resource_instance in self.resource_instances:
             path_info = ""
             if resource_instance.get("path"):
                 path_info = f"({'/'.join([path_info['name'] for path_info in resource_instance['path']])})"
-            resource_info_list.append(f"{resource_instance['type']}：{resource_instance['name']}{path_info}")
+            resource_info_list.append(f"{resource_instance['type']}:{resource_instance['name']}{path_info}")
         return "\n".join(resource_info_list)
 
     def _gen_export_data(self):
@@ -147,7 +149,7 @@ class QueryAuthorizedSubjects(object):
         system_name = SystemService().get(self.system_id).name
         action_name = ActionService().get(self.system_id, self.action_id).name
         subjects = self.query_by_permission_type()
-        export_data = [["系统名", "系统ID", "操作名", "操作ID", "资源实例", "有权限成员", "成员ID", "成员类型"]]
+        export_data = [["系统名", "系统 ID", "操作名", "操作 ID", "资源实例", "有权限成员", "成员 ID", "成员类型"]]
 
         resource_instance_info = (
             self._gen_resource_instance_info(self.resource_instances) if self.resource_instances else "-"
@@ -177,7 +179,7 @@ class QueryAuthorizedSubjects(object):
 
     def export(self, filename: str):
         """
-        将权限成员列表导出成excel
+        将权限成员列表导出成 excel
         """
         export_data = self._gen_export_data()
         work_book, work_shell = ExcelHandler().fill_work_shell(export_data)
@@ -187,12 +189,12 @@ class QueryAuthorizedSubjects(object):
 
 class ExcelHandler(object):
     """
-    excel处理
+    excel 处理
     """
 
     def fill_work_shell(self, export_data: list):
         """
-        新建work_book，完成work_shell填充
+        新建 work_book，完成 work_shell 填充
         """
         work_book = openpyxl.Workbook()
         work_shell = work_book.active
@@ -203,7 +205,7 @@ class ExcelHandler(object):
 
     def save_handled_work_book(self, work_book, filename):
         """
-        处理完毕的work_book保存
+        处理完毕的 work_book 保存
         """
         output = BytesIO()
         work_book.save(output)

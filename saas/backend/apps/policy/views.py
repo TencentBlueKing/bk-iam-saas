@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -21,25 +21,20 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.apps.subject.audit import SubjectPolicyDeleteAuditProvider
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.action import ActionBean, ActionBeanList, ActionBiz
-from backend.biz.action_group import ActionGroupBiz
+from backend.biz.action import ActionBean, ActionBeanList
 from backend.biz.constants import PolicyTag
-from backend.biz.open import ApplicationPolicyListCache
 from backend.biz.policy import (
     ConditionBean,
     PolicyBean,
     PolicyBeanList,
     PolicyEmptyException,
-    PolicyOperationBiz,
-    PolicyQueryBiz,
     RelatedResourceBean,
 )
 from backend.biz.policy_tag import PolicyTagBean, PolicyTagBeanList
-from backend.biz.related_policy import RelatedPolicyBiz
 from backend.common.error_codes import error_codes
 from backend.common.serializers import ActionQuerySLZ
 from backend.common.time import get_soon_expire_ts
-from backend.service.action import ActionService
+from backend.mixins import BizMixin, ServiceMixin
 from backend.service.models import Subject as SvcSubject
 
 from .serializers import (
@@ -54,13 +49,8 @@ from .serializers import (
 )
 
 
-class PolicyViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    policy_query_biz = PolicyQueryBiz()
-    policy_operation_biz = PolicyOperationBiz()
-
-    application_policy_list_cache = ApplicationPolicyListCache()
+class PolicyViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="用户的所有权限列表",
@@ -78,10 +68,10 @@ class PolicyViewSet(GenericViewSet):
         if cache_id != "":
             cached_policy_list = self.application_policy_list_cache.get(cache_id)
             if cached_policy_list.system_id != system_id:
-                raise error_codes.INVALID_ARGS.format(_("请求的system与缓存策略数据的system不一致"))
+                raise error_codes.INVALID_ARGS.format(_("请求的 system 与缓存策略数据的 system 不一致"))
 
             apply_policy_list = PolicyTagBeanList(
-                system_id, parse_obj_as(List[PolicyTagBean], cached_policy_list.policies)
+                self.tenant_id, system_id, parse_obj_as(List[PolicyTagBean], cached_policy_list.policies)
             )
             apply_policy_list.set_tag(PolicyTag.ADD.value)
 
@@ -160,12 +150,9 @@ class PolicyViewSet(GenericViewSet):
         return Response({})
 
 
-class PolicyResourceGroupDeleteViewSet(GenericViewSet):
-    policy_query_biz = PolicyQueryBiz()
-    policy_operation_biz = PolicyOperationBiz()
-
+class PolicyResourceGroupDeleteViewSet(BizMixin, GenericViewSet):
     @swagger_auto_schema(
-        operation_description="Policy删除资源组",
+        operation_description="Policy 删除资源组",
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["policy"],
     )
@@ -187,10 +174,8 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
         return Response()
 
 
-class PolicySystemViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = PolicyQueryBiz()
+class PolicySystemViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="用户的有权限的所有系统列表",
@@ -200,15 +185,13 @@ class PolicySystemViewSet(GenericViewSet):
     def list(self, request, *args, **kwargs):
         subject = SvcSubject.from_username(request.user.username)
 
-        data = self.biz.list_system_counter_by_subject(subject)
+        data = self.policy_query_biz.list_system_counter_by_subject(subject)
 
         return Response([one.dict() for one in data])
 
 
-class PolicyExpireSoonViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = PolicyQueryBiz()
+class PolicyExpireSoonViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="用户即将过期的权限列表",
@@ -218,18 +201,15 @@ class PolicyExpireSoonViewSet(GenericViewSet):
     def list(self, request, *args, **kwargs):
         subject = SvcSubject.from_username(request.user.username)
 
-        data = self.biz.list_expired(subject, get_soon_expire_ts())
+        data = self.policy_query_biz.list_expired(subject, get_soon_expire_ts())
 
         return Response([one.dict() for one in data])
 
 
-class RelatedPolicyViewSet(GenericViewSet):
+class RelatedPolicyViewSet(BizMixin, GenericViewSet):
     """
     生成依赖操作
     """
-
-    policy_query_biz = PolicyQueryBiz()
-    related_policy_biz = RelatedPolicyBiz()
 
     @swagger_auto_schema(
         operation_description="生成依赖操作",
@@ -245,7 +225,7 @@ class RelatedPolicyViewSet(GenericViewSet):
         system_id = data["system_id"]
         source_policy = PolicyBean.parse_obj(data["source_policy"])
 
-        # 移除用户已有的权限, 只需要生成新增数据的依赖操作权限
+        # 移除用户已有的权限，只需要生成新增数据的依赖操作权限
         subject = SvcSubject.from_username(request.user.username)
         old_policy_list = self.policy_query_biz.new_policy_list(system_id, subject)
         old_policy = old_policy_list.get(source_policy.action_id)
@@ -254,25 +234,27 @@ class RelatedPolicyViewSet(GenericViewSet):
                 # 移除用户已有的资源实例
                 source_policy = source_policy.remove_resource_group_list(old_policy.resource_groups)
             except PolicyEmptyException:
-                # 如果来源policy与用户已有的策略完全一致, 不需要生成依赖操作
+                # 如果来源 policy 与用户已有的策略完全一致，不需要生成依赖操作
                 return Response([])
 
         # 关联操作
         related_policies = self.related_policy_biz.create_related_policies(system_id, source_policy)
         # 目标策略
         target_policies = parse_obj_as(List[PolicyTagBean], data["target_policies"])
-        target_policy_list = PolicyTagBeanList(system_id, target_policies)
+        target_policy_list = PolicyTagBeanList(self.tenant_id, system_id, target_policies)
 
         # 新增的操作
-        related_policy_list = PolicyTagBeanList(system_id, parse_obj_as(List[PolicyTagBean], related_policies))
+        related_policy_list = PolicyTagBeanList(
+            self.tenant_id, system_id, parse_obj_as(List[PolicyTagBean], related_policies)
+        )
         add_policy_list = related_policy_list.sub(target_policy_list)
         if add_policy_list.policies:
             tag_add_policy_list = PolicyTagBeanList(
-                system_id, parse_obj_as(List[PolicyTagBean], add_policy_list.policies)
+                self.tenant_id, system_id, parse_obj_as(List[PolicyTagBean], add_policy_list.policies)
             )
-            tag_add_policy_list.set_tag(PolicyTag.ADD.value)  # 对于新增的部分打tag, 方便前端处理
+            tag_add_policy_list.set_tag(PolicyTag.ADD.value)  # 对于新增的部分打 tag, 方便前端处理
 
-            # 对已有策略中会增加部分实例的策略打update标签
+            # 对已有策略中会增加部分实例的策略打 update 标签
             for p in target_policy_list.policies:
                 add_policy = add_policy_list.get(p.action_id)
                 if (
@@ -289,13 +271,10 @@ class RelatedPolicyViewSet(GenericViewSet):
         return Response([p.dict() for p in target_policy_list.policies])
 
 
-class BatchPolicyResourceCopyViewSet(GenericViewSet):
+class BatchPolicyResourceCopyViewSet(BizMixin, ServiceMixin, GenericViewSet):
     """
     批量复制策略资源
     """
-
-    related_policy_biz = RelatedPolicyBiz()
-    action_svc = ActionService()
 
     @swagger_auto_schema(
         operation_description="批量复制策略资源",
@@ -308,8 +287,8 @@ class BatchPolicyResourceCopyViewSet(GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         """
-        1. 对actions做以system做分组
-        2. 查询system_id对应的操作的实例视图
+        1. 对 actions 做以 system 做分组
+        2. 查询 system_id 对应的操作的实例视图
         3. 校验资源的类型是否满足操作对应的资源类型
         4. 通过实例视图筛选对应的实例
         5. 返回操作相关的信息与资源的数据/列表
@@ -343,19 +322,12 @@ class BatchPolicyResourceCopyViewSet(GenericViewSet):
         return Response(action_resource)
 
 
-class RecommendPolicyViewSet(GenericViewSet):
+class RecommendPolicyViewSet(BizMixin, GenericViewSet):
     """
     生成推荐操作
     """
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    action_biz = ActionBiz()
-    action_group_biz = ActionGroupBiz()
-    policy_query_biz = PolicyQueryBiz()
-    related_policy_biz = RelatedPolicyBiz()
-
-    application_policy_list_cache = ApplicationPolicyListCache()
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="生成推荐操作",
@@ -372,7 +344,7 @@ class RecommendPolicyViewSet(GenericViewSet):
 
         cached_policy_list = self.application_policy_list_cache.get(cache_id)
         if cached_policy_list.system_id != system_id:
-            raise error_codes.INVALID_ARGS.format(_("请求的system与缓存策略数据的system不一致"))
+            raise error_codes.INVALID_ARGS.format(_("请求的 system 与缓存策略数据的 system 不一致"))
 
         # 查询推荐的操作
         recommend_action_dict = self.action_group_biz.get_action_same_group_dict(
@@ -382,7 +354,7 @@ class RecommendPolicyViewSet(GenericViewSet):
         action_list = self.action_biz.action_svc.new_action_list(system_id)
 
         # 生成推荐的策略
-        policy_list = PolicyBeanList(system_id, [])
+        policy_list = PolicyBeanList(self.tenant_id, system_id, [])
         for policy in cached_policy_list.policies:
             recommend_action_ids = recommend_action_dict.get(policy.action_id)
             if not recommend_action_ids:
@@ -392,18 +364,18 @@ class RecommendPolicyViewSet(GenericViewSet):
                 policy, action_list, recommend_action_ids
             )
 
-            policy_list.add(PolicyBeanList(system_id, recommend_policies))  # 合并去重
+            policy_list.add(PolicyBeanList(self.tenant_id, system_id, recommend_policies))  # 合并去重
 
         # 移除用户已有的操作
         subject = SvcSubject.from_username(request.user.username)
         own_policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         # 只移除用户已有的实例
-        policy_list = policy_list.sub(PolicyBeanList(system_id, own_policies))
+        policy_list = policy_list.sub(PolicyBeanList(self.tenant_id, system_id, own_policies))
 
         policy_list.fill_empty_fields()
 
-        # 生成推荐的操作, 排除已生成推荐策略的操作
+        # 生成推荐的操作，排除已生成推荐策略的操作
         own_action_id_set = {p.action_id for p in own_policies}
         actions, action_id_set = [], set()
         for action_id in chain(*list(recommend_action_dict.values())):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -47,6 +47,13 @@ class ESBAuthentication(BaseAuthentication):
 
         request.bk_app_code = app_code  # 获取到调用 app_code
 
+        # Q: 为什么租户 ID 可以直接从 HTTP 头部获取，不需要验证么？
+        # A: 经过网关 JWT 验证后，租户 ID 是可信任的，因为网关会校验 AppCode 与 HTTP_X_BK_TENANT_ID 之间的权限
+        request.tenant_id = request.META.get("HTTP_X_BK_TENANT_ID")
+        if not request.tenant_id:
+            logger.error("X-Bk-Tenant-Id is not provided in apigw request headers for app_code: %s", app_code)
+            raise exceptions.AuthenticationFailed("HTTP_X_BK_TENANT_ID is required")
+
         return self._get_or_create_user(username), None
 
     def authenticate_header(self, request):
@@ -86,31 +93,31 @@ class ESBAuthentication(BaseAuthentication):
             return None
 
     def _get_username_from_jwt_payload(self, jwt_payload):
-        """从jwt里获取username"""
+        """从 jwt 里获取 username"""
         user = jwt_payload.get("user", {})
         verified = user.get("verified", False)
         username = user.get("bk_username", "") or user.get("username", "")
-        # 如果user通过认证，则为实体用户，直接返回
+        # 如果 user 通过认证，则为实体用户，直接返回
         if verified:
             return username
-        # 未通过认证有两种可能，（1）username不可信任（2）username为空
-        # 非空则说明是未认证，不可信任的用户，则统一用不可信任的用户名代替，不使用传递过来的username
+        # 未通过认证有两种可能，（1）username 不可信任（2）username 为空
+        # 非空则说明是未认证，不可信任的用户，则统一用不可信任的用户名代替，不使用传递过来的 username
         if username:
             return BKNonEntityUser.BK__UNVERIFIED_USER.value
         # 匿名用户
         return BKNonEntityUser.BK__ANONYMOUS_USER.value
 
     def _get_app_code_from_jwt_payload(self, jwt_payload):
-        """从jwt里获取app_code"""
+        """从 jwt 里获取 app_code"""
         app = jwt_payload.get("app", {})
 
         if not app.get("verified", False):
             raise exceptions.AuthenticationFailed("app is not verified")
 
-        # 兼容多版本(企业版/TE版/社区版) 以及兼容APIGW/ESB
+        # 兼容多版本 (企业版/TE 版/社区版) 以及兼容APIGW/ESB
         app_code = app.get("bk_app_code", "") or app.get("app_code", "")
 
-        # 虽然app_code为空对于后续的鉴权一定是不通过的，但鉴权不通过有很多原因，这里提前log便于问题排查
+        # 虽然 app_code 为空对于后续的鉴权一定是不通过的，但鉴权不通过有很多原因，这里提前 log 便于问题排查
         if not app_code:
             raise exceptions.AuthenticationFailed("could not get app_code from esb/apigateway jwt payload! it's empty")
 
@@ -125,15 +132,15 @@ class ESBAuthentication(BaseAuthentication):
 
     def _get_apigw_public_key(self):
         """
-        获取APIGW的PUBLIC KEY
-        由于配置文件里的public key 是来着环境变量，且使用了base64编码的，所以需要获取后解码
+        获取 APIGW 的 PUBLIC KEY
+        由于配置文件里的 public key 是来着环境变量，且使用了 base64 编码的，所以需要获取后解码
         """
-        # 如果BK_APIGW_PUBLIC_KEY为空，则直接报错
+        # 如果 BK_APIGW_PUBLIC_KEY 为空，则直接报错
         if not settings.BK_APIGW_PUBLIC_KEY:
             logger.error("BK_APIGW_PUBLIC_KEY can not be empty")
             return ""
 
-        # base64解码
+        # base64 解码
         try:
             public_key = base64.b64decode(settings.BK_APIGW_PUBLIC_KEY).decode("utf-8")
         except Exception:  # pylint: disable=broad-except
@@ -142,7 +149,7 @@ class ESBAuthentication(BaseAuthentication):
 
         return public_key
 
-    @cachedmethod(timeout=None)  # 缓存不过期，除非重新部署SaaS
+    @cachedmethod(timeout=None)  # 缓存不过期，除非重新部署 SaaS
     def _get_jwt_public_key(self, request_from):
         if request_from == "apigw":
             return self._get_apigw_public_key()

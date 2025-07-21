@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -28,15 +28,14 @@ from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
 from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.constants import PermissionTypeEnum
-from backend.biz.group import GroupBiz
 from backend.biz.permission_audit import QueryAuthorizedSubjects
-from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList, PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import ActionScopeDiffer, RoleBiz
-from backend.biz.subject_template import SubjectTemplateBiz
+from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList
+from backend.biz.role import ActionScopeDiffer
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.component.iam import list_all_subject_groups
+from backend.mixins import BizMixin, TenantMixin
 from backend.service.constants import SubjectRelationType
 from backend.service.group import SubjectGroup
 from backend.service.models import Subject
@@ -53,13 +52,11 @@ from .serializers import (
 )
 
 
-class UserGroupViewSet(GenericViewSet):
+class UserGroupViewSet(BizMixin, GenericViewSet):
     pagination_class = CustomPageNumberPagination
 
-    biz = GroupBiz()
-
     @swagger_auto_schema(
-        operation_description="我的权限-用户组列表",
+        operation_description="我的权限 - 用户组列表",
         query_serializer=QueryGroupSLZ(label="query_group"),
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["user"],
@@ -73,17 +70,17 @@ class UserGroupViewSet(GenericViewSet):
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
 
         if system_id:
-            count, relations = self.biz.list_paging_system_subject_group(
+            count, relations = self.group_biz.list_paging_system_subject_group(
                 system_id, subject, limit=limit, offset=offset
             )
         else:
-            count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
+            count, relations = self.group_biz.list_paging_subject_group(subject, limit=limit, offset=offset)
 
         slz = GroupSLZ(instance=relations, many=True)
         return Response({"count": count, "results": slz.data})
 
     @swagger_auto_schema(
-        operation_description="我的权限-退出用户组",
+        operation_description="我的权限 - 退出用户组",
         query_serializer=UserRelationSLZ(),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["user"],
@@ -98,7 +95,7 @@ class UserGroupViewSet(GenericViewSet):
 
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:
-            self.biz.remove_members(data["id"], [subject])
+            self.group_biz.remove_members(data["id"], [subject])
 
             # 写入审计上下文
             group = Group.objects.filter(id=int(data["id"])).first()
@@ -107,13 +104,11 @@ class UserGroupViewSet(GenericViewSet):
         return Response({})
 
 
-class UserDepartmentGroupViewSet(GenericViewSet):
+class UserDepartmentGroupViewSet(BizMixin, GenericViewSet):
     pagination_class = None
 
-    biz = GroupBiz()
-
     @swagger_auto_schema(
-        operation_description="我的权限-继承自部门的用户组列表",
+        operation_description="我的权限 - 继承自部门的用户组列表",
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["user"],
     )
@@ -124,19 +119,16 @@ class UserDepartmentGroupViewSet(GenericViewSet):
 
         subject = Subject.from_username(request.user.username)
         if system_id:
-            relations = self.biz.list_all_system_user_department_group(system_id, subject)
+            relations = self.group_biz.list_all_system_user_department_group(system_id, subject)
         else:
-            # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
-            relations = self.biz.list_all_user_department_group(subject)
+            # 目前只能查询所有的，暂时不支持分页，如果有性能问题，需要考虑优化
+            relations = self.group_biz.list_all_user_department_group(subject)
         slz = GroupSLZ(instance=relations, many=True)
         return Response(slz.data)
 
 
-class UserGroupRenewViewSet(GenericViewSet):
+class UserGroupRenewViewSet(BizMixin, GenericViewSet):
     pagination_class = CustomPageNumberPagination
-
-    # service
-    group_biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="用户即将过期用户组列表",
@@ -166,15 +158,15 @@ class UserGroupRenewViewSet(GenericViewSet):
         return Response({"count": count, "results": slz.data})
 
 
-class UserProfileNewbieViewSet(GenericViewSet):
+class UserProfileNewbieViewSet(TenantMixin, GenericViewSet):
     """
-    用户配置-新手指引
+    用户配置 - 新手指引
     """
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
-        operation_description="用户配置-新手指引",
+        operation_description="用户配置 - 新手指引",
         responses={status.HTTP_200_OK: UserNewbieSLZ(label="新手指引", many=True)},
         tags=["user"],
     )
@@ -183,7 +175,7 @@ class UserProfileNewbieViewSet(GenericViewSet):
         return Response(data)
 
     @swagger_auto_schema(
-        operation_description="用户配置-新手指引设置",
+        operation_description="用户配置 - 新手指引设置",
         request_body=UserNewbieUpdateSLZ(label="场景"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["user"],
@@ -193,19 +185,17 @@ class UserProfileNewbieViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        UserProfile.objects.update_newbie(request.user.username, data["scene"], True)
+        UserProfile.objects.update_newbie(self.tenant_id, request.user.username, data["scene"], True)
 
         return Response({})
 
 
-class UserCommonActionViewSet(GenericViewSet):
+class UserCommonActionViewSet(BizMixin, GenericViewSet):
     """
     常用操作
     """
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    role_biz = RoleBiz()
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="常用操作列表",
@@ -223,10 +213,8 @@ class UserCommonActionViewSet(GenericViewSet):
         return Response([one.dict() for one in data])
 
 
-class RoleViewSet(GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    biz = RoleBiz()
+class RoleViewSet(BizMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="用户角色权限",
@@ -239,15 +227,13 @@ class RoleViewSet(GenericViewSet):
         slz.is_valid(raise_exception=True)
         with_perm = slz.validated_data["with_perm"]
 
-        user_roles = self.biz.list_user_role(request.user.username, with_perm, with_hidden=False)
+        user_roles = self.role_biz.list_user_role(request.user.username, with_perm, with_hidden=False)
         return Response([one.dict() for one in user_roles])
 
 
-class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
+class SubjectGroupSearchMixin(BizMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSLZ
-
-    biz = GroupBiz()
 
     def search(self, request, *args, **kwargs):
         slz = GroupSearchSLZ(data=request.data)
@@ -263,7 +249,7 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
                 if k in ["id", "name", "description", "hidden"]
                 if isinstance(v, bool) or v
             },
-            queryset=self.get_queryset(),
+            queryset=self.get_queryset().filter(tenant_id=self.tenant_id),
         )
         queryset = f.qs
 
@@ -291,7 +277,7 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
         return Response({"count": 0, "results": []})
 
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
-        return search_group_ids(data)
+        return search_group_ids(request.tenant_id, data)
 
     def get_subject(self, request, kwargs):
         return Subject.from_username(request.user.username)
@@ -302,7 +288,7 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
 
     def get_page_result(self, group_dict, page):
         relations = [SubjectGroup(**group_dict[one.id]) for one in page]
-        return self.biz._convert_to_subject_group_beans(relations)
+        return self.group_biz._convert_to_subject_group_beans(relations)
 
 
 class UserGroupSearchViewSet(SubjectGroupSearchMixin):
@@ -327,18 +313,15 @@ class UserDepartmentGroupSearchViewSet(SubjectGroupSearchMixin):
         return super().search(request, *args, **kwargs)
 
     def get_group_dict(self, subject: Subject):
-        groups = self.biz.list_all_user_department_group(subject)
+        groups = self.group_biz.list_all_user_department_group(subject)
         return {one.id: one for one in groups}
 
     def get_page_result(self, group_dict, page):
         return [group_dict[one.id] for one in page]
 
 
-class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
-    policy_query_biz = PolicyQueryBiz()
-    policy_operation_biz = PolicyOperationBiz()
+class UserPolicySearchViewSet(BizMixin, mixins.ListModelMixin, GenericViewSet):
+    pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
         operation_description="搜索用户权限策略列表",
@@ -396,13 +379,11 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
         return Subject.from_username(request.user.username)
 
 
-class UserSubjectTemplateGroupViewSet(GenericViewSet):
+class UserSubjectTemplateGroupViewSet(BizMixin, GenericViewSet):
     pagination_class = CustomPageNumberPagination
 
-    biz = SubjectTemplateBiz()
-
     @swagger_auto_schema(
-        operation_description="我的权限-人员模版用户组列表",
+        operation_description="我的权限 - 人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
         tags=["user"],
@@ -419,7 +400,7 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
         query_slz = SubjectTemplateGroupQuerySLZ(data=request.query_params)
         query_slz.is_valid(raise_exception=True)
 
-        count = self.biz.get_subject_template_group_count(
+        count = self.subject_template_biz.get_subject_template_group_count(
             subject,
             id=data["id"],
             name=data["name"],
@@ -428,7 +409,7 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
             group_ids=group_ids,
             system_id=query_slz.validated_data["system_id"],
         )
-        relations = self.biz.list_paging_subject_template_group(
+        relations = self.subject_template_biz.list_paging_subject_template_group(
             subject,
             id=data["id"],
             name=data["name"],
@@ -444,30 +425,28 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
         return Response({"count": count, "results": slz.data})
 
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
-        return search_group_ids(data)
+        return search_group_ids(request.tenant_id, data)
 
     def get_subject(self, request, kwargs):
         return Subject.from_username(request.user.username)
 
 
-def search_group_ids(data) -> Optional[List[int]]:
+def search_group_ids(tenant_id, data) -> Optional[List[int]]:
     group_ids = None
     if data["system_id"] and data["action_id"]:
         # 通过实例或操作查询用户组
         data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
         data["limit"] = 10000
-        subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+        subjects = QueryAuthorizedSubjects(tenant_id, data).query_by_resource_instance(subject_type="group")
         group_ids = list({int(s["id"]) for s in subjects})
     return group_ids
 
 
-class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
+class UserDepartmentSubjectTemplateGroupViewSet(BizMixin, GenericViewSet):
     pagination_class = CustomPageNumberPagination
 
-    biz = SubjectTemplateBiz()
-
     @swagger_auto_schema(
-        operation_description="我的权限-部门人员模版用户组列表",
+        operation_description="我的权限 - 部门人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
         tags=["user"],
@@ -484,7 +463,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
         query_slz = SubjectTemplateGroupQuerySLZ(data=request.query_params)
         query_slz.is_valid(raise_exception=True)
 
-        count = self.biz.get_subject_department_template_group_count(
+        count = self.subject_template_biz.get_subject_department_template_group_count(
             subject,
             id=data["id"],
             name=data["name"],
@@ -493,7 +472,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
             group_ids=group_ids,
             system_id=query_slz.validated_data["system_id"],
         )
-        relations = self.biz.list_paging_subject_department_template_group(
+        relations = self.subject_template_biz.list_paging_subject_department_template_group(
             subject,
             id=data["id"],
             name=data["name"],
@@ -509,39 +488,39 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
         return Response({"count": count, "results": slz.data})
 
     def search_group_ids(self, request, kwargs, data):
-        return search_group_ids(data)
+        return search_group_ids(request.tenant_id, data)
 
     def get_subject(self, request, kwargs):
         return Subject.from_username(request.user.username)
 
 
-class UserFavoriteSystemViewSet(GenericViewSet):
+class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
     """
     用户添加或删除收藏的系统
     """
 
     @swagger_auto_schema(
         operation_description="添加收藏系统",
-        request_body=serializers.ListSerializer(child=serializers.CharField(label="系统ID")),
+        request_body=serializers.ListSerializer(child=serializers.CharField(label="系统 ID")),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["user"],
     )
     def create(self, request, *args, **kwargs):
-        slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统ID"))
+        slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统 ID"))
         slz.is_valid(raise_exception=True)
 
-        UserProfile.objects.add_favorite_systems(request.user.username, slz.validated_data)
+        UserProfile.objects.add_favorite_systems(self.tenant_id, request.user.username, slz.validated_data)
 
         return Response({})
 
     @swagger_auto_schema(
         operation_description="移除收藏系统",
-        request_body=serializers.ListSerializer(child=serializers.CharField(label="系统ID")),
+        request_body=serializers.ListSerializer(child=serializers.CharField(label="系统 ID")),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["user"],
     )
     def destroy(self, request, *args, **kwargs):
-        slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统ID"))
+        slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统 ID"))
         slz.is_valid(raise_exception=True)
 
         UserProfile.objects.remove_favorite_systems(request.user.username, slz.validated_data)

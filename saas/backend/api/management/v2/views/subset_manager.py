@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -31,13 +31,11 @@ from backend.apps.role.models import Role, RoleRelation, RoleSource
 from backend.apps.role.tasks import delete_role
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
-from backend.biz.group import GroupBiz
-from backend.biz.role import RoleBiz, RoleCheckBiz
+from backend.mixins import BizMixin, TransMixin
 from backend.service.constants import GroupSaaSAttributeEnum, RoleSourceType, RoleType
-from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementSubsetManagerCreateListViewSet(GenericViewSet):
+class ManagementSubsetManagerCreateListViewSet(BizMixin, TransMixin, GenericViewSet):
     """二级管理员创建"""
 
     authentication_classes = [ESBAuthentication]
@@ -54,13 +52,7 @@ class ManagementSubsetManagerCreateListViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
     filterset_class = GradeManagerFilter
-
-    biz = RoleBiz()
-    group_biz = GroupBiz()
-    role_check_biz = RoleCheckBiz()
-    trans = GradeManagerTrans()
 
     @swagger_auto_schema(
         operation_description="二级管理员创建",
@@ -77,18 +69,22 @@ class ManagementSubsetManagerCreateListViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        grade_manager = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
+        grade_manager = get_object_or_404(
+            Role, tenant_id=self.tenant_id, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"]
+        )
 
-        # 名称唯一性检查, 检查在分级管理员下唯一
+        # 名称唯一性检查，检查在分级管理员下唯一
         self.role_check_biz.check_subset_manager_unique_name(grade_manager, data["name"])
 
         source_system_id = kwargs["system_id"]
 
-        # 兼容member格式
+        # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
 
         # 结构转换
-        info = self.trans.to_role_info(data, _type=RoleType.SUBSET_MANAGER.value, source_system_id=source_system_id)
+        info = self.grade_manager_trans.to_role_info(
+            data, _type=RoleType.SUBSET_MANAGER.value, source_system_id=source_system_id
+        )
 
         # 检查授权范围
         self.role_check_biz.check_subset_manager_auth_scope(grade_manager, info.authorization_scopes)
@@ -98,16 +94,19 @@ class ManagementSubsetManagerCreateListViewSet(GenericViewSet):
             # 检查人员范围
             self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
         else:
-            subject_scopes = self.biz.list_subject_scope(grade_manager.id)
+            subject_scopes = self.role_biz.list_subject_scope(grade_manager.id)
             info.subject_scopes = subject_scopes
 
         with transaction.atomic():
-            # 创建子集管理员, 并创建分级管理员与子集管理员的关系
-            role = self.biz.create_subset_manager(grade_manager, info, request.user.username)
+            # 创建子集管理员，并创建分级管理员与子集管理员的关系
+            role = self.role_biz.create_subset_manager(grade_manager, info, request.user.username)
 
-            # 记录role创建来源信息
+            # 记录 role 创建来源信息
             RoleSource.objects.create(
-                role_id=role.id, source_type=RoleSourceType.API.value, source_system_id=source_system_id
+                tenant_id=self.tenant_id,
+                role_id=role.id,
+                source_type=RoleSourceType.API.value,
+                source_system_id=source_system_id,
             )
 
         # 创建同步权限用户组
@@ -134,7 +133,9 @@ class ManagementSubsetManagerCreateListViewSet(GenericViewSet):
     def list(self, request, *args, **kwargs):
         role_ids = RoleRelation.objects.list_sub_id(kwargs["id"])
 
-        queryset = self.queryset.filter(id__in=role_ids)
+        queryset = Role.objects.filter(
+            tenant_id=self.tenant_id, type=RoleType.SUBSET_MANAGER.valuem, id__in=role_ids
+        ).order_by("-updated_time")
         queryset = self.filter_queryset(queryset)
 
         page = self.paginate_queryset(queryset)
@@ -146,7 +147,7 @@ class ManagementSubsetManagerCreateListViewSet(GenericViewSet):
         return Response(serializer.data)
 
 
-class ManagementSubsetManagerViewSet(GenericViewSet):
+class ManagementSubsetManagerViewSet(BizMixin, TransMixin, GenericViewSet):
     """子集管理员详情"""
 
     authentication_classes = [ESBAuthentication]
@@ -158,12 +159,9 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
 
-    biz = RoleBiz()
-    group_biz = GroupBiz()
-    role_check_biz = RoleCheckBiz()
-    trans = GradeManagerTrans()
+    def get_queryset(self):
+        return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="子集管理员详情",
@@ -204,11 +202,11 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
         # 检查成员数量是否满足限制
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
-        # 兼容member格式
+        # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
 
-        # 转换为RoleInfoBean
-        role_info = self.trans.to_role_info(data, source_system_id=kwargs["system_id"])
+        # 转换为 RoleInfoBean
+        role_info = self.grade_manager_trans.to_role_info(data, source_system_id=kwargs["system_id"])
 
         # 检查授权范围
         self.role_check_biz.check_subset_manager_auth_scope(grade_manager, role_info.authorization_scopes)
@@ -218,10 +216,10 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
             # 检查人员范围
             self.role_check_biz.check_subset_manager_subject_scope(grade_manager, role_info.subject_scopes)
         else:
-            subject_scopes = self.biz.list_subject_scope(grade_manager.id)
+            subject_scopes = self.role_biz.list_subject_scope(grade_manager.id)
             role_info.subject_scopes = subject_scopes
 
-        self.biz.update(role, role_info, request.user.username)
+        self.role_biz.update(role, role_info, request.user.username)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(

@@ -15,9 +15,7 @@ from logging import getLogger
 import requests
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseServerError, JsonResponse
-from rest_framework import serializers
 
-from backend.component import usermgr
 from backend.util.url import url_join
 
 logger = getLogger("app")
@@ -134,23 +132,4 @@ class HealthChecker:
             logger.exception("iam backend request fail")
             return False, f"iam backend request fail, error: {str(e)}"
 
-        return True, "ok"
-
-    def usermgr(self):
-        """
-        Check User Manager
-        """
-        try:
-            # TODO: 暂时不引入 JSON-Schema 进行校验，待校验接入系统回调接口数据时再引入
-            # 校验查询目录返回的数据结构是否 OK
-            class CategorySLZ(serializers.Serializer):
-                id = serializers.CharField()
-                display_name = serializers.CharField()
-
-            categories = usermgr.list_category()
-            for category in categories:
-                CategorySLZ(data=category).is_valid(raise_exception=True)
-        except Exception as e:  # pylint: disable=broad-except
-            logger.exception("usermgr request fail")
-            return True, f"usermgr request fail, error: {str(e)}"
         return True, "ok"

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -29,12 +29,13 @@ from backend.apps.template.audit import TemplateCreateAuditProvider
 from backend.apps.template.views import TemplateQueryMixin
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery
-from backend.biz.template import TemplateBiz, TemplateCheckBiz, TemplateCreateBean
+from backend.biz.template import TemplateCreateBean
 from backend.common.lock import gen_template_upsert_lock
+from backend.mixins import BizMixin
 from backend.service.constants import RoleType
 
 
-class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
+class AdminTemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
     """模板"""
 
     authentication_classes = [ESBAuthentication]
@@ -45,17 +46,15 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         "create": AdminAPIEnum.TEMPLATE_CREATE.value,
     }
 
-    template_biz = TemplateBiz()
-    template_check_biz = TemplateCheckBiz()
-
     @swagger_auto_schema(
         operation_description="模板列表",
         responses={status.HTTP_200_OK: AdminTemplateListSchemaSLZ(label="模板", many=True)},
         tags=["admin.template"],
     )
     def list(self, request, *args, **kwargs):
-        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-        user = User.objects.get(username="admin")
+        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value, tenant_id=self.tenant_id)
+        # FIXME(tenant): 这里应该使用 login_name=bk_admin 的虚拟账号
+        user = User.objects.get(username=role.members[0])
         queryset = RoleListQuery(role, user).query_template()
 
         # 查询 role 的 system-actions set
@@ -77,7 +76,7 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="创建模板",
         request_body=AdminTemplateCreateSLZ(label="模板"),
-        responses={status.HTTP_201_CREATED: AdminTemplateIdSLZ(label="模板ID")},
+        responses={status.HTTP_201_CREATED: AdminTemplateIdSLZ(label="模板 ID")},
         tags=["admin.template"],
     )
     @view_audit_decorator(TemplateCreateAuditProvider)
@@ -90,7 +89,7 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
         user_id = request.user.username
         data = serializer.validated_data
-        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value, tenant_id=self.tenant_id)
 
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(role)

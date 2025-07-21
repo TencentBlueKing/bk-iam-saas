@@ -118,9 +118,11 @@ class ActionBeanList:
 
 
 class ActionBiz:
-    action_svc = ActionService()
-    resource_type_svc = ResourceTypeService()
-    policy_svc = PolicyQueryService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.action_svc = ActionService(self.tenant_id)
+        self.resource_type_svc = ResourceTypeService()
+        self.policy_svc = PolicyQueryService()
 
     @cachedmethod(timeout=1 * 60)  # 缓存 1 分钟
     def list(self, system_id: str) -> ActionBeanList:
@@ -229,7 +231,7 @@ class ActionBiz:
         if condition.action_group_id:
             from backend.biz.action_group import ActionGroupBiz
 
-            actions = ActionGroupBiz().get_actions_by_frontend_id(
+            actions = ActionGroupBiz(self.tenant_id).get_actions_by_frontend_id(
                 system_id, action_list.actions, condition.action_group_id
             )
             action_list = ActionBeanList(actions)
@@ -283,7 +285,9 @@ class ActionResourceGroupForCheck(BaseModel):
 
 
 class ActionCheckBiz:
-    svc = ActionService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = ActionService(tenant_id=tenant_id)
 
     def check(self, system_id: str, actions: List[ActionForCheck]):
         """

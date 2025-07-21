@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 
 import json
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from backend.apps.organization.constants import SyncTaskStatus
@@ -25,10 +26,11 @@ class Command(BaseCommand):
     help = "Synchronous organization"
 
     def handle(self, *args, **options):
+        tenant_id = settings.BK_APP_TENANT_ID
         # 1. 组织架构同步 - 单用户 admin
-        Syncer().sync_single_user("admin")
+        Syncer(tenant_id).sync_single_user("admin")
         # 2. 将 admin 添加到超级管理员成员里，在部署 migration 里已经默认创建了分级管理员
-        RoleBiz().add_super_manager_member("admin", True)
+        RoleBiz(tenant_id).add_super_manager_member("admin", True)
         # 3. 尽可能的初始化已存在系统的管理员
         sync_system_manager()
         # 4. 异步任务 - 全量同步组织架构

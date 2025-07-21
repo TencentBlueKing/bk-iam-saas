@@ -14,10 +14,9 @@ from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 
+from backend.service.constants import ApplicationStatus, ApplicationType, SensitivityLevel, SubjectType
 from backend.service.models.subject import Applicant
 from backend.util.model import ListModel
-
-from ..constants import ApplicationStatus, ApplicationType, SensitivityLevel, SubjectType
 
 
 class ApplicationTicket(BaseModel):
@@ -26,7 +25,6 @@ class ApplicationTicket(BaseModel):
     sn: str
     status: ApplicationStatus
     url: str = ""
-    ticket_id: str = ""
 
 
 class ApplicantDepartment(BaseModel):

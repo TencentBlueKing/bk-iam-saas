@@ -149,6 +149,7 @@ def log_group_cleanup_member_audit_event(task_id: str, group: Group, members: Li
     Event = get_event_model()  # noqa: N806
 
     event = Event(
+        tenant_id=group.tenant_id,
         source_type=AuditSourceType.TASK.value,
         type=AuditType.GROUP_MEMBER_DELETE.value,
         source_data_task_id=task_id,

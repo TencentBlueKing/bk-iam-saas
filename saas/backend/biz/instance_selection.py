@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -35,12 +35,13 @@ class BaseInstanceSelection(BaseModel):
         return {node.system_id for node in self.resource_type_chain}
 
 
-# NOTE: 这里存在system_id / ignore_iam_path, 用于上层业务
+# NOTE: 这里存在 system_id / ignore_iam_path, 用于上层业务
 class InstanceSelectionBean(BaseInstanceSelection, InstanceSelection):
     """
     业务层实例视图数据定义
-    继承Service里InstanceSelection的所有字段和方法，但是resource_type_chain不一样多了一些字段和方法，所以这里继承的顺序必须是先
-    BaseInstanceSelection，后InstanceSelection
+    继承 Service 里 InstanceSelection 的所有字段和方法，
+    但是 resource_type_chain 不一样多了一些字段和方法，所以这里继承的顺序必须是先
+    BaseInstanceSelection，后 InstanceSelection
     """
 
     def match_path(self, path: List[PathResourceTypeBean]) -> bool:
@@ -49,12 +50,12 @@ class InstanceSelectionBean(BaseInstanceSelection, InstanceSelection):
 
     def list_match_path_system_id(self, path: List[PathResourceTypeBean]) -> List[str]:
         """
-        获取path匹配的system_id列表, 用于填充path缺失的system_id
+        获取 path 匹配的 system_id 列表，用于填充 path 缺失的 system_id
         """
         return super().list_match_path_system_id(parse_obj_as(List[PathResourceType], path))
 
 
-# NOTE: 原始注册的实例视图, 此时未被引用, 无需system_id/ignore_iam_path
+# NOTE: 原始注册的实例视图，此时未被引用，无需 system_id/ignore_iam_path
 class RawInstanceSelectionBean(BaseInstanceSelection):
     id: str
     name: str
@@ -68,7 +69,7 @@ class InstanceSelectionList:
 
     def _list_system_id(self):
         """
-        获取所有视图节点的system_id
+        获取所有视图节点的 system_id
         """
         if not self.selections:
             return []
@@ -77,7 +78,7 @@ class InstanceSelectionList:
 
     def fill_chain_node_name(self):
         """
-        填充视图节点的name
+        填充视图节点的 name
         """
         system_ids = self._list_system_id()
         name_provider = ResourceTypeService().get_system_resource_type_dict(system_ids)
@@ -88,7 +89,9 @@ class InstanceSelectionList:
 
 
 class InstanceSelectionBiz:
-    svc = InstanceSelectionService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = InstanceSelectionService()
 
     def list_by_action_resource_type(
         self, system_id: str, action_id: str, resource_type_system_id: str, resource_type_id: str

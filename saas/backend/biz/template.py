@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -70,7 +70,7 @@ class TemplateGroupPreCommitBean(BaseModel):
             policy.set_expired_at(PERMANENT_SECONDS)  # 用户组默认过期时间为 永久
 
     class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传
+        allow_population_by_field_name = True  # 支持 alias 字段同时传
 
     @property
     def action_ids(self):
@@ -85,18 +85,22 @@ class TemplateNameDictBean(BaseModel):
 
 
 class TemplateBiz:
-    svc = TemplateService()
-    action_svc = ActionService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = TemplateService(tenant_id)
+        self.action_svc = ActionService(self.tenant_id)
 
     def create(self, role_id: int, info: TemplateCreateBean, creator: str) -> PermTemplate:
         """
         创建权限模板
         """
         with transaction.atomic():
-            template = PermTemplate(creator=creator, updater=creator, **info.dict(exclude={"action_ids"}))
+            template = PermTemplate(
+                tenant_id=self.tenant_id, creator=creator, updater=creator, **info.dict(exclude={"action_ids"})
+            )
             template.action_ids = info.action_ids
             template.save(force_insert=True)
-            RoleRelatedObject.objects.create_template_relation(role_id, template.id)
+            RoleRelatedObject.objects.create_template_relation(self.tenant_id, role_id, template.id)
 
         return template
 
@@ -117,7 +121,7 @@ class TemplateBiz:
         删除权限模板
         """
         if PermTemplatePolicyAuthorized.objects.count_by_template(template_id) != 0:
-            raise error_codes.VALIDATE_ERROR.format(_("该权限模板已被用户组关联, 不能删除!"))
+            raise error_codes.VALIDATE_ERROR.format(_("该权限模板已被用户组关联，不能删除！"))
 
         with transaction.atomic():
             PermTemplate.objects.filter(id=template_id).delete()
@@ -137,7 +141,7 @@ class TemplateBiz:
 
     def filter_not_auth_subjects(self, template_id, subjects: List[Subject]) -> List[Subject]:
         """
-        筛选出还没授权的subjects
+        筛选出还没授权的 subjects
         """
         exists_subjects = PermTemplatePolicyAuthorized.objects.query_exists_subject(
             template_id, [s.id for s in subjects]
@@ -153,7 +157,7 @@ class TemplateBiz:
 
     def delete_template_auth_by_subject(self, subject: Subject):
         """
-        删除subject模板授权
+        删除 subject 模板授权
         """
         template_ids = list(
             PermTemplatePolicyAuthorized.objects.filter_by_subject(subject).values_list("template_id", flat=True)
@@ -215,18 +219,18 @@ class TemplateBiz:
         创建模板更新锁
         """
         if GroupAuthorizeLock.objects.filter(template_id=template.id).exists():
-            raise error_codes.VALIDATE_ERROR.format(_("正在授权中, 请稍后!"))
+            raise error_codes.VALIDATE_ERROR.format(_("正在授权中，请稍后！"))
 
         if set(template.action_ids) == set(action_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("权限模板未变更, 无需更新!"))
+            raise error_codes.VALIDATE_ERROR.format(_("权限模板未变更，无需更新！"))
 
         template_id = template.id
         lock = PermTemplatePreUpdateLock.objects.acquire_lock_not_running_or_raise(template_id=template_id)
         if lock and set(lock.action_ids) != set(action_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("任务正在运行中，请稍后!"))
+            raise error_codes.VALIDATE_ERROR.format(_("任务正在运行中，请稍后！"))
 
         if not lock:
-            lock = PermTemplatePreUpdateLock(template_id=template_id)
+            lock = PermTemplatePreUpdateLock(tenant_id=self.tenant_id, template_id=template_id)
             lock.action_ids = action_ids  # type: ignore
             lock.save(force_insert=True)
 
@@ -234,14 +238,16 @@ class TemplateBiz:
 
     def get_template_name_dict_by_ids(self, template_ids: List[int]) -> TemplateNameDict:
         """
-        获取模板id: name的字典
+        获取模板 id: name 的字典
         """
         queryset = PermTemplate.objects.filter(id__in=template_ids).only("name")
         return TemplateNameDict(data={one.id: one.name for one in queryset})
 
 
 class TemplateCheckBiz:
-    svc = TemplateService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = TemplateService(tenant_id)
 
     def check_role_template_name_exists(self, role_id: int, name: str, template_id: int = 0):
         """
@@ -262,18 +268,18 @@ class TemplateCheckBiz:
         try:
             template = PermTemplate.objects.get_or_404(template_id)
         except Http404:
-            raise error_codes.VALIDATE_ERROR.format(_("模板: {} 不存在").format(template_id))
+            raise error_codes.VALIDATE_ERROR.format(_("模板：{} 不存在").format(template_id))
 
         try:
             PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, template_id)
             raise error_codes.VALIDATE_ERROR.format(
-                _("用户组: {} 不能授权已授权的模板: {}").format(subject.id, template.name)
+                _("用户组：{} 不能授权已授权的模板：{}").format(subject.id, template.name)
             )
         except Http404:
             pass
 
         if set(template.action_ids) != set(action_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("提交的操作列表与模板: {} 实际的不一致").format(template.name))
+            raise error_codes.VALIDATE_ERROR.format(_("提交的操作列表与模板：{} 实际的不一致").format(template.name))
 
     def check_group_update_pre_commit(
         self, template_id: int, pre_commits: List[TemplateGroupPreCommitBean], add_action_ids: List[str]
@@ -290,14 +296,14 @@ class TemplateCheckBiz:
         exists_members = [Subject(type=one[0], id=one[1]) for one in queryset]
         subjects = [Subject.from_group_id(one.group_id) for one in pre_commits]
         if not set(subjects).issubset(set(exists_members)):
-            raise error_codes.VALIDATE_ERROR.format(_("提交数据中存在模板未授权的用户组!"))
+            raise error_codes.VALIDATE_ERROR.format(_("提交数据中存在模板未授权的用户组！"))
 
         # 检查用户组提交的新增操作与模板与提交的新增操作是否一致
         action_id_set = set(add_action_ids)
         for pre_commit in pre_commits:
             if set(pre_commit.action_ids) != action_id_set:
                 raise error_codes.VALIDATE_ERROR.format(
-                    _("提交操作数据{}与模板预更新的数据{}不一致!").format(pre_commit.action_ids, add_action_ids)
+                    _("提交操作数据{}与模板预更新的数据{}不一致！").format(pre_commit.action_ids, add_action_ids)
                 )
 
     def check_group_pre_commit_complete(self, template_id: int):
@@ -315,7 +321,7 @@ class TemplateCheckBiz:
 
         if set(map(str, pre_commit_group_ids)) != set(exists_group_ids):
             raise error_codes.VALIDATE_ERROR.format(
-                _("权限模板授权的用户组更新信息不完整! 缺少以下action: {}").format(
+                _("权限模板授权的用户组更新信息不完整！缺少以下 action: {}").format(
                     set(exists_group_ids) - set(map(str, pre_commit_group_ids))
                 )
             )
@@ -373,10 +379,10 @@ class ChainList:
 
     def append(self, chain: ChainNodeList):
         """
-        新增新的chain到容器中
+        新增新的 chain 到容器中
 
-        如果新增的链与已有的链中前缀没有重复, 增加到链中
-        如果已有的链比新增的链短， 则替换为新的
+        如果新增的链与已有的链中前缀没有重复，增加到链中
+        如果已有的链比新增的链短，则替换为新的
         """
         for i in range(len(self.chains)):
             old_chain = self.chains[i]
@@ -384,7 +390,7 @@ class ChainList:
             if not prefix:
                 continue
 
-            # 前缀与已有的chain一样并且新的链长度大于已有的则替换
+            # 前缀与已有的 chain 一样并且新的链长度大于已有的则替换
             if (prefix.length == old_chain.length) and (chain.length > old_chain.length):
                 self.chains[i] = chain
                 return
@@ -398,7 +404,7 @@ class ChainList:
 
     def match_prefix(self, chain_list: "ChainList") -> Optional["ChainList"]:
         """
-        匹配chain的前缀，返回所有结果的集合，并去重
+        匹配 chain 的前缀，返回所有结果的集合，并去重
         """
         new_chain_list = ChainList([])
         for target_chain in self.chains:
@@ -417,22 +423,25 @@ class ChainList:
 
 class TemplatePolicyCloneBiz:
     """
-    模板策略克隆BIZ
+    模板策略克隆 BIZ
 
-    用于模板更新时, 新增操作从已有操作中Clone策略
+    用于模板更新时，新增操作从已有操作中 Clone 策略
 
-    1. 生成clone的配置, 匹配目标action与源action视图是否有相同的链路前缀, 如果有则可以从该源action Clone策略数据
-    2. 生成clone的策略, 遍历源策略的每个实例路径, 是否能与上一步匹配的链路前缀匹配, 如果可以匹配则该路径Clone
+    1. 生成 clone 的配置，匹配目标 action 与源 action 视图是否有相同的链路前缀，
+       如果有则可以从该源 action Clone 策略数据
+    2. 生成 clone 的策略，遍历源策略的每个实例路径，是否能与上一步匹配的链路前缀匹配，如果可以匹配则该路径 Clone
     """
 
-    svc = TemplateService()
-    action_svc = ActionService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = TemplateService(tenant_id)
+        self.action_svc = ActionService(self.tenant_id)
 
     def generate_template_groups_clone_policy(
         self, template: PermTemplate, group_ids: List[str], action_id: str, source_action_id: str, role
     ) -> List[GroupClonePolicy]:
         """
-        生成模板更新时用户组的clone Policy
+        生成模板更新时用户组的 clone Policy
         """
         old_action_ids = template.action_ids
         if source_action_id not in old_action_ids:
@@ -458,6 +467,7 @@ class TemplatePolicyCloneBiz:
         group_policies = []
         for authorized_template in authorized_templates:
             policy_list = PolicyBeanList(
+                self.tenant_id,
                 template.system_id,
                 [PolicyBean.parse_obj(one) for one in authorized_template.data["actions"]],
             )
@@ -470,7 +480,9 @@ class TemplatePolicyCloneBiz:
                 continue
 
             # 填充名称
-            clone_policy_list = PolicyBeanList(template.system_id, [policy], need_fill_empty_fields=True)
+            clone_policy_list = PolicyBeanList(
+                self.tenant_id, template.system_id, [policy], need_fill_empty_fields=True
+            )
             group_policies.append(
                 GroupClonePolicy(group_id=int(authorized_template.subject_id), policy=clone_policy_list.policies[0])
             )
@@ -486,7 +498,7 @@ class TemplatePolicyCloneBiz:
         scope_checker: RoleAuthorizationScopeChecker,
     ) -> Optional[PolicyBean]:
         """
-        生成clone的policy
+        生成 clone 的 policy
         """
         if len(source_policy.list_thin_resource_type()) != 1:
             return None
@@ -515,7 +527,7 @@ class TemplatePolicyCloneBiz:
         if not match_paths:
             return None
 
-        # 检查role scope, 剔除不在范围的部分
+        # 检查 role scope, 剔除不在范围的部分
         match_paths = scope_checker.remove_path_outside_scope(system_id, action.id, match_paths)
         if not match_paths:
             return None
@@ -524,7 +536,7 @@ class TemplatePolicyCloneBiz:
 
     def _gen_policy_by_paths(self, action: Action, paths: List[List[PathNodeBean]]) -> PolicyBean:
         """
-        生成新的Policy
+        生成新的 Policy
         """
         instances = group_paths([PathNodeBeanList.parse_obj(one).dict() for one in paths])
         condition = ConditionBean(instances=instances, attributes=[])
@@ -541,7 +553,7 @@ class TemplatePolicyCloneBiz:
         self, system_id: str, new_action_ids: List[str], old_action_ids: List[str]
     ) -> List[ActionCloneConfig]:
         """
-        生成系统的操作clone配置
+        生成系统的操作 clone 配置
         """
         configs: List[ActionCloneConfig] = []
         action_list = self.action_svc.new_action_list(system_id)
@@ -556,7 +568,7 @@ class TemplatePolicyCloneBiz:
         self, action_list: ActionList, new_action_ids: List[str], old_action_ids: List[str]
     ) -> Dict[str, Dict[str, ChainList]]:
         """
-        生成操作数据clone的配置信息
+        生成操作数据 clone 的配置信息
 
         return: {
             "target_action_id": {
@@ -590,15 +602,15 @@ class TemplatePolicyCloneBiz:
         """
         生成操作的实例视图匹配前缀列表
         """
-        # 目标与来源操作如果不关联资源类型, 不匹配
+        # 目标与来源操作如果不关联资源类型，不匹配
         if len(target_action.related_resource_types) == 0 or len(source_action.related_resource_types) == 0:
             return None
 
-        # 来源操作如果关联多个资源类型, 不匹配
+        # 来源操作如果关联多个资源类型，不匹配
         if len(source_action.related_resource_types) > 1:
             return None
 
-        # 来源操作的实例视图为空, 不匹配
+        # 来源操作的实例视图为空，不匹配
         source_selections = source_action.related_resource_types[0].instance_selections
         if not source_selections:
             return None
@@ -608,7 +620,7 @@ class TemplatePolicyCloneBiz:
 
         prefix_chain_list = None
         for rrt in target_action.related_resource_types:
-            # 目标操作的实例视图为空, 不匹配
+            # 目标操作的实例视图为空，不匹配
             if not rrt.instance_selections:
                 return None
 
@@ -619,7 +631,7 @@ class TemplatePolicyCloneBiz:
             if not chain_list:
                 return None
 
-            # 如果target_action关联了多个资源类型，取多个资源类型的前缀的交集
+            # 如果 target_action 关联了多个资源类型，取多个资源类型的前缀的交集
             if prefix_chain_list is None:
                 prefix_chain_list = chain_list
             else:

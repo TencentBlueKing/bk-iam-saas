@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -18,7 +18,7 @@ from backend.util.enum import ChoicesEnum
 class NewbieSceneEnum(ChoicesEnum, LowerStrEnum):
     """新手指引场景枚举"""
 
-    # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    # NOTE: 不能直接改成 auto, 历史原因以前分级管理员是 rating_manager, 数据已入库
     GRADE_MANAGER_AUTHORIZATION_SCOPE = "rating_manager_authorization_scope"
     GRADE_MANAGER_SUBJECT_SCOPE = "rating_manager_subject_scope"
     GRADE_MANAGER_MERGE_ACTION = "rating_manager_merge_action"
@@ -28,7 +28,6 @@ class NewbieSceneEnum(ChoicesEnum, LowerStrEnum):
     ADD_GROUP_MEMBER = auto()
     ADD_GROUP_PERM_TEMPLATE = auto()
     SET_GROUP_APPROVAL_PROCESS = auto()
-    GRADE_MANAGER_UPGRADE = auto()
 
     _choices_labels = skip(
         (
@@ -41,7 +40,6 @@ class NewbieSceneEnum(ChoicesEnum, LowerStrEnum):
             (ADD_GROUP_MEMBER, "添加用户组成员"),
             (ADD_GROUP_PERM_TEMPLATE, "添加用户组权限"),
             (SET_GROUP_APPROVAL_PROCESS, "配置用户组审批流程"),
-            (GRADE_MANAGER_UPGRADE, "一级管理员升级"),
         )
     )
 

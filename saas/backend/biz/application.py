@@ -30,7 +30,6 @@ from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
-from backend.biz.constants import StaffStatus
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
@@ -145,17 +144,34 @@ class ApprovalProcessorBiz:
     当前只能查询 IAM 本身角色，后续需要扩展支持其他的再重新抽象该类
     """
 
-    svc = RoleService()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = RoleService(self.tenant_id)
 
     @cachedmethod(timeout=60)  # 缓存 1 分钟
-    def get_super_manager_members(self) -> str:
-        """获取超级管理员成员员"""
-        return Role.objects.get(type=RoleType.SUPER_MANAGER.value).members
+    def _get_super_manager_members(self, tenant_id: str) -> List[str]:
+        """
+        获取超级管理员成员
+        Q: 为什么 tenant_id 是参数传入的，而不是直接使用 self.tenant_id
+        A: 缓存 Key 是基于函数里的参数，不包括 self 属性，需要避免不同租户的缓存冲突
+        """
+        return Role.objects.get(tenant_id=tenant_id, type=RoleType.SUPER_MANAGER.value).members
+
+    def get_super_manager_members(self) -> List[str]:
+        return self._get_super_manager_members(self.tenant_id)
 
     @cachedmethod(timeout=60)  # 缓存 1 分钟
-    def get_system_manager_members(self, system_id: str) -> str:
-        """获取系统管理员成员"""
-        return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=system_id).members
+    def _get_system_manager_members(self, tenant_id: str, system_id: str) -> List[str]:
+        """
+        获取系统管理员成员
+
+        Q: 为什么 tenant_id 是参数传入的，而不是直接使用 self.tenant_id
+        A: 缓存 Key 是基于函数里的参数，不包括 self 属性，需要避免不同租户的缓存冲突
+        """
+        return Role.objects.get(tenant_id=tenant_id, type=RoleType.SYSTEM_MANAGER.value, code=system_id).members
+
+    def get_system_manager_members(self, system_id: str) -> List[str]:
+        return self._get_system_manager_members(self.tenant_id, system_id)
 
     @cachedmethod(timeout=60)  # 缓存 1 分钟
     def get_grade_manager_members_by_group_id(
@@ -174,9 +190,11 @@ class ApprovalProcessorBiz:
 class ApprovedPassApplicationBiz:
     """审批通过处理"""
 
-    policy_operation_biz = PolicyOperationBiz()
-    group_biz = GroupBiz()
-    role_biz = RoleBiz()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.policy_operation_biz = PolicyOperationBiz(tenant_id)
+        self.group_biz = GroupBiz(tenant_id)
+        self.role_biz = RoleBiz(tenant_id)
 
     def _check_subject_exists(self, subject: Subject) -> Tuple[bool, str]:
         """
@@ -186,9 +204,6 @@ class ApprovedPassApplicationBiz:
         user = UserModel.objects.filter(username=subject.id).first()
         if not user:
             return False, f"user [{subject.id}] not exists"
-
-        if user.staff_status != StaffStatus.IN.value:
-            return False, f"user [{subject.id}] staff status [{user.staff_status}]"
 
         return True, ""
 
@@ -342,6 +357,7 @@ class ApprovedPassApplicationBiz:
             if application.source_system_id:
                 # 记录 role 创建来源信息
                 RoleSource.objects.create(
+                    tenant_id=self.tenant_id,
                     role_id=role.id,
                     source_type=RoleSourceType.API.value,
                     source_system_id=application.source_system_id,
@@ -406,14 +422,17 @@ class ApprovedPassApplicationBiz:
 
 
 class ApplicationBiz:
-    svc = ApplicationService()
-    system_svc = SystemService()
-    approval_process_svc = ApprovalProcessService()
-    approval_processor_biz = ApprovalProcessorBiz()
-    approved_pass_biz = ApprovedPassApplicationBiz()
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.svc = ApplicationService(tenant_id)
+        self.approval_process_svc = ApprovalProcessService(tenant_id)
 
-    policy_biz = PolicyQueryBiz()
-    template_biz = TemplateBiz()
+        self.system_svc = SystemService()
+        self.approval_processor_biz = ApprovalProcessorBiz(tenant_id)
+        self.approved_pass_biz = ApprovedPassApplicationBiz(tenant_id)
+
+        self.policy_biz = PolicyQueryBiz(tenant_id)
+        self.template_biz = TemplateBiz(tenant_id)
 
     def _get_approval_process_with_node_processor(
         self, process: ApprovalProcess, **kwargs
@@ -523,7 +542,7 @@ class ApplicationBiz:
             GradeManagerApproverHandler,
         ]
         for pipe in pipeline:
-            policy_process_list = pipe(system_id).handle(policy_process_list)
+            policy_process_list = pipe(self.tenant_id, system_id).handle(policy_process_list)
 
         # 6. 依据审批流程合并策略
         policy_list_process = self._merge_policies_by_approval_process(system_id, policy_process_list)
@@ -583,9 +602,9 @@ class ApplicationBiz:
         policy_list_process = []
         # 流程相同的策略中，合并 action_id 一样的策略
         for _process, _policies in merge_process_dict.items():
-            policy_list = PolicyBeanList(system_id, [])
+            policy_list = PolicyBeanList(self.tenant_id, system_id, [])
             for p in _policies:
-                policy_list.add(PolicyBeanList(system_id, [p]))
+                policy_list.add(PolicyBeanList(self.tenant_id, system_id, [p]))
 
             policy_list_process.append((policy_list, _process))
 
@@ -666,6 +685,7 @@ class ApplicationBiz:
         # 循环组织权限模板数据
         for authorized in authorized_query_set:
             policy_list = PolicyBeanList(
+                tenant_id=self.tenant_id,
                 system_id=authorized.system_id,
                 policies=parse_obj_as(List[PolicyBean], authorized.data["actions"]),
                 need_fill_empty_fields=True,
@@ -791,6 +811,7 @@ class ApplicationBiz:
         for scope in role_info.authorization_scopes:
             system = self._gen_application_system(scope.system_id)
             policy_list = PolicyBeanList(
+                tenant_id=self.tenant_id,
                 system_id=scope.system_id,
                 policies=parse_obj_as(List[PolicyBean], scope.actions),
                 need_fill_empty_fields=True,
@@ -881,8 +902,7 @@ class ApplicationBiz:
         ticket = self.svc.get_approval_ticket_from_callback_request(request)
 
         try:
-            # 单据sn号提单时返回和回调返回sn不一致，使用ticket_id进行查询
-            application = Application.objects.get(ticket_id=ticket.ticket_id, callback_id=callback_id)
+            application = Application.objects.get(sn=ticket.sn, callback_id=callback_id)
         except Application.DoesNotExist:
             raise error_codes.NOT_FOUND_ERROR
 
@@ -891,10 +911,10 @@ class ApplicationBiz:
 
     def query_application_approval_status(self, applications: List[Application]) -> ApplicationIDStatusDict:
         """查询申请单审批状态"""
-        ticket_id_id_dict = {a.ticket_id: a.id for a in applications}
-        tickets = self.svc.query_ticket_approval_status(list(ticket_id_id_dict.keys()))
+        sn_id_dict = {a.sn: a.id for a in applications}
+        tickets = self.svc.query_ticket_approval_status(list(sn_id_dict.keys()))
 
-        return ApplicationIDStatusDict(data={ticket_id_id_dict[t.ticket_id]: t.status for t in tickets})
+        return ApplicationIDStatusDict(data={sn_id_dict[t.sn]: t.status for t in tickets})
 
     def cancel_application(self, application: Application, operator: str, need_cancel_ticket: bool = True):
         """撤销申请单"""
@@ -903,12 +923,12 @@ class ApplicationBiz:
 
         if need_cancel_ticket:
             # 撤销单据
-            self.svc.cancel_ticket(application.ticket_id)
+            self.svc.cancel_ticket(application.sn)
 
         # 更新状态
         self.handle_application_result(application, ApplicationStatus.CANCELLED.value)
 
     def get_approval_url(self, application: Application) -> str:
         """查询审批 URL"""
-        ticket = self.svc.get_ticket(application.ticket_id)
+        ticket = self.svc.get_ticket(application.sn)
         return ticket.url

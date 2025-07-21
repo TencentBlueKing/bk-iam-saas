@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -33,21 +33,18 @@ from backend.apps.application.models import Application
 from backend.apps.organization.models import User as UserModel
 from backend.apps.role.models import Role
 from backend.biz.application import (
-    ApplicationBiz,
     ApplicationGroupInfoBean,
     GradeManagerApplicationDataBean,
     GroupApplicationDataBean,
 )
-from backend.biz.group import GroupBiz
-from backend.biz.role import RoleCheckBiz
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
+from backend.mixins import BizMixin, TransMixin
 from backend.service.constants import ApplicationType, RoleType, SubjectType
 from backend.service.models import Applicant, Subject
-from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementGroupApplicationViewSet(GenericViewSet):
+class ManagementGroupApplicationViewSet(BizMixin, GenericViewSet):
     """用户组申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -59,13 +56,10 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         ),
     }
 
-    biz = ApplicationBiz()
-    group_biz = GroupBiz()
-
     @swagger_auto_schema(
         operation_description="创建用户组申请单",
         request_body=ManagementGroupApplicationCreateSLZ(label="创建用户组申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据 ID 列表")},
         tags=["management.group.application"],
     )
     def create(self, request, *args, **kwargs):
@@ -79,7 +73,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.filter(username=user_id).first()
         if not user:
             raise error_codes.INVALID_ARGS.format(f"user: {user_id} not exists")
@@ -90,7 +84,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
         # 创建申请
-        applications = self.biz.create_for_group(
+        applications = self.application_biz.create_for_group(
             ApplicationType.JOIN_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user_id,
@@ -110,7 +104,9 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         return Response({"ids": [a.id for a in applications]})
 
 
-class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+class ManagementGradeManagerApplicationViewSet(
+    BizMixin, TransMixin, ManagementAPIPermissionCheckMixin, GenericViewSet
+):
     """分级管理员创建申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -121,10 +117,6 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
             ManagementAPIEnum.V2_GRADE_MANAGER_APPLICATION_CREATE.value,
         ),
     }
-
-    biz = ApplicationBiz()
-    role_check_biz = RoleCheckBiz()
-    trans = GradeManagerTrans()
 
     @swagger_auto_schema(
         operation_description="分级管理员创建申请单",
@@ -142,22 +134,22 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
 
         user_id = data["applicant"]
 
-        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+        # API 里数据鉴权：不可超过接入系统可管控的授权系统范围
         source_system_id = kwargs["system_id"]
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(source_system_id, auth_system_ids)
 
-        # 兼容member格式
+        # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
 
         # 结构转换
-        info = self.trans.to_role_info(data, source_system_id=source_system_id)
+        info = self.grade_manager_trans.to_role_info(data, source_system_id=source_system_id)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
-            applications = self.biz.create_for_grade_manager(
+            applications = self.application_biz.create_for_grade_manager(
                 ApplicationType.CREATE_GRADE_MANAGER.value,
                 GradeManagerApplicationDataBean(
                     applicant=user_id, reason=data["reason"], role_info=info, group_name=data["group_name"]
@@ -172,7 +164,9 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
         return Response({"id": applications[0].id, "sn": applications[0].sn})
 
 
-class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+class ManagementGradeManagerUpdatedApplicationViewSet(
+    BizMixin, TransMixin, ManagementAPIPermissionCheckMixin, GenericViewSet
+):
     """分级管理员更新申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -185,10 +179,6 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
     }
 
     lookup_field = "id"
-
-    biz = ApplicationBiz()
-    role_check_biz = RoleCheckBiz()
-    trans = GradeManagerTrans()
 
     @swagger_auto_schema(
         operation_description="分级管理员更新申请单",
@@ -206,23 +196,23 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
 
         user_id = data["applicant"]
 
-        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+        # API 里数据鉴权：不可超过接入系统可管控的授权系统范围
         source_system_id = kwargs["system_id"]
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(source_system_id, auth_system_ids)
 
         role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
 
-        # 兼容member格式
+        # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
 
-        info = self.trans.to_role_info(data, source_system_id=source_system_id)
+        info = self.grade_manager_trans.to_role_info(data, source_system_id=source_system_id)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
-            applications = self.biz.create_for_grade_manager(
+            applications = self.application_biz.create_for_grade_manager(
                 ApplicationType.UPDATE_GRADE_MANAGER,
                 GradeManagerApplicationDataBean(
                     role_id=role.id,
@@ -241,7 +231,7 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
         return Response({"id": applications[0].id, "sn": applications[0].sn})
 
 
-class ManagementApplicationCancelView(views.APIView):
+class ManagementApplicationCancelView(BizMixin, views.APIView):
     """
     申请单取消
     """
@@ -255,23 +245,21 @@ class ManagementApplicationCancelView(views.APIView):
         ),
     }
 
-    biz = ApplicationBiz()
-
     # Note: 这里会回调第三方处理，所以不定义参数
     def put(self, request, *args, **kwargs):
         source_system_id = kwargs["system_id"]
         callback_id = kwargs["callback_id"]
 
-        # 校验系统与callback_id对应的审批存在
+        # 校验系统与 callback_id 对应的审批存在
         application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
 
-        # 接入系统自行cancel itsm 单据
-        self.biz.cancel_application(application, application.applicant, need_cancel_ticket=False)
+        # 接入系统自行 cancel itsm 单据
+        self.application_biz.cancel_application(application, application.applicant, need_cancel_ticket=False)
 
         return Response({})
 
 
-class ManagementGroupRenewApplicationViewSet(GenericViewSet):
+class ManagementGroupRenewApplicationViewSet(BizMixin, GenericViewSet):
     """用户组续期申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -283,13 +271,10 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         ),
     }
 
-    biz = ApplicationBiz()
-    group_biz = GroupBiz()
-
     @swagger_auto_schema(
         operation_description="用户组续期申请单",
         request_body=ManagementGroupApplicationCreateSLZ(label="用户组续期申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据 ID 列表")},
         tags=["management.group.application"],
     )
     def create(self, request, *args, **kwargs):
@@ -303,7 +288,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.filter(username=user_id).first()
         if not user:
             raise error_codes.INVALID_ARGS.format(f"user: {user_id} not exists")
@@ -314,7 +299,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
         # 创建申请
-        applications = self.biz.create_for_group(
+        applications = self.application_biz.create_for_group(
             ApplicationType.RENEW_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user.username,
@@ -331,7 +316,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         return Response({"ids": [a.id for a in applications]})
 
 
-class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
+class ManagementGroupBatchExpiredAtRenewApplicationViewSet(BizMixin, GenericViewSet):
     """用户组批量续期申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -343,13 +328,10 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
         ),
     }
 
-    biz = ApplicationBiz()
-    group_biz = GroupBiz()
-
     @swagger_auto_schema(
         operation_description="用户组批量续期申请单",
         request_body=ManagementGroupApplicationBatchSLZ(label="用户组批量续期申请单"),
-        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
+        responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据 ID 列表")},
         tags=["management.group.application"],
     )
     def create(self, request, *args, **kwargs):
@@ -364,7 +346,7 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
 
-        # 转换为ApplicationBiz创建申请单所需数据结构
+        # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.filter(username=user_id).first()
         if not user:
             raise (error_codes.INVALID_ARGS.format(f"user: {user_id} not exists"))
@@ -375,7 +357,7 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(GenericViewSet):
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), group_ids)
 
         # 创建申请
-        applications = self.biz.create_for_group(
+        applications = self.application_biz.create_for_group(
             ApplicationType.RENEW_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user.username,

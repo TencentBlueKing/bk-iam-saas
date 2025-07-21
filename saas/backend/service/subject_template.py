@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -21,6 +21,9 @@ from backend.service.models.subject import Subject
 
 
 class SubjectTemplateService:
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+
     def create(
         self,
         name: str,
@@ -31,6 +34,7 @@ class SubjectTemplateService:
         source_group_id: int = 0,
     ) -> SubjectTemplate:
         template = SubjectTemplate(
+            tenant_id=self.tenant_id,
             name=name,
             description=description,
             creator=creator,
@@ -41,6 +45,7 @@ class SubjectTemplateService:
 
         relations = [
             SubjectTemplateRelation(
+                tenant_id=self.tenant_id,
                 template_id=template.id,
                 subject_type=subject.type,
                 subject_id=subject.id,
@@ -88,6 +93,7 @@ class SubjectTemplateService:
 
     def add_group(self, template_id: int, group_id: int, expired_at: int, creator: str) -> List[Subject]:
         relation = SubjectTemplateGroup(
+            tenant_id=self.tenant_id,
             template_id=template_id,
             group_id=group_id,
             expired_at=expired_at,
@@ -141,6 +147,7 @@ class SubjectTemplateService:
         # 批量添加
         relations = [
             SubjectTemplateRelation(
+                tenant_id=self.tenant_id,
                 template_id=template_id,
                 subject_type=subject.type,
                 subject_id=subject.id,

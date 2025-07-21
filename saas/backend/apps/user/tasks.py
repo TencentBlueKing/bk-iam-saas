@@ -53,9 +53,6 @@ MAX_USER_PERMISSION_CLEAN_RETRY_COUNT = 3
 class SendUserExpireRemindMailTask(Task):
     name = "backend.apps.user.tasks.SendUserExpireRemindMailTask"
 
-    policy_biz = PolicyQueryBiz()
-    group_biz = GroupBiz()
-
     base_url = url_join(settings.APP_URL, "/perm-renewal")
 
     def run(self, username: str, expired_at_before: int, expired_at_after: int, notification_types: List[str]):
@@ -259,20 +256,21 @@ class UserPermissionCleaner:
     用户权限清理
     """
 
-    system_biz = SystemBiz()
-    policy_query_biz = PolicyQueryBiz()
-    policy_operation_biz = PolicyOperationBiz()
-
-    group_biz = GroupBiz()
-    role_biz = RoleBiz()
-    role_with_perm_group_biz = RoleWithPermGroupBiz()
-    subject_template_biz = SubjectTemplateBiz()
-
     def __init__(self, username: str) -> None:
         record = UserPermissionCleanupRecord.objects.get(username=username)
+        tenant_id = record.tenant_id
 
         self._record = record
         self._subject = Subject.from_username(username)
+
+        self.system_biz = SystemBiz()
+        self.policy_query_biz = PolicyQueryBiz(tenant_id)
+        self.policy_operation_biz = PolicyOperationBiz(tenant_id)
+
+        self.group_biz = GroupBiz(tenant_id)
+        self.role_biz = RoleBiz(tenant_id)
+        self.role_with_perm_group_biz = RoleWithPermGroupBiz(tenant_id)
+        self.subject_template_biz = SubjectTemplateBiz(tenant_id)
 
     def clean(self):
         # 有其他的任务在处理，忽略

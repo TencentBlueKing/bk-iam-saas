@@ -10,19 +10,15 @@ specific language governing permissions and limitations under the License.
 """
 
 import logging
-import traceback
 
 from blue_krill.web.std_error import APIError
 from django.contrib.auth.backends import ModelBackend
-from django.db import IntegrityError
 from rest_framework import status
 
 from backend.account import get_user_model
-from backend.component import login
+from backend.component.client.bk_login import BkLoginClient
 
 logger = logging.getLogger("app")
-
-ROLE_TYPE_ADMIN = "1"
 
 
 class PermissionForbidden(Exception):
@@ -39,109 +35,48 @@ class TokenBackend(ModelBackend):
         if not bk_token:
             return None
 
-        verify_result, username = self.verify_bk_token(bk_token)
+        result, user_info = self.get_user_info(bk_token)
         # 判断 bk_token 是否验证通过，不通过则返回 None
-        if not verify_result:
+        if not result:
             return None
 
         user_model = get_user_model()
-        try:
-            user, _ = user_model.objects.get_or_create(username=username)
-            get_user_info_result, user_info = self.get_user_info(bk_token)
-            # 判断是否获取到用户信息，获取不到则返回 None
-            if not get_user_info_result:
-                return None
-            # user.set_property(key="qq", value=user_info.get("qq", ""))
-            user.set_property(key="language", value=user_info.get("language", ""))
-            user.set_property(key="time_zone", value=user_info.get("time_zone", ""))
-            user.set_property(key="role", value=user_info.get("role", ""))
-            # user.set_property(key="phone", value=user_info.get("phone", ""))
-            # user.set_property(key="email", value=user_info.get("email", ""))
-            # user.set_property(key="wx_userid", value=user_info.get("wx_userid", ""))
-            # user.set_property(key="chname", value=user_info.get("chname", ""))
+        username = user_info["username"]
 
-            # 用户如果不是管理员，则需要判断是否存在平台权限，如果有则需要加上
-            if not user.is_superuser and not user.is_staff:
-                role = user_info.get("role", "")
-                is_admin = str(role) == ROLE_TYPE_ADMIN
-                user.is_superuser = is_admin
-                user.is_staff = is_admin
-                user.save()
-            return user
+        user, _ = user_model.objects.get_or_create(username=username)
+        user.set_property(key="language", value=user_info["language"])
+        user.set_property(key="time_zone", value=user_info["time_zone"])
+        user.set_property(key="tenant_id", value=user_info["tenant_id"])
+        user.set_property(key="display_name", value=user_info["display_name"])
+        # 消息通知中心所需
+        user.tenant_id = user_info["tenant_id"]
 
-        except PermissionForbidden:
-            raise
-        except IntegrityError:
-            logger.exception(traceback.format_exc())
-            logger.exception("get_or_create UserModel fail or update_or_create UserProperty")
-            return None
-        except Exception:  # pylint: disable=broad-except
-            logger.exception(traceback.format_exc())
-            logger.exception("Auto create & update UserModel fail")
-            return None
+        return user
 
     def get_user_info(self, bk_token):
         """
-        请求平台 ESB 接口获取用户信息
-        @param bk_token: bk_token
-        @type bk_token: str
-        @return:True, {
-            u'message': u'\u7528\u6237\u4fe1\u606f\u83b7\u53d6\u6210\u529f',
-            u'code': 0,
-            u'data': {
-                u'qq': u'',
-                u'wx_userid': u'',
-                u'language': u'zh-cn',
-                u'username': u'test',
-                u'time_zone': u'Asia/Shanghai',
-                u'role': 2,
-                u'phone': u'11111111111',
-                u'email': u'test',
-                u'chname': u'test'
-            },
-            u'result': True,
-            u'request_id': u'eac0fee52ba24a47a335fd3fef75c099'
-        }
-        @rtype: bool,dict
+        请求登录 接口获取用户信息
+        :param bk_token: 用户登录凭证
+        :return: 是否获取成功，用户信息
         """
         try:
-            data = login.get_user_info(bk_token)
-        except Exception as e:  # pylint: disable=broad-except
-            logger.exception("Abnormal error in get_user_info(%s)", bk_token)
-            self._handle_exception(e)
+            data = BkLoginClient().get_user_info(bk_token)
+        except Exception as error:  # pylint: disable=broad-except
+            logger.exception("Abnormal error in get_user_info, bk_token=%s", bk_token)
+            self._handle_exception(error)
             return False, {}
 
-        user_info = {}
-        # v1,v2 字段相同的部分
-        user_info["wx_userid"] = data.get("wx_userid", "")
-        user_info["language"] = data.get("language", "")
-        user_info["time_zone"] = data.get("time_zone", "")
-        user_info["phone"] = data.get("phone", "")
-        user_info["chname"] = data.get("chname", "")
-        user_info["email"] = data.get("email", "")
-        user_info["qq"] = data.get("qq", "")
-        user_info["username"] = data.get("bk_username", "")
-        user_info["role"] = data.get("bk_role", "")
+        user_info = {
+            "username": data["bk_username"],
+            "language": data.get("language", ""),
+            "time_zone": data.get("time_zone", ""),
+            "tenant_id": data.get("tenant_id", ""),
+            "display_name": data.get("display_name", ""),
+        }
         return True, user_info
 
-    def verify_bk_token(self, bk_token):
-        """
-        请求 VERIFY_URL，认证 bk_token 是否正确
-        @param bk_token: "_FrcQiMNevOD05f8AY0tCynWmubZbWz86HslzmOqnhk"
-        @type bk_token: str
-        @return: False,None True,username
-        @rtype: bool,None/str
-        """
-        try:
-            data = login.verify_bk_token(bk_token)
-        except Exception as e:  # pylint: disable=broad-except
-            logger.warning("Abnormal error in verify_bk_token...", exc_info=True)
-            self._handle_exception(e)
-            return False, None
-
-        return True, data["bk_username"]
-
-    def _handle_exception(self, e):
+    @staticmethod
+    def _handle_exception(e: Exception):
         """处理登录特殊异常，需要前端响应给用户"""
         if isinstance(e, APIError) and "1302403" in e.message:
             msg_prefix = "message="

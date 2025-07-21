@@ -46,6 +46,7 @@ from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.service.constants import PermissionCodeEnum
 
 
+# FIXME(tenant): 应该调整为仅仅运营租户的管理员可操作
 class ApiViewSet(mixins.ListModelMixin, GenericViewSet):
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 

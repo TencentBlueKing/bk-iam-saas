@@ -89,9 +89,11 @@ class SubjectInfoList:
 
 
 class SubjectBiz:
-    subject_svc = SubjectService()
-
     # 直通的方法
     list_freezed_subjects = SubjectService.__dict__["list_freezed_subjects"]
     freeze_users = SubjectService.__dict__["freeze_users"]
     unfreeze_users = SubjectService.__dict__["unfreeze_users"]
+
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.subject_svc = SubjectService()

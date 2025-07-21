@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -17,6 +17,7 @@ from django.core.paginator import Paginator
 from django.db import connection, models
 from django.utils.functional import cached_property
 
+from backend.common.constants import DEFAULT_TENANT_ID
 from backend.common.models import BaseModel, BaseSystemHiddenModel
 from backend.service.constants import (
     RoleConfigType,
@@ -36,6 +37,8 @@ class Role(BaseModel, BaseSystemHiddenModel):
     """
     角色
     """
+
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
 
     name = models.CharField("名称", max_length=512)
     name_en = models.CharField("英文名", max_length=512, default="")
@@ -69,8 +72,10 @@ class RoleUser(BaseModel):
     角色的用户
     """
 
-    role_id = models.IntegerField("角色ID")
-    username = models.CharField("用户id", max_length=64, db_index=True)
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID")
+    username = models.CharField("用户 id", max_length=64, db_index=True)
     readonly = models.BooleanField("只读标识", default=False)  # 增加可读标识
 
     objects = RoleUserManager()
@@ -89,7 +94,9 @@ class RoleUserSystemPermission(BaseModel):
     角色里的用户是否拥有对应接入系统的超级权限
     """
 
-    role_id = models.IntegerField("角色ID", db_index=True)
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID", db_index=True)
     content = models.TextField("限制内容", default='{"enabled_users": [], "global_enabled": false}')
 
     @cached_property
@@ -133,6 +140,8 @@ class Permission(models.Model):
     权限
     """
 
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
     name = models.CharField("名称", max_length=64)
     name_en = models.CharField("英文名", max_length=64, default="")
     code = models.CharField("标志", max_length=64)
@@ -147,8 +156,10 @@ class RolePerm(models.Model):
     角色的权限
     """
 
-    role_id = models.IntegerField("角色ID")
-    perm_id = models.IntegerField("权限ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID")
+    perm_id = models.IntegerField("权限 ID")
 
     class Meta:
         verbose_name = "角色的权限"
@@ -161,7 +172,9 @@ class RoleScope(models.Model):
     角色的限制范围
     """
 
-    role_id = models.IntegerField("角色ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID")
     type = models.CharField("限制类型", max_length=32, choices=RoleScopeType.get_choices())
     content = models.TextField("限制内容")
 
@@ -173,7 +186,7 @@ class RoleScope(models.Model):
     @classmethod
     def delete_action_from_scope(cls, system_id: str, action_id: str):
         """
-        从可授权范围里删除某个操作，由于json存储了所有授权信息，所以无法直接索引，只能遍历所有
+        从可授权范围里删除某个操作，由于 json 存储了所有授权信息，所以无法直接索引，只能遍历所有
         """
         qs = Role.objects.only("id")
         if system_id != "bk_ci_rbac":
@@ -193,11 +206,11 @@ class RoleScope(models.Model):
                 for scope in content:
                     if scope["system_id"] != system_id:
                         continue
-                    # 判断Action是否存在，不存在则忽略
+                    # 判断 Action 是否存在，不存在则忽略
                     action_ids = {action["id"] for action in scope["actions"]}
                     if action_id not in action_ids:
                         continue
-                    # 如果包含要删除的Action，则进行更新数据
+                    # 如果包含要删除的 Action，则进行更新数据
                     scope["actions"] = [action for action in scope["actions"] if action["id"] != action_id]
                     should_updated = True
                     break
@@ -212,17 +225,19 @@ class RoleScope(models.Model):
 
 class ScopeSubject(models.Model):
     """
-    subject的限制冗余
+    subject 的限制冗余
     """
 
-    role_scope_id = models.IntegerField("角色限制ID")
-    role_id = models.IntegerField("角色ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_scope_id = models.IntegerField("角色限制 ID")
+    role_id = models.IntegerField("角色 ID")
     subject_type = models.CharField("授权对象类型", max_length=32, choices=SubjectType.get_choices())
-    subject_id = models.CharField("授权对象ID", max_length=64)
+    subject_id = models.CharField("授权对象 ID", max_length=64)
 
     class Meta:
-        verbose_name = "subject限制"
-        verbose_name_plural = "subject限制"
+        verbose_name = "subject 限制"
+        verbose_name_plural = "subject 限制"
         indexes = [
             models.Index(fields=["subject_id", "subject_type", "role_id"]),
             models.Index(fields=["role_id", "role_scope_id"]),
@@ -234,9 +249,11 @@ class RoleRelatedObject(BaseModel):
     角色关联资源
     """
 
-    role_id = models.IntegerField("角色ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID")
     object_type = models.CharField("对象类型", max_length=32, choices=RoleRelatedObjectType.get_choices())
-    object_id = models.IntegerField("对象ID")
+    object_id = models.IntegerField("对象 ID")
     sync_perm = models.BooleanField("跟随角色同步", default=False)
 
     objects = RoleRelatedObjectManager()
@@ -254,11 +271,13 @@ class RoleRelation(BaseModel):
     """
     角色关系
 
-    当前只有 分级管理员 -- 子集管理员 的1对多关系
+    当前只有 分级管理员 -- 子集管理员 的 1 对多关系
     """
 
-    parent_id = models.IntegerField("父级角色ID")
-    role_id = models.IntegerField("角色ID", db_index=True)
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    parent_id = models.IntegerField("父级角色 ID")
+    role_id = models.IntegerField("角色 ID", db_index=True)
 
     objects = RoleRelationManager()
 
@@ -273,10 +292,12 @@ class RoleCommonAction(BaseModel):
     角色常用操作
     """
 
-    role_id = models.IntegerField("角色ID")
-    system_id = models.CharField("系统ID", max_length=32)
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID")
+    system_id = models.CharField("系统 ID", max_length=32)
     name = models.CharField("名称", max_length=128)
-    name_en = models.CharField("名称EN", max_length=128, default="")
+    name_en = models.CharField("名称 EN", max_length=128, default="")
     _action_ids = models.TextField("操作列表", db_column="action_ids")
 
     class Meta:
@@ -299,7 +320,9 @@ class RoleSource(BaseModel):
     角色创建来源
     """
 
-    role_id = models.IntegerField("角色ID", unique=True)
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID", unique=True)
     source_type = models.CharField("来源类型", max_length=32, choices=RoleSourceType.get_choices())
     source_system_id = models.CharField("来源系统", max_length=32, default="")
 
@@ -336,10 +359,12 @@ class RoleResourceRelation(BaseModel):
     用于自定义申请权限查询管理员审批人
     """
 
-    role_id = models.IntegerField("角色ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID")
     system_id = models.CharField("资源系统", max_length=32)
     resource_type_id = models.CharField("资源类型", max_length=32)
-    resource_id = models.CharField("资源ID", max_length=36)
+    resource_id = models.CharField("资源 ID", max_length=36)
 
     class Meta:
         verbose_name = "角色资源关系"
@@ -352,7 +377,9 @@ class RoleConfig(BaseModel):
     角色配置
     """
 
-    role_id = models.IntegerField("角色ID")
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID")
     type = models.CharField("限制类型", max_length=32, choices=RoleConfigType.get_choices())
     _config = models.TextField("配置", db_column="config", default="{}")
 
@@ -371,6 +398,7 @@ class RoleConfig(BaseModel):
 
 
 class AnonymousRole:
+    tenant_id = ""
     id = 0
     pk = 0
     name = "STAFF"
@@ -412,12 +440,14 @@ class RoleGroupMember(models.Model):
     角色用户组成员冗余数据表
     """
 
-    role_id = models.IntegerField("角色ID")
-    subset_id = models.IntegerField("二级角色ID", default=0)
-    group_id = models.IntegerField("用户组ID", db_index=True)
-    subject_template_id = models.IntegerField("用户模板ID", default=0, db_index=True)
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID")
+    subset_id = models.IntegerField("二级角色 ID", default=0)
+    group_id = models.IntegerField("用户组 ID", db_index=True)
+    subject_template_id = models.IntegerField("用户模板 ID", default=0, db_index=True)
     subject_type = models.CharField("用户类型", max_length=32, choices=SubjectType.get_choices())
-    subject_id = models.CharField("用户ID", max_length=32)
+    subject_id = models.CharField("用户 ID", max_length=32)
 
     class Meta:
         verbose_name = "角色用户组成员"
@@ -432,7 +462,9 @@ class RolePolicyExpiredNotificationConfig(BaseModel):
     角色策略过期通知配置
     """
 
-    role_id = models.IntegerField("角色ID", unique=True)
+    tenant_id = models.CharField("租户 ID", max_length=64, default=DEFAULT_TENANT_ID)
+
+    role_id = models.IntegerField("角色 ID", unique=True)
     _config = models.TextField("配置", db_column="config", default="{}")
 
     class Meta:
