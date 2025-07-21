@@ -42,22 +42,18 @@ class GroupSLZ(SubjectGroupSLZ):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        tenant_id = self.context["tenant_id"]
         self.group_role_dict = None
         self.group_attrs_dict = None
         self.subject_template_count_dict = None
         if isinstance(self.instance, list) and self.instance:
             group_ids = [int(group.id) for group in self.instance]
-            if self.instance:
-                tenant_id = self.instance[0].tenant_id
-                self.group_role_dict = GroupBiz(tenant_id).get_group_role_dict_by_ids(group_ids)
-                # 查询涉及到的用户组的属性
-                self.group_attrs_dict = GroupAttributeService(tenant_id).batch_get_attributes(group_ids)
-                # 人员模版数量
-                self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(
-                    group_ids
-                )
+            self.group_role_dict = GroupBiz(tenant_id).get_group_role_dict_by_ids(group_ids)
+            # 查询涉及到的用户组的属性
+            self.group_attrs_dict = GroupAttributeService(tenant_id).batch_get_attributes(group_ids)
+            # 人员模版数量
+            self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(group_ids)
         elif isinstance(self.instance, Group):
-            tenant_id = self.instance.tenant_id
             self.group_attrs_dict = GroupAttributeService(tenant_id).batch_get_attributes([self.instance.id])
             # 人员模版数量
             self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(

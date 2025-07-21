@@ -76,7 +76,7 @@ class UserGroupViewSet(BizMixin, GenericViewSet):
         else:
             count, relations = self.group_biz.list_paging_subject_group(subject, limit=limit, offset=offset)
 
-        slz = GroupSLZ(instance=relations, many=True)
+        slz = GroupSLZ(instance=relations, many=True, context={"tenant_id": self.tenant_id})
         return Response({"count": count, "results": slz.data})
 
     @swagger_auto_schema(
@@ -123,7 +123,7 @@ class UserDepartmentGroupViewSet(BizMixin, GenericViewSet):
         else:
             # 目前只能查询所有的，暂时不支持分页，如果有性能问题，需要考虑优化
             relations = self.group_biz.list_all_user_department_group(subject)
-        slz = GroupSLZ(instance=relations, many=True)
+        slz = GroupSLZ(instance=relations, many=True, context={"tenant_id": self.tenant_id})
         return Response(slz.data)
 
 
@@ -154,7 +154,7 @@ class UserGroupRenewViewSet(BizMixin, GenericViewSet):
                 subject, expired_at=expired_at, limit=limit, offset=offset
             )
 
-        slz = GroupSLZ(instance=relations, many=True)
+        slz = GroupSLZ(instance=relations, many=True, context={"tenant_id": self.tenant_id})
         return Response({"count": count, "results": slz.data})
 
 
@@ -385,7 +385,9 @@ class UserSubjectTemplateGroupViewSet(BizMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="我的权限 - 人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
-        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        responses={
+            status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True, context={"tenant_id": "tenant_id"})
+        },
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
@@ -421,7 +423,7 @@ class UserSubjectTemplateGroupViewSet(BizMixin, GenericViewSet):
             offset=query_slz.validated_data["offset"],
         )
 
-        slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
+        slz = SubjectTemplateGroupSLZ(instance=relations, many=True, context={"tenant_id": self.tenant_id})
         return Response({"count": count, "results": slz.data})
 
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
@@ -448,7 +450,9 @@ class UserDepartmentSubjectTemplateGroupViewSet(BizMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="我的权限 - 部门人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
-        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        responses={
+            status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True, context={"tenant_id": "tenant_id"})
+        },
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
@@ -484,7 +488,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(BizMixin, GenericViewSet):
             offset=query_slz.validated_data["offset"],
         )
 
-        slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
+        slz = SubjectTemplateGroupSLZ(instance=relations, many=True, context={"tenant_id": self.tenant_id})
         return Response({"count": count, "results": slz.data})
 
     def search_group_ids(self, request, kwargs, data):

@@ -211,7 +211,9 @@ class GroupService:
         if not user:
             return relations
         # 查询用户直接加入的部门
-        department_ids = DepartmentMember.objects.filter(user_id=user.id).values_list("department_id", flat=True)
+        department_ids = DepartmentMember.objects.filter(username=user.username).values_list(
+            "department_id", flat=True
+        )
         department_set = set()
         group_id_set = set()
         for department in Department.objects.filter(id__in=department_ids):
@@ -244,7 +246,9 @@ class GroupService:
         if not user:
             return relations
         # 查询用户直接加入的部门
-        department_ids = DepartmentMember.objects.filter(user_id=user.id).values_list("department_id", flat=True)
+        department_ids = DepartmentMember.objects.filter(username=user.username).values_list(
+            "department_id", flat=True
+        )
         department_set = set()
         group_id_set = set()
         for department in Department.objects.filter(id__in=department_ids):

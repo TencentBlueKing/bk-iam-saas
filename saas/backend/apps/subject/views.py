@@ -55,7 +55,7 @@ class SubjectGroupViewSet(BizMixin, GenericViewSet):
         # 分页参数
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         count, relations = self.group_biz.list_paging_subject_group(subject, limit=limit, offset=offset)
-        slz = GroupSLZ(instance=relations, many=True)
+        slz = GroupSLZ(instance=relations, many=True, context={"tenant_id": self.tenant_id})
         return Response({"count": count, "results": slz.data})
 
     @swagger_auto_schema(
@@ -100,7 +100,7 @@ class SubjectDepartmentGroupViewSet(BizMixin, GenericViewSet):
         # FIXME(tenant): 需要校验 subject 是否是当前租户的用户或部门
         # 目前只能查询所有的，暂时不支持分页，如果有性能问题，需要考虑优化
         relations = self.group_biz.list_all_user_department_group(subject)
-        slz = GroupSLZ(instance=relations, many=True)
+        slz = GroupSLZ(instance=relations, many=True, context={"tenant_id": self.tenant_id})
         return Response(slz.data)
 
 
@@ -384,7 +384,9 @@ class SubjectTemplateGroupViewSet(UserSubjectTemplateGroupViewSet):
     @swagger_auto_schema(
         operation_description="我的权限 - 人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
-        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        responses={
+            status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True, context={"tenant_id": "tenant_id"})
+        },
         tags=["subject"],
     )
     def list(self, request, *args, **kwargs):
@@ -398,7 +400,9 @@ class DepartmentSubjectTemplateGroupViewSet(UserDepartmentSubjectTemplateGroupVi
     @swagger_auto_schema(
         operation_description="我的权限 - 部门人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
-        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        responses={
+            status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True, context={"tenant_id": "tenant_id"})
+        },
         tags=["subject"],
     )
     def list(self, request, *args, **kwargs):

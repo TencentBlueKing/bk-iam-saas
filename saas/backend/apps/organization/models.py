@@ -15,7 +15,6 @@ from typing import Dict, List
 
 from django.db import models
 from django.db.models import TextField
-from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 
 from backend.apps.organization.constants import (
@@ -90,8 +89,6 @@ class Department(TimestampMPTTModel):
     child_count = models.IntegerField("子部门数量 (非递归)", default=0)
     member_count = models.IntegerField("部门下用户数 (非递归)", default=0)
     recursive_member_count = models.IntegerField("(递归) 部门下用户数", default=0)
-
-    tree_objects = TreeManager()
 
     class Meta:
         ordering = ["id"]

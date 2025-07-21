@@ -235,7 +235,6 @@ CELERY_IMPORTS = (
     "backend.audit.tasks",
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
-    "backend.api.bkci.tasks",
     "backend.apps.handover.tasks",
 )
 CELERYBEAT_SCHEDULE = {
@@ -247,10 +246,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.organization.tasks.clean_subject_to_delete",
         "schedule": crontab(minute=0, hour=2),  # 每天凌晨 2 时执行
     },
-    "periodic_sync_new_users": {
-        "task": "backend.apps.organization.tasks.sync_new_users",
-        "schedule": crontab(),  # 每 1 分钟执行一次
-    },
+    # "periodic_sync_new_users": {
+    #     "task": "backend.apps.organization.tasks.sync_new_users",
+    #     "schedule": crontab(),  # 每 1 分钟执行一次
+    # },
     "periodic_sync_system_manager": {
         "task": "backend.apps.role.tasks.sync_system_manager",
         "schedule": crontab(minute="*/5"),  # 每 5 分钟执行一次

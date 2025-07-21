@@ -141,7 +141,9 @@ class RoleGroupMemberTemplateGroupViewSet(SubjectTemplateGroupViewSet):
     @swagger_auto_schema(
         operation_description="角色用户组成员 - 人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
-        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        responses={
+            status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True, context={"tenant_id": "tenant_id"})
+        },
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
@@ -175,7 +177,9 @@ class RoleGroupMemberDepartmentTemplateGroupViewSet(DepartmentSubjectTemplateGro
     @swagger_auto_schema(
         operation_description="角色用户组成员 - 部门人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
-        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        responses={
+            status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True, context={"tenant_id": "tenant_id"})
+        },
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
@@ -187,7 +191,7 @@ class RoleGroupMemberDepartmentTemplateGroupViewSet(DepartmentSubjectTemplateGro
         if subject.type != SubjectType.USER.value:
             return []
 
-        departments = self.biz.get_user_departments(subject.id)
+        departments = self.subject_template_biz.get_user_departments(subject.id)
         if not departments:
             return []
 

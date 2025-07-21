@@ -31,7 +31,7 @@ class BkUserClient(BkApigwBaseClient):
     def __init__(self, tenant_id: str):
         self.tenant_id = tenant_id
         self.api_url = url_join(
-            settings.BK_API_TMPL.format(api_name=settings.BK_USER_APIGW_NAME), settings.BK_USER_APIGW_STAGE
+            settings.BK_API_URL_TMPL.format(api_name=settings.BK_USER_APIGW_NAME), settings.BK_USER_APIGW_STAGE
         )
         self.headers = {
             **self.request_id_headers,
@@ -43,6 +43,7 @@ class BkUserClient(BkApigwBaseClient):
 
     def _call(self, http_func_only_20x, url_path, **kwargs):
         url = url_join(self.api_url, url_path)
+        kwargs.setdefault("headers", {}).update(self.headers)
         # TODO: 如何使用 requests retries 重试机制，需自定义 requests.Session; 如何传入呢？
         ok, resp_data = http_func_only_20x(url, **kwargs)
 

@@ -818,7 +818,7 @@ class RoleListQuery:
 
         return queryset.filter(id__in=role_ids)
 
-    @cached(timeout=5 * 60, key_function=lambda _, user: str(user.id))
+    @cached(timeout=5 * 60, key_function=lambda _, user: str(user.username))
     def is_user_super_manager(self, user: User):
         super_manager = get_super_manager(self.tenant_id)
         return RoleUser.objects.filter(
@@ -1128,17 +1128,17 @@ class RoleSubjectScopeChecker:
         if need_query_users:
             users = User.objects.filter(username__in=need_query_users)
             # 查询用户直接加入的部门
-            department_members = DepartmentMember.objects.filter(user_id__in=[i.id for i in users])
-            # 这里是记录 user_id 与其直接部门 ID 的集合，user_id 对应的 set(DepartmentIDs)
-            user_id_direct_departments = defaultdict(set)
+            department_members = DepartmentMember.objects.filter(username__in=[i.id for i in users])
+            # 这里是记录 username 与其直接部门 ID 的集合，username 对应的 set(DepartmentIDs)
+            username_direct_departments = defaultdict(set)
             for dm in department_members:
-                user_id_direct_departments[dm.user_id].add(dm.department_id)
+                username_direct_departments[dm.username].add(dm.department_id)
             # 遍历每个用户，获得其所有所在的部门
             for u in users:
-                # 将 user_id_direct_departments 转换为 user_direct_department
-                user_direct_department[u.username] = user_id_direct_departments[u.id]
+                # 将 username_direct_departments 转换为 user_direct_department
+                user_direct_department[u.username] = username_direct_departments[u.id]
                 # 每个部门也是需要查询其祖先部门的
-                need_query_ancestor_departments.update(user_id_direct_departments[u.id])
+                need_query_ancestor_departments.update(username_direct_departments[u.id])
 
         # DB 查询所有部门的祖先部门，包括部门本身
         department_ancestors = defaultdict(set)
