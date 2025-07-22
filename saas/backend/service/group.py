@@ -94,7 +94,7 @@ class GroupService:
         """
         groups = [
             Group(
-                tennant_id=self.tenant_id,
+                tenant_id=self.tenant_id,
                 name=one.name,
                 description=one.description,
                 readonly=one.readonly,

@@ -1,5 +1,5 @@
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -22,10 +22,11 @@ from backend.apps.role.models import Role
 from backend.apps.subject_template.filters import SubjectTemplateFilter
 from backend.biz.role import RoleListQuery
 from backend.common.filters import NoCheckModelFilterBackend
+from backend.mixins import TenantMixin
 from backend.service.constants import RoleType
 
 
-class ManagementGradeManagerSubjectTemplateViewSet(GenericViewSet):
+class ManagementGradeManagerSubjectTemplateViewSet(TenantMixin, GenericViewSet):
     """分级管理员下人员模版"""
 
     authentication_classes = [ESBAuthentication]
@@ -36,11 +37,13 @@ class ManagementGradeManagerSubjectTemplateViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]).order_by(
-        "-updated_time"
-    )
     filterset_class = SubjectTemplateFilter
     filter_backends = [NoCheckModelFilterBackend]
+
+    def get_queryset(self):
+        return Role.objects.filter(
+            tenant_id=self.tenant_id, type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]
+        ).order_by("-updated_time")
 
     @swagger_auto_schema(
         operation_description="人员模版列表",
@@ -48,7 +51,7 @@ class ManagementGradeManagerSubjectTemplateViewSet(GenericViewSet):
         tags=["management.role.subject_template"],
     )
     def list(self, request, *args, **kwargs):
-        role = get_object_or_404(self.queryset, id=kwargs["id"])
+        role = get_object_or_404(self.get_queryset(), id=kwargs["id"])
 
         queryset = RoleListQuery(role).query_subject_template()
         queryset = self.filter_queryset(queryset)

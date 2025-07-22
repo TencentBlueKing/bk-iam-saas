@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 
 import json
-from typing import List
+from typing import Dict, List
 
 from django.conf import settings
 from django.utils.translation import gettext as _
@@ -46,13 +46,16 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
         self.client = BkITSMClient(tenant_id=tenant_id)
 
     @cachedmethod(timeout=60)  # 缓存 1 分钟
-    def list(self) -> List[ApprovalProcess]:
+    def _list(self, tenant_id: str) -> List[ApprovalProcess]:
         """查询审批流程列表，所有流程"""
         processes = self.client.list_process()
         return [ApprovalProcess(id=p["key"], name=p["name"]) for p in processes]
 
+    def list(self) -> List[ApprovalProcess]:
+        return self._list(tenant_id=self.tenant_id)
+
     @cachedmethod(timeout=60)  # 缓存 1 分钟
-    def list_with_nodes(self, application_type: ApplicationType) -> List[ApprovalProcessWithNode]:
+    def _list_with_nodes(self, tenant_id: str, application_type: ApplicationType) -> List[ApprovalProcessWithNode]:
         """审批流程列表，查询指定申请类型的流程列表，并附带流程节点
         1. 对于 ITSM, 不支持通过条件过滤出指定申请类型的，只能手动匹配
         2. 对于 ITSM，不支持查询流程时附带节点名称，所有都需要单独查询
@@ -67,6 +70,9 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
 
         # 过滤出满足对应申请类型的流程
         return [p for p in process_list if p.is_match_application_type(application_type)]
+
+    def list_with_nodes(self, application_type: ApplicationType) -> List[ApprovalProcessWithNode]:
+        return self._list_with_nodes(tenant_id=self.tenant_id, application_type=application_type)
 
     def get_default_process(self, application_type: ApplicationType) -> ApprovalProcess:
         """获取某种申请类型的默认流程
@@ -115,8 +121,7 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
 
         return process_nodes
 
-    def create_workflow(self):
-        """创建工作流程"""
+    def _load_workflow_template(self) -> Dict:
         system_id = settings.ITSM_SYSTEM_ID
         tenant_id = self.tenant_id
 
@@ -141,5 +146,15 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
             f"{tenant_id}__{system_id}__{k}": v for k, v in workflow_template["key_mapping"]["workflows"].items()
         }
 
+        return workflow_template
+
+    def create_workflow(self):
+        """创建工作流程"""
+        workflow_template = self._load_workflow_template()
         # 注册默认流程
         self.client.migrate_system(workflow_template)
+
+    def get_default_workflow_key(self) -> List[str]:
+        workflow_template = self._load_workflow_template()
+        # 获取默认流程的 key
+        return list(workflow_template["key_mapping"]["workflows"].keys())

@@ -693,7 +693,6 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
         "destroy": PermissionCodeEnum.MANAGE_GROUP.value,
         "update": PermissionCodeEnum.MANAGE_GROUP.value,
     }
-
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
     lookup_field = "id"
 
@@ -744,7 +743,7 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
 
         subject = Subject.from_group_id(group.id)
 
