@@ -38,7 +38,8 @@ class AggregateActionsBean(BaseModel):
 
 
 class AggregateActionsList:
-    def __init__(self, aggregate_action_list: List[AggregateActionsBean]) -> None:
+    def __init__(self, tenant_id: str, aggregate_action_list: List[AggregateActionsBean]) -> None:
+        self.tenant_id = tenant_id
         self.aggregate_actions = aggregate_action_list
 
     def _list_resource_type_system_id(self):
@@ -50,7 +51,7 @@ class AggregateActionsList:
         return list(system_ids_set)
 
     def fill_action_name(self):
-        action_svc = ActionService()
+        action_svc = ActionService(self.tenant_id)
         for one in self.aggregate_actions:
             action_list = ActionList(action_svc.list(one.system_id))
 
@@ -78,7 +79,9 @@ class AggregateActionsBiz:
         """
         svc_aggregate_actions = self.svc.list(system_ids)
 
-        aggregate_action_list = AggregateActionsList(parse_obj_as(List[AggregateActionsBean], svc_aggregate_actions))
+        aggregate_action_list = AggregateActionsList(
+            self.tenant_id, parse_obj_as(List[AggregateActionsBean], svc_aggregate_actions)
+        )
         aggregate_action_list.fill_action_name()
         aggregate_action_list.fill_resource_type_name()
 

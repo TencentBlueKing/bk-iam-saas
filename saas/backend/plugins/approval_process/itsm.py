@@ -28,8 +28,8 @@ from .base import ApprovalProcessProvider
 class DefaultProcessNameEnum(ChoicesEnum):
     """默认流程名称枚举"""
 
-    DEFAULT = "默认审批流程"
-    GROUP = "用户组审批流程"
+    DEFAULT = "超级管理员审批"
+    GROUP = "超级管理员审批"
 
 
 APPLICATION_TYPE_DEFAULT_PROCESS_DICT = {

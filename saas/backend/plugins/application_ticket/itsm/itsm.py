@@ -11,7 +11,6 @@ specific language governing permissions and limitations under the License.
 
 from typing import Dict, List, Optional
 
-from django.conf import settings
 from rest_framework.request import Request
 
 from backend.component.client.bk_itsm import BkITSMClient
@@ -77,7 +76,6 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             "workflow_key": process.id,
             "operator": data.applicant_info.username,
             "callback_url": callback_url,
-            "system_id": settings.BK_ITSM_V4_SYSTEM_ID,
             "callback_token": callback_token,
             "form_data": {
                 "ticket__title": "",

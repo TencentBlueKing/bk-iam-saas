@@ -66,7 +66,7 @@ class BkITSMClient(BkApigwBaseClient):
             )
 
         code = resp_data.get("code", -1)
-        if code in [0, 20000]:
+        if str(code) in ["0", "20000"]:
             return resp_data["data"]
 
         message = resp_data.get("message", "unknown")
