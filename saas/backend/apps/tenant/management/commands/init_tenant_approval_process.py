@@ -19,7 +19,7 @@ from backend.plugins.approval_process.itsm import ITSMApprovalProcessProvider
 class Command(BaseCommand):
     """
     初始化租户审批流程
-    $ python manage.py init_tenant_approval_process --tenant_id <tenant_id>
+    $ python manage.py init_tenant_approval_process --tenant_id=<tenant_id>
     """
 
     def add_arguments(self, parser):
