@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -13,6 +13,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional
 
 from celery import shared_task
+from django.conf import settings
 from pydantic import parse_obj_as
 
 from backend.apps.action.models import AggregateAction
@@ -26,7 +27,7 @@ from backend.service.models.instance_selection import ChainNode
 def generate_action_aggregate():
     # 生成操作聚合配置
     systems = SystemBiz().list()
-    action_svc = ActionService()
+    action_svc = ActionService(settings.BK_APP_TENANT_ID)
 
     # 遍历每个系统
     for system in systems:
@@ -68,7 +69,7 @@ def generate_action_aggregate():
             agg_action.aggregate_resource_type = resource_type.to_resource_type_list()
             create_agg_actions.append(agg_action)
 
-        # 执行CURD
+        # 执行 CURD
         if create_agg_actions:
             AggregateAction.objects.bulk_create(create_agg_actions)
 
@@ -112,7 +113,7 @@ def aggregate_actions_group_by_selection_node(actions) -> Dict[FirstNodeList, Li
     """
     resource_type_actions = defaultdict(list)
     for action in actions:
-        # 操作关联多个资源, 或者不关联资源不能聚合
+        # 操作关联多个资源，或者不关联资源不能聚合
         if len(action.related_resource_types) != 1:
             continue
 
@@ -128,15 +129,15 @@ def aggregate_actions_group_by_selection_node(actions) -> Dict[FirstNodeList, Li
 def get_action_selection_first_node_list(action: Action) -> Optional[FirstNodeList]:
     """
     获取操作的关联的资源类型的实例视图的第一个节点
-    如果有多个实例视图, 返回多个实例视图的第一个节点, 并且去重
-    !!!只能用于只关联了1个资源类型的操作
+    如果有多个实例视图，返回多个实例视图的第一个节点，并且去重
+    !!! 只能用于只关联了 1 个资源类型的操作
     """
     resource_type = action.related_resource_types[0]
     if not resource_type.instance_selections:
         return None
 
     first_node_set = set()
-    # 遍历余下的所有实例视图, 如果第一个节点与第一个视图的第一个节点不一致, 返回None
+    # 遍历余下的所有实例视图，如果第一个节点与第一个视图的第一个节点不一致，返回 None
     for instance_selection in resource_type.instance_selections:
         first_node = instance_selection.resource_type_chain[0]
         if first_node not in first_node_set:

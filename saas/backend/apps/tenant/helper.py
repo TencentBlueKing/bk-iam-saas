@@ -9,8 +9,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+import json
+
 from django.db import transaction
 
+from backend.apps.organization.constants import SyncTaskStatus
+from backend.apps.organization.models import SyncRecord
+from backend.apps.organization.tasks import sync_organization
 from backend.apps.role.models import Role, RolePolicyExpiredNotificationConfig, RoleScope
 from backend.service.constants import RoleScopeType, RoleType
 from backend.util.json import json_dumps
@@ -70,3 +75,14 @@ def create_default_notification_config(tenant_id: str):
             )
         },
     )
+
+
+def manual_sync_organization(tenant_id: str):
+    """
+    手动同步组织架构（阻塞的）
+    :param tenant_id: 租户 ID
+    """
+    record_id = sync_organization(tenant_id=tenant_id)
+    record = SyncRecord.objects.get(id=record_id)
+    if record.status == SyncTaskStatus.Failed.value:
+        raise Exception(json.dumps(record.detail))  # noqa: TRY002

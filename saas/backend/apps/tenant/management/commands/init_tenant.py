@@ -12,10 +12,12 @@ specific language governing permissions and limitations under the License.
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from backend.apps.organization.constants import SyncTaskStatus
-from backend.apps.organization.models import SyncRecord
-from backend.apps.organization.tasks import sync_organization
-from backend.apps.tenant.helper import create_default_notification_config, create_super_manager
+from backend.apps.action.tasks import generate_action_aggregate
+from backend.apps.tenant.helper import (
+    create_default_notification_config,
+    create_super_manager,
+    manual_sync_organization,
+)
 from backend.component.client.bk_user import BkUserClient
 
 
@@ -36,6 +38,16 @@ class Command(BaseCommand):
         """
         return tenant_id in {i["id"] for i in BkUserClient(settings.BK_APP_TENANT_ID).list_tenant()}
 
+    def _only_system_tenant_init(self, tenant_id: str):
+        """
+        仅运营租户初始化需要（即部署所需）
+        """
+        if tenant_id != settings.BK_APP_TENANT_ID:
+            return
+
+        # 生成操作聚合数据
+        generate_action_aggregate()
+
     def handle(self, *args, **options):
         tenant_id = options["tenant_id"]
         if not self._check_tenant_exists(tenant_id):
@@ -51,9 +63,9 @@ class Command(BaseCommand):
 
         # 同步组织架构
         # Note: 这里不异步，因为在租户初始化时，组织架构应该是最新的，有问题直接抛出异常
-        record_id = sync_organization(tenant_id=tenant_id)
-        record = SyncRecord.objects.get(id=record_id)
-        if record.status == SyncTaskStatus.Failed.value:
-            raise ValueError(f"sync organization failed for tenant({tenant_id}): {record.detail}")
+        manual_sync_organization(tenant_id)
+
+        # 仅运营租户初始化需要（即部署所需）
+        self._only_system_tenant_init(tenant_id)
 
         self.stdout.write(f"tenant({tenant_id}) initialized successfully")

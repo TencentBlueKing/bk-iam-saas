@@ -135,19 +135,20 @@ wrapt = ">=1.15.0,<2.0.0"
 
 [[package]]
 name = "bk-iam"
-version = "1.3.6"
+version = "2.0.3"
 description = "bk-iam python sdk"
 optional = false
-python-versions = "*"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,<4,>3"
 groups = ["main"]
 files = [
-    {file = "bk-iam-1.3.6.tar.gz", hash = "sha256:008086b036f285fd5c240be65911c2e7968e57d258292e6212767c73e363bf2c"},
+    {file = "bk_iam-2.0.3-py2.py3-none-any.whl", hash = "sha256:0a388237d226151a3abe0d4e6e7f99d2c2809bb32a7ede475b7808cee9d100a5"},
+    {file = "bk_iam-2.0.3.tar.gz", hash = "sha256:28d025237bf8d6e43a143f55657f29e1ce778e585b89c1567ea554acb9a23a97"},
 ]
 
 [package.dependencies]
 cachetools = ">=3.1.1,<6.0"
 curlify = "2.2.1"
-requests = "*"
+requests = ">=2.16.0"
 six = ">=1.11.0"
 
 [[package]]
@@ -3399,4 +3400,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11.10,<3.12"
-content-hash = "5de9d8c67e017174b917007ade78dcde25aa1208cfed1809d20c8aa2a10132e8"
+content-hash = "7c76de4fe6cdf6946a1a87fdb2ac1dd3bd9d663ea0f218cb3fe167bcac7c2fee"

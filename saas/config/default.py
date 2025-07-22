@@ -495,14 +495,11 @@ ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in
 
 # 对接审计中心相关配置，包括注册权限模型到权限中心后台的配置
 BK_IAM_SYSTEM_ID = "bk_iam"
-if BK_IAM_HOST_TYPE == "direct":
-    BK_IAM_USE_APIGATEWAY = False
-    BK_IAM_INNER_HOST = BK_IAM_HOST
-elif BK_IAM_HOST_TYPE == "apigateway":
-    BK_IAM_USE_APIGATEWAY = True
-    BK_IAM_APIGATEWAY_URL = BK_IAM_HOST
+BK_IAM_APIGATEWAY_URL = BK_API_URL_TMPL.format(api_name=BK_APIGW_NAME).rstrip("/") + "/prod/"
 BK_IAM_MIGRATION_APP_NAME = "iam"
 BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
+# 是否跳过 IAM 权限模型注册
+BK_IAM_SKIP = env.bool("BK_IAM_SKIP", default=False)
 
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
