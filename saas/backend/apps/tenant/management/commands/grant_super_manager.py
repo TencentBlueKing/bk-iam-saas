@@ -18,7 +18,7 @@ from backend.biz.role import RoleBiz
 class Command(BaseCommand):
     """
     授权超级管理员空间权限
-    $ python manage.py grant_super_manager --tenant_id <tenant_id> --bk_username <bk_username>
+    $ python manage.py grant_super_manager --tenant_id=<tenant_id> --bk_username=<bk_username>
     """
 
     def add_arguments(self, parser):

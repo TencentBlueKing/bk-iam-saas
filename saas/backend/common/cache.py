@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 
 import functools
+import hashlib
 from enum import Enum
 
 from aenum import LowerStrEnum, auto
@@ -74,8 +75,9 @@ def cached(cache=default_cache, key_function=_default_key_function, timeout=DEFA
         def wrapper(*args, **kwargs):
             custom_key = key_function(*args, **kwargs)
             namespace = f"{func.__module__}:{func.__name__}"
-            key = f"{CacheKeyPrefixEnum.AUTO.value}:{namespace}:{custom_key}"
-
+            # 使用 md5 生成 key，避免 key 太长或包含特殊字符导致缓存不生效（会引起 django CacheKeyWarning）
+            # Note: 单次 md5 一般 0.001 ms；且一般缓存不会太长，冲突概率极低
+            key = hashlib.md5(f"{CacheKeyPrefixEnum.AUTO.value}:{namespace}:{custom_key}".encode()).hexdigest()
             return cache.get_or_set(key, lambda: func(*args, **kwargs), timeout)
 
         return wrapper
@@ -93,8 +95,9 @@ def cachedmethod(cache=default_cache, key_function=_method_key_function, timeout
         def wrapper(self, *args, **kwargs):
             custom_key = key_function(self, *args, **kwargs)
             namespace = f"{method.__module__}:{method.__qualname__}"
-            key = f"{CacheKeyPrefixEnum.AUTO.value}:{namespace}:{custom_key}"
-
+            # 使用 md5 生成 key，避免 key 太长或包含特殊字符导致缓存不生效（会引起 django CacheKeyWarning）
+            # Note: 单次 md5 一般 0.001 ms；且一般缓存不会太长，冲突概率极低
+            key = hashlib.md5(f"{CacheKeyPrefixEnum.AUTO.value}:{namespace}:{custom_key}".encode()).hexdigest()
             return cache.get_or_set(key, lambda: method(self, *args, **kwargs), timeout)
 
         return wrapper
