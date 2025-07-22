@@ -9,26 +9,23 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from celery.signals import task_failure, task_success
-from werkzeug.local import release_local
+from django.core.management.base import BaseCommand
 
-from backend.common.debug import log_task_error_trace
-from backend.common.local import get_local
+from backend.apps.tenant.helper import manual_sync_organization
 
 
-@task_success.connect
-def task_success_handler(sender, **kwargs):
-    try:
-        log_task_error_trace(sender)
-        release_local(get_local())
-    except IndexError:
-        return
+class Command(BaseCommand):
+    """
+    同步组织架构（阻塞）
+    $ python manage.py sync_organization --tenant_id=<tenant_id>
+    """
 
+    def add_arguments(self, parser):
+        parser.add_argument("--tenant_id", type=str, help="Tenant ID", required=True)
 
-@task_failure.connect
-def task_failure_handler(sender, exception, traceback, **kwargs):
-    try:
-        log_task_error_trace(sender)
-        release_local(get_local())
-    except IndexError:
-        return
+    def handle(self, *args, **options):
+        tenant_id = options["tenant_id"]
+
+        manual_sync_organization(tenant_id)
+
+        self.stdout.write(f"tenant({tenant_id}) sync organization successfully")

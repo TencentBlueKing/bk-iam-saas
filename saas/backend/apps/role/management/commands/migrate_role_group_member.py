@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -28,7 +28,7 @@ class Command(BaseCommand):
     _cache: Dict[int, Tuple[int, int]] = {}
 
     def handler_user(self):
-        queryset = User.objects.order_by("id")
+        queryset = User.objects.order_by("username")
         paginator = Paginator(queryset, 1000)
         for i in paginator.page_range:
             for user in paginator.page(i):
@@ -44,6 +44,7 @@ class Command(BaseCommand):
 
                     role_group_member.append(
                         RoleGroupMember(
+                            tenant_id=user.tenant_id,
                             role_id=role_id,
                             subset_id=subset_id,
                             group_id=group_id,
@@ -73,6 +74,7 @@ class Command(BaseCommand):
 
                     role_group_member.append(
                         RoleGroupMember(
+                            tenant_id=department.tenant_id,
                             role_id=role_id,
                             subset_id=subset_id,
                             group_id=group_id,
