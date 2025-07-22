@@ -649,7 +649,7 @@ class GroupTemplateViewSet(BizMixin, GroupPermissionMixin, GenericViewSet):
         queryset = PermTemplatePolicyAuthorized.objects.filter_by_subject(subject).defer("_data")
 
         queryset = self.filter_queryset(queryset)
-        return Response(GroupTemplateSLZ(queryset, many=True).data)
+        return Response(GroupTemplateSLZ(queryset, many=True, context={"tenant_id": self.tenant_id}).data)
 
     @swagger_auto_schema(
         operation_description="用户组权限模板授权信息",
