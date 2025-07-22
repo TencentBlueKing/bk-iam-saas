@@ -148,7 +148,9 @@ class ManagementGradeManagerGroupViewSet(BizMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户组列表",
         query_serializer=ManagementQueryGroupSLZ(label="query_group"),
-        responses={status.HTTP_200_OK: ManagementGroupSLZ(label="用户组", many=True)},
+        responses={
+            status.HTTP_200_OK: ManagementGroupSLZ(label="用户组", many=True, context={"tenant_id": "tenant_id"})
+        },
         tags=["management.role.group"],
     )
     def list(self, request, *args, **kwargs):
@@ -165,10 +167,10 @@ class ManagementGradeManagerGroupViewSet(BizMixin, GenericViewSet):
 
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = ManagementGroupSLZ(page, many=True)
+            serializer = ManagementGroupSLZ(page, many=True, context={"tenant_id": self.tenant_id})
             return self.get_paginated_response(serializer.data)
 
-        serializer = ManagementGroupSLZ(queryset, many=True)
+        serializer = ManagementGroupSLZ(queryset, many=True, context={"tenant_id": self.tenant_id})
         return Response(serializer.data)
 
     def _filter(self, request, queryset):

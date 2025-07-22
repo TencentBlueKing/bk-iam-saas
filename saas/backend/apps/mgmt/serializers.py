@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -24,18 +24,18 @@ from .constants import ApiType, LongTaskObjectType
 
 
 class QueryApiSLZ(serializers.Serializer):
-    api_type = serializers.ChoiceField(label="API类型", choices=ApiType.get_choices())
+    api_type = serializers.ChoiceField(label="API 类型", choices=ApiType.get_choices())
 
 
 class ApiSLZ(serializers.Serializer):
     api = serializers.CharField(label="API")
-    name = serializers.CharField(label="API名称")
+    name = serializers.CharField(label="API 名称")
 
 
 class AdminApiWhiteListSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="白名单记录ID")
-    api_info = serializers.SerializerMethodField(label="API信息")
-    app_code = serializers.CharField(label="应用TOKEN")
+    id = serializers.IntegerField(label="白名单记录 ID")
+    api_info = serializers.SerializerMethodField(label="API 信息")
+    app_code = serializers.CharField(label="应用 TOKEN")
 
     def get_api_info(self, obj):
         api = obj.api
@@ -44,8 +44,8 @@ class AdminApiWhiteListSLZ(serializers.Serializer):
 
 
 class AdminApiAddWhiteListSLZ(serializers.Serializer):
-    app_code = serializers.CharField(label="应用TOKEN")
-    api = serializers.CharField(label="超级管理类API")
+    app_code = serializers.CharField(label="应用 TOKEN")
+    api = serializers.CharField(label="超级管理类 API")
 
     def validate_api(self, value):
         if value == "*" or value in dict(AdminAPIEnum.get_choices()):
@@ -54,10 +54,10 @@ class AdminApiAddWhiteListSLZ(serializers.Serializer):
 
 
 class AuthorizationApiWhiteListSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="白名单记录ID")
-    api_info = serializers.SerializerMethodField(label="API信息")
+    id = serializers.IntegerField(label="白名单记录 ID")
+    api_info = serializers.SerializerMethodField(label="API 信息")
     system_info = serializers.SerializerMethodField(label="系统信息")
-    object_id = serializers.CharField(label="资源类型ID")
+    object_id = serializers.CharField(label="资源类型 ID")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -84,14 +84,14 @@ class AuthorizationApiWhiteListSchemaSLZ(AuthorizationApiWhiteListSLZ):
 
 
 class AuthorizationApiAddWhiteListSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
-    api = serializers.ChoiceField(label="授权类API", choices=AuthorizationAPIEnum.get_choices())
-    object_id = serializers.CharField(label="资源类型ID")
+    system_id = serializers.CharField(label="系统 ID")
+    api = serializers.ChoiceField(label="授权类 API", choices=AuthorizationAPIEnum.get_choices())
+    object_id = serializers.CharField(label="资源类型 ID")
 
 
 class ManagementApiWhiteListSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="白名单记录ID")
-    api_info = serializers.SerializerMethodField(label="API信息")
+    id = serializers.IntegerField(label="白名单记录 ID")
+    api_info = serializers.SerializerMethodField(label="API 信息")
     system_info = serializers.SerializerMethodField(label="系统信息")
 
     def __init__(self, *args, **kwargs):
@@ -120,8 +120,8 @@ class ManagementApiWhiteListSchemaSLZ(ManagementApiWhiteListSLZ):
 
 
 class ManagementApiAddWhiteListSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
-    api = serializers.CharField(label="管理类API")
+    system_id = serializers.CharField(label="系统 ID")
+    api = serializers.CharField(label="管理类 API")
 
     def validate_api(self, value):
         if value == "*" or value in dict(ManagementAPIEnum.get_choices()):
@@ -130,14 +130,14 @@ class ManagementApiAddWhiteListSLZ(serializers.Serializer):
 
 
 class LongTaskSLZ(serializers.Serializer):
-    id = serializers.CharField(label="任务ID")
+    id = serializers.CharField(label="任务 ID")
     type = serializers.CharField(label="任务类型")
     status = serializers.SerializerMethodField(label="任务状态")
     object = serializers.SerializerMethodField(label="任务相关参数")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        tenant_id = self.context["tenant_id"]
         group_ids = []
         template_ids = []
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
@@ -148,8 +148,8 @@ class LongTaskSLZ(serializers.Serializer):
                 if task_detail.type == TaskType.TEMPLATE_UPDATE.value:
                     template_ids.append(task_detail.args[0])
 
-            self._template_name_dict = TemplateBiz().get_template_name_dict_by_ids(template_ids)
-            self._group_name_dict = GroupBiz().get_group_name_dict_by_ids(group_ids)
+            self._template_name_dict = TemplateBiz(tenant_id).get_template_name_dict_by_ids(template_ids)
+            self._group_name_dict = GroupBiz(tenant_id).get_group_name_dict_by_ids(group_ids)
 
     def get_status(self, obj):
         return TaskStatus.get_choice_label(obj.status)
@@ -172,7 +172,7 @@ class LongTaskSLZ(serializers.Serializer):
 
 
 class SubTaskSLZ(serializers.Serializer):
-    id = serializers.CharField(label="子任务ID")
+    id = serializers.CharField(label="子任务 ID")
     status = serializers.SerializerMethodField(label="状态")
     exception = serializers.CharField(label="异常信息")
 

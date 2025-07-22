@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -33,24 +33,24 @@ from backend.util.serializer import StringArrayField
 
 
 class ManagementSourceSystemSLZ(serializers.Serializer):
-    system = serializers.CharField(label="调用API的系统id", max_length=32, help_text="用于认证是哪个系统调用了API")
+    system = serializers.CharField(label="调用 API 的系统 id", max_length=32, help_text="用于认证是哪个系统调用了 API")
 
 
 class ManagementActionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="操作ID")
+    id = serializers.CharField(label="操作 ID")
 
 
 class ManagementResourcePathNodeSLZ(serializers.Serializer):
-    system = serializers.CharField(label="系统ID")
+    system = serializers.CharField(label="系统 ID")
     type = serializers.CharField(label="资源类型")
-    id = serializers.CharField(label="资源实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
+    id = serializers.CharField(label="资源实例 ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(
-        label="资源实例ID名称", allow_blank=True, trim_whitespace=False
-    )  # 路径节点存在无限制，当id="*"则name可以为空
+        label="资源实例 ID 名称", allow_blank=True, trim_whitespace=False
+    )  # 路径节点存在无限制，当 id="*"则 name 可以为空
 
 
 class ManagementResourcePathsSLZ(serializers.Serializer):
-    system = serializers.CharField(label="系统ID")
+    system = serializers.CharField(label="系统 ID")
     type = serializers.CharField(label="资源类型")
     paths = serializers.ListField(
         label="批量层级",
@@ -62,10 +62,10 @@ class ManagementResourcePathsSLZ(serializers.Serializer):
 
 
 class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
-    system = serializers.CharField(label="授权的系统id", max_length=32)
+    system = serializers.CharField(label="授权的系统 id", max_length=32)
     actions = serializers.ListField(label="操作", child=ManagementActionSLZ(label="操作"), allow_empty=False)
     resources = serializers.ListField(
-        # 如果action是与资源实例无关的，那么resources允许为空列表，但是字段还是要有，保持格式一致
+        # 如果 action 是与资源实例无关的，那么 resources 允许为空列表，但是字段还是要有，保持格式一致
         label="资源拓扑",
         child=ManagementResourcePathsSLZ(label="匹配资源拓扑"),
         allow_empty=True,
@@ -80,7 +80,7 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
 class ManagementGradeManagerCreateApplicationSLZ(GradeMangerBaseInfoSLZ, ReasonSLZ):
     members = serializers.ListField(
         label="成员列表",
-        child=serializers.CharField(label="用户ID", max_length=64),
+        child=serializers.CharField(label="用户 ID", max_length=64),
         max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
     )
     authorization_scopes = serializers.ListField(
@@ -95,14 +95,14 @@ class ManagementGradeManagerCreateApplicationSLZ(GradeMangerBaseInfoSLZ, ReasonS
     )
     sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
-    callback_id = serializers.CharField(label="回调ID", max_length=32, required=False, allow_blank=True, default="")
-    callback_url = serializers.CharField(label="回调URL", required=False, allow_blank=True, default="")
+    callback_id = serializers.CharField(label="回调 ID", max_length=32, required=False, allow_blank=True, default="")
+    callback_url = serializers.CharField(label="回调 URL", required=False, allow_blank=True, default="")
     title = serializers.CharField(label="审批单标题", required=False, allow_blank=True, default="")
     content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
 
 
 class ManagementGradeManagerBasicInfoSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="分级管理员ID")
+    id = serializers.IntegerField(label="分级管理员 ID")
     name = serializers.CharField(label="分级管理员名称", max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
 
@@ -114,9 +114,9 @@ class ManagementGradeManagerMembersSLZ(serializers.Serializer):
         """
         校验成员加入的分级管理员数是否超过限制
         """
-        role_check_biz = RoleCheckBiz()
+        role_check_biz = RoleCheckBiz(self.context["tenant_id"])
         for username in data["members"]:
-            # subject加入的分级管理员数量不能超过最大值
+            # subject 加入的分级管理员数量不能超过最大值
             role_check_biz.check_subject_grade_manager_limit(Subject.from_username(username))
         return data
 
@@ -125,13 +125,13 @@ class ManagementGradeManagerMembersDeleteSLZ(serializers.Serializer):
     members = serializers.CharField(label="用户名", help_text="用户名，多个以英文逗号分隔")
 
     def validate(self, data):
-        # 验证 member的合法性，并转化为后续view需要数据格式
+        # 验证 member 的合法性，并转化为后续 view 需要数据格式
         members = data.get("members") or ""
         if members:
             try:
                 data["members"] = list(filter(None, members.split(",")))
             except Exception:  # pylint: disable=broad-except
-                raise serializers.ValidationError({"members": [f"用户名({members})非法"]})
+                raise serializers.ValidationError({"members": [f"用户名 ({members}) 非法"]})
 
         if len(data["members"]) == 0:
             raise serializers.ValidationError({"members": "should not be empty"})
@@ -155,7 +155,7 @@ class ManagementGradeManagerGroupCreateSLZ(serializers.Serializer):
 
     def validate(self, data):
         """
-        groups自身数据是否包括用户重名
+        groups 自身数据是否包括用户重名
         """
         groups_data = data["groups"]
         names = set()
@@ -167,7 +167,7 @@ class ManagementGradeManagerGroupCreateSLZ(serializers.Serializer):
 
 
 class ManagementGroupBasicSLZ(ManagementGroupBasicInfoSLZ):
-    id = serializers.IntegerField(label="用户组ID")
+    id = serializers.IntegerField(label="用户组 ID")
 
 
 class ManagementGroupBaseInfoUpdateSLZ(serializers.Serializer):
@@ -177,27 +177,27 @@ class ManagementGroupBaseInfoUpdateSLZ(serializers.Serializer):
 
 class ManagementGroupMemberSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
-    id = serializers.CharField(label="成员id")
+    id = serializers.CharField(label="成员 id")
     name = serializers.CharField(label="名称")
-    expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
-    created_at = serializers.IntegerField(label="创建时间戳(单位秒)")
+    expired_at = serializers.IntegerField(label="过期时间戳 (单位秒)")
+    created_at = serializers.IntegerField(label="创建时间戳 (单位秒)")
 
 
 class ManagementGroupMemberDeleteSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
     ids = serializers.CharField(
-        label="成员IDs",
-        help_text="成员IDs，多个以英文逗号分隔, 对于type=user，则ID为用户名，对于type=department，则为部门ID",
+        label="成员 IDs",
+        help_text="成员 IDs，多个以英文逗号分隔，对于 type=user，则 ID 为用户名，对于 type=department，则为部门 ID",
     )
 
     def validate(self, data):
-        # 验证 ID的合法性，并转化为后续view需要数据格式
+        # 验证 ID 的合法性，并转化为后续 view 需要数据格式
         ids = data.get("ids") or ""
         if ids:
             try:
                 data["ids"] = list(filter(None, ids.split(",")))
             except Exception:  # pylint: disable=broad-except
-                raise serializers.ValidationError({"ids": [f"成员IDS({ids})非法"]})
+                raise serializers.ValidationError({"ids": [f"成员 IDS({ids}) 非法"]})
 
         if len(data["ids"]) == 0:
             raise serializers.ValidationError({"ids": "should not be empty"})
@@ -208,14 +208,14 @@ class ManagementGroupMemberDeleteSLZ(serializers.Serializer):
 class ManagementGroupSubjectTemplateSLZ(serializers.Serializer):
     id = serializers.CharField(label="人员模板 ID", source="template_id")
     name = serializers.SerializerMethodField(label="人员模板名称")
-    expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
+    expired_at = serializers.IntegerField(label="过期时间戳 (单位秒)")
 
     def get_name(self, obj):
         return self.context["subject_template_name_map"].get(obj.template_id) or obj.template_id
 
 
 class ManagementGradeManagerBasicSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="分级管理员ID")
+    id = serializers.IntegerField(label="分级管理员 ID")
 
 
 class ManagementUserQuerySLZ(serializers.Serializer):
@@ -227,20 +227,20 @@ class ManagementUserGradeManagerQuerySLZ(ManagementUserQuerySLZ, ManagementSourc
 
 
 class ManagementGroupGrantSLZ(ManagementRoleScopeAuthorizationSLZ):
-    system = serializers.CharField(label="授权的系统id", max_length=32, required=False, allow_blank=True, default="")
+    system = serializers.CharField(label="授权的系统 id", max_length=32, required=False, allow_blank=True, default="")
 
 
 class ManagementGroupRevokeSLZ(ManagementRoleScopeAuthorizationSLZ):
-    system = serializers.CharField(label="授权的系统id", max_length=32, required=False, allow_blank=True, default="")
+    system = serializers.CharField(label="授权的系统 id", max_length=32, required=False, allow_blank=True, default="")
 
 
 class ManagementGroupPolicyDeleteSLZ(serializers.Serializer):
-    system = serializers.CharField(label="授权的系统id", max_length=32, required=False, allow_blank=True, default="")
+    system = serializers.CharField(label="授权的系统 id", max_length=32, required=False, allow_blank=True, default="")
     actions = serializers.ListField(label="操作", child=ManagementActionSLZ(label="操作"), allow_empty=False)
 
 
 class ManagementGroupIDsSLZ(serializers.Serializer):
-    group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(label="用户组ID"))
+    group_ids = serializers.ListField(label="用户组 ID 列表", child=serializers.IntegerField(label="用户组 ID"))
 
 
 class ManagementGroupApplicationSLZ(serializers.Serializer):
@@ -253,7 +253,7 @@ class ManagementGroupApplicationSLZ(serializers.Serializer):
         if data["content_template"] and data["group_content"]:
             if "schemes" not in data["content_template"] or "form_data" not in data["content_template"]:
                 raise serializers.ValidationError(
-                    {"content_template": ["content_template中必须包含schemes和form_data"]}
+                    {"content_template": ["content_template 中必须包含 schemes 和 form_data"]}
                 )
             if (
                 not isinstance(data["content_template"]["form_data"], list)
@@ -262,11 +262,11 @@ class ManagementGroupApplicationSLZ(serializers.Serializer):
                 or not isinstance(data["content_template"]["form_data"][0]["value"], list)
             ):
                 raise serializers.ValidationError(
-                    {"content_template": ["content_template中必须包含form_data且为空数组"]}
+                    {"content_template": ["content_template 中必须包含 form_data 且为空数组"]}
                 )
 
             if set(map(str, data["group_ids"])) != set(data["group_content"].keys()):
-                raise serializers.ValidationError({"group_content": ["group_content中的key必须与group_ids一致"]})
+                raise serializers.ValidationError({"group_content": ["group_content 中的 key 必须与 group_ids 一致"]})
         else:
             data["content_template"] = None
             data["group_content"] = None
@@ -280,11 +280,11 @@ class ManagementGroupApplicationCreateSLZ(
 
 
 class ManagementApplicationIDSLZ(serializers.Serializer):
-    ids = serializers.ListField(label="申请单据ID列表", child=serializers.CharField(label="申请单据ID"))
+    ids = serializers.ListField(label="申请单据 ID 列表", child=serializers.CharField(label="申请单据 ID"))
 
 
 class ManagementSubjectGroupBelongSLZ(serializers.Serializer):
-    group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255, required=True)
+    group_ids = serializers.CharField(label="用户组 ID，多个以英文逗号分隔", max_length=255, required=True)
 
 
 class ManagementMemberGroupDetailInputInPathSLZ(serializers.Serializer):
@@ -337,14 +337,14 @@ class ManagementMemberGroupDetailOutputSLZ(serializers.Serializer):
 
 
 class ManagementGradeManagerApplicationResultSLZ(serializers.Serializer):
-    id = serializers.CharField(label="申请单据ID")
-    sn = serializers.CharField(label="ITSM审批单SN")
+    id = serializers.CharField(label="申请单据 ID")
+    sn = serializers.CharField(label="ITSM 审批单 SN")
 
 
 class ManagementSubsetMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     members = serializers.ListField(
         label="成员列表",
-        child=serializers.CharField(label="用户ID", max_length=64),
+        child=serializers.CharField(label="用户 ID", max_length=64),
         max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
     )
     authorization_scopes = serializers.ListField(
@@ -385,14 +385,17 @@ class ManagementGroupSLZ(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        tenant_id = self.context["tenant_id"]
         self.subject_template_count_dict = None
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
             group_ids = [int(group.id) for group in self.instance]
             # 人员模版数量
-            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict(group_ids)
+            self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(group_ids)
         elif isinstance(self.instance, Group):
             # 人员模版数量
-            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict([self.instance.id])
+            self.subject_template_count_dict = SubjectTemplateBiz(tenant_id).get_group_template_count_dict(
+                [self.instance.id]
+            )
 
     def get_subject_template_count(self, obj):
         if not self.subject_template_count_dict:
@@ -408,7 +411,7 @@ class ManagementQueryGroupSLZ(serializers.Serializer):
 class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
     members = serializers.ListField(
         label="成员列表",
-        child=serializers.CharField(label="用户ID", max_length=64),
+        child=serializers.CharField(label="用户 ID", max_length=64),
         max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
     )
     authorization_scopes = serializers.ListField(
@@ -497,7 +500,7 @@ class GroupBatchUpdateMemberSLZ(serializers.Serializer):
             # 过期时间不能小于当前时间
             if m["expired_at"] <= int(time.time()):
                 raise serializers.ValidationError("expired_at must more then now")
-            # 屏蔽admin授权
+            # 屏蔽 admin 授权
             if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER):
                 members.append(m)
 

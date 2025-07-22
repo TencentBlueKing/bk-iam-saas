@@ -202,7 +202,7 @@ class GroupTemplateSLZ(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         template_ids = [tmp.template_id for tmp in args[0]]
-        self._template_name_dict = TemplateBiz().get_template_name_dict_by_ids(template_ids)
+        self._template_name_dict = TemplateBiz(self.context["tenant_id"]).get_template_name_dict_by_ids(template_ids)
         self._system_list = SystemBiz().new_system_list()
 
     def get_system(self, obj):

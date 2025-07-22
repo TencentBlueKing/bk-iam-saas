@@ -296,11 +296,11 @@ class GradeMangerDetailSLZ(BaseGradeMangerSLZ):
 
     def get_authorization_scopes(self, obj):
         # ResourceNameAutoUpdate
-        scope_systems = RoleBiz().list_auth_scope_bean(obj.id, should_auto_update_resource_name=True)
+        scope_systems = RoleBiz(obj.tenant_id).list_auth_scope_bean(obj.id, should_auto_update_resource_name=True)
         return [one.dict() for one in scope_systems]
 
     def get_subject_scopes(self, obj):
-        subjects = RoleBiz().list_subject_scope(obj.id)
+        subjects = RoleBiz(obj.tenant_id).list_subject_scope(obj.id)
         subject_list = SubjectInfoList(subjects)
         return [one.dict() for one in subject_list.subjects]
 

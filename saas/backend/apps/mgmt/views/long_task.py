@@ -34,12 +34,17 @@ class LongTaskViewSet(TenantMixin, mixins.ListModelMixin, GenericViewSet):
     serializer_class = LongTaskSLZ
     filterset_class = LongTaskFilter
 
+    def get_serializer_context(self):
+        return {"tenant_id": self.tenant_id}
+
     def get_queryset(self):
         return TaskDetail.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="长时任务列表",
-        responses={status.HTTP_200_OK: LongTaskSLZ(label="长时任务列表", many=True)},
+        responses={
+            status.HTTP_200_OK: LongTaskSLZ(label="长时任务列表", many=True, context={"tenant_id": "tenant_id"})
+        },
         tags=["mgmt.api"],
     )
     def list(self, request, *args, **kwargs):

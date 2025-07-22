@@ -235,7 +235,7 @@ class ManagementGradeManagerMemberViewSet(BizMixin, GenericViewSet):
     def create(self, request, *args, **kwargs):
         role = self.get_object()
 
-        serializer = ManagementGradeManagerMembersSLZ(data=request.data)
+        serializer = ManagementGradeManagerMembersSLZ(data=request.data, context={"tenant_id": self.tenant_id})
         serializer.is_valid(raise_exception=True)
 
         members = list(set(serializer.validated_data["members"]))
