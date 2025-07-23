@@ -31,7 +31,7 @@ def task_success_handler(sender, **kwargs):
             # 安全回退
             release_local(celery_local)
     except RecursionError:
-        logger.error("Recursion prevented in task cleanup", extra={
+        logger.exception("Recursion prevented in task cleanup", extra={
             "task_id": sender.request.id
         })
     except Exception as e:
@@ -50,7 +50,7 @@ def task_failure_handler(sender, exception, traceback, **kwargs):
             # 安全回退
             release_local(celery_local)
     except RecursionError:
-        logger.error("Recursion prevented in task cleanup", extra={
+        logger.exception("Recursion prevented in task cleanup", extra={
             "task_id": sender.request.id
         })
     except Exception as e:
