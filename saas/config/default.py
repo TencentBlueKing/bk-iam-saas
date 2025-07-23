@@ -465,7 +465,7 @@ BK_IAM_SAAS_API_SVC = env.str("BK_IAM_SAAS_API_SVC", default="bkiam-saas-api")
 BK_IAM_ENGINE_SVC = env.str("BK_IAM_ENGINE_SVC", default="bkiam-search-engine")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
 # [多租户] 全租户网关、全租户消息通知系统都需要声明所属租户 ID
-BK_APP_TENANT_ID = "sysetm"
+BK_APP_TENANT_ID = "system"
 
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
@@ -495,7 +495,7 @@ ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in
 
 # 对接审计中心相关配置，包括注册权限模型到权限中心后台的配置
 BK_IAM_SYSTEM_ID = "bk_iam"
-BK_IAM_APIGATEWAY_URL = BK_API_URL_TMPL.format(api_name=BK_APIGW_NAME).rstrip("/") + "/prod/"
+BK_IAM_APIGATEWAY_URL = BK_API_URL_TMPL.format(api_name=BK_APIGW_NAME).rstrip("/") + "/prod"
 BK_IAM_MIGRATION_APP_NAME = "iam"
 BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 # 是否跳过 IAM 权限模型注册
