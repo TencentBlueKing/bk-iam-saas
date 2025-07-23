@@ -105,6 +105,21 @@ class CeleryLocal(_Local):
         object.__setattr__(self, "__storage__", {})
         object.__setattr__(self, "__ident_func__", inspect_task_id)
 
+    def __release_local__(self):
+        """重写释放方法避免递归"""
+        try:
+            # 直接访问存储避免触发__getattr__
+            storage = object.__getattribute__(self, "__storage__")
+            ident_func = object.__getattribute__(self, "__ident_func__")
+            ident = ident_func()
+
+            # 安全释放存储
+            if ident in storage:
+                del storage[ident]
+        except Exception:
+            # 安全回退
+            object.__setattr__(self, "__storage__", {})
+
 
 celery_local = CeleryLocal()
 
