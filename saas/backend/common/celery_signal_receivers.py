@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 
 from celery.signals import task_failure, task_success
 from werkzeug.local import release_local
@@ -15,20 +16,42 @@ from werkzeug.local import release_local
 from backend.common.debug import log_task_error_trace
 from backend.common.local import celery_local
 
+logger = logging.getLogger("celery")
+
 
 @task_success.connect
 def task_success_handler(sender, **kwargs):
     try:
         log_task_error_trace(sender)
-        release_local(celery_local)
-    except IndexError:
-        return
+        # 安全释放本地存储
+        if hasattr(celery_local, '__release_local__'):
+            # 使用重写的方法
+            celery_local.__release_local__()
+        else:
+            # 安全回退
+            release_local(celery_local)
+    except RecursionError:
+        logger.error("Recursion prevented in task cleanup", extra={
+            "task_id": sender.request.id
+        })
+    except Exception as e:
+        logger.exception("Error releasing local storage: {}".format(e))
 
 
 @task_failure.connect
 def task_failure_handler(sender, exception, traceback, **kwargs):
     try:
         log_task_error_trace(sender)
-        release_local(celery_local)
-    except IndexError:
-        return
+        # 安全释放本地存储
+        if hasattr(celery_local, '__release_local__'):
+            # 使用重写的方法
+            celery_local.__release_local__()
+        else:
+            # 安全回退
+            release_local(celery_local)
+    except RecursionError:
+        logger.error("Recursion prevented in task cleanup", extra={
+            "task_id": sender.request.id
+        })
+    except Exception as e:
+        logger.exception("Error releasing local storage: {}".format(e))

@@ -40,17 +40,36 @@ class DebugStack:
     key = "debug_stack"
 
     def push(self, item):
-        local = get_local()
-        if not hasattr(local, self.key):
-            setattr(local, self.key, [])
-
-        getattr(local, self.key).append(item)
+        local_obj = get_local()
+        try:
+            # 直接操作底层存储结构
+            storage = local_obj.__storage__
+            ident = local_obj.__ident_func__()
+            current_storage = storage.setdefault(ident, {})
+            if self.key not in current_storage:
+                current_storage[self.key] = []
+            current_storage[self.key].append(item)
+        except AttributeError:
+            # 回退到原始方法
+            if not hasattr(local_obj, self.key):
+                setattr(local_obj, self.key, [])
+            getattr(local_obj, self.key).append(item)
 
     def pop_all(self):
-        local = get_local()
-        items = getattr(local, self.key, [])
-        setattr(local, self.key, [])
-        return items
+        local_obj = get_local()
+        try:
+            # 直接操作底层存储结构
+            storage = local_obj.__storage__
+            ident = local_obj.__ident_func__()
+            current_storage = storage.get(ident, {})
+            items = current_storage.pop(self.key, [])
+            return items
+        except AttributeError:
+            # 回退到原始方法
+            items = getattr(local_obj, self.key, [])
+            setattr(local_obj, self.key, [])
+            return items
+
 
 
 stack = DebugStack()
