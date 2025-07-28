@@ -23,18 +23,17 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
 */
-import en from './lang/en';
-import cn from './lang/zh';
-import ja from './lang/ja';
+import Vue from 'vue';
+import VueI18n from 'vue-i18n';
 import magicbox from 'bk-magic-vue';
-import { formatI18nKey } from '@/common/util';
+import { language } from '@/language';
 
-const { lang } = magicbox;
+const cn = require('./lang/zh');
+const en = require('./lang/en');
+const ja = require('./lang/ja');
+
+const { lang, locale } = magicbox;
 const messages = {
-  'ja': {
-    ...lang.jaJP,
-    ...ja
-  },
   'zh-cn': {
     ...lang.zhCN,
     ...cn
@@ -42,22 +41,46 @@ const messages = {
   en: {
     ...lang.enUS,
     ...en
+  },
+  ja: {
+    ...lang.jaJP,
+    ...ja
   }
 };
 
-const language = formatI18nKey();
-
-const il8n = (key, subKey) => {
-  const local = messages[language]['language'];
-  if (!local[key] || !local[key][subKey]) {
-    return subKey;
+function getMagicBoxLang () {
+  const isEN = language.toLowerCase().indexOf('en') > -1;
+  const isJP = language.toLowerCase().indexOf('ja') > -1 || language.toLowerCase().indexOf('jp') > -1;
+  if (isEN) {
+    return lang.enUS;
   }
-  return local[key][subKey];
-};
+  if (isJP) {
+    return lang.jaJP;
+  }
+  return lang.zhCN;
+}
 
-export default il8n;
+Vue.use(VueI18n);
+
+const i18n = new VueI18n({
+  locale: language,
+  fallbackLocale: language,
+  messages,
+  silentTranslationWarn: true,
+  missing (_locale, path) {
+    const parsedPath = i18n._path.parsePath(path);
+    return parsedPath[parsedPath.length - 1];
+  }
+});
+
+locale.use(getMagicBoxLang());
+locale.i18n((key, value) => i18n.t(key, value));
+
+Vue.use(magicbox, {
+  i18n: (key, args) => i18n.t(key, args)
+});
+Vue.mixin(locale.mixin);
 
 export {
-  il8n,
-  language
+  i18n
 };

@@ -45,9 +45,8 @@ import RenderHorizontalBlock from './components/render-block/horizontal.vue';
 import RenderVerticalBlock from './components/render-block/vertical.vue';
 import RenderSearch from './components/render-search/index.vue';
 import Icon from './components/icon';
-import VueI18n from 'vue-i18n';
-import magicbox from 'bk-magic-vue';
 import { subEnv } from '@blueking/sub-saas/dist/main.js';
+import { i18n as I18n } from './language/i18n';
 import { language, il8n as il8nNew } from './language';
 import { bus } from './common/bus';
 import { injectCSRFTokenToHeaders } from './api';
@@ -74,57 +73,15 @@ Vue.prototype.scrollToLocation = function ($ref) {
   const $dom = document.getElementsByClassName('main-scroller')[0];
   $dom.scrollTo(0, distance);
 };
-
-Vue.use(VueI18n);
-Vue.use(magicbox, {
-  i18n: (key, args) => i18n.t(key, args)
-});
-
-const cn = require('./language/lang/zh');
-
-const en = require('./language/lang/en');
-
-const { lang, locale } = magicbox;
-
-const messages = {
-  'zh-cn': {
-    ...lang.zhCN,
-    ...cn
-  },
-  en: {
-    ...lang.enUS,
-    ...en
-  }
-};
-
-window.changeAlert = false;
-window.changeDialog = false;
-
-const i18n = new VueI18n({
-  // 语言标识
-  locale: language,
-  fallbackLocale: language,
-  // this.$i18n.locale 通过切换locale的值来实现语言切换
-  messages,
-  silentTranslationWarn: true,
-  missing (locale, path) {
-    const parsedPath = i18n._path.parsePath(path);
-    return parsedPath[parsedPath.length - 1];
-  }
-});
-
-locale.use(language === 'zh-cn' ? lang.zhCN : lang.enUS);
-
-locale.i18n((key, value) => i18n.t(key, value));
-
 Vue.prototype.curLanguageIsCn = language === 'zh-cn';
 Vue.prototype.isSubEnv = subEnv || false;
-
-Vue.mixin(locale.mixin);
 
 if (NODE_ENV === 'development') {
   Vue.config.devtools = true;
 }
+
+window.changeAlert = false;
+window.changeDialog = false;
 
 auth.requestCurrentUser().then(user => {
   injectCSRFTokenToHeaders();
@@ -134,7 +91,7 @@ auth.requestCurrentUser().then(user => {
     global.bus = bus;
     global.mainComponent = new Vue({
       el: '#app',
-      i18n,
+      i18n: I18n,
       router,
       store,
       // components: {
