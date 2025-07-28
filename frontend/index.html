@@ -62,47 +62,36 @@
             })()
 
             function getLanguage () {
-                // const cookieList = document.cookie.split(';')
-                // const CUR_LANGUAGE_DATA = cookieList.find(item => item.includes('blueking_language'))
-                // let CUR_LANGUAGE = 'zh-cn'
-                // if (CUR_LANGUAGE_DATA) {
-                //     CUR_LANGUAGE = CUR_LANGUAGE_DATA.split('=')[1] || 'zh-cn'
-                // }
-                let CUR_LANGUAGE = getCookie('blueking_language') ||'zh-cn'
-                // 英文 兼容处理
-                if (CUR_LANGUAGE.toLowerCase().indexOf('en') > -1) {
-                    CUR_LANGUAGE = 'en'
-                }
-                // 中文 兼容处理
-                if (CUR_LANGUAGE.toLowerCase().indexOf('zh') > -1) {
-                    CUR_LANGUAGE = 'zh-cn'
-                }
-                if (CUR_LANGUAGE === 'en') {
-                    document.title = 'lAM | Tencent BlueKing'
-                } else {
-                    document.title = '权限中心 | 蓝鲸智云'
-                }
-
-                return CUR_LANGUAGE
+              let CUR_LANGUAGE = getCookie("blueking_language") || "zh-cn";
+              const isEN = CUR_LANGUAGE.toLowerCase().indexOf("en") > -1;
+              const isCN = CUR_LANGUAGE.toLowerCase().indexOf("zh") > -1;
+              const isJP = CUR_LANGUAGE.toLowerCase().indexOf("ja") > -1 || CUR_LANGUAGE.toLowerCase().indexOf("jp") > -1;
+              // 英文 兼容处理
+              if (isEN) {
+                CUR_LANGUAGE = "en";
+                document.title = "lAM | Tencent BlueKing";
+              }
+              // 中文 兼容处理
+              if (isCN) {
+                CUR_LANGUAGE = "zh-cn";
+                document.title = "权限中心 | 蓝鲸智云";
+              }
+              //  日文 兼容处理
+              if (isJP) {
+                CUR_LANGUAGE = 'ja';
+                document.title = "権限センター | ブルーケイルズクラウド";
+              }
+              return CUR_LANGUAGE;
             }
 
-             function getCookie (name) {
-                const data = document.cookie.split(';');
-                const params = {};
-                for (let i = 0; i < data.length; i++) {
-                    params[data[i].split('=')[0].replace(/\s/, '')] = data[i].split('=')[1];
-                }
-                return params[name];
+            function getCookie (name) {
+            const data = document.cookie.split(';');
+            const params = {};
+            for (let i = 0; i < data.length; i++) {
+                params[data[i].split('=')[0].replace(/\s/, '')] = data[i].split('=')[1];
             }
-
-            // window.onload = function () {
-            //     let ta = document.createElement('script')
-            //     ta.src = '//tajs.qq.com/stats?sId=64878578'
-            //     ta.defer = 'defer'
-            //     let s = document.getElementsByTagName('script')[0]
-            //     s.parentNode.insertBefore(ta, s)
-            // }
+            return params[name];
+          }
         </script>
-        <!-- <script src="{{ STATIC_URL }}/lib.bundle.js"></script> -->
     </body>
 </html>
