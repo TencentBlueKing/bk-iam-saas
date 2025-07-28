@@ -619,6 +619,9 @@ export function getCookie (name) {
 // 兼容外部系统i18的key
 export function formatI18nKey () {
   const lang = getCookie('blueking_language') || 'zh-cn';
+  if (['ja-jp', 'ja', 'jp', 'ja_jp'].includes(lang)) {
+    return 'ja';
+  }
   const result = ['zh-cn', 'en'].includes(lang) ? lang : 'zh-cn';
   return result;
 }
