@@ -38,9 +38,12 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.user['操作人']`)">
         <template slot-scope="{ row }">
-          <span :title="row.executor">
-            {{ row.trigger_type === 'periodic_task' ? $t(`m.user['定时同步']`) : row.executor }}
-          </span>
+          <template v-if="!['periodic_task'].includes(row.trigger_type)">
+            <IamUserDisplayName :user-id="row.executor" />
+          </template>
+          <template v-else>
+            {{ $t(`m.user['定时同步']`) }}
+          </template>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.user['触发类型']`)">
