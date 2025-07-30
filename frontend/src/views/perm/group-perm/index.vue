@@ -144,7 +144,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, xssFilter } from '@/common/util';
   import { bus } from '@/common/bus';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
@@ -414,7 +414,7 @@
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
           if (this.$refs.groupPermTableRef && selectionCount && selectionCount.length && selectionCount[0].children) {
-            selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
+            selectionCount[0].children[0].innerHTML = xssFilter(this.currentSelectGroupList.length);
           }
         });
       },
