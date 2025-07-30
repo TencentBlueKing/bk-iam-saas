@@ -342,7 +342,7 @@
 <script>
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
-  import { getDataBetweenBraces, getCopyValue } from '@/common/util';
+  import { xssFilter, getDataBetweenBraces, getCopyValue } from '@/common/util';
   import BkUserSelector from '@blueking/user-selector';
   export default {
     components: {
@@ -465,11 +465,11 @@
         const typeMap = {
           user: () => {
             this.isShowUserTempError = !innerText.trim();
-            this.noticeTempData.user_temp_html = innerHTML;
+            this.noticeTempData.user_temp_html = xssFilter(innerHTML);
           },
           manager: () => {
             this.isShowManagerTempError = !innerText.trim();
-            this.noticeTempData.manager_temp_html = innerHTML;
+            this.noticeTempData.manager_temp_html = xssFilter(innerHTML);
           }
         };
         return typeMap[type]();
@@ -536,14 +536,14 @@
               userTemp = this.noticeTempData.user_temp.replaceAll(`{{${userTextList[i]}}}`, `<span style=\'color: #3a84ff;position: relative;\'>{{${userTextList[i]}}}</span>`);
             }
             this.noticeTempData.user_temp_html = cloneDeep(userTemp);
-            this.$refs.userTextarea.innerHTML = userTemp;
+            this.$refs.userTextarea.innerHTML = xssFilter(userTemp);
           }
           if (managerTextList && managerTextList.length > 0) {
             for (let i = 0; i < managerTextList.length; i++) {
               managerTemp = this.noticeTempData.manager_temp.replaceAll(`{{${managerTextList[i]}}}`, `<span style=\'color: #3a84ff;position: relative;z-index: 10000;line-height: 29px;left: 1px;\'>{{${managerTextList[i]}}}</span>`);
             }
             this.noticeTempData.manager_temp_html = cloneDeep(managerTemp);
-            this.$refs.managerTextarea.innerHTML = managerTemp;
+            this.$refs.managerTextarea.innerHTML = xssFilter(managerTemp);
           }
         });
       },
