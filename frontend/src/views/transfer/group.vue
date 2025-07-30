@@ -88,8 +88,8 @@
   </div>
 </template>
 <script>
-  import { xssFilter, mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
+  import { mapGetters } from 'vuex';
+  import { xssFilter, formatCodeData } from '@/common/util';
 
   export default {
     name: '',
