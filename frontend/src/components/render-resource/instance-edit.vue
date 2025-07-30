@@ -18,15 +18,15 @@
       @click="handleExpanded">
       <div class="info">
         <p>
-          <span v-html="displayTitle"></span>
+          <span v-dompurify-html="displayTitle" />
           <iam-svg name="icon-new" ext-cls="new-icon" v-if="isNew && curLanguageIsCn" />
           <iam-svg name="icon-new-en" ext-cls="new-icon" v-if="isNew && !curLanguageIsCn" />
         </p>
         <template v-if="isEdit">
-          <p v-html="subTitle"></p>
+          <p v-dompurify-html="subTitle" />
         </template>
         <template v-else>
-          <p v-if="!isExpanded" v-html="subTitle"></p>
+          <p v-if="!isExpanded" v-dompurify-html="subTitle" />
         </template>
       </div>
       <div class="expand-action">

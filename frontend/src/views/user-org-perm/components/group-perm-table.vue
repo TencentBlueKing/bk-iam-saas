@@ -216,6 +216,7 @@
   import { cloneDeep } from 'lodash';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { bus } from '@/common/bus';
+  import { xssFilter } from '@/common/util';
   import BatchOperateSlider from './batch-operate-slider.vue';
   import MemberTemplateDetailSlider from '@/views/member-template/components/member-template-detail-slider.vue';
 
@@ -604,7 +605,7 @@
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
           if (this.$refs.groupPermRef && selectionCount && selectionCount.length && selectionCount[0].children) {
-            selectionCount[0].children[0].innerHTML = payload.length;
+            selectionCount[0].children[0].innerHTML = xssFilter(payload.length);
           }
         });
       },
