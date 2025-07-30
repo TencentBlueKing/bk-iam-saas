@@ -47,20 +47,21 @@
         />
         <!-- eslint-disable max-len -->
         <div
-          v-bk-tooltips="getToolTipData(item, { disabled: !item.full_name && (item.showCount && enableOrganizationCount) })"
+          v-bk-tooltips="getToolTipData(item, {
+            disabled: !item.full_name
+          })"
           :style="nameStyle(item)"
           :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
         >
           <IamUserDisplayName
             style="width: 100%"
             :user-id="item.username || item.name"
-            :tooltip-config="{ placement: 'right-start', disabled: !!item.full_name }"
+            :tooltip-config="{ placement: 'right-start', disabled: Boolean(item.full_name) }"
           />
         </div>
         <span class="red-dot" v-if="item.isNewMember"></span>
         <span
           v-if="item.showCount && enableOrganizationCount"
-          v-bk-tooltips="getToolTipData(item, { disabled: !item.full_name })"
           class="node-user-count"
         >
           {{ '(' + item.count + `)` }}
