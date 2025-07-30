@@ -322,7 +322,7 @@
   import ClipboardJS from 'clipboard';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP, COPY_KEYS_ENUM } from '@/common/constants';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, xssFilter } from '@/common/util';
   import { bus } from '@/common/bus';
   import renderRenewalDialog from '@/components/render-renewal-dialog';
   import DeleteDialog from '../common/iam-confirm-dialog';
@@ -900,7 +900,7 @@
             const paginationWrapper = tableRef.$refs.paginationWrapper;
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount && selectCount.length && selectCount[0].children) {
-              selectCount[0].children[0].innerHTML = this.currentSelectList.length;
+              selectCount[0].children[0].innerHTML = xssFilter(this.currentSelectList.length);
             }
           }
         });

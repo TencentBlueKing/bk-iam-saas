@@ -27,6 +27,7 @@
 import './public-path';
 import '../static/lib.bundle.js';
 import Vue from 'vue';
+import VueDOMPurifyHTML from 'vue-dompurify-html';
 import App from './App.vue';
 import IframeEntry from './IframeEntry.vue';
 import router from './router/index';
@@ -62,6 +63,8 @@ import '@icon-cool/bk-icon-bk-iam';
 import '@/directive';
 // 多租户人员选择器样式
 import '@blueking/bk-user-selector/vue2/vue2.css';
+
+Vue.use(VueDOMPurifyHTML);
 
 Vue.component('app-exception', Exception);
 Vue.component('app-auth', AuthComponent);

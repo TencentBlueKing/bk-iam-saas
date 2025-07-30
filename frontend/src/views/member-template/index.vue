@@ -175,7 +175,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { formatCodeData, getWindowHeight } from '@/common/util';
+  import { formatCodeData, getWindowHeight, xssFilter } from '@/common/util';
   import { MEMBERS_TEMPLATE_FIELDS } from '@/common/constants';
   import IamSearchSelect from '@/components/iam-search-select';
   import MemberTemplateDetailSlider from './components/member-template-detail-slider.vue';
@@ -678,7 +678,7 @@
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
           if (this.$refs.memberTemplateRef && selectionCount && selectionCount.length && selectionCount[0].children) {
-            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+            selectionCount[0].children[0].innerHTML = xssFilter(this.currentSelectList.length);
           }
         });
       },

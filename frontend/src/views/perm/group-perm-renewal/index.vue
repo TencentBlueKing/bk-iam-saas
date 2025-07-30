@@ -209,11 +209,11 @@
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants';
+  import { formatCodeData, getNowTimeExpired, xssFilter } from '@/common/util';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import renderExpireDisplay from '@/components/render-renewal-dialog/display';
   import renderPerm from '@/components/render-perm';
   import DeleteDialog from '@/views/perm/components/iam-confirm-dialog';
-  import { formatCodeData, getNowTimeExpired } from '@/common/util';
 
   export default {
     name: '',
@@ -577,11 +577,11 @@
             const typeMap = {
               userOrgPerm: () => {
                 const list = checkList.filter((item) => ['user', 'department'].includes(item.type));
-                selectionCount[tableIndex].children[0].innerHTML = list.length;
+                selectionCount[tableIndex].children[0].innerHTML = xssFilter(list.length);
               },
               memberTemplate: () => {
                 const list = checkList.filter((item) => ['template'].includes(item.type));
-                selectionCount[tableIndex].children[0].innerHTML = list.length;
+                selectionCount[tableIndex].children[0].innerHTML = xssFilter(list.length);
               }
             };
             return typeMap[tabActive]();

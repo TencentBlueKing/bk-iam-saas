@@ -1711,8 +1711,7 @@
         }
         this.fetchManualTableData();
       },
-
-
+      
       handleGetUniqueName () {
         // 通过bk_username反向查询display_name
         if (this.hasExistOrgData.length) {

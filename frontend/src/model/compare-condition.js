@@ -27,6 +27,7 @@
 /* eslint-disable max-len */
 
 import { language, il8n } from '@/language';
+import { xssFilter } from '@/common/util';
 
 const isCn = language === 'zh-cn';
 class Instance {
@@ -76,7 +77,7 @@ class Instance {
 
   get title () {
     if (this.status === 'delete') {
-      return `<s style="color: #c4c6cc;">${this.name}：</s>`;
+      return xssFilter(`<s style="color: #c4c6cc;">${this.name}：</s>`);
     }
     return `${this.name}：`;
   }
@@ -106,7 +107,7 @@ class Attribute {
 
   get title () {
     if (this.status === 'delete') {
-      return `<s style="color: #c4c6cc;">${this.name}：</s>`;
+      return xssFilter(`<s style="color: #c4c6cc;">${this.name}：</s>`);
     }
     return `${this.name}：`;
   }
@@ -138,7 +139,7 @@ export default class CompareCondition {
   get instanceTitle () {
     if (this.instance && this.instance.length > 0) {
       if (this.instance.every(item => item.status === 'delete')) {
-        return `<s style="color: #c4c6cc;">${il8n('resource', '拓扑实例')}：</s>`;
+        return xssFilter(`<s style="color: #c4c6cc;">${il8n('resource', '拓扑实例')}：</s>`);
       }
       return `${il8n('resource', '拓扑实例')}：`;
     }
@@ -155,32 +156,32 @@ export default class CompareCondition {
       // debugger
       this.instance.forEach(item => {
         if (item.displayPath.length > 0) {
-          const strs = [];
+          const strList = [];
           let str = '';
           const addLen = item.displayPath.filter(item => item.status === 'add').length;
           const deleteLen = item.displayPath.filter(item => item.status === 'delete').length;
           if (addLen > 0) {
-            strs.push(`${il8n('common', '增')} ${addLen}`);
+            strList.push(`${il8n('common', '增')} ${addLen}`);
           }
           if (deleteLen > 0) {
-            strs.push(`${il8n('common', '删')} ${deleteLen}`);
+            strList.push(`${il8n('common', '删')} ${deleteLen}`);
           }
-          if (strs.length > 0) {
+          if (strList.length > 0) {
             if (item.displayPath.every(item => item.status === 'delete')) {
-              str = `<s style="color: #c4c6cc;">0<span style="font-weight: 600;">(${strs.join('，')})</span>${isCn ? '个' : ''} ${item.name}${isCn ? '' : '(s))'}</s>`;
+              str = `<s style="color: #c4c6cc;">0<span style="font-weight: 600;">(${strList.join('，')})</span>${isCn ? '个' : ''} ${item.name}${isCn ? '' : '(s))'}</s>`;
             } else {
-              str = `<span>${item.displayPath.length - deleteLen}<span style="font-weight: 600;">(${strs.join('，')})</span>${isCn ? '个' : ''} ${item.name}${isCn ? '' : '(s))'}</span>`;
+              str = `<span>${item.displayPath.length - deleteLen}<span style="font-weight: 600;">(${strList.join('，')})</span>${isCn ? '个' : ''} ${item.name}${isCn ? '' : '(s))'}</span>`;
             }
           } else {
             str = ` ${item.displayPath.length} ${isCn ? '个' : ''} ${item.name}${isCn ? '' : '(s)'}`;
           }
-          strList.push(str);
+          strList.push(xssFilter(str));
         }
       });
       if (this.instance.every(item => {
         return item.displayPath.every(item => item.status === 'delete');
       })) {
-        return `<s style="color: #c4c6cc;">${il8n('common', '已选择')} ${strList.join('、')}</s>`;
+        return xssFilter(`<s style="color: #c4c6cc;">${il8n('common', '已选择')} ${strList.join('、')}</s>`);
       }
       return `${il8n('common', '已选择')} ${strList.join('、')}`;
     }
@@ -190,7 +191,7 @@ export default class CompareCondition {
   get attributeTitle () {
     if (this.attribute && this.attribute.length > 0) {
       if (this.attribute.every(item => item.status === 'delete')) {
-        return `<s style="color: #c4c6cc;">${il8n('resource', '属性条件')}：</s>`;
+        return xssFilter(`<s style="color: #c4c6cc;">${il8n('resource', '属性条件')}：</s>`);
       }
       return `${il8n('resource', '属性条件')}：`;
     }
@@ -210,28 +211,28 @@ export default class CompareCondition {
         }
       });
       if (len > 0) {
-        const strs = [];
+        const strList = [];
         const addLen = this.attribute.filter(item => item.status === 'add').length;
         const deleteLen = this.attribute.filter(item => item.status === 'delete').length;
         const editLen = this.attribute.filter(item => item.status === 'unchanged' && item.values.some(val => ['delete', 'add'].includes(val.status))).length;
         if (addLen > 0) {
-          strs.push(`${il8n('common', '增')} ${addLen}`);
+          strList.push(`${il8n('common', '增')} ${addLen}`);
         }
         if (deleteLen > 0) {
-          strs.push(`${il8n('common', '删')} ${deleteLen}`);
+          strList.push(`${il8n('common', '删')} ${deleteLen}`);
         }
         if (editLen > 0) {
-          strs.push(`${il8n('common', '改')} ${editLen}`);
+          strList.push(`${il8n('common', '改')} ${editLen}`);
         }
-        if (strs.length > 0) {
+        if (strList.length > 0) {
           if (this.attribute.length === deleteLen) {
-            return `<s style="color: #c4c6cc;">${isCn ? '已设置0' : '0 has been set'} <span style="font-weight: 600;">(${isCn ? '删' : 'delete'} ${deleteLen})</span>${isCn ? '个属性条件' : 'condition(s)'}</s>`;
+            return xssFilter(`<s style="color: #c4c6cc;">${isCn ? '已设置0' : '0 has been set'} <span style="font-weight: 600;">(${isCn ? '删' : 'delete'} ${deleteLen})</span>${isCn ? '个属性条件' : 'condition(s)'}</s>`);
           }
-          return isCn
-            ? `已设置<span>${this.attribute.length - deleteLen}<span style="font-weight: 600;">(${strs.join('，')})</span>个属性条件</span>`
-            : `<span>${this.attribute.length - deleteLen}<span style="font-weight: 600;">(${strs.join('，')})</span>condition(s) has been set</span>`;
+          return xssFilter(isCn
+            ? `已设置<span>${this.attribute.length - deleteLen}<span style="font-weight: 600;">(${strList.join('，')})</span>个属性条件</span>`
+            : `<span>${this.attribute.length - deleteLen}<span style="font-weight: 600;">(${strList.join('，')})</span>condition(s) has been set</span>`);
         }
-        return `${il8n('resource', '已设置')} ${len} ${il8n('resource', '个属性条件')}`;
+        return xssFilter(`${il8n('resource', '已设置')} ${len} ${il8n('resource', '个属性条件')}`);
       }
       return il8n('verify', '未设置任何条件');
     }
