@@ -77,7 +77,7 @@
   </div>
 </template>
 <script>
-  import { formatCodeData } from '@/common/util';
+  import { xssFilter, formatCodeData } from '@/common/util';
   import { mapGetters } from 'vuex';
   export default {
     name: '',
@@ -185,7 +185,7 @@
           const paginationWrapper = this.$refs.manageTableRef.$refs.paginationWrapper;
           const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
           if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
-            selectCount[0].children[0].innerHTML = this.managerSelectData.length;
+            selectCount[0].children[0].innerHTML = xssFilter(this.managerSelectData.length);
           }
         }, 0);
       },
