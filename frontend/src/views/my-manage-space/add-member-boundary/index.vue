@@ -490,6 +490,7 @@
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
         hasSelectedManualUsers: [],
+        hasExistOrgData: [],
         regValue: /，|,|；|;|、|\\|\n|\s/
       };
     },
@@ -846,10 +847,13 @@
             });
             const result = await this.fetchSubjectScopeCheck(users, 'user');
             if (result && result.length) {
-              const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+              const hasSelectedUsers = [...this.defaultUsers, ...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
               const userTemp = result.filter((item) => {
-                return !hasSelectedUsers.map((subItem) =>
-                  `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
+                const isExistData = hasSelectedUsers.map((subItem) => subItem.username).includes(item.username);
+                if (isExistData) {
+                  this.hasExistOrgData.push(item.username);
+                }
+                return !isExistData;
               });
               this.hasSelectedUsers.push(...userTemp);
               this.hasSelectedManualUsers.push(...userTemp);
@@ -885,10 +889,17 @@
             });
             const result = await this.fetchSubjectScopeCheck(departments, 'depart');
             if (result && result.length) {
-              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+              const hasSelectedDepartments = [
+                ...this.defaultDepartments,
+                ...this.hasSelectedDepartments,
+                ...this.hasSelectedManualDepartments
+              ];
               const departTemp = result.filter((item) => {
-                return !hasSelectedDepartments.map((subItem) =>
-                  subItem.id.toString()).includes(item.id.toString());
+                const isExistData = hasSelectedDepartments.map((v) => String(v.id)).includes(String(item.id));
+                if (isExistData) {
+                  this.hasExistOrgData.push(item.name);
+                }
+                return !isExistData;
               });
               this.hasSelectedManualDepartments.push(...departTemp);
               this.hasSelectedDepartments.push(...departTemp);
@@ -941,10 +952,17 @@
               return getUsername(item);
             })
           });
+          this.hasExistOrgData = [];
+          const hasSelectedUsers = this.hasSelectedUsers.map((item) => item.username);
+          const defaultUsers = this.defaultUsers.map((item) => item.id);
           const temps = res.data.filter((item) => {
             this.$set(item, 'type', 'user');
             this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
-            return !this.hasSelectedUsers.map((subItem) => subItem.username).includes(item.username);
+            const isExistName = [...defaultUsers, ...hasSelectedUsers].includes(item.username);
+            if (isExistName) {
+              this.hasExistOrgData.push(item.username);
+            }
+            return !isExistName;
           });
           this.hasSelectedUsers.push(...temps);
           this.hasSelectedManualUsers.push(...temps);
@@ -1033,10 +1051,17 @@
             });
             const result = await this.fetchSubjectScopeCheck(list);
             if (result && result.length) {
-              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+              const hasSelectedDepartments = [
+                ...this.defaultDepartments,
+                ...this.hasSelectedDepartments,
+                ...this.hasSelectedManualDepartments
+              ];
               const departTemp = result.filter((item) => {
-                return !hasSelectedDepartments.map((subItem) =>
-                  subItem.id.toString()).includes(item.id.toString());
+                const isExistData = hasSelectedDepartments.map((v) => String(v.id)).includes(String(item.id));
+                if (isExistData) {
+                  this.hasExistOrgData.push(item.name);
+                }
+                return !isExistData;
               });
               this.hasSelectedManualDepartments.push(...departTemp);
               this.hasSelectedDepartments.push(...departTemp);
@@ -1685,6 +1710,19 @@
           return;
         }
         this.fetchManualTableData();
+      },
+
+
+      handleGetUniqueName () {
+        // 通过bk_username反向查询display_name
+        if (this.hasExistOrgData.length) {
+          this.$store.dispatch('tenantConfig/getTenantDisplayName', { bk_usernames: this.hasExistOrgData.join() }).then(res => {
+            const results = res.data || [];
+            const displayNames = results.length ? results.map(v => v.display_name) : this.hasExistOrgData;
+            // 这里会存在批量成员重复情况，因此limit限制行数大一些
+            this.messageWarn(this.$t(`m.info['组织架构重复添加多个相同用户名']`, { value: [...new Set(displayNames)].join() }), 3000, 1000);
+          });
+        }
       },
 
       handleAfterLeave () {
