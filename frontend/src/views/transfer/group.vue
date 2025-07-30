@@ -89,7 +89,7 @@
 </template>
 <script>
   import { mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
+  import { xssFilter, formatCodeData } from '@/common/util';
 
   export default {
     name: '',
@@ -210,7 +210,7 @@
           if (paginationWrapper && paginationWrapper.getElementsByClassName('bk-page-selection-count')) {
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
-              selectCount[0].children[0].innerHTML = this.groupSelectData.length;
+              selectCount[0].children[0].innerHTML = xssFilter(this.groupSelectData.length);
             }
           }
         }, 0);

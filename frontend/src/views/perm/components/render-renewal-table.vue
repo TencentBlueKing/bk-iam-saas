@@ -269,7 +269,7 @@
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
-  import { formatCodeData, existValue } from '@/common/util';
+  import { formatCodeData, existValue, xssFilter } from '@/common/util';
   import RenderExpireDisplay from '@/components/render-renewal-dialog/display';
   import RenderResourcePopover from '../components/prem-view-resource-popover';
   import RenderDetail from './render-detail';
@@ -604,7 +604,7 @@
             const selectList = this.curFilterSystem && ['custom'].includes(this.type)
               ? this.currentSelectList.filter((item) => item.system.id === this.curFilterSystem)
               : cloneDeep(this.currentSelectList);
-            selectionCount[0].children[0].innerHTML = selectList.length;
+            selectionCount[0].children[0].innerHTML = xssFilter(selectList.length);
           }
         });
       },
