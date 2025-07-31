@@ -12,7 +12,9 @@ specific language governing permissions and limitations under the License.
 """
 
 import inspect
+import logging
 
+from celery import current_task
 from celery.app.task import Task
 from werkzeug.local import Local as _Local
 from werkzeug.local import release_local
@@ -20,6 +22,8 @@ from werkzeug.local import release_local
 from backend.util.uuid import gen_uuid
 
 _local = _Local()
+logger = logging.getLogger("celery")
+
 
 
 def new_request_id():
@@ -101,9 +105,90 @@ def inspect_task_id():
 
 
 class CeleryLocal(_Local):
+    """为 Celery 任务定制的 Local 类"""
+
     def __init__(self):
-        object.__setattr__(self, "__storage__", {})
-        object.__setattr__(self, "__ident_func__", inspect_task_id)
+        # 调用父类初始化
+        super().__init__()
+
+    def _get_ident(self):
+        """重写标识符获取方法"""
+        try:
+            # 使用 Celery 的 current_task 获取当前任务 ID
+            if current_task and hasattr(current_task, 'request'):
+                task_id = getattr(current_task.request, 'id', None)
+                if task_id:
+                    return task_id
+        except Exception as e:
+            # 记录异常以便调试，但不中断主流程
+            logger.debug("Failed to get Celery task ID: %s", str(e), exc_info=True)
+            pass
+        # 返回 None 或默认值表示不在任务上下文中
+        return None
+
+    # 通过属性名称空间隔离不同任务的数据
+    def __getattr__(self, name):
+        task_id = self._get_ident()
+        if task_id is None:
+            # 不在任务上下文中，使用正常属性访问
+            return super().__getattr__(name)
+
+        # 构造任务特定的属性名
+        task_specific_name = f"_task_{task_id}_{name}"
+        try:
+            return super().__getattr__(task_specific_name)
+        except AttributeError:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+    def __setattr__(self, name, value):
+        if name.startswith('_'):
+            # 私有属性直接设置
+            return super().__setattr__(name, value)
+
+        task_id = self._get_ident()
+        if task_id is None:
+            # 不在任务上下文中，正常设置属性
+            return super().__setattr__(name, value)
+
+        # 构造任务特定的属性名
+        task_specific_name = f"_task_{task_id}_{name}"
+        super().__setattr__(task_specific_name, value)
+        return None
+
+    def __delattr__(self, name):
+        task_id = self._get_ident()
+        if task_id is None:
+            # 不在任务上下文中，正常删除属性
+            return super().__delattr__(name)
+
+        # 构造任务特定的属性名
+        task_specific_name = f"_task_{task_id}_{name}"
+        try:
+            super().__delattr__(task_specific_name)
+        except AttributeError:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        return None
+
+    def __release_local__(self):
+        """重写释放方法，只清理当前任务的上下文"""
+        task_id = self._get_ident()
+        if task_id is None:
+            # 不在任务上下文中，正常释放
+            return super().__release_local__()
+
+        # 只清理当前任务相关的数据
+        try:
+            storage = self._storage.get({}).copy()
+        except LookupError:
+            return None
+
+        # 删除所有以当前任务ID为前缀的属性
+        keys_to_remove = [key for key in storage if key.startswith(f"_task_{task_id}_")]
+        if keys_to_remove:
+            for key in keys_to_remove:
+                storage.pop(key, None)
+            self._storage.set(storage)
+        return None
 
 
 celery_local = CeleryLocal()
