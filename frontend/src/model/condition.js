@@ -25,6 +25,7 @@
 */
 
 import { language, il8n } from '@/language';
+import { xssFilter } from '@/common/util';
 import Instance from './instance';
 import Attribute from './attribute';
 
@@ -83,15 +84,15 @@ export default class Condition {
   }
   get instanceTitle () {
     if (this.isInstanceEmpty) {
-      return `<span style="color: #ff4d4d;">${il8n('verify', '请选择拓扑实例')}</span>`;
+      return xssFilter(`<span style="color: #ff4d4d;">${il8n('verify', '请选择拓扑实例')}</span>`);
     }
     if (this.instance && this.instance.length > 0) {
       const strList = [];
       this.instance.forEach(item => {
         if (item.displayPath.length > 0) {
-          const str = isCn
+          const str = xssFilter(isCn
             ? `<span style="color: #3A84FF; font-weight: 700;">${item.displayPath.length}</span> 个${item.name}`
-            : ` <span style="color: #3A84FF; font-weight: 700;">${item.displayPath.length}</span> ${item.name}(s)`;
+            : ` <span style="color: #3A84FF; font-weight: 700;">${item.displayPath.length}</span> ${item.name}(s)`);
           strList.push(str);
         }
       });
@@ -104,7 +105,7 @@ export default class Condition {
   }
   get attributeTitle () {
     if (this.isAttributeEmpty) {
-      return `<span style="color: #ff4d4d; font-weight: 700;">${il8n('verify', '请设置属性条件')}</span>`;
+      return xssFilter(`<span style="color: #ff4d4d; font-weight: 700;">${il8n('verify', '请设置属性条件')}</span>`);
     }
     if (this.attribute && this.attribute.length > 0) {
       let len = 0;
@@ -114,7 +115,7 @@ export default class Condition {
         }
       });
       if (len > 0) {
-        return `${il8n('resource', '已设置')} <span style="color: #ff4d4d;font-weight: 700;">${len}</span> ${il8n('resource', '个属性条件')}`;
+        return xssFilter(`${il8n('resource', '已设置')} <span style="color: #ff4d4d;font-weight: 700;">${len}</span> ${il8n('resource', '个属性条件')}`);
       }
       return il8n('verify', '未设置任何条件');
     }

@@ -25,6 +25,7 @@
 */
 
 import il8n from '@/language';
+import DOMPurify from 'dompurify';
 import { messageWarn, messageSuccess } from '@/common/bkmagic';
 import { rootPath } from '@blueking/sub-saas/dist/main.js';
 
@@ -854,4 +855,12 @@ export const navDocCenterPath = (versionLog, path, autoOpen = true) => {
   } else {
     return curPath;
   }
+};
+
+/**
+ * 处理非直接用指令过滤标签的innerHTML
+ * @param {str} versionLog 传入的html字符串
+ */
+export const xssFilter = str => {
+  return DOMPurify.sanitize(str);
 };
