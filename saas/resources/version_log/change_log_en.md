@@ -1,3 +1,12 @@
+<!-- 2025-08-06 -->
+# V1.10.45 Version Update Log
+
+### Features
+* Added Japanese internationalization support for Blueking Devops
+* Enhanced XSS protection optimization
+
+---
+
 <!-- 2025-05-28 -->
 # V1.10.44 Version Update Log
 
