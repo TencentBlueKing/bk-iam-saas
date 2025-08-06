@@ -222,7 +222,7 @@ class GradeManagerViewSet(BizMixin, TransMixin, mixins.ListModelMixin, GenericVi
 
         info = self.role_trans.from_role_data(data, old_system_policy_list=old_system_policy_list)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
@@ -270,7 +270,7 @@ class GradeManagerViewSet(BizMixin, TransMixin, mixins.ListModelMixin, GenericVi
                 message=_("非分级管理员 ({}) 的成员，无权限修改").format(role.name), replace=True
             )
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 

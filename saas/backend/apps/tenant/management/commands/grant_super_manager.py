@@ -13,6 +13,7 @@ from django.core.management.base import BaseCommand
 
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.role import RoleBiz
+from backend.component.client.bk_user import BkUserClient
 
 
 class Command(BaseCommand):
@@ -32,7 +33,17 @@ class Command(BaseCommand):
         # 单一用户同步
         Syncer(tenant_id).sync_single_user(bk_username)
 
+        # 是否需要授予所有接入系统的超级权限；仅 bk_admin 才允许被授予接入系统的超级权限
+        has_super_permission = self._is_bk_admin(tenant_id, bk_username)
         # 授权超级管理员空间权限
-        RoleBiz(tenant_id).add_super_manager_member(bk_username, True)
+        RoleBiz(tenant_id).add_super_manager_member(bk_username, has_super_permission)
 
         self.stdout.write(f"grant super manager for {bk_username} in tenant {tenant_id} successfully")
+
+    @staticmethod
+    def _is_bk_admin(tenant_id: str, bk_username: str) -> bool:
+        """
+        判断当前用户是否为蓝鲸专用内置管理员
+        """
+        virtual_users = BkUserClient(tenant_id).batch_lookup_virtual_user_by_login_name(["bk_admin"])
+        return bk_username in {u["login_name"] for u in virtual_users}

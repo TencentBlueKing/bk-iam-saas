@@ -79,7 +79,7 @@ class ManagementGradeManagerViewSet(BizMixin, TransMixin, ManagementAPIPermissio
         # 转换为 RoleInfoBean，用于创建时使用
         role_info = self.grade_manager_trans.to_role_info(data, source_system_id=source_system_id)
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
@@ -143,7 +143,7 @@ class ManagementGradeManagerViewSet(BizMixin, TransMixin, ManagementAPIPermissio
         # 转换为 RoleInfoBean
         role_info = self.grade_manager_trans.to_role_info(data, source_system_id=kwargs["system_id"])
 
-        with gen_role_upsert_lock(data["name"]):
+        with gen_role_upsert_lock(self.tenant_id, data["name"]):
             # 名称唯一性检查
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 

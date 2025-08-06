@@ -242,3 +242,23 @@ class BkUserClient(BkApigwBaseClient):
         url_path = f"/api/v3/open/tenant/users/{bk_username}/departments/"
         params = {"with_ancestors": with_ancestors}
         return self._call(http_get_20x, url_path, params=params)
+
+    def batch_lookup_virtual_user_by_login_name(self, login_names: List[str]) -> List[Dict]:
+        """获取虚拟用户信息
+
+        :param login_names: 虚拟登录名
+        :return: {
+            "bk_username": "klzwge6k69ly0rjt",
+            "login_name": "virtual_user_1",
+            "display_name": "virtual_user_1(虚拟用户 1)",
+        }
+        """
+        url_path = "/api/v3/open/tenant/virtual-users/-/lookup/"
+        # FIXME(nan): bk_usernames 最多支持 100 个，后面这里需要改成分组查询
+        assert len(login_names) <= 100  # noqa: PLR2004
+
+        params = {
+            "lookups": ",".join(login_names),
+            "lookup_field": "login_name",
+        }
+        return self._call(http_get_20x, url_path, params=params)
