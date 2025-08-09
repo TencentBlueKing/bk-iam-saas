@@ -52,6 +52,12 @@ class DebugStack:
         setattr(local, self.key, [])
         return items
 
+    def pop_celery_task_context(self):
+        local = get_local()
+        items = getattr(local, local._get_ident(), [])
+        local.__release_local__()
+        return items
+
 
 stack = DebugStack()
 
@@ -249,7 +255,7 @@ def log_task_error_trace(task, force=False):
     """
     记录 task 的错误跟踪信息
     """
-    chain = stack.pop_all()
+    chain = stack.pop_celery_task_context()
     if chain or force:
         data = {
             "id": task.request.id,
