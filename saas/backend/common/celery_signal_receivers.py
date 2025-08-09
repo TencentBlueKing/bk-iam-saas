@@ -10,17 +10,14 @@ specific language governing permissions and limitations under the License.
 """
 
 from celery.signals import task_failure, task_success
-from werkzeug.local import release_local
 
 from backend.common.debug import log_task_error_trace
-from backend.common.local import celery_local
 
 
 @task_success.connect
 def task_success_handler(sender, **kwargs):
     try:
         log_task_error_trace(sender)
-        release_local(celery_local)
     except IndexError:
         return
 
@@ -29,6 +26,5 @@ def task_success_handler(sender, **kwargs):
 def task_failure_handler(sender, exception, traceback, **kwargs):
     try:
         log_task_error_trace(sender)
-        release_local(celery_local)
     except IndexError:
         return
