@@ -11,15 +11,16 @@ specific language governing permissions and limitations under the License.
 全局相关
 """
 
-import inspect
+import logging
 
-from celery.app.task import Task
+from celery import current_task
 from werkzeug.local import Local as _Local
 from werkzeug.local import release_local
 
 from backend.util.uuid import gen_uuid
 
 _local = _Local()
+logger = logging.getLogger("celery")
 
 
 def new_request_id():
@@ -89,21 +90,62 @@ local = Local()
 
 
 # celery task 专用
-
-
-def inspect_task_id():
-    for info in inspect.stack()[1:]:
-        locals = info.frame.f_locals
-        if "self" in locals and isinstance(locals["self"], Task):
-            return locals["self"].request.id
-
-    return ""
-
-
 class CeleryLocal(_Local):
-    def __init__(self):
-        object.__setattr__(self, "__storage__", {})
-        object.__setattr__(self, "__ident_func__", inspect_task_id)
+    """
+    一个基于任务ID（task_id）区分的本地存储（local storage）
+    从而使不同的 Celery 任务能有自己的独立上下文，手动管理任务ID隔离
+    """
+
+    def _get_task_id(self) -> str:
+        try:
+            if current_task and hasattr(current_task, "request"):
+                task_id = getattr(current_task.request, "id", None)
+                if task_id:
+                    return task_id
+        except Exception:
+            pass
+        return "__no_task__"
+
+    def _get_storage(self) -> dict:
+        total_storage = super().__storage.get({})
+        task_id = self._get_task_id()
+        if task_id not in total_storage:
+            total_storage = total_storage.copy()
+            total_storage[task_id] = {}
+            super().__storage.set(total_storage)
+        return total_storage[task_id]
+
+    def __getattr__(self, name):
+        storage = self._get_storage()
+        if name in storage:
+            return storage[name]
+        raise AttributeError(name)
+
+    def __setattr__(self, name, value):
+        task_id = self._get_task_id()
+        total_storage = super().__storage.get({}).copy()
+        storage = total_storage.get(task_id, {}).copy()
+        storage[name] = value
+        total_storage[task_id] = storage
+        super().__storage.set(total_storage)
+
+    def __delattr__(self, name):
+        task_id = self._get_task_id()
+        total_storage = super().__storage.get({}).copy()
+        storage = total_storage.get(task_id, {}).copy()
+        if name in storage:
+            del storage[name]
+            total_storage[task_id] = storage
+            super().__storage.set(total_storage)
+        else:
+            raise AttributeError(name)
+
+    def __release_local__(self):
+        total_storage = super().__storage.get({}).copy()
+        task_id = self._get_task_id()
+        if task_id in total_storage:
+            total_storage.pop(task_id)
+            super().__storage.set(total_storage)
 
 
 celery_local = CeleryLocal()
