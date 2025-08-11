@@ -46,4 +46,4 @@ class Command(BaseCommand):
         判断当前用户是否为蓝鲸专用内置管理员
         """
         virtual_users = BkUserClient(tenant_id).batch_lookup_virtual_user_by_login_name(["bk_admin"])
-        return bk_username in {u["login_name"] for u in virtual_users}
+        return bk_username in {u["bk_username"] for u in virtual_users}
