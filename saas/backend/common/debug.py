@@ -44,13 +44,16 @@ class DebugStack:
         if not hasattr(local, self.key):
             setattr(local, self.key, [])
 
-        getattr(local, self.key).append(item)
+        stack = getattr(local, self.key)
+        stack.append(item)
 
     def pop_all(self):
         local = get_local()
-        items = getattr(local, self.key, [])
-        setattr(local, self.key, [])
-        return items
+        if hasattr(local, self.key):
+            items = getattr(local, self.key)
+            setattr(local, self.key, [])
+            return items
+        return []
 
 
 stack = DebugStack()
