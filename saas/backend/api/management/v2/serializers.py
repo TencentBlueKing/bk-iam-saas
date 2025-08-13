@@ -400,6 +400,7 @@ class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
     group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
     sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
+    enabled = serializers.BooleanField(label="是否启用", required=False, default=True)
 
 
 class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):
@@ -417,6 +418,7 @@ class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):
             "updater",
             "members",
             "sync_perm",
+            "enabled",
         )
 
     def get_members(self, obj):
