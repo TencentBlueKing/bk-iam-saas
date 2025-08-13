@@ -242,6 +242,10 @@ def _add_group_role_set(group_id_set: Set[int], role_id_set: Set[int], group_id:
     if not relation:
         return
 
+    role = Role.objects.filter(id=relation.role_id, enabled=False).first()
+    if role:
+        return
+
     role_id_set.add(relation.role_id)
 
 
