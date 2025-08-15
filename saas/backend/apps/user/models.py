@@ -64,6 +64,7 @@ class UserPermissionCleanupRecord(BaseModel):
     )
     error_info = models.TextField("异常", default="")
     retry_count = models.IntegerField("重试次数", default=0)
+    clean_time = models.DateTimeField("清理时间", null=True, blank=True, default=None)
 
     class Meta:
         verbose_name = "用户权限清理记录"

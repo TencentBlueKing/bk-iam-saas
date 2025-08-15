@@ -114,3 +114,8 @@ class AdminTemplateCreateSLZ(TemplateCreateSLZ):
 
 class AdminTemplateIdSLZ(TemplateIdSLZ):
     pass
+
+
+class CleanupSubjectSLZ(serializers.Serializer):
+    id = serializers.CharField(label="用户id")
+    clean_time = serializers.CharField(label="清理时间", help_text="格式为YYYY-MM-DD HH:mm:ss")
