@@ -56,6 +56,9 @@ class AdminAPIEnum(BaseAPIEnum):
     # 清理
     SUBJECT_PERMISSION_CLEANUP = auto()
 
+    # 清理指定时间前的权限
+    SUBJECT_TIME_PERMISSION_CLEANUP = auto()
+
     # 是否有权限数据
     SUBJECT_PERMISSION_EXISTS = auto()
 
@@ -79,6 +82,7 @@ class AdminAPIEnum(BaseAPIEnum):
             (AUDIT_EVENT_LIST, "获取审计事件列表"),
             (SUBJECT_FREEZE_UNFREEZE, "冻结/解冻Subject"),
             (SUBJECT_PERMISSION_CLEANUP, "权限清理"),
+            (SUBJECT_TIME_PERMISSION_CLEANUP, "指定时间前权限清理"),
             (SUBJECT_PERMISSION_EXISTS, "权限是否存在"),
         )
     )

@@ -18,13 +18,19 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import AdminSubjectGroupSLZ, FreezeSubjectResponseSLZ, SubjectRoleSLZ, SubjectSLZ
+from backend.api.admin.serializers import (
+    AdminSubjectGroupSLZ,
+    CleanupSubjectSLZ,
+    FreezeSubjectResponseSLZ,
+    SubjectRoleSLZ,
+    SubjectSLZ,
+)
 from backend.api.authentication import ESBAuthentication
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import RoleUser
 from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.apps.user.models import UserPermissionCleanupRecord
-from backend.apps.user.tasks import user_permission_clean
+from backend.apps.user.tasks import user_permission_clean, user_permission_clean_by_time
 from backend.audit.audit import log_user_blacklist_event, log_user_permission_clean_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
@@ -249,3 +255,38 @@ class AdminSubjectPermissionExistsViewSet(GenericViewSet):
             return Response(True)
 
         return Response(False)
+
+
+class AdminSubjectPermissionCleanupByTimeViewSet(GenericViewSet):
+    """指定日期前用户权限清理"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {
+        "cleanup": AdminAPIEnum.SUBJECT_PERMISSION_CLEANUP.value,
+    }
+
+    pagination_class = None
+
+    @swagger_auto_schema(
+        operation_description="清理用户权限",
+        request_body=CleanupSubjectSLZ(label="清理用户权限"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["admin.subject.cleanup.time"],
+    )
+    def cleanup(self, request, *args, **kwargs):
+        serializer = CleanupSubjectSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        clean_time = validated_data.get("clean_time")
+
+        # 创建清理记录
+        record = UserPermissionCleanupRecord(username=validated_data.get("id"), clean_time=clean_time)
+        record.save()
+
+        # 触发清理任务
+        user_permission_clean_by_time.delay(record.username, clean_time)
+
+        logger.info("cleanup users permission by time: %s", serializer.data)
+        return Response({}, status=status.HTTP_200_OK)

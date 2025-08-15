@@ -3708,3 +3708,29 @@ paths:
           appVerifiedRequired: true
           resourcePermissionRequired: false
         descriptionEn:
+  /api/v1/open/admin/cleanup/users/time/permission/:
+    delete:
+      operationId: open_admin_subject_cleanup_time
+      description: 清理指定时间前的用户权限
+      tags:
+        - open
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/open/admin/cleanup/users/time/permission/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:

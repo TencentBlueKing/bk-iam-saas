@@ -59,3 +59,13 @@ def format_localtime(fmt="%Y%m%d%H%M%S"):
     """
     t = time.strftime(fmt, time.localtime())
     return t
+
+
+def string_to_utc_local(str_time):
+    """
+    字符时间 转 本地时间
+    """
+    naive_datetime = string_to_datetime(str_time, fmt="%Y-%m-%d %H:%M:%S")
+    utc_time = timezone.make_aware(naive_datetime).astimezone(timezone.utc)
+
+    return utc_to_local(utc_time)
