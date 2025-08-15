@@ -16,8 +16,9 @@ from backend.common.debug import log_task_error_trace
 from backend.common.local import celery_local
 
 
-@task_success.connect
+# @task_success.connect
 def task_success_handler(sender, **kwargs):
+    # TODO werkzeug升级3.1.3 发生递归调用，待修复
     try:
         log_task_error_trace(sender)
         release_local(celery_local)
@@ -25,8 +26,9 @@ def task_success_handler(sender, **kwargs):
         return
 
 
-@task_failure.connect
+# @task_failure.connect
 def task_failure_handler(sender, exception, traceback, **kwargs):
+    # TODO werkzeug升级3.1.3 发生递归调用，待修复
     try:
         log_task_error_trace(sender)
         release_local(celery_local)
