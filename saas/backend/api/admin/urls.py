@@ -99,10 +99,4 @@ urlpatterns = [
         views.AdminSubjectPermissionCleanupViewSet.as_view({"delete": "cleanup"}),
         name="open.admin.subject.cleanup",
     ),
-    # 清理用户指定时间前权限
-    path(
-        "cleanup/users/time/permission/",
-        views.AdminSubjectPermissionCleanupByTimeViewSet.as_view({"delete": "cleanup"}),
-        name="open.admin.subject.cleanup.time",
-    ),
 ]

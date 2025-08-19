@@ -93,6 +93,10 @@ class SubjectSLZ(serializers.Serializer):
     # 注意, 当前只支持冻结用户, 不支持其他类型
     type = serializers.ChoiceField(label="Subject类型", choices=[("user", "用户")])
     id = serializers.CharField(label="SubjectID")
+    before_at = serializers.IntegerField(label="清理时间戳", required=False)
+
+    class Meta:
+        ref_name = "AdminSubjectSLZ"
 
 
 class FreezeSubjectResponseSLZ(serializers.Serializer):
@@ -114,8 +118,3 @@ class AdminTemplateCreateSLZ(TemplateCreateSLZ):
 
 class AdminTemplateIdSLZ(TemplateIdSLZ):
     pass
-
-
-class CleanupSubjectSLZ(serializers.Serializer):
-    id = serializers.CharField(label="用户id")
-    clean_time = serializers.CharField(label="清理时间", help_text="格式为YYYY-MM-DD HH:mm:ss")

@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from datetime import timedelta
 from itertools import groupby
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlencode
 
 from celery import Task, current_app, shared_task
@@ -39,9 +39,9 @@ from backend.component import esb
 from backend.component.bkbot import send_iam_ticket
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
+from backend.util.time import timestamp_to_string
 from backend.util.url import url_join
 
-from ...util.time import string_to_datetime, string_to_utc_local, utc_to_local
 from ..role.models import RoleUser
 from .constants import UserPermissionCleanupRecordStatusEnum
 
@@ -269,16 +269,13 @@ class UserPermissionCleaner:
     role_with_perm_group_biz = RoleWithPermGroupBiz()
     subject_template_biz = SubjectTemplateBiz()
 
-    def __init__(self, username: str, clean_time: str = None) -> None:
-        if clean_time:
-            record = UserPermissionCleanupRecord.objects.get(username=username, clean_time=clean_time)
-        else:
-            record = UserPermissionCleanupRecord.objects.get(username=username)
+    def __init__(self, username: str) -> None:
+        record = UserPermissionCleanupRecord.objects.get(username=username)
 
         self._record = record
         self._subject = Subject.from_username(username)
 
-    def clean(self):
+    def clean(self, before_at: Optional[int] = None):
         # 有其他的任务在处理, 忽略
         if self._record.status == UserPermissionCleanupRecordStatusEnum.RUNNING.value:
             return
@@ -291,32 +288,9 @@ class UserPermissionCleaner:
 
         try:
             self._clean_policy()
-            self._clean_group()
-            self._clean_subject_group()
-            self._clean_role()
-        except Exception as e:  # pylint: disable=broad-except
-            self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
-            self._record.error_info = str(e)
-            self._record.save(update_fields=["status", "error_info"])
-        else:
-            self._record.status = UserPermissionCleanupRecordStatusEnum.SUCCEED.value
-            self._record.save(update_fields=["status"])
-
-    def clean_by_time(self, clean_time: str):
-        # 有其他的任务在处理, 忽略
-        if self._record.status == UserPermissionCleanupRecordStatusEnum.RUNNING.value:
-            return
-
-        # 更新失败, 不处理
-        if not UserPermissionCleanupRecord.objects.filter(
-            username=self._subject.id, status=self._record.status
-        ).update(status=UserPermissionCleanupRecordStatusEnum.RUNNING.value):
-            return
-
-        try:
-            self._clean_group(clean_time)
-            self._clean_subject_group(clean_time)
-            self._clean_role(clean_time)
+            self._clean_group(before_at)
+            self._clean_subject_group(before_at)
+            self._clean_role(before_at)
         except Exception as e:  # pylint: disable=broad-except
             self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
             self._record.error_info = str(e)
@@ -347,27 +321,20 @@ class UserPermissionCleaner:
                     system_id, self._subject, [p.policy_id for p in temporary_policies]
                 )
 
-    def _clean_subject_group(self, clean_time: str = None):
+    def _clean_subject_group(self, before_at: Optional[int] = None):
         """
         清理人员模版
         """
-        if clean_time:
-            template_ids = list(
-                SubjectTemplateRelation.objects.filter(
-                    subject_type=self._subject.type, subject_id=self._subject.id, created_time__lte=clean_time
-                ).values_list("template_id", flat=True)
-            )
-        else:
-            template_ids = list(
-                SubjectTemplateRelation.objects.filter(
-                    subject_type=self._subject.type, subject_id=self._subject.id
-                ).values_list("template_id", flat=True)
-            )
+        query = SubjectTemplateRelation.objects.filter(subject_type=self._subject.type, subject_id=self._subject.id)
+        if before_at:
+            query = query.filter(created_time__lte=timestamp_to_string(before_at))
+
+        template_ids = list(query.values_list("template_id", flat=True))
 
         for template_id in template_ids:
             self.subject_template_biz.delete_members(template_id, [self._subject])
 
-    def _clean_group(self, clean_time: str = None):
+    def _clean_group(self, before_at: Optional[int] = None):
         """
         清理用户组
         """
@@ -376,15 +343,14 @@ class UserPermissionCleaner:
         while True:
             _, groups = self.group_biz.list_paging_subject_group(self._subject, limit=1000)
             for group in groups:
-                if clean_time:
-                    if group.created_time > string_to_datetime(clean_time):
-                        continue
+                if before_at and group.created_time.timestamp() > before_at:
+                    continue
                 self.group_biz.remove_members(str(group.id), [self._subject])
 
             if len(groups) < 1000:
                 break
 
-    def _clean_role(self, clean_time: str = None):
+    def _clean_role(self, before_at: Optional[int] = None):
         """
         清理角色
         """
@@ -392,13 +358,16 @@ class UserPermissionCleaner:
         # 查询所有的角色, 按角色类型清理
         username = self._subject.id
         roles = self.role_biz.list_user_role(username)
+        if before_at:
+            role_users = RoleUser.objects.filter(
+                role_id__in=[role.id for role in roles],
+                username=username,
+                created_time__lte=timestamp_to_string(before_at),
+            ).all()
+            role_ids = [r.role_id for r in role_users]
+            roles = [role for role in roles if role.id in role_ids]
+
         for role in roles:
-            if clean_time:
-                clean_time = string_to_utc_local(clean_time)
-                role_user = RoleUser.objects.filter(role_id=role.id, username=username).first()
-                created_time = utc_to_local(role_user.created_time)
-                if created_time > clean_time:
-                    continue
             if role.type in (
                 RoleType.GRADE_MANAGER.value,
                 RoleType.SUBSET_MANAGER.value,
@@ -415,11 +384,11 @@ class UserPermissionCleaner:
 
 
 @shared_task(ignore_result=True)
-def user_permission_clean(username: str):
+def user_permission_clean(username: str, before_at: int = None):
     """
     清理用户权限
     """
-    UserPermissionCleaner(username).clean()
+    UserPermissionCleaner(username).clean(before_at)
 
 
 @shared_task(ignore_result=True)
@@ -436,10 +405,7 @@ def check_user_permission_clean_task():
     qs.update(status=UserPermissionCleanupRecordStatusEnum.CREATED.value, retry_count=F("retry_count") + 1)  # 重置status
 
     for r in qs:
-        if r.clean_time:
-            user_permission_clean_by_time(r.username, r.clean_time)
-        else:
-            user_permission_clean(r.username)
+        user_permission_clean(r.username)
 
 
 @shared_task(ignore_result=True)
@@ -449,11 +415,3 @@ def clean_user_permission_clean_record():
     UserPermissionCleanupRecord.objects.filter(
         created_time__lt=day_before, status=UserPermissionCleanupRecordStatusEnum.SUCCEED.value
     ).delete()
-
-
-@shared_task(ignore_result=True)
-def user_permission_clean_by_time(username: str, clean_time: str):
-    """
-    清理用户权限
-    """
-    UserPermissionCleaner(username, clean_time).clean_by_time(clean_time)
