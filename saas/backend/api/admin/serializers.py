@@ -93,7 +93,7 @@ class SubjectSLZ(serializers.Serializer):
     # 注意, 当前只支持冻结用户, 不支持其他类型
     type = serializers.ChoiceField(label="Subject类型", choices=[("user", "用户")])
     id = serializers.CharField(label="SubjectID")
-    before_at = serializers.IntegerField(label="清理时间戳", required=False)
+    before_at = serializers.IntegerField(label="清理时间戳", required=False, default=None)
 
     class Meta:
         ref_name = "AdminSubjectSLZ"
