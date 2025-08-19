@@ -171,11 +171,11 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
 class AdminSubjectPermissionCleanupViewSet(GenericViewSet):
     """用户权限清理"""
 
-    # authentication_classes = [ESBAuthentication]
-    # permission_classes = [AdminAPIPermission]
-    # admin_api_permission = {
-    #     "cleanup": AdminAPIEnum.SUBJECT_PERMISSION_CLEANUP.value,
-    # }
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {
+        "cleanup": AdminAPIEnum.SUBJECT_PERMISSION_CLEANUP.value,
+    }
 
     pagination_class = None
 
