@@ -69,7 +69,3 @@ def string_to_utc_local(str_time):
     utc_time = timezone.make_aware(naive_datetime).astimezone(timezone.utc)
 
     return utc_to_local(utc_time)
-
-
-def timestamp_to_string(ts: int) -> str:
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts))

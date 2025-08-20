@@ -24,6 +24,7 @@ from django.utils import timezone
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.constants import NotificationTypeEnum
+from backend.apps.role.models import RoleUser
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
@@ -39,10 +40,9 @@ from backend.component import esb
 from backend.component.bkbot import send_iam_ticket
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
-from backend.util.time import timestamp_to_string
+from backend.util.time import timestamp_to_local
 from backend.util.url import url_join
 
-from ..role.models import RoleUser
 from .constants import UserPermissionCleanupRecordStatusEnum
 
 logger = logging.getLogger("celery")
@@ -327,7 +327,7 @@ class UserPermissionCleaner:
         """
         query = SubjectTemplateRelation.objects.filter(subject_type=self._subject.type, subject_id=self._subject.id)
         if before_at:
-            query = query.filter(created_time__lte=timestamp_to_string(before_at))
+            query = query.filter(created_time__lte=timestamp_to_local(before_at))
 
         template_ids = list(query.values_list("template_id", flat=True))
 
@@ -362,8 +362,8 @@ class UserPermissionCleaner:
             role_users = RoleUser.objects.filter(
                 role_id__in=[role.id for role in roles],
                 username=username,
-                created_time__lte=timestamp_to_string(before_at),
-            ).all()
+                created_time__lte=timestamp_to_local(before_at),
+            )
             role_ids = [r.role_id for r in role_users]
             roles = [role for role in roles if role.id in role_ids]
 
