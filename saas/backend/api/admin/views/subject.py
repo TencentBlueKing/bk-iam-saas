@@ -181,6 +181,7 @@ class AdminSubjectPermissionCleanupViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="清理用户权限",
+        request_body=SubjectSLZ(label="用户信息", many=True),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["admin.subject.cleanup"],
     )
@@ -192,12 +193,12 @@ class AdminSubjectPermissionCleanupViewSet(GenericViewSet):
             raise error_codes.INVALID_ARGS.format(_("至少传递一个用户"))
 
         # 创建清理记录
-        records = [UserPermissionCleanupRecord(username=s["id"]) for s in serializer.data]
+        records = [UserPermissionCleanupRecord(username=s["id"], before_at=s["before_at"]) for s in serializer.data]
         UserPermissionCleanupRecord.objects.bulk_create(records, ignore_conflicts=True)
 
         # 触发清理任务
         for r in records:
-            user_permission_clean.delay(r.username)
+            user_permission_clean.delay(r.username, r.before_at)
 
         log_user_permission_clean_event(
             Subject.from_username(request.user.username),
