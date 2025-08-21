@@ -1,3 +1,11 @@
+<!-- 2025-08-21 -->
+# V1.10.46 Version Update Log
+
+### Features
+* Clean up permissions before the user-specified time
+
+---
+
 <!-- 2025-08-06 -->
 # V1.10.45 Version Update Log
 
