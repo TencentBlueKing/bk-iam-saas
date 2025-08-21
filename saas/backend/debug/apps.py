@@ -16,4 +16,5 @@ class DebugConfig(AppConfig):
     name = "backend.debug"
 
     def ready(self):
-        import backend.common.celery_signal_receivers  # noqa
+        # 移除了对不存在的 celery_signal_receivers 模块的导入
+        pass
