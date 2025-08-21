@@ -88,29 +88,13 @@ class Local(Singleton):
 local = Local()
 
 
-# celery task 专用
-
-
-def inspect_task_id():
-    for info in inspect.stack()[1:]:
-        locals = info.frame.f_locals
-        if "self" in locals and isinstance(locals["self"], Task):
-            return locals["self"].request.id
-
-    return ""
-
-
-class CeleryLocal(_Local):
-    def __init__(self):
-        object.__setattr__(self, "__storage__", {})
-        object.__setattr__(self, "__ident_func__", inspect_task_id)
-
-
-celery_local = CeleryLocal()
-
-
 def get_local():
+    """
+    获取当前上下文的local对象
+
+    在Web请求上下文中，通过request判断；
+    """
     if local.request:
         return _local
-
-    return celery_local
+    # 不考虑Celery上下文情况，当没有request时返回None
+    return None
