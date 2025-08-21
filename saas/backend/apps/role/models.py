@@ -43,6 +43,7 @@ class Role(BaseModel, BaseSystemHiddenModel):
     code = models.CharField("标志", max_length=64, default="")
     inherit_subject_scope = models.BooleanField("继承人员管理范围", default=False)
     sync_perm = models.BooleanField("同步角色权限", default=False)
+    enabled = models.BooleanField("是否启用", default=True)
 
     class Meta:
         verbose_name = "角色"

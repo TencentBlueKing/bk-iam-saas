@@ -113,6 +113,7 @@ class RoleInfo(PartialModel):
     type: str = RoleType.GRADE_MANAGER.value
     inherit_subject_scope: bool = False
     sync_perm: bool = False
+    enabled: bool = True
     sync_subject_template: bool = False
 
     members: List[RoleMember]
@@ -292,6 +293,8 @@ class RoleService:
                 role.inherit_subject_scope = info.inherit_subject_scope
             if "sync_perm" in update_fields:
                 role.sync_perm = info.sync_perm
+            if "enabled" in update_fields:
+                role.enabled = info.enabled
 
             role.updater = updater
             role.save()
