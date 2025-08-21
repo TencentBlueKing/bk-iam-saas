@@ -97,7 +97,7 @@ class ApprovalProcessGlobalConfigViewSet(BizMixin, mixins.ListModelMixin, Generi
         slz.is_valid(raise_exception=True)
 
         application_type = slz.validated_data["type"]
-        process_id = int(slz.validated_data["process_id"])
+        process_id = slz.validated_data["process_id"]
 
         self.approval_process_biz.create_or_update_default_process(application_type, process_id, request.user.username)
 
@@ -178,7 +178,7 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         actions = slz.validated_data["actions"]
-        process_id = int(slz.validated_data["process_id"])
+        process_id = slz.validated_data["process_id"]
 
         # 目前只支持同一系统的批量 Action 设置审批流程
         system_id = actions[0]["system_id"]
@@ -315,7 +315,7 @@ class GroupApprovalProcessViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         group_ids = slz.validated_data["group_ids"]
-        process_id = int(slz.validated_data["process_id"])
+        process_id = slz.validated_data["process_id"]
 
         # 校验角色是否能管理对应的用户组
         if not RoleObjectRelationChecker(request.role).check_group_ids(group_ids):

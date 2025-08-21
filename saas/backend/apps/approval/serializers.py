@@ -32,7 +32,7 @@ class ApprovalProcessGlobalConfigSLZ(serializers.Serializer):
 
 class ApprovalProcessGlobalConfigModifySLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="申请审批类型", choices=ApplicationType.get_choices())
-    process_id = serializers.IntegerField(label="流程ID")
+    process_id = serializers.CharField(label="流程ID")
 
 
 class ActionApprovalProcessQuerySLZ(serializers.Serializer):
@@ -58,7 +58,7 @@ class BaseActionSLZ(serializers.Serializer):
 
 class ActionApprovalProcessModifySLZ(serializers.Serializer):
     actions = serializers.ListField(label="操作列表", child=BaseActionSLZ(label="操作"))
-    process_id = serializers.IntegerField(label="流程ID")
+    process_id = serializers.CharField(label="流程ID")
 
 
 class GroupApprovalProcessQuerySLZ(serializers.Serializer):
@@ -75,7 +75,7 @@ class GroupApprovalProcessSLZ(serializers.Serializer):
 
 class GroupApprovalProcessModifySLZ(serializers.Serializer):
     group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(label="用户组ID"))
-    process_id = serializers.IntegerField(label="流程ID")
+    process_id = serializers.CharField(label="流程ID")
 
 
 class SensitivityLevelCountSLZ(serializers.Serializer):
