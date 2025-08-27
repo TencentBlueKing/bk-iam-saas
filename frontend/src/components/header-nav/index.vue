@@ -2,7 +2,6 @@
   <!-- eslint-disable max-len -->
   <header class="header-nav-layout">
     <div :class="['logo', 'fl']" @click.stop="handleBackHome">
-      <!-- <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" /> -->
       <img :src="appLogo" :alt="$t(`m.nav['蓝鲸权限中心']`)">
       <span class="text">{{ appName }}</span>
     </div>
@@ -18,14 +17,6 @@
             {{ item.text }}
           </h2>
         </span>
-        <!-- <iam-guide
-                    v-if="haveManager"
-                    type="switch_role"
-                    direction="top"
-                    :flag="showGuide"
-                    :style="{ top: '10px', left: '240px' }"
-                    :content="$t(`m.guide['管理空间导航']`)"
-                /> -->
       </div>
     </div>
     <div class="user fr">
@@ -48,7 +39,7 @@
         </div>
       </div>
       <div class="lang-flag">
-        <Icon :type="`icon-${$i18n.locale}`" />
+        <Icon :type="`icon-${['zh-cn', 'ja'].includes($i18n.locale) ? 'zh-cn' : $i18n.locale}`" />
         <div class="dropdown-panel">
           <div
             :class="[
@@ -62,7 +53,7 @@
             :key="item.value"
           >
             <div class="lang-flex">
-              <Icon :type="`icon-${item.value}`" />
+              <Icon :type="`icon-${item.value || 'zh-cn'}`" />
               <span class="lang-flex-label">{{ item.label }}</span>
             </div>
           </div>

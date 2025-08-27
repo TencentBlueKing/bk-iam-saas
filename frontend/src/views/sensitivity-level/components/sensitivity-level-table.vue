@@ -106,7 +106,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { formatCodeData, getWindowHeight } from '@/common/util';
+  import { xssFilter, formatCodeData, getWindowHeight } from '@/common/util';
   import { SENSITIVITY_LEVEL_ENUM } from '@/common/constants';
   import IamSearchSelect from '@/components/iam-search-select';
   import IamSensitivitySelect from './iam-sensitivity-select.vue';
@@ -334,7 +334,7 @@
                 && selectionCount.length
                 && selectionCount[0].children
               ) {
-                selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+                selectionCount[0].children[0].innerHTML = xssFilter(this.currentSelectList.length);
               }
             });
           },
@@ -349,7 +349,7 @@
                 'bk-page-selection-count'
               );
               if (this.$refs.sensitivityTableRef && selectionCount) {
-                selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+                selectionCount[0].children[0].innerHTML = xssFilter(this.currentSelectList.length);
               }
             });
           }

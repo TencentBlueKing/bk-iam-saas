@@ -235,6 +235,13 @@
             return !(payload[1] && payload[1].total > 0);
           }
         };
+
+        const validKeys = ['group', 'custom'];
+        if (!validKeys.includes(this.active)) {
+          console.error(`Invalid tab key: ${this.active}`);
+          return;
+        }
+
         this.isEmpty = activeItem[this.active]();
         this.tabKey = +new Date();
       },
@@ -310,7 +317,12 @@
             }
           }
         };
-        return tabMap[this.active]();
+
+        // return tabMap[this.active]();
+        if (tabMap.hasOwnProperty(this.active) && typeof tabMap[this.active] === 'function') {
+          return tabMap[this.active]();
+        }
+        console.warn(`Invalid tab key: ${this.active}`);
       },
 
       async handleSubmit () {
@@ -380,7 +392,7 @@
             font-size: 12px;
             color: #ea3636;
         }
-        
+
         .reason-error-tips {
             top: 0;
         }

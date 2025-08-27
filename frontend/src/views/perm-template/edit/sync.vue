@@ -190,6 +190,7 @@
   import SyncPolicy from '@/model/template-sync-policy';
   import Condition from '@/model/condition';
   import { leaveConfirm } from '@/common/leave-confirm';
+  import { xssFilter } from '@/common/util';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderCondition from '../components/render-condition';
   import RenderDetail from '../components/render-detail';
@@ -934,12 +935,12 @@
                 theme: 'danger'
               },
               domProps: {
-                innerHTML: this.$t(`m.common['移除']`)
+                innerHTML: xssFilter(this.$t(`m.common['移除']`))
               }
             }),
             h('span', {
               domProps: {
-                innerHTML: column.label
+                innerHTML: xssFilter(column.label)
               }
             })
           ]
@@ -965,12 +966,12 @@
                 theme: 'info'
               },
               domProps: {
-                innerHTML: this.$t(`m.common['新增']`)
+                innerHTML: xssFilter(this.$t(`m.common['新增']`))
               }
             }),
             h('span', {
               domProps: {
-                innerHTML: column.label
+                innerHTML: xssFilter(column.label)
               }
             })
           ]

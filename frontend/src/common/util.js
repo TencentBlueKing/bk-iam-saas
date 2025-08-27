@@ -25,6 +25,7 @@
 */
 
 import il8n from '@/language';
+import DOMPurify from 'dompurify';
 import { messageWarn, messageSuccess } from '@/common/bkmagic';
 import { rootPath } from '@blueking/sub-saas/dist/main.js';
 
@@ -619,6 +620,9 @@ export function getCookie (name) {
 // 兼容外部系统i18的key
 export function formatI18nKey () {
   const lang = getCookie('blueking_language') || 'zh-cn';
+  if (['ja-jp', 'ja', 'jp', 'ja_jp'].includes(lang)) {
+    return 'ja';
+  }
   const result = ['zh-cn', 'en'].includes(lang) ? lang : 'zh-cn';
   return result;
 }
@@ -854,4 +858,9 @@ export const navDocCenterPath = (versionLog, path, autoOpen = true) => {
   } else {
     return curPath;
   }
+};
+
+// 处理非直接用指令过滤标签的innerHTML
+export const xssFilter = str => {
+  return DOMPurify.sanitize(str);
 };
