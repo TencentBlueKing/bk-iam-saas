@@ -89,12 +89,4 @@ local = Local()
 
 
 def get_local():
-    """
-    获取当前上下文的local对象
-
-    在Web请求上下文中，通过request判断；
-    """
-    if local.request:
-        return _local
-    # 不考虑Celery上下文情况，当没有request时返回None
-    return None
+    return _local
