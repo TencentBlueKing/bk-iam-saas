@@ -145,8 +145,8 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
                 "user_count": g.user_count,
                 "department_count": g.department_count,
                 "creator": g.creator,
-                "created_time": g.created_time_display,
-                "updated_time": g.updated_time_display,
+                "created_at": int(g.created_time.timestamp()),
+                "updated_at": int(g.updated_time.timestamp()),
                 "updater": g.updater,
             }
             for g in groups
