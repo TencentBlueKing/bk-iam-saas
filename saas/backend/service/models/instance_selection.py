@@ -51,6 +51,8 @@ class InstanceSelection(BaseModel):
     ignore_iam_path: bool
     resource_type_chain: List[ChainNode]
 
+    tenant_id: str = ""
+
     def match_path(self, path: List[PathResourceType]) -> bool:
         """
         匹配实例的链路是否与实例的链路是否一致
@@ -96,7 +98,7 @@ class InstanceSelection(BaseModel):
         return system_ids
 
 
-# NOTE: 原始注册的实例视图，此时未被引用，无需system_id/ignore_iam_path
+# NOTE: 原始注册的实例视图，此时未被引用，无需 system_id/ignore_iam_path
 class RawInstanceSelection(BaseModel):
     id: str
     name: str
