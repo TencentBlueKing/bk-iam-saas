@@ -3181,6 +3181,31 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+    get:
+        operationId: admin_list_groups
+        description: 超管批量获取用户组列表
+        tags:
+            - open
+        responses:
+            default:
+                description: ""
+        x-bk-apigateway-resource:
+            isPublic: true
+            allowApplyPermission: true
+            matchSubpath: false
+            backend:
+                type: HTTP
+                method: get
+                path: /api/v1/open/admin/groups/
+                matchSubpath: false
+                timeout: 0
+                upstreams: { }
+                transformHeaders: { }
+            authConfig:
+                userVerifiedRequired: false
+                resourcePermissionRequired: false
+            disabledStages: [ ]
+            descriptionEn:
   /api/v1/open/admin/groups/{id}/:
     delete:
       operationId: admin_delete_group
@@ -3309,6 +3334,57 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+    get:
+        operationId: admin_list_group_members
+        description: 超管获取用户组成员
+        tags:
+            - open
+        responses:
+            default:
+                description: ""
+        x-bk-apigateway-resource:
+            isPublic: true
+            allowApplyPermission: true
+            matchSubpath: false
+            backend:
+                type: HTTP
+                method: get
+                path: /api/v1/open/admin/groups/{id}/members/
+                matchSubpath: false
+                timeout: 0
+                upstreams: { }
+                transformHeaders: { }
+            authConfig:
+                userVerifiedRequired: false
+                resourcePermissionRequired: false
+            disabledStages: [ ]
+            descriptionEn:
+  /api/v1/open/subjects/{subject_type}/{subject_id}/groups/:
+      get:
+          operationId: admin_list_subject_group
+          description: 超管获取Subject 加入的用户组列表
+          tags:
+              - open
+          responses:
+              default:
+                  description: ""
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: get
+                  path: /api/v1/open/subjects/{subject_type}/{subject_id}/groups/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
   /api/v1/open/admin/systems/{system_id}/provider_config/:
     get:
       operationId: admin_list_provider_config
