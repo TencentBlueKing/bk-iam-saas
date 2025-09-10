@@ -362,6 +362,7 @@ class ApprovedPassApplicationBiz:
 
         return role
 
+    @transaction.atomic
     def _update_rating_manager(self, subject: Subject, application: Application):
         """更新分级管理员"""
         role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=application.data["id"])
