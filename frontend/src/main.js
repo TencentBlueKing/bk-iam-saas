@@ -27,7 +27,6 @@
 import './public-path';
 import '../static/lib.bundle.js';
 import Vue from 'vue';
-import VueDOMPurifyHTML from 'vue-dompurify-html';
 import App from './App.vue';
 import IframeEntry from './IframeEntry.vue';
 import router from './router/index';
@@ -47,6 +46,7 @@ import RenderVerticalBlock from './components/render-block/vertical.vue';
 import RenderSearch from './components/render-search/index.vue';
 import Icon from './components/icon';
 import { subEnv } from '@blueking/sub-saas/dist/main.js';
+import { BkXssFilterDirective } from '@blueking/xss-filter';
 import { i18n as I18n } from './language/i18n';
 import { language, il8n as il8nNew } from './language';
 import { bus } from './common/bus';
@@ -57,7 +57,7 @@ import './assets/iconfont/style.css';
 import '@icon-cool/bk-icon-bk-iam';
 import '@/directive';
 
-Vue.use(VueDOMPurifyHTML);
+Vue.use(BkXssFilterDirective);
 
 Vue.component('app-exception', Exception);
 Vue.component('app-auth', AuthComponent);
