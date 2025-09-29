@@ -337,6 +337,7 @@ class RelatedPolicySLZ(serializers.Serializer):
     target_policies = serializers.ListField(
         label="操作策略", child=PolicyActionExpiredAtSLZ(label="策略"), required=False, default=list
     )
+    is_custom_policy_apply = serializers.BooleanField(label="是否自定义权限申请", required=False, default=False)
 
 
 class PolicyResourceCopySLZ(serializers.Serializer):
