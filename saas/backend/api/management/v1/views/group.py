@@ -142,6 +142,12 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
                 "name": g.name,
                 "description": g.description,
                 "attributes": group_attrs[g.id].get_attributes(),
+                "user_count": g.user_count,
+                "department_count": g.department_count,
+                "creator": g.creator,
+                "created_at": int(g.created_time.timestamp()),
+                "updated_at": int(g.updated_time.timestamp()),
+                "updater": g.updater,
             }
             for g in groups
         ]
