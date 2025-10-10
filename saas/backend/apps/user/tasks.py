@@ -24,7 +24,7 @@ from django.utils import timezone
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.constants import NotificationTypeEnum
-from backend.apps.role.models import RoleUser
+from backend.apps.role.models import Role, RoleUser
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
@@ -358,14 +358,17 @@ class UserPermissionCleaner:
         # 查询所有的角色, 按角色类型清理
         username = self._subject.id
         roles = self.role_biz.list_user_role(username)
+        role_ids = [role.id for role in roles]
         if before_at:
-            role_users = RoleUser.objects.filter(
-                role_id__in=[role.id for role in roles],
-                username=username,
-                created_time__lte=timestamp_to_local(before_at),
+            role_ids = list(
+                RoleUser.objects.filter(
+                    role_id__in=role_ids,
+                    username=username,
+                    created_time__lte=timestamp_to_local(before_at),
+                ).values_list("role_id", flat=True)
             )
-            role_ids = [r.role_id for r in role_users]
-            roles = [role for role in roles if role.id in role_ids]
+
+        roles = Role.objects.filter(id__in=role_ids)
 
         for role in roles:
             if role.type in (

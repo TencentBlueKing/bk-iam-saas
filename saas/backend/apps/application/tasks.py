@@ -59,7 +59,7 @@ def check_or_update_application_status():
                 biz.handle_application_result(application, status)
             except Exception:  # pylint: disable=broad-except
                 logger.exception(
-                    "check_or_update_application_status: handle_application_result fail, application sn: %s", 
+                    "check_or_update_application_status: handle_application_result fail, application sn: %s",
                     application.sn,
                 )
 
