@@ -1,3 +1,19 @@
+<!-- 2025-10-14 -->
+# V1.10.47 Version Update Log
+
+### Features
+* OpenAPI - `management_grade_manager_groups` now supports returning metadata fields such as updater and update time.
+* Disabling notification for project renewals in BlueKing for deactivated projects.
+* User organization options now allow filtering group members by validity period.
+* Added Django command for super admin user authorization.
+
+### Fixes
+* Fixed an issue where the application form status was not updated after approval callback due to unsupported transactions, leading to execution authorization problems.
+* Fixed an issue where instances of dependent operations were empty after editing resource instances in a standard IT operation within a user group.
+* Fixed inconsistencies of role types during role cleanup.
+
+---
+
 <!-- 2025-08-21 -->
 # V1.10.46 Version Update Log
 
