@@ -122,7 +122,10 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         tags=["management.role.group"],
     )
     def list(self, request, *args, **kwargs):
-        role = self.get_object()
+        role_id = kwargs.get("id")
+        role = Role.objects.filter(
+            id=role_id, type__in=[RoleType.GRADE_MANAGER.value, RoleType.SYSTEM_MANAGER.value]
+        ).first()
 
         # 分页参数
         limit, offset = CompatiblePagination().get_limit_offset_pair(request)
