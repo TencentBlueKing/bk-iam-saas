@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
+from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status
@@ -67,7 +68,9 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(
+        Q(type=RoleType.GRADE_MANAGER.value) | Q(type=RoleType.SYSTEM_MANAGER.value)
+    ).order_by("-updated_time")
     pagination_class = CompatiblePagination
 
     group_biz = GroupBiz()
@@ -122,10 +125,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         tags=["management.role.group"],
     )
     def list(self, request, *args, **kwargs):
-        role_id = kwargs.get("id")
-        role = Role.objects.filter(
-            id=role_id, type__in=[RoleType.GRADE_MANAGER.value, RoleType.SYSTEM_MANAGER.value]
-        ).first()
+        role = self.get_object()
 
         # 分页参数
         limit, offset = CompatiblePagination().get_limit_offset_pair(request)
