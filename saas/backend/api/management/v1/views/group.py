@@ -67,7 +67,9 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SYSTEM_MANAGER.value]).order_by(
+        "-updated_time"
+    )
     pagination_class = CompatiblePagination
 
     group_biz = GroupBiz()
