@@ -5,84 +5,6 @@
         <basic-info :data="formData" @on-change="handleBasicInfoChange" ref="basicInfoRef" />
       </section>
     </render-horizontal-block>
-    <!-- <render-action
-            style="margin-bottom: 16px;"
-            :title="$t(`m.levelSpace['选择操作和资源实例']`)"
-            :tips="addActionTips"
-            v-if="isSelectSystem"
-            @on-click="handleAddAction" /> -->
-    <!-- <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
-            :label-width="renderLabelWidth('resource')"
-            :required="true"
-        >
-            <div class="grade-admin-select-wrapper">
-                <div class="showTableClick" @click.stop="isShowTableClick">
-                    <div class="action">
-                        <section class="action-wrapper" @click.stop="handleAddAction">
-                            <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
-                        </section>
-                        <Icon
-                            type="info-fill"
-                            class="info-icon"
-                            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
-                    </div>
-                    <div class="sub-title" v-if="policyList.length > 0 && !isShowTable">
-                        {{ $t(`m.common['共']`) }}
-                        <span class="number">{{policyList.length}}</span>
-                        {{ $t(`m.common['个']`) }}
-                        {{ $t(`m.perm['操作权限']`) }}
-                    </div>
-                </div>
-                <div v-show="isShowTable">
-                    <div class="info-wrapper">
-                        <p class="tips">{{ infoText }}</p>
-                        <section style="min-width: 108px;">
-                            <bk-switcher
-                                v-model="isAllExpanded"
-                                :disabled="isAggregateDisabled"
-                                size="small"
-                                theme="primary"
-                                @change="handleAggregateAction" />
-                            <span class="text">{{ expandedText }}</span>
-                        </section>
-                    </div>
-                    <div class="resource-instance-wrapper"
-                        ref="instanceTableContentRef"
-                        v-bkloading="{ isLoading, opacity: 1, extCls: 'loading-resource-instance-cls' }">
-                        <render-instance-table
-                            :is-all-expanded="isAllExpanded"
-                            ref="resourceInstanceRef"
-                            :data="policyList"
-                            :list="policyList"
-                            :backup-list="aggregationsTableData"
-                            @on-delete="handleDelete"
-                            @on-aggregate-delete="handleAggregateDelete"
-                            @on-select="handleResourceSelect" />
-                    </div>
-                </div>
-            </div>
-        </render-horizontal-block> -->
-    <!-- <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p> -->
-    <!-- <section v-if="isShowMemberAdd" ref="memberRef">
-            <render-action
-                :title="$t(`m.levelSpace['选择可授权人员边界']`)"
-                :tips="addMemberTips"
-                style="margin-bottom: 16px;"
-                @on-click="handleAddMember" />
-        </section> -->
-    <!-- <section ref="memberRef">
-            <render-member
-                :users="users"
-                :departments="departments"
-                :is-all="isAll"
-                :label-width="renderLabelWidth('member')"
-                @on-add="handleAddMember"
-                @on-delete="handleMemberDelete"
-                @on-delete-all="handleDeleteAll" />
-        </section>
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p> -->
     <render-horizontal-block
       :label="$t(`m.nav['授权边界']`)"
       :label-width="renderLabelWidth('resource')"
@@ -105,21 +27,30 @@
                 {{ $t(`m.common['添加']`) }}
               </bk-button>
             </section>
-            <div
-              v-if="isSelectSystem"
-              class="aggregate-action-group"
-              style="min-width: 108px; position: relative;">
-              <div
-                v-for="item in AGGREGATION_EDIT_ENUM"
-                :key="item.value"
-                :class="[
-                  'aggregate-action-btn',
-                  { 'is-active': isAllExpanded === item.value },
-                  { 'is-disabled': isAggregateDisabled }
-                ]"
-                @click.stop="handleAggregateAction(item.value)"
-              >
-                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+            <div v-if="isSelectSystem" class="switch-action-group">
+              <div class="all-unlimited-switch">
+                <bk-switcher
+                  v-model="isAllUnlimited"
+                  theme="primary"
+                  size="small"
+                  :disabled="isUnlimitedDisabled"
+                  @change="handleUnlimitedActionChange"
+                />
+                <span class="expanded-text">{{ $t(`m.common['批量无限制']`) }}</span>
+              </div>
+              <div class="aggregate-action-group">
+                <div
+                  v-for="item in AGGREGATION_EDIT_ENUM"
+                  :key="item.value"
+                  :class="[
+                    'aggregate-action-btn',
+                    { 'is-active': isAllExpanded === item.value },
+                    { 'is-disabled': isAggregateDisabled }
+                  ]"
+                  @click.stop="handleAggregateActionChange(item.value)"
+                >
+                  <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -291,6 +222,7 @@
         isShowAddActionSideslider: false,
         isShowActionEmptyError: false,
         isExpanded: false,
+        isAllUnlimited: false,
         curSystem: '',
         curActionValue: [],
         addMemberTitle: this.$t(`m.levelSpace['选择可授权人员边界']`),
@@ -316,41 +248,50 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isSelectSystem () {
-                return this.originalList.length > 0;
-            },
-            defaultValue () {
-                if (this.originalList.length < 1) {
-                    return [];
-                }
-                const tempList = [];
-                this.originalList.forEach(item => {
-                    if (!tempList.some(sys => sys.system_id === item.system_id)) {
-                        tempList.push({
-                            system_id: item.system_id,
-                            system_name: item.system_name,
-                            list: [item]
-                        });
-                    } else {
-                        const curData = tempList.find(sys => sys.system_id === item.system_id);
-                        curData.list.push(item);
-                    }
-                });
+      ...mapGetters(['user']),
+      isSelectSystem () {
+        return this.originalList.length > 0;
+      },
+      defaultValue () {
+        if (this.originalList.length < 1) {
+          return [];
+        }
+        const tempList = [];
+        this.originalList.forEach(item => {
+          if (!tempList.some(sys => sys.system_id === item.system_id)) {
+            tempList.push({
+              system_id: item.system_id,
+              system_name: item.system_name,
+              list: [item]
+            });
+          } else {
+            const curData = tempList.find(sys => sys.system_id === item.system_id);
+            curData.list.push(item);
+          }
+        });
 
-                return tempList;
-            },
-            expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
-            },
-            isAggregateDisabled () {
-                return this.policyList.length < 1
-                    || this.aggregations.length < 1
-                    || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
-            },
-            isStaff () {
-                return this.user.role.type === 'staff' || this.$route.params.role_type === 'staff';
-            }
+        return tempList;
+      },
+      expandedText () {
+        return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
+      },
+      isAggregateDisabled () {
+        return this.policyList.length < 1
+          || this.aggregations.length < 1
+          || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
+      },
+      isUnlimitedDisabled () {
+        const isDisabled = this.policyList.every(item =>
+          ((!item.resource_groups || (item.resource_groups && !item.resource_groups.length)) && !item.instances)
+        );
+        if (isDisabled) {
+          this.isAllUnlimited = false;
+        }
+        return isDisabled;
+      },
+      isStaff () {
+        return this.user.role.type === 'staff' || this.$route.params.role_type === 'staff';
+      }
     },
     watch: {
       reason () {
@@ -372,6 +313,8 @@
             const data = this.getFilterAggregation(this.aggregationsBackup);
             this.aggregations = _.cloneDeep(data);
           }
+          // 处理批量无限制，默认为新增的操作选中无实例
+          // this.handleUnlimitedActionChange(this.isAllUnlimited);
         },
         deep: true
       }
@@ -380,6 +323,7 @@
       isShowTableClick () {
         this.isShowTable = !this.isShowTable;
       },
+
       async fetchPageData () {
         await this.fetchRatingManagerDetail();
       },
@@ -492,7 +436,6 @@
           this.aggregationsBackup = _.cloneDeep(res.data.aggregations);
           this.aggregations = _.cloneDeep(data);
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
@@ -539,7 +482,6 @@
         window.changeDialog = true;
         this.isAllExpanded = payload;
         const aggregationAction = this.aggregations;
-        console.log('aggregationAction', aggregationAction);
         const actionIds = [];
         aggregationAction.forEach(item => {
           actionIds.push(...item.actions.map(_ => `${_.system_id}&${_.id}`));
@@ -577,20 +519,8 @@
                   break;
                 }
               }
-              console.log('instances: ');
-              console.log(instances);
-              console.log('isAllEqual: ' + isAllEqual);
               if (isAllEqual) {
-                console.log(instances[0][0]);
-                // const instanceData = instances[0][0][0];
-                // item.instances = instanceData.path.map(pathItem => {
-                //     return {
-                //         id: pathItem[0].id,
-                //         name: pathItem[0].name
-                //     };
-                // });
                 const instanceData = instances[0][0];
-                console.log('instanceData', instanceData);
                 item.instances = [];
                 instanceData.map(pathItem => {
                   const instance = pathItem.path.map(e => {
@@ -613,7 +543,6 @@
           });
           this.policyList = this.policyList.filter(item => !actionIds.includes(`${item.system_id}&${item.id}`));
           this.policyList.unshift(...aggregations);
-          console.log('this.policyList', this.policyList);
           return;
         }
         const aggregationData = [];
@@ -679,6 +608,61 @@
           }
         });
       },
+      
+      // 批量无限制
+      handleUnlimitedActionChange (payload) {
+        const tableData = _.cloneDeep(this.policyList);
+        tableData.forEach((item, index) => {
+          if (!item.isAggregate) {
+            if (item.resource_groups && item.resource_groups.length) {
+              item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                  if (!payload && (types.condition.length > 0 && types.condition[0] !== 'none')) {
+                    return;
+                  }
+                  types.condition = payload ? [] : ['none'];
+                  if (payload) {
+                    types.isError = false;
+                  }
+                });
+              });
+            } else {
+              item.name = item.name.split('，')[0];
+            }
+          }
+          if (item.instances && item.isAggregate) {
+            item = Object.assign(item, {
+              isNoLimited: false,
+              isNeedNoLimited: true,
+              isError: !(item.instances.length || (!item.instances.length && item.isNoLimited))
+            });
+            if (!payload || item.instances.length) {
+              item = Object.assign(item, {
+                isNoLimited: false,
+                isError: false
+              });
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item = Object.assign(item, {
+                isNoLimited: true,
+                isError: false,
+                instances: []
+              });
+            }
+            return this.$set(
+              tableData,
+              index,
+              new GradeAggregationPolicy(item)
+            );
+          }
+        });
+        this.policyList = _.cloneDeep(tableData);
+      },
+
+      handleAggregateActionChange (payload) {
+        this.handleAggregateAction(payload);
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
+      },
 
       // 设置InstancesDisplayData
       setInstancesDisplayData (data) {
@@ -703,13 +687,11 @@
           const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.$route.params.id });
           this.handleDetailData(res.data);
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         }
       },
 
       handleDetailData (payload) {
-        console.log('payload', payload);
         const { name, description, members, sync_perm } = payload;
         this.formData = Object.assign({}, {
           name,
@@ -738,9 +720,7 @@
             });
           }
         });
-
         this.isAll = payload.subject_scopes.some(item => item.type === '*' && item.id === '*');
-
         this.users.splice(0, this.users.length, ...users);
         this.departments.splice(0, this.departments.length, ...departments);
         this.isShowMemberAdd = false;
@@ -749,16 +729,18 @@
         payload.authorization_scopes.forEach(item => {
           item.actions.forEach(act => {
             tempActions.push({
-                            ...act,
-                            system_id: item.system.id,
-                            system_name: item.system.name,
-                            $id: `${item.system.id}&${act.id}`
+              ...act,
+              system_id: item.system.id,
+              system_name: item.system.name,
+              $id: `${item.system.id}&${act.id}`
             });
           });
         });
-
         this.originalList = _.cloneDeep(tempActions);
+        // 还差回显无限制
+        console.log(this.originalList, 445455);
       },
+
       /**
        * @description: 处理 base-info数据
        * @param {*} field
@@ -871,7 +853,6 @@
         this.isAll = payload.isAll;
         this.users = _.cloneDeep(users);
         this.departments = _.cloneDeep(departments);
-        console.log(this.users, this.departments);
         this.isShowMemberAdd = false;
         this.isShowAddMemberDialog = false;
         this.isShowMemberEmptyError = false;
@@ -919,7 +900,6 @@
           id: this.$route.params.id,
           sync_perm: sync_perm
         };
-        console.log('params', params);
         try {
           await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
           await this.$store.dispatch('roleList');
@@ -929,7 +909,6 @@
             name: 'apply'
           });
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.dialogLoading = false;
@@ -938,14 +917,15 @@
 
       async handleSubmit () {
         const validatorFlag = this.$refs.basicInfoRef.handleValidator();
+        const tableResource = this.$refs.resourceInstanceRef.handleGetValue();
         let data = [];
         let flag = false;
         this.isShowActionEmptyError = this.originalList.length < 1;
         // this.isShowReasonError = this.isStaff && this.reason === '';
         this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
         if (!this.isShowActionEmptyError) {
-          data = this.$refs.resourceInstanceRef.handleGetValue().actions;
-          flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
+          data = tableResource.actions;
+          flag = tableResource.flag;
         }
         if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError
           || this.isShowReasonError) {
@@ -1003,7 +983,6 @@
         };
         this.submitLoading = true;
         window.changeDialog = false;
-        console.log('params', params);
                 
         const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
         try {
@@ -1017,7 +996,6 @@
             }
           });
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;

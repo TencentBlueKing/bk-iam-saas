@@ -270,7 +270,6 @@
               return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
           }, []);
           const temps = [];
-          console.log('aggregationIds', this.tableList, aggregationIds);
           aggregationIds.forEach(item => {
               if (!temps.some(sub => sub.includes(item))) {
                   temps.push([item]);
@@ -1139,7 +1138,7 @@
               if (item.resource_groups && item.resource_groups.length) {
                 item.resource_groups.forEach(groupItem => {
                   groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
-                    if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
+                    if (!payload && (types.condition.length > 0 && types.condition[0] !== 'none')) {
                       return;
                     }
                     types.condition = payload ? [] : ['none'];

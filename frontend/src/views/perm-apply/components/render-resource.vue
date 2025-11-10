@@ -9,7 +9,8 @@
             :ext-cls="'no-limit-checkbox'"
             v-model="notLimitValue"
             :disabled="disabled"
-            @change="handleLimitChange">
+            @change="handleLimitChange"
+          >
             {{ $t(`m.common['无限制']`) }}
           </bk-checkbox>
         </span>

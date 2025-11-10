@@ -65,7 +65,7 @@ export default class AggregationPolicy {
 
   get empty () {
     if (this.isNeedNoLimited) {
-      if (this.instances.length === 1 && this.instances[0] === 'none') {
+      if ((this.instances.length === 1 && this.instances[0] === 'none')) {
         return true;
       }
       return false;

@@ -41,33 +41,39 @@ export default class GradeAggregationPolicy {
     this.$id = payload.$id || '';
     this.selectedIndex = payload.selectedIndex || 0;
     this.canPaste = false;
+    // 是否需要展示无限制
+    this.isNeedNoLimited = payload.isNeedNoLimited || false;
+    // 是否是无限制操作
+    this.isNoLimited = payload.isNoLimited || false;
+    this.initAggregateResourceType();
   }
 
-  get empty () {
-    return this.instances.length < 1;
-  }
-
-  get value () {
-    if (this.empty) {
-      return il8n('verify', '请选择');
-    }
+  initAggregateResourceType () {
     let str = '';
-    this.aggregateResourceType.length && this.aggregateResourceType.forEach(item => {
-      if (this.instancesDisplayData[item.id]) {
-        if (this.instancesDisplayData[item.id].length > 1) {
+    this.aggregateResourceType.forEach((item, index) => {
+      const displayData = this.instancesDisplayData[item.id];
+      if (displayData) {
+        // 如果是批量无限制直接填充无限制
+        const isExistNoLimited = this.isNoLimited && (this.selectedIndex === index || displayData.length === 0);
+        console.log(item, isExistNoLimited, displayData, 55555555555555);
+        if (displayData.length > 1) {
           for (const key in this.instancesDisplayData) {
             if (item.id === key) {
-              str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
-              Vue.set(item, 'displayValue', str.substring(1, str.length));
+              str = language === 'zh-cn'
+                ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}`
+                : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
+              Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : str.substring(1, str.length));
               str = '';
             }
           }
         } else {
           // 这里防止切换tab下存在空数据，需要重新判断下
-          if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
+          if (displayData.length) {
             str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
+            Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : str.substring(1, str.length));
+          } else {
+            Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : '');
           }
-          Vue.set(item, 'displayValue', str.substring(1, str.length));
           str = '';
         }
       } else {
@@ -76,8 +82,39 @@ export default class GradeAggregationPolicy {
         str = '';
       }
     });
-    const aggregateResourceType = _.cloneDeep(this.aggregateResourceType.map(item => item.displayValue));
-    return aggregateResourceType.join();
+    const aggregateResourceType = _.cloneDeep(this.aggregateResourceType[this.selectedIndex].displayValue);
+    return aggregateResourceType;
+  }
+
+  get empty () {
+    const isExistMultipleResourceType = ['', il8n('verify', '请选择')].includes(this.aggregateResourceType[this.selectedIndex].displayValue);
+    if (this.isNeedNoLimited) {
+      if ((this.instances.length === 1 && this.instances[0] === 'none')) {
+        if (this.aggregateResourceType.length > 1) {
+          return isExistMultipleResourceType;
+        }
+        return true;
+      }
+      return false;
+    } else {
+      if (this.aggregateResourceType.length > 1) {
+        return isExistMultipleResourceType;
+      }
+      return this.instances.length < 1;
+    }
+  }
+
+  get value () {
+    if (this.empty) {
+      return il8n('verify', '请选择');
+    }
+    if ((this.isNoLimited || (!this.instances.length && !['add'].includes(this.tag)))) {
+      if (this.aggregateResourceType.length > 1) {
+        return this.aggregateResourceType[this.selectedIndex].displayValue;
+      }
+      return il8n('common', '无限制');
+    }
+    return this.initAggregateResourceType();
   }
 
   get name () {
