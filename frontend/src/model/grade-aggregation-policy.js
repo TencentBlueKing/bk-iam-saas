@@ -49,37 +49,36 @@ export default class GradeAggregationPolicy {
   }
 
   initAggregateResourceType () {
-    let str = '';
+    let displayContent = '';
     this.aggregateResourceType.forEach((item, index) => {
       const displayData = this.instancesDisplayData[item.id];
       if (displayData) {
         // 如果是批量无限制直接填充无限制
         const isExistNoLimited = this.isNoLimited && (this.selectedIndex === index || displayData.length === 0);
-        console.log(item, isExistNoLimited, displayData, 55555555555555);
         if (displayData.length > 1) {
           for (const key in this.instancesDisplayData) {
             if (item.id === key) {
-              str = language === 'zh-cn'
-                ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}`
-                : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
-              Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : str.substring(1, str.length));
-              str = '';
+              displayContent = language === 'zh-cn'
+                ? `${displayContent}，已选择${this.instancesDisplayData[item.id].length}个${item.name}`
+                : `${displayContent}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
+              Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : displayContent.substring(1, displayContent.length));
+              displayContent = '';
             }
           }
         } else {
           // 这里防止切换tab下存在空数据，需要重新判断下
           if (displayData.length) {
-            str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
-            Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : str.substring(1, str.length));
+            displayContent = `${displayContent}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
+            Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : displayContent.substring(1, displayContent.length));
           } else {
             Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : '');
           }
-          str = '';
+          displayContent = '';
         }
       } else {
         this.instancesDisplayData[item.id] = [];
         Vue.set(item, 'displayValue', '');
-        str = '';
+        displayContent = '';
       }
     });
     const aggregateResourceType = _.cloneDeep(this.aggregateResourceType[this.selectedIndex].displayValue);
@@ -121,7 +120,7 @@ export default class GradeAggregationPolicy {
     if (this.actions.length < 1) {
       return '';
     }
-    return this.actions.map(item => item.name).join('，');
+    return this.actions.map(item => item.name).filter(name => name).join('，');
   }
 
   get key () {

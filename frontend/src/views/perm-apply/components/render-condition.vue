@@ -7,11 +7,11 @@
       <section
         :class="[
           'iam-condition-input',
-          { 'is-empty': isEmpty || curValue === $t(`m.verify['请选择']`) }
+          { 'is-empty': isEmpty || ['', $t(`m.verify['请选择']`)].includes(curValue) }
         ]"
         @click.stop="handleClick"
       >
-        {{ curValue }}
+        {{ curValue || $t(`m.verify['请选择']`) }}
       </section>
     </div>
     <!-- 预览 -->
@@ -184,7 +184,6 @@
         };
         try {
           const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', params);
-          console.warn(data);
           if (data && data.length) {
             const condition = data[0].resource_type.condition;
             this.$emit('on-paste', {
@@ -199,7 +198,6 @@
             flag: false,
             data: null
           });
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.pasteLoading = false;
@@ -235,7 +233,6 @@
             flag: false,
             data: null
           });
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;

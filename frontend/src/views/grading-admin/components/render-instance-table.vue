@@ -66,10 +66,7 @@
                   size="small"
                 >
                   {{item.name}}
-                  <span v-if="!row.isNoLimited
-                    && row.instancesDisplayData[item.id]
-                    && row.instancesDisplayData[item.id].length > 0"
-                  >
+                  <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length > 0">
                     ({{row.instancesDisplayData[item.id].length}})
                   </span>
                 </bk-button>
@@ -196,7 +193,7 @@
 
     <render-aggregate-side-slider
       ref="aggregateRef"
-      :show.sync="isShowAggregateSideslider"
+      :show.sync="isShowAggregateSideSlider"
       :params="aggregateResourceParams"
       :value="aggregateValue"
       @on-selected="handlerSelectAggregateRes" />
@@ -275,7 +272,7 @@
         previewResourceParams: {},
         curCopyData: ['none'],
         curCopyKey: '',
-        isShowAggregateSideslider: false,
+        isShowAggregateSideSlider: false,
         aggregateResourceParams: {},
         aggregateIndex: -1,
         aggregateValue: [],
@@ -531,23 +528,30 @@
       },
 
       showAggregateResourceInstance (data, index) {
+        const aggregateResourceData = data.aggregateResourceType[data.selectedIndex];
         const aggregateResourceParams = {
-          ...data.aggregateResourceType[data.selectedIndex],
+          ...aggregateResourceData,
           curAggregateSystemId: data.system_id,
           isNoLimited: data.isNoLimited || false
         };
-        this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
+        if (!data.instancesDisplayData[aggregateResourceData.id]) {
+          data.instancesDisplayData[aggregateResourceData.id] = [];
+        }
+        // 如果有多种聚合类型，根据当前点击索引展示对应选择实例
+        if (data.aggregateResourceType.length > 1) {
+          aggregateResourceParams.isNoLimited
+            = data.instancesDisplayData[aggregateResourceData.id].length < 1 && data.isNoLimited;
+        }
+        this.instanceKey = aggregateResourceData.id;
         this.aggregateIndex = !this.curFilterSystem ? index : this.tableList.findIndex(item => `${item.system_id}-${item.$id}` === this.curFilterSystem);
-        const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
-        this.instanceKey = instanceKey;
-        if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
-        this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
+        this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
+        this.aggregateValue = _.cloneDeep(data.instancesDisplayData[this.instanceKey].map(item => {
           return {
             id: item.id,
             display_name: item.name
           };
         }));
-        this.isShowAggregateSideslider = true;
+        this.isShowAggregateSideSlider = true;
       },
 
       handlerSelectAggregateRes (payload) {
@@ -587,7 +591,11 @@
           const isNoLimited = !isEmpty && !data.length;
           curAggregateItem.instances = data;
           curAggregateItem.isError = !(isNoLimited || data.length);
-          curAggregateItem.isNoLimited = isNoLimited;
+          if (curAggregateItem.aggregateResourceType.length > 1) {
+            curAggregateItem.isNoLimited = curAggregateItem.instancesDisplayData[instanceKey].length < 1 && isNoLimited;
+          } else {
+            curAggregateItem.isNoLimited = isNoLimited;
+          }
         }
         const aggregationPolicy = new GradeAggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } });
         this.$set(
@@ -1345,12 +1353,12 @@
             }
           } else {
             const { actions, aggregateResourceType, instances, instancesDisplayData, isNoLimited } = item;
-            if (!isNoLimited && (instances.length < 1 || (instances.length === 1 && instances[0] === 'none'))) {
-              // 如果存在多个资源类型，只要有一项有值就允许提交
-              const isError = aggregateResourceType.length > 1
-                ? aggregateResourceType.every(rs => ['', this.$t(`m.verify['请选择']`)].includes(rs.displayValue))
-                : true;
-              item.isError = isError;
+            // 如果存在多个资源类型，只要有一项有值就允许提交
+            const isExistEmpty = aggregateResourceType.length > 1
+              ? aggregateResourceType.every(rs => ['', this.$t(`m.verify['请选择']`)].includes(rs.displayValue))
+              : true;
+            if (!isNoLimited && ((instances.length < 1 || (instances.length === 1 && instances[0] === 'none')) && isExistEmpty)) {
+              item.isError = true;
               flag = true;
             }
             const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
@@ -1377,6 +1385,7 @@
                 aggregate_resource_types: aggregateResourceTypes
               });
             } else {
+              // 如果聚合后的操作没有相同实例且空值校验通过，则代表是设置无限制
               actionList.push(aggregateParams);
             }
           }

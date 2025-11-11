@@ -1141,8 +1141,8 @@
                     if (!payload && (types.condition.length > 0 && types.condition[0] !== 'none')) {
                       return;
                     }
-                    types.condition = payload ? [] : ['none'];
                     if (payload) {
+                      types.condition = [];
                       types.isError = false;
                     }
                   });

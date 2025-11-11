@@ -313,8 +313,6 @@
             const data = this.getFilterAggregation(this.aggregationsBackup);
             this.aggregations = _.cloneDeep(data);
           }
-          // 处理批量无限制，默认为新增的操作选中无实例
-          // this.handleUnlimitedActionChange(this.isAllUnlimited);
         },
         deep: true
       }
@@ -451,8 +449,8 @@
             curSelectActions.push(`${item.system_id}&${item.id}`);
           }
         });
-        let aggregations = []
-        ;(payload || []).forEach(item => {
+        let aggregations = [];
+        (payload || []).forEach(item => {
           const { actions, aggregate_resource_types, $id } = item;
           const curActions = actions.filter(_ => curSelectActions.includes(`${_.system_id}&${_.id}`));
           if (curActions.length > 0) {
@@ -611,6 +609,7 @@
       
       // 批量无限制
       handleUnlimitedActionChange (payload) {
+        this.setPolicyList(this.originalList);
         const tableData = _.cloneDeep(this.policyList);
         tableData.forEach((item, index) => {
           if (!item.isAggregate) {
@@ -620,8 +619,8 @@
                   if (!payload && (types.condition.length > 0 && types.condition[0] !== 'none')) {
                     return;
                   }
-                  types.condition = payload ? [] : ['none'];
                   if (payload) {
+                    types.condition = [];
                     types.isError = false;
                   }
                 });
@@ -737,8 +736,6 @@
           });
         });
         this.originalList = _.cloneDeep(tempActions);
-        // 还差回显无限制
-        console.log(this.originalList, 445455);
       },
 
       /**
@@ -810,6 +807,8 @@
           this.handleAggregateAction(false);
           this.isAllExpanded = false;
         }
+        // 处理批量无限制，默认为新增的操作选中无实例
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
         this.isShowActionEmptyError = false;
         this.isShowAddActionSideslider = false;
       },
@@ -983,7 +982,6 @@
         };
         this.submitLoading = true;
         window.changeDialog = false;
-                
         const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
         try {
           await this.$store.dispatch(`role/${dispatchMethod}`, params);

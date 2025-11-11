@@ -310,8 +310,6 @@
             const data = this.getFilterAggregation(this.aggregationsBackup);
             this.aggregations = _.cloneDeep(data);
           }
-          // 处理批量无限制，默认为新增的操作选中无实例
-          this.handleUnlimitedActionChange(this.isAllUnlimited);
         },
         deep: true
       }
@@ -732,6 +730,7 @@
 
       // 批量无限制
       handleUnlimitedActionChange (payload) {
+        this.setPolicyList(this.originalList);
         const tableData = _.cloneDeep(this.policyList);
         tableData.forEach((item, index) => {
           if (!item.isAggregate) {
@@ -741,8 +740,8 @@
                   if (!payload && (types.condition.length > 0 && types.condition[0] !== 'none')) {
                     return;
                   }
-                  types.condition = payload ? [] : ['none'];
                   if (payload) {
+                    types.condition = [];
                     types.isError = false;
                   }
                 });
@@ -877,6 +876,8 @@
           this.handleAggregateAction(false);
           this.isAllExpanded = false;
         }
+        // 处理批量无限制，默认为新增的操作选中无实例
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
         this.isShowActionEmptyError = false;
       },
 
