@@ -1072,21 +1072,6 @@
         }
       }
     }
-    // beforeRouteLeave (to, from, next) {
-    //     let cancelHandler = Promise.resolve();
-    //     if (window.changeDialog && this.operate !== 'cancel') {
-    //         cancelHandler = leavePageConfirm();
-    //         next(false);
-    //         cancelHandler.then(
-    //             () => {
-    //                 next();
-    //             },
-    //             (_) => _
-    //         );
-    //     } else {
-    //         next();
-    //     }
-    // }
   };
 </script>
 <style lang="postcss">
@@ -1094,67 +1079,6 @@
   .grading-admin-render-perm-cls {
     margin-bottom: 16px;
   }
-  /* .action-empty-error {
-    position: relative;
-    top: -40px;
-    left: 160px;
-    font-size: 12px;
-    color: #ff4d4d;
-  } */
-
-  /* .grade-admin-select-wrapper {
-    .action {
-      position: relative;
-      display: flex;
-      justify-content: flex-start;
-      .action-wrapper {
-        margin-left: 8px;
-        font-size: 14px;
-        color: #3a84ff;
-        cursor: pointer;
-        &:hover {
-          color: #699df4;
-        }
-        i {
-          position: relative;
-          top: -1px;
-          left: 2px;
-        }
-      }
-      .info-icon {
-        margin: 2px 0 0 2px;
-        color: #c4c6cc;
-        &:hover {
-          color: #3a84ff;
-        }
-      }
-    }
-    .sub-title {
-      margin-top: 10px;
-      margin-left: 10px;
-      font-size: 14px;
-      color: #979ba5;
-      .number {
-        font-weight: 600;
-      }
-    }
-    .info-wrapper {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 16px;
-      margin-left: 8px;
-      line-height: 24px;
-      .tips,
-      .text {
-        line-height: 20px;
-        font-size: 12px;
-      }
-    }
-    .resource-instance-wrapper {
-      margin-left: 8px;
-      min-height: 200px;
-    }
-  } */
 }
 .iam-create-rate-manager-reason-dialog {
   .content-wrapper {
@@ -1173,33 +1097,32 @@
 
 <style lang="postcss" scoped>
 @import '@/css/mixins/authorize-boundary.css';
-</style>
 
-<style lang="postcss" scoped>
 /deep/ .grade-admin-select-wrapper {
-    .resource_boundary_title {
-        font-size: 12px;
-    }
-    .perm-resource-add {
-        width: 88px;
-        height: 32px;
-        background: #F0F5FF;
-        color: v#3A84FF;
-        border-radius: 2px;
-        border: none;
-        vertical-align: middle;
-        .icon-plus-circle-shape {
-            color: #3A84FF !important;
-            font-size: 14px;
-        }
-        span {
-             vertical-align: middle;
-        }
-    }
+  .resource_boundary_title {
+    font-size: 12px;
+  }
 
-    .aggregate-action-btn {
-        background-color: #F0F1F5;
+  .perm-resource-add {
+    width: 88px;
+    height: 32px;
+    background: #F0F5FF;
+    color: v#3A84FF;
+    border-radius: 2px;
+    border: none;
+    vertical-align: middle;
+    .icon-plus-circle-shape {
+      color: #3A84FF !important;
+      font-size: 14px;
     }
+    span {
+      vertical-align: middle;
+    }
+  }
+
+  .aggregate-action-btn {
+    background-color: #F0F1F5;
+  }
     
 }
 </style>
