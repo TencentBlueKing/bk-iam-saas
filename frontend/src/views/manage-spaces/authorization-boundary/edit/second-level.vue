@@ -761,7 +761,7 @@
 
       async handleSubmit () {
         const validatorFlag = this.$refs.basicInfoRef.handleValidator();
-        const tableResource = this.$refs.basicInfoRef.handleGetValue();
+        const tableResource = this.$refs.resourceInstanceRef.handleGetValue();
         let data = [];
         let flag = false;
         this.isShowActionEmptyError = this.originalList.length < 1;
