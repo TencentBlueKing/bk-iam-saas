@@ -25,9 +25,9 @@
 */
 
 import il8n from '@/language';
-import DOMPurify from 'dompurify';
 import { messageWarn, messageSuccess } from '@/common/bkmagic';
 import { rootPath } from '@blueking/sub-saas/dist/main.js';
+import { filterXss } from '@blueking/xss-filter';
 
 /**
  * 函数柯里化
@@ -862,5 +862,5 @@ export const navDocCenterPath = (versionLog, path, autoOpen = true) => {
 
 // 处理非直接用指令过滤标签的innerHTML
 export const xssFilter = str => {
-  return DOMPurify.sanitize(str);
+  return filterXss(str);
 };

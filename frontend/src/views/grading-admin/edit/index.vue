@@ -5,84 +5,6 @@
         <basic-info :data="formData" @on-change="handleBasicInfoChange" ref="basicInfoRef" />
       </section>
     </render-horizontal-block>
-    <!-- <render-action
-            style="margin-bottom: 16px;"
-            :title="$t(`m.levelSpace['选择操作和资源实例']`)"
-            :tips="addActionTips"
-            v-if="isSelectSystem"
-            @on-click="handleAddAction" /> -->
-    <!-- <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
-            :label-width="renderLabelWidth('resource')"
-            :required="true"
-        >
-            <div class="grade-admin-select-wrapper">
-                <div class="showTableClick" @click.stop="isShowTableClick">
-                    <div class="action">
-                        <section class="action-wrapper" @click.stop="handleAddAction">
-                            <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
-                        </section>
-                        <Icon
-                            type="info-fill"
-                            class="info-icon"
-                            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
-                    </div>
-                    <div class="sub-title" v-if="policyList.length > 0 && !isShowTable">
-                        {{ $t(`m.common['共']`) }}
-                        <span class="number">{{policyList.length}}</span>
-                        {{ $t(`m.common['个']`) }}
-                        {{ $t(`m.perm['操作权限']`) }}
-                    </div>
-                </div>
-                <div v-show="isShowTable">
-                    <div class="info-wrapper">
-                        <p class="tips">{{ infoText }}</p>
-                        <section style="min-width: 108px;">
-                            <bk-switcher
-                                v-model="isAllExpanded"
-                                :disabled="isAggregateDisabled"
-                                size="small"
-                                theme="primary"
-                                @change="handleAggregateAction" />
-                            <span class="text">{{ expandedText }}</span>
-                        </section>
-                    </div>
-                    <div class="resource-instance-wrapper"
-                        ref="instanceTableContentRef"
-                        v-bkloading="{ isLoading, opacity: 1, extCls: 'loading-resource-instance-cls' }">
-                        <render-instance-table
-                            :is-all-expanded="isAllExpanded"
-                            ref="resourceInstanceRef"
-                            :data="policyList"
-                            :list="policyList"
-                            :backup-list="aggregationsTableData"
-                            @on-delete="handleDelete"
-                            @on-aggregate-delete="handleAggregateDelete"
-                            @on-select="handleResourceSelect" />
-                    </div>
-                </div>
-            </div>
-        </render-horizontal-block> -->
-    <!-- <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p> -->
-    <!-- <section v-if="isShowMemberAdd" ref="memberRef">
-            <render-action
-                :title="$t(`m.levelSpace['选择可授权人员边界']`)"
-                :tips="addMemberTips"
-                style="margin-bottom: 16px;"
-                @on-click="handleAddMember" />
-        </section> -->
-    <!-- <section ref="memberRef">
-            <render-member
-                :users="users"
-                :departments="departments"
-                :is-all="isAll"
-                :label-width="renderLabelWidth('member')"
-                @on-add="handleAddMember"
-                @on-delete="handleMemberDelete"
-                @on-delete-all="handleDeleteAll" />
-        </section>
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p> -->
     <render-horizontal-block
       :label="$t(`m.nav['授权边界']`)"
       :label-width="renderLabelWidth('resource')"
@@ -117,7 +39,7 @@
                   { 'is-active': isAllExpanded === item.value },
                   { 'is-disabled': isAggregateDisabled }
                 ]"
-                @click.stop="handleAggregateAction(item.value)"
+                @click.stop="handleAggregateActionChange(item.value)"
               >
                 <span>{{ $t(`m.grading['${item.name}']`)}}</span>
               </div>
@@ -508,8 +430,8 @@
             curSelectActions.push(`${item.system_id}&${item.id}`);
           }
         });
-        let aggregations = []
-        ;(payload || []).forEach(item => {
+        let aggregations = [];
+        (payload || []).forEach(item => {
           const { actions, aggregate_resource_types, $id } = item;
           const curActions = actions.filter(_ => curSelectActions.includes(`${_.system_id}&${_.id}`));
           if (curActions.length > 0) {
@@ -679,6 +601,62 @@
           }
         });
       },
+      
+      // 批量无限制
+      handleUnlimitedActionChange (payload) {
+        this.setPolicyList(this.originalList);
+        const tableData = _.cloneDeep(this.policyList);
+        tableData.forEach((item, index) => {
+          if (!item.isAggregate) {
+            if (item.resource_groups && item.resource_groups.length) {
+              item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                  if (!payload && (types.condition.length > 0 && types.condition[0] !== 'none')) {
+                    return;
+                  }
+                  if (payload) {
+                    types.condition = [];
+                    types.isError = false;
+                  }
+                });
+              });
+            } else {
+              item.name = item.name.split('，')[0];
+            }
+          }
+          if (item.instances && item.isAggregate) {
+            item = Object.assign(item, {
+              isNoLimited: false,
+              isNeedNoLimited: true,
+              isError: !(item.instances.length || (!item.instances.length && item.isNoLimited))
+            });
+            if (!payload || item.instances.length) {
+              item = Object.assign(item, {
+                isNoLimited: false,
+                isError: false
+              });
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item = Object.assign(item, {
+                isNoLimited: true,
+                isError: false,
+                instances: []
+              });
+            }
+            return this.$set(
+              tableData,
+              index,
+              new GradeAggregationPolicy(item)
+            );
+          }
+        });
+        this.policyList = _.cloneDeep(tableData);
+      },
+
+      handleAggregateActionChange (payload) {
+        this.handleAggregateAction(payload);
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
+      },
 
       // 设置InstancesDisplayData
       setInstancesDisplayData (data) {
@@ -756,9 +734,9 @@
             });
           });
         });
-
         this.originalList = _.cloneDeep(tempActions);
       },
+      
       /**
        * @description: 处理 base-info数据
        * @param {*} field
@@ -828,6 +806,8 @@
           this.handleAggregateAction(false);
           this.isAllExpanded = false;
         }
+        // 处理批量无限制，默认为新增的操作选中无实例
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
         this.isShowActionEmptyError = false;
         this.isShowAddActionSideslider = false;
       },
@@ -1003,8 +983,6 @@
         };
         this.submitLoading = true;
         window.changeDialog = false;
-        console.log('params', params);
-                
         const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
         try {
           await this.$store.dispatch(`role/${dispatchMethod}`, params);

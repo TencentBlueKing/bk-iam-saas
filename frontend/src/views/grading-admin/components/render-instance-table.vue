@@ -62,10 +62,12 @@
                 <bk-button v-for="(item, index) in row.aggregateResourceType"
                   :key="item.id" @click="selectResourceType(row, index)"
                   :class="row.selectedIndex === index ? 'is-selected' : ''"
-                  size="small">{{item.name}}
-                  <span v-if="row.instancesDisplayData[item.id]
-                    && row.instancesDisplayData[item.id].length">
-                    ({{row.instancesDisplayData[item.id].length}})</span>
+                  size="small"
+                >
+                  {{item.name}}
+                  <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length > 0">
+                    ({{row.instancesDisplayData[item.id].length}})
+                  </span>
                 </bk-button>
               </div>
               <render-condition
@@ -176,8 +178,9 @@
       :params="previewResourceParams"
       @on-after-leave="handlerPreviewDialogClose" />
 
-    <render-aggregate-sideslider
-      :show.sync="isShowAggregateSideslider"
+    <render-aggregate-side-slider
+      ref="aggregateRef"
+      :show.sync="isShowAggregateSideSlider"
       :params="aggregateResourceParams"
       :value="aggregateValue"
       @on-selected="handlerSelectAggregateRes" />
@@ -188,7 +191,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import Condition from '@/model/condition';
-  import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
+  import RenderAggregateSideSlider from '@/components/choose-ip/sideslider';
   import { leaveConfirm } from '@/common/leave-confirm';
   import RenderResource from './render-resource';
   import RenderCondition from '../../perm-apply/components/render-condition';
@@ -208,7 +211,7 @@
       RenderResource,
       RenderCondition,
       PreviewResourceDialog,
-      RenderAggregateSideslider
+      RenderAggregateSideSlider
     },
     props: {
       list: {
@@ -255,9 +258,7 @@
         previewResourceParams: {},
         curCopyData: ['none'],
         curCopyKey: '',
-
-        isShowAggregateSideslider: false,
-
+        isShowAggregateSideSlider: false,
         aggregateResourceParams: {},
         aggregateIndex: -1,
         aggregateValue: [],
@@ -514,22 +515,30 @@
       },
 
       showAggregateResourceInstance (data, index) {
+        const aggregateResourceData = data.aggregateResourceType[data.selectedIndex];
         const aggregateResourceParams = {
-          ...data.aggregateResourceType[data.selectedIndex],
-          curAggregateSystemId: data.system_id
+          ...aggregateResourceData,
+          curAggregateSystemId: data.system_id,
+          isNoLimited: data.isNoLimited || false
         };
-        this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
+        if (!data.instancesDisplayData[aggregateResourceData.id]) {
+          data.instancesDisplayData[aggregateResourceData.id] = [];
+        }
+        // 如果有多种聚合类型，根据当前点击索引展示对应选择实例
+        if (data.aggregateResourceType.length > 1) {
+          aggregateResourceParams.isNoLimited
+            = data.instancesDisplayData[aggregateResourceData.id].length < 1 && data.isNoLimited;
+        }
+        this.instanceKey = aggregateResourceData.id;
         this.aggregateIndex = !this.curFilterSystem ? index : this.tableList.findIndex(item => `${item.system_id}-${item.$id}` === this.curFilterSystem);
-        const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
-        this.instanceKey = instanceKey;
-        if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
-        this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
+        this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
+        this.aggregateValue = _.cloneDeep(data.instancesDisplayData[this.instanceKey].map(item => {
           return {
             id: item.id,
             display_name: item.name
           };
         }));
-        this.isShowAggregateSideslider = true;
+        this.isShowAggregateSideSlider = true;
       },
 
       handlerSelectAggregateRes (payload) {
@@ -540,24 +549,47 @@
             name: item.display_name
           };
         });
-        this.tableList[this.aggregateIndex].isError = false;
-        this.selectedIndex = this.tableList[this.aggregateIndex].selectedIndex;
-        const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
-        const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
-        this.tableList[this.aggregateIndex].instancesDisplayData = {
-                    ...instancesDisplayData,
-                    [instanceKey]: instances
+        const curAggregateItem = this.tableList[this.aggregateIndex];
+        curAggregateItem.isError = false;
+        this.selectedIndex = curAggregateItem.selectedIndex;
+        const instanceKey = curAggregateItem.aggregateResourceType[this.selectedIndex].id;
+        const instancesDisplayData = _.cloneDeep(curAggregateItem.instancesDisplayData);
+        curAggregateItem.instancesDisplayData = {
+          ...instancesDisplayData,
+          [instanceKey]: instances
         };
-        this.tableList[this.aggregateIndex].instances = [];
-
-        for (const key in this.tableList[this.aggregateIndex].instancesDisplayData) {
-          // eslint-disable-next-line max-len
-          this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
+        curAggregateItem.instances = [];
+        for (const key in curAggregateItem.instancesDisplayData) {
+          curAggregateItem.instances.push(...curAggregateItem.instancesDisplayData[key]);
         }
+        const conditionData = this.$refs.aggregateRef.handleGetValue();
+        const { isEmpty, data } = conditionData;
+        if (isEmpty) {
+          return;
+        }
+        const isConditionEmpty = data.length === 1 && data[0] === 'none';
+        if (isConditionEmpty) {
+          curAggregateItem.instances = ['none'];
+          curAggregateItem.isLimitExceeded = false;
+          curAggregateItem.isError = true;
+          curAggregateItem.isNoLimited = false;
+        } else {
+          // data和isEmpty都为false代表是无限制
+          const isNoLimited = !isEmpty && !data.length;
+          curAggregateItem.instances = data;
+          curAggregateItem.isError = !(isNoLimited || data.length);
+          if (curAggregateItem.aggregateResourceType.length > 1) {
+            curAggregateItem.isNoLimited = curAggregateItem.instancesDisplayData[instanceKey].length < 1 && isNoLimited;
+          } else {
+            curAggregateItem.isNoLimited = isNoLimited;
+          }
+        }
+        const aggregationPolicy = new GradeAggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } });
         this.$set(
           this.tableList,
           this.aggregateIndex,
-          new GradeAggregationPolicy(this.tableList[this.aggregateIndex])
+          new GradeAggregationPolicy(this.tableList[this.aggregateIndex]),
+          aggregationPolicy
         );
         this.$emit('on-select', this.tableList[this.aggregateIndex]);
       },
@@ -1214,17 +1246,6 @@
         }
         const actionList = [];
 
-        // 重新赋值
-        // 资源授权与操作不一致的bug
-        // if (this.isAllExpanded) {
-        //     this.tableList = this.tableList.filter(e =>
-        //         (e.resource_groups && e.resource_groups.length)
-        //         || e.isAggregate);
-        //     if (this.emptyResourceGroupsList.length) {
-        //         this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
-        //         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
-        //     }
-        // }
         this.tableList.forEach(item => {
           const curSystemData = actionList.find(subItem => subItem.system_id === item.system_id);
           if (!item.isAggregate) {
@@ -1300,8 +1321,12 @@
               actionList.push(params);
             }
           } else {
-            const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
-            if (instances.length < 1) {
+            const { actions, aggregateResourceType, instances, instancesDisplayData, isNoLimited } = item;
+            // 如果存在多个资源类型，只要有一项有值就允许提交
+            const isExistEmpty = aggregateResourceType.length > 1
+              ? aggregateResourceType.every(rs => ['', this.$t(`m.verify['请选择']`)].includes(rs.displayValue))
+              : true;
+            if (!isNoLimited && ((instances.length < 1 || (instances.length === 1 && instances[0] === 'none')) && isExistEmpty)) {
               item.isError = true;
               flag = true;
             }
@@ -1330,91 +1355,12 @@
                   aggregate_resource_types: aggregateResourceTypes
                 });
               } else {
+                // 如果聚合后的操作没有相同实例且空值校验通过，则代表是设置无限制
                 actionList.push(aggregateParams);
               }
             }
           }
         });
-
-        // const isExistBackList = this.tableList.filter(
-        //     item => item.isAggregate && item.instances.length < 1 && item.selectValueDisplay !== ''
-        // )
-        // if (isExistBackList.length > 0) {
-        //     const actions = isExistBackList.map(
-        //         item => item.actions.map(subItem => `${subItem.system_id}&${subItem.id}`)
-        //     ).flat()
-        //     const backupList = this.backupList.filter(
-        //         item => actions.includes(`${item.system_id}&${item.id}`)
-        //     )
-        //     backupList.forEach(item => {
-        //         const curSystemData = actionList.find(subItem => subItem.system_id === item.system_id)
-        //         if (!item.isAggregate) {
-        //             const relatedResourceTypes = []
-        //             if (item.related_resource_types.length > 0) {
-        //                 item.related_resource_types.forEach(resItem => {
-        //                     if (resItem.empty) {
-        //                         resItem.isError = true
-        //                         flag = true
-        //                     }
-        //                     const conditionList = (resItem.condition.length > 0 && !resItem.empty)
-        //                         ? resItem.condition.map(conItem => {
-        //                             const { id, instance, attribute } = conItem
-        //                             const attributeList = (attribute && attribute.length > 0)
-        //                                 ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-        //                                 : []
-
-        //                             const instanceList = (instance && instance.length > 0)
-        //                                 ? instance.map(({ name, type, path }) => {
-        //                                     const tempPath = _.cloneDeep(path)
-        //                                     tempPath.forEach(pathItem => {
-        //                                         pathItem.forEach(pathSubItem => {
-        //                                             delete pathSubItem.disabled
-        //                                         })
-        //                                     })
-        //                                     return {
-        //                                         name,
-        //                                         type,
-        //                                         path: tempPath
-        //                                     }
-        //                                 })
-        //                                 : []
-        //                             return {
-        //                                 id,
-        //                                 instances: instanceList,
-        //                                 attributes: attributeList
-        //                             }
-        //                         })
-        //                         : []
-        //                     relatedResourceTypes.push({
-        //                         type: resItem.type,
-        //                         system_id: resItem.system_id,
-        //                         name: resItem.name,
-        //                         condition: conditionList
-        //                     })
-        //                 })
-        //             }
-        //             const params = {
-        //                 system_id: item.system_id,
-        //                 actions: [
-        //                     {
-        //                         id: item.id,
-        //                         related_resource_types: relatedResourceTypes
-        //                     }
-        //                 ],
-        //                 aggregations: []
-        //             }
-        //             if (curSystemData) {
-        //                 curSystemData.actions.push({
-        //                     id: item.id,
-        //                     related_resource_types: relatedResourceTypes
-        //                 })
-        //             } else {
-        //                 actionList.push(params)
-        //             }
-        //         }
-        //     })
-        // }
-
         return {
           flag,
           actions: actionList

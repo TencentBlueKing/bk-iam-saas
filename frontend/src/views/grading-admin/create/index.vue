@@ -142,7 +142,7 @@
                   { 'is-active': isAllExpanded === item.value },
                   { 'is-disabled': isAggregateDisabled }
                 ]"
-                @click.stop="handleAggregateAction(item.value)"
+                @click.stop="handleAggregateActionChange(item.value)"
               >
                 <span>{{ $t(`m.grading['${item.name}']`)}}</span>
               </div>
@@ -765,6 +765,62 @@
         });
       },
 
+      // 批量无限制
+      handleUnlimitedActionChange (payload) {
+        this.setPolicyList(this.originalList);
+        const tableData = _.cloneDeep(this.policyList);
+        tableData.forEach((item, index) => {
+          if (!item.isAggregate) {
+            if (item.resource_groups && item.resource_groups.length) {
+              item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                  if (!payload && (types.condition.length > 0 && types.condition[0] !== 'none')) {
+                    return;
+                  }
+                  if (payload) {
+                    types.condition = [];
+                    types.isError = false;
+                  }
+                });
+              });
+            } else {
+              item.name = item.name.split('，')[0];
+            }
+          }
+          if (item.instances && item.isAggregate) {
+            item = Object.assign(item, {
+              isNoLimited: false,
+              isNeedNoLimited: true,
+              isError: !(item.instances.length || (!item.instances.length && item.isNoLimited))
+            });
+            if (!payload || item.instances.length) {
+              item = Object.assign(item, {
+                isNoLimited: false,
+                isError: false
+              });
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item = Object.assign(item, {
+                isNoLimited: true,
+                isError: false,
+                instances: []
+              });
+            }
+            return this.$set(
+              tableData,
+              index,
+              new GradeAggregationPolicy(item)
+            );
+          }
+        });
+        this.policyList = _.cloneDeep(tableData);
+      },
+
+      handleAggregateActionChange (payload) {
+        this.handleAggregateAction(payload);
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
+      },
+
       // 设置InstancesDisplayData
       setInstancesDisplayData (data) {
         data.instancesDisplayData = data.instances.reduce((p, v) => {
@@ -845,6 +901,8 @@
           this.handleAggregateAction(false);
           this.isAllExpanded = false;
         }
+        // 处理批量无限制，默认为新增的操作选中无实例
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
         this.isShowActionEmptyError = false;
       },
 
