@@ -8,8 +8,13 @@
           <bk-checkbox
             :ext-cls="'no-limit-checkbox'"
             v-model="notLimitValue"
+            v-bk-tooltips="{
+              content: $t(`m.resource['当前操作授权范围不包含无限制，如需更改授权范围请前往空间信息进行变更']`),
+              disabled: !limitDisabled
+            }"
             :disabled="limitDisabled"
-            @change="handleLimitChange">
+            @change="handleLimitChange"
+          >
             {{ $t(`m.common['无限制']`) }}
           </bk-checkbox>
         </span>

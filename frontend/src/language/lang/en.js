@@ -933,6 +933,7 @@ export const m = {
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',
         '无限制文案': 'If the action does not require restricted instances, select unlimited',
+        '当前操作授权范围不包含无限制，如需更改授权范围请前往空间信息进行变更': 'The current action authorization scope does not include unlimited. If you need to change the authorization scope, please go to the space information to make the change',
         '拓扑实例': 'Topology Instances',
         '属性条件': 'Attributes',
         '添加一组实例': 'Add One More',
