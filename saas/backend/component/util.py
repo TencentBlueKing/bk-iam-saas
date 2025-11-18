@@ -23,7 +23,7 @@ logger = logging.getLogger("component")
 
 # TODO: 后续抽象成通用的公共函数，比如paging_func支持可变参数等，同时改成一个通用装饰器
 def list_all_data_by_paging(
-    paging_func: Callable[[int, int], Tuple[int, List[Dict]]], page_size: int = 1000
+    paging_func: Callable[[int, int], Tuple[int, List[Dict]]], page_size: int = settings.USERMGR_DEFAULT_PAGE_SIZE
 ) -> List[Dict]:
     """获取所有数据通过循环分页"""
     page = 1
