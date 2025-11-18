@@ -162,9 +162,12 @@ export const beforeEach = async (to, from, next) => {
   // 如果进入没有权限
   const isNoPerm = ['', 'staff'].includes(curRole) && navIndex > 0;
   // 跳转的页面是否需要非管理员用户界面
-  const isStaff = !getNavRouterDiff(0).includes(to.name) || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source));
+  let isStaff = !getNavRouterDiff(0).includes(to.name) || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source));
+  // 跳转的页面是否需要非超级管理员用户界面
+  const isAudit = !getNavRouterDiff(2).includes(to.name);
+  const isPlatForm = !getNavRouterDiff(3).includes(to.name);
   // 处理新标签页链接是管理员页面 ，但是上次用户信息是staff
-  const isManagerPage = !isStaff && noFrom && navIndex < 1;
+  let isManagerPage = !isStaff && noFrom && navIndex < 1;
   // 如果进入没有权限或者是拿到的上次用户信息是非管理员身份但是新开标签页是管理员页面， 蓝盾交互不需要判断
   if ((isNoPerm || isManagerPage || to.query.role_name) && isNoIframe) {
     const roleList = await store.dispatch('roleList', {
@@ -173,7 +176,9 @@ export const beforeEach = async (to, from, next) => {
       limit: 100,
       name: to.query.role_name
     });
-    if (roleList && roleList.length > 0) {
+    // 如果不存在roleList代表是个人用户
+    const isManager = roleList && roleList.length > 0;
+    if (isManager) {
       curRoleList = [...roleList];
       // 只有管理员页面才需要提供默认管理员身份
       if (navIndex > 0 && !isStaff) {
@@ -183,6 +188,14 @@ export const beforeEach = async (to, from, next) => {
         store.commit('updateNavId', id);
         await getManagerInfo();
       }
+    } else {
+      isStaff = true;
+      isManagerPage = false;
+      curRoleId = 0;
+      store.commit('updateCurRoleId', 0);
+      store.commit('updateNavId', 0);
+      navDiffMenuIndex(0);
+      next({ path: `${SITE_URL}${defaultRoute[0]}` });
     }
   }
   // 因为管理空间下菜单还需要细分具体管理员身份，所以getRouterDiff用于分配管理空间导航栏下的路由，getNavRouterDiff用于分配其他几个导航栏的路由
@@ -289,8 +302,6 @@ export const beforeEach = async (to, from, next) => {
             if (isManagerPage) {
               const superData = curRoleList.find((v) => ['super_manager'].includes(v.type));
               const managerData = curRoleList.find((v) => !['staff'].includes(v.type));
-              const isAudit = !getNavRouterDiff(2).includes(to.name);
-              const isPlatForm = !getNavRouterDiff(3).includes(to.name);
               // 如果跳转的页面必须是超管身份才能访问
               if (superData && (isAudit || isPlatForm)) {
                 const { id } = superData;
