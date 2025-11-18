@@ -1686,6 +1686,10 @@
                     types.condition = [];
                     types.isError = false;
                   }
+                  // 取消批量无限制后，还原上一次的操作
+                  if (!payload && types.condition.length < 1 && types.conditionBackup.length > 0) {
+                    types.condition = _.cloneDeep(types.conditionBackup);
+                  }
                 });
               });
             } else {
