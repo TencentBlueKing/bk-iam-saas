@@ -40,11 +40,16 @@ export default class GradeAggregationPolicy {
     this.system_name = payload.system_name;
     this.$id = payload.$id || '';
     this.selectedIndex = payload.selectedIndex || 0;
+    this.tag = payload.tag || 'add';
     this.canPaste = false;
     // 是否需要展示无限制
     this.isNeedNoLimited = payload.isNeedNoLimited || false;
     // 是否是无限制操作
     this.isNoLimited = payload.isNoLimited || false;
+    // 是否是批量无限制
+    this.isBatchNoLimited = payload.isBatchNoLimited || false;
+    // 是否是新增操作, 处理新增操作取消批量无限制后回显上一次操作实例
+    this.isAddActions = payload.isAddActions || false;
     this.initAggregateResourceType();
   }
 
@@ -54,7 +59,8 @@ export default class GradeAggregationPolicy {
       const displayData = this.instancesDisplayData[item.id];
       if (displayData) {
         // 如果是批量无限制直接填充无限制
-        const isExistNoLimited = this.isNoLimited && (this.selectedIndex === index || displayData.length === 0);
+        const isExistNoLimited = this.isBatchNoLimited
+          || (this.isNoLimited && (this.selectedIndex === index || displayData.length === 0));
         if (displayData.length > 1) {
           for (const key in this.instancesDisplayData) {
             if (item.id === key) {

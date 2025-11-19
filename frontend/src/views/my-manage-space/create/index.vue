@@ -600,9 +600,11 @@
                 (subItem) => subItem.resource_groups[0].related_resource_types[0].condition
               );
               // 是否都选择了实例
-              const isAllHasInstance = conditions.every(
-                (subItem) => subItem[0] !== 'none' && subItem.length > 0
-              );
+              const isAllHasInstance = conditions.every(subItem => subItem.length > 0 && subItem[0] !== 'none');
+              // 是否所有项都是空实例
+              const isAllEmptyInstance = conditions.every(subItem => subItem.length > 0 && subItem[0] === 'none');
+              // 是否所有项都是无限制
+              const isAllNoLimited = conditions.every(subItem => subItem.length === 0);
               if (isAllHasInstance) {
                 const instances = conditions.map((subItem) =>
                   subItem.map((v) => v.instance)
@@ -641,6 +643,14 @@
                 }
               } else {
                 item.instances = [];
+                if (isAllNoLimited) {
+                  item.isNoLimited = true;
+                  item.isNeedNoLimited = true;
+                }
+                if (isAllEmptyInstance) {
+                  item.isAddActions = true;
+                  item.instances = ['none'];
+                }
               }
               return new GradeAggregationPolicy(item);
             });
@@ -744,6 +754,10 @@
                     types.condition = [];
                     types.isError = false;
                   }
+                  // 取消批量无限制后，还原上一次的操作
+                  if (!payload && types.condition.length < 1 && types.conditionBackup.length > 0) {
+                    types.condition = _.cloneDeep(types.conditionBackup);
+                  }
                 });
               });
             } else {
@@ -768,6 +782,23 @@
                 isError: false,
                 instances: []
               });
+            }
+            // 多项相同资源类型只要满足其中一项资源类型有实例就可提交
+            // 如果只是其中一项选择了资源，因为空数组既代表是空集也代表是无限制，所以无法判断另外资源类型是无限制还是空集
+            const curAggregateTab = item.aggregateResourceType[this.$refs.resourceInstanceRef.selectedIndex];
+            if (curAggregateTab) {
+              const isExistIns = item.instances.length > 0 && item.instances.some(ins => ins.type === curAggregateTab.id && ins !== 'none');
+              if (!isExistIns && item.aggregateResourceType.length > 0) {
+                const isExistNoLimited = item.aggregateResourceType.length > 1
+                  ? Object.values(item.instancesDisplayData).flat(Infinity).length === 0
+                  : item.instancesDisplayData[curAggregateTab.id].length < 1;
+                // empty或者isAddActions为true代表是新增操作需要清空资源
+                const isUnlimited = item.empty || item.isAddActions ? false : isExistNoLimited;
+                item = Object.assign(item, {
+                  isNoLimited: payload || isUnlimited,
+                  isBatchNoLimited: payload
+                });
+              }
             }
             return this.$set(
               tableData,
