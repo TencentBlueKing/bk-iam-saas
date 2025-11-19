@@ -155,6 +155,14 @@ export const beforeEach = async (to, from, next) => {
     window.localStorage.setItem('index', index);
   }
 
+  // 设置roleList里查找不到的管理员身份
+  function setStaffOrSubSet ({ roleId, index }) {
+    [curRoleId, currentRoleId] = [roleId, roleId];
+    store.commit('updateCurRoleId', roleId);
+    store.commit('updateNavId', roleId);
+    navDiffMenuIndex(index);
+  }
+
   let curRoleList = [];
   const noFrom = !from.name;
   // 是否是嵌入系统
@@ -176,7 +184,7 @@ export const beforeEach = async (to, from, next) => {
       limit: 100,
       name: to.query.role_name
     });
-    // 如果不存在roleList代表是个人用户
+    // roleList只能查找根节点的管理空间，比如系管、超管、分管，如果不存在roleList代表是个人用户或者是二级管理空间
     const isManager = roleList && roleList.length > 0;
     if (isManager) {
       curRoleList = [...roleList];
@@ -189,13 +197,24 @@ export const beforeEach = async (to, from, next) => {
         await getManagerInfo();
       }
     } else {
-      isStaff = true;
-      isManagerPage = false;
-      curRoleId = 0;
-      store.commit('updateCurRoleId', 0);
-      store.commit('updateNavId', 0);
-      navDiffMenuIndex(0);
-      next({ path: `${SITE_URL}${defaultRoute[0]}` });
+      // 如果不存在roleList，查找是不是属于二级管理空间
+      const res = await store.dispatch('spaceManage/getSearchManagerList', {
+        page: 1,
+        page_size: 100,
+        name: to.query.role_name
+      });
+      const { code, data = {} } = res || {};
+      if (code === 0 && data.count > 0) {
+        isStaff = false;
+        isManagerPage = true;
+        setStaffOrSubSet({ roleId: data.results[0].id, index: 1 });
+        await getManagerInfo();
+      } else {
+        isStaff = true;
+        isManagerPage = false;
+        setStaffOrSubSet({ roleId: 0, index: 0 });
+        next({ path: `${SITE_URL}${defaultRoute[0]}` });
+      }
     }
   }
   // 因为管理空间下菜单还需要细分具体管理员身份，所以getRouterDiff用于分配管理空间导航栏下的路由，getNavRouterDiff用于分配其他几个导航栏的路由
