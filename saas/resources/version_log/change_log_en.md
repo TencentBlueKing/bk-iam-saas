@@ -1,3 +1,18 @@
+<!-- 2025-11-21 -->
+# V1.10.48 Version Update Log
+
+### Features
+* Permission initialization for business-based space management now supports the bksam system
+* OpenAPI supports querying user groups and cleaning group members under system management spaces via API
+* My Management Space, Management Space, and Space Information modules now support batch unlimited operations
+* My Management Space, Management Space, and Space Information now support batch unlimited aggregation, batch copy and paste
+* Custom permission policy applications for multiple resource types now support approval by business-based space management administrators
+
+### Fixes
+* Fixed privilege escalation issue on pages after switching high-privilege users to low-privilege users
+
+---
+
 <!-- 2025-10-14 -->
 # V1.10.47 Version Update Log
 
