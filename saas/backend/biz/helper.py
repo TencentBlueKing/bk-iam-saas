@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Any, Dict, List, Tuple
 
+from django.conf import settings
 from django.db import transaction
 
 from backend.apps.application.models import Application
@@ -312,7 +313,13 @@ def get_user_expired_groups_policies(
     ]
 
     policies = policy_biz.list_expired(subject, expired_at_before)
-    policies = [p for p in policies if p.expired_at > expired_at_after]
+    # 同时过滤掉不接收续期通知的系统的权限策略
+    policies = [
+        p
+        for p in policies
+        if p.expired_at > expired_at_after
+        and p.system.id not in set(settings.CUSTOM_POLICY_RENEWAL_NOTIFICATION_EXEMPTION_SYSTEMS)
+    ]
 
     if not groups and not policies:
         return groups, policies
