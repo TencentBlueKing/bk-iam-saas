@@ -122,7 +122,7 @@
 
     .reason-wrapper {
         margin: 16px 0 20px 0 !important;
-        .perm-apply-reason-error {
+        /deep/ .perm-apply-reason-error {
             .bk-textarea-wrapper {
                 border-color: #ff5656;
             }
@@ -308,7 +308,7 @@
         }
         .reason-wrapper {
             margin: 16px 0 20px 0 !important;
-            .perm-apply-reason-error {
+            /deep/ .perm-apply-reason-error {
                 .bk-textarea-wrapper {
                     border-color: #ff5656;
                 }
