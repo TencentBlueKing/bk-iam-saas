@@ -38,24 +38,14 @@ from backend.service.group_saas_attribute import GroupAttributeService
 
 class SearchMemberSLZ(serializers.Serializer):
     keyword = serializers.CharField(label="搜索关键词", allow_null=False, required=False, default="")
-    ordering = serializers.CharField(
+    ordering = serializers.ChoiceField(
         label="排序方式",
         help_text="支持：expired_at（过期时间升序）, -expired_at（过期时间降序）",
+        choices=[("expired_at", "过期时间升序"), ("-expired_at", "过期时间降序")],
         allow_null=False,
         required=False,
         default="",
     )
-
-    def validate_ordering(self, value):
-        """校验ordering参数，只允许expired_at和-expired_at"""
-        if not value:
-            return value
-
-        valid_values = ["expired_at", "-expired_at"]
-        if value not in valid_values:
-            raise serializers.ValidationError(f"排序参数 '{value}' 无效，只支持：{', '.join(valid_values)}")
-
-        return value
 
 
 class GroupIdSLZ(serializers.Serializer):
