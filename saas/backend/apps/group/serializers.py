@@ -40,8 +40,7 @@ class SearchMemberSLZ(serializers.Serializer):
     keyword = serializers.CharField(label="搜索关键词", allow_null=False, required=False, default="")
     ordering = serializers.ChoiceField(
         label="排序方式",
-        help_text="支持：expired_at（过期时间升序）, -expired_at（过期时间降序）",
-        choices=[("expired_at", "过期时间升序"), ("-expired_at", "过期时间降序")],
+        choices=["expired_at", "-expired_at"],
         allow_null=False,
         required=False,
         default="",
