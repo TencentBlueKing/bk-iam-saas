@@ -327,12 +327,17 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         if not checker.check_group(group):
             raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
 
+        # 获取排序参数
+        slz = SearchMemberSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        ordering = slz.validated_data.get("ordering", "")
+
         if request.query_params.get("keyword"):
             slz = SearchMemberSLZ(data=request.query_params)
             slz.is_valid(raise_exception=True)
             keyword = slz.validated_data["keyword"].lower()
 
-            group_members = self.group_biz.search_member_by_keyword(group.id, keyword)
+            group_members = self.group_biz.search_member_by_keyword(group.id, keyword, ordering)
 
             return Response({"results": [one.dict() for one in group_members]})
 
@@ -340,7 +345,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         limit = pagination.get_limit(request)
         offset = pagination.get_offset(request)
 
-        count, group_members = self.group_biz.list_paging_group_member(group.id, limit, offset)
+        count, group_members = self.group_biz.list_paging_group_member(group.id, limit, offset, ordering)
         return Response({"count": count, "results": [one.dict() for one in group_members]})
 
     @swagger_auto_schema(
