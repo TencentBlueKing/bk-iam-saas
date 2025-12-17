@@ -41,7 +41,7 @@ class SearchMemberSLZ(serializers.Serializer):
     ordering = serializers.ChoiceField(
         label="排序方式",
         choices=["expired_at", "-expired_at"],
-        allow_null=False,
+        allow_blank=True,
         required=False,
         default="",
     )
