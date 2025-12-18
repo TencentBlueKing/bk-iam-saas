@@ -30,7 +30,7 @@ session.mount("https://", adapter)
 session.mount("http://", adapter)
 
 # 用户管理，分页的默认数量为1000（实际最大可支持2000）
-USERMGR_DEFAULT_PAGE_SIZE = 1000
+USERMGR_DEFAULT_PAGE_SIZE = settings.USERMGR_DEFAULT_PAGE_SIZE
 
 # 超时时间
 USERMGR_DEFAULT_TIMEOUT = 60
