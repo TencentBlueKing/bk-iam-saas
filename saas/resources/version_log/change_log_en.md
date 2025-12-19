@@ -1,3 +1,26 @@
+<!-- 2025-12-19 -->
+# V1.10.50 Version Update Log
+
+### Features
+* Supported sorting user group members by expiration date.
+
+### Fixes
+* Fixed an issue where the custom duration failed to display when applying for custom or temporary permissions.
+* Fixed the unique constraint error in the authorization whitelist table.
+
+---
+
+<!-- 2025-12-04 -->
+# V1.10.49 Version Update Log
+
+### Features
+* Supported exempting system whitelists in the notification configuration for custom permission renewals.
+
+### Fixes
+* Removed the mandatory field indicator from the user group description.
+
+---
+
 <!-- 2025-11-21 -->
 # V1.10.48 Version Update Log
 
