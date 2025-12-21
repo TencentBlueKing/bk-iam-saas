@@ -24,7 +24,7 @@
         <div class="no-limited-wrapper-right">
           <bk-checkbox
             ext-cls="no-limit-checkbox"
-            v-model="notLimitValue"
+            v-model="notLimitedValue"
             :disabled="disabled"
             @change="handleLimitChange">
             {{ $t(`m.common['无限制']`) }}
@@ -183,8 +183,17 @@
         listLoading: true,
         isScrollBottom: false,
         isHide: false,
-        notLimitValue: false,
-        noLimitRoutes: ['createUserGroup', 'cloneUserGroup', 'addGroupPerm'], // 需要展示无限制的页面
+        notLimitedValue: false,
+        // 需要展示无限制的页面
+        noLimitedRoutes: [
+          'applyCustomPerm',
+          'gradingAdminEdit',
+          'gradingAdminCreate',
+          'gradingAdminClone',
+          'myManageSpaceCreate',
+          'myManageSpaceClone',
+          'authorBoundaryEditFirstLevel'
+        ],
         emptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -212,10 +221,13 @@
       isHasDefaultData () {
         return this.defaultList.length > 0;
       },
+      // 用户组限制只有系管和超管支持批量无限制
+      isEnableNoLimitedByManager () {
+        return ['createUserGroup', 'cloneUserGroup', 'addGroupPerm'].includes(this.$route.name)
+         && ['super_manager', 'system_manager'].includes(this.user.role.type);
+      },
       isShowUnlimited () {
-        const result = ['applyCustomPerm'].includes(this.$route.name)
-        || (['super_manager', 'system_manager'].includes(this.user.role.type)
-         && this.noLimitRoutes.includes(this.$route.name));
+        const result = this.isEnableNoLimitedByManager || this.noLimitedRoutes.includes(this.$route.name);
         return result;
       }
     },
@@ -261,7 +273,7 @@
         handler (value) {
           if (Object.keys(value).length) {
             const { isNoLimited } = value;
-            this.notLimitValue = isNoLimited;
+            this.notLimitedValue = isNoLimited;
             this.isHide = isNoLimited;
             if (isNoLimited) {
               this.handleClear();
@@ -271,7 +283,7 @@
         },
         immediate: true
       },
-      notLimitValue (value) {
+      notLimitedValue (value) {
         if (value) {
           this.conditionData.forEach(item => {
             item.isInstanceEmpty = false;
@@ -306,9 +318,7 @@
           });
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.resetData();
           this.messageAdvancedError(e);
         } finally {
@@ -337,7 +347,6 @@
             }
           }
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         }
       },
@@ -369,7 +378,6 @@
               });
               this.selectList.push(...res.data.results || []);
             } catch (e) {
-              console.error(e);
               this.messageAdvancedError(e);
             } finally {
               this.isScrollBottom = false;
@@ -418,7 +426,6 @@
             item.checked = this.curSelectedIds.includes(item.id);
           });
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.listLoading = false;
@@ -490,7 +497,7 @@
 
       handleGetValue () {
         const tempConditionData = _.cloneDeep(this.curSelectedList);
-        if (this.notLimitValue) {
+        if (this.notLimitedValue) {
           return {
             isEmpty: false,
             data: []
@@ -534,7 +541,7 @@
 
       handleSave () {
         window.changeAlert = false;
-        if (this.notLimitValue) {
+        if (this.notLimitedValue) {
           this.curSelectedList = [];
           this.selectList.forEach(item => {
             item.checked = false;
@@ -572,14 +579,14 @@
     }
     .no-limited-wrapper,
     .no-aggregate-wrapper {
-      width: 100%;
+      width: 920px;
       height: 42px;
       line-height: 39px;
       font-size: 12px;
       color: #63656e;
       background-color: #fafbfd;
       border: 1px solid #dcdee5;
-      padding: 0 21px 0 13px;
+      padding: 0 20px 0 12px;
       &-left {
         max-width: calc(100% - 100px);
       }

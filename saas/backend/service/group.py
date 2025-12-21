@@ -349,9 +349,11 @@ class GroupService:
             [one.dict() for one in members],
         )
 
-    def list_paging_group_member(self, group_id: int, limit: int, offset: int) -> Tuple[int, List[SubjectGroup]]:
+    def list_paging_group_member(
+        self, group_id: int, limit: int, offset: int, ordering: str = ""
+    ) -> Tuple[int, List[SubjectGroup]]:
         """分页查询用户组成员"""
-        data = iam.list_subject_member(SubjectType.GROUP.value, str(group_id), limit, offset)
+        data = iam.list_subject_member(SubjectType.GROUP.value, str(group_id), limit, offset, ordering)
         return data["count"], parse_obj_as(List[SubjectGroup], data["results"])
 
     def list_paging_template_group_member(

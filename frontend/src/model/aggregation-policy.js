@@ -65,7 +65,7 @@ export default class AggregationPolicy {
 
   get empty () {
     if (this.isNeedNoLimited) {
-      if (this.instances.length === 1 && this.instances[0] === 'none') {
+      if ((this.instances.length === 1 && this.instances[0] === 'none')) {
         return true;
       }
       return false;
@@ -120,7 +120,7 @@ export default class AggregationPolicy {
     if (this.actions.length < 1) {
       return '';
     }
-    return this.actions.map((item) => item.name).join('，');
+    return this.actions.map(item => item.name).filter(name => name).join('，');
   }
 
   get key () {

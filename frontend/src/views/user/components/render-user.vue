@@ -600,8 +600,8 @@
         this.active = tabName;
         // 如果active是同一项目
         const searchParams = {
-        ...this.$route.query,
-        tab: tabName
+          ...this.$route.query,
+          tab: tabName
         };
         if (!['GroupPerm'].includes(tabName)) {
           this.handleSelectGroup([]);

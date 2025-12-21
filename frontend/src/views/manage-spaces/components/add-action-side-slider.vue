@@ -536,7 +536,6 @@
               this.systemData[item.id].system_name = item.name;
               this.$set(this.systemData[item.id], 'count', 0);
               this.$set(this.systemData[item.id], 'list', []);
-              console.log('this.defaultData', this.defaultData);
               const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
               if (isExistSys) {
                 isExistSys.list.forEach(act => {

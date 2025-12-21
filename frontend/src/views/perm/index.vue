@@ -241,8 +241,8 @@
           limit: 10
         },
         emptyData: {
-          type: '',
-          text: '',
+          type: 'empty',
+          text: '暂无数据',
           tip: '',
           tipType: ''
         },
