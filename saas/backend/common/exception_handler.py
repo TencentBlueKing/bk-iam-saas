@@ -168,6 +168,17 @@ def exception_handler(exc, context):
     ):
         status_code = status.HTTP_200_OK
 
+    if request.path in settings.PCG_API_LIST:
+        if request.path == "/api/resign/getAssets":
+            return Response(
+                {"code": error.code_num, "message": f"{error.message} ({error.code})", "assets": []},
+                status=status_code,
+            )
+        return Response(
+            {"code": error.code_num, "message": f"{error.message} ({error.code})", "err_list": []},
+            status=status_code,
+        )
+
     return Response(
         {"result": False, "code": error.code_num, "message": f"{error.message} ({error.code})", "data": error.data},
         status=status_code,

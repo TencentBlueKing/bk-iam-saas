@@ -34,6 +34,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    url(r"^api/resign/", include("backend.api.resign.urls")),
     # backend apps url
     url(
         r"^api/v1/",

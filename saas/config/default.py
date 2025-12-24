@@ -525,3 +525,12 @@ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED
 
 # 问题反馈地址
 BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
+
+# PCG
+PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
+PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")
+
+PCG_DEPARTMENT_IDS = env.list("PCG_DEPARTMENT_IDS", default=[])
+PCG_DEPARTMENT_IDS_SET = set(PCG_DEPARTMENT_IDS)
+
+PCG_API_LIST = ["/api/resign/getAssets", "/api/resign/handover", "/api/resign/recycle"]
