@@ -761,13 +761,14 @@
 
       async handleSubmit () {
         const validatorFlag = this.$refs.basicInfoRef.handleValidator();
+        const tableResource = this.$refs.resourceInstanceRef.handleGetValue();
         let data = [];
         let flag = false;
         this.isShowActionEmptyError = this.originalList.length < 1;
         this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
         if (!this.isShowActionEmptyError) {
-          data = this.$refs.resourceInstanceRef.handleGetValue().actions;
-          flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
+          data = tableResource.actions;
+          flag = tableResource.flag;
         }
 
         if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError

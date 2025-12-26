@@ -497,7 +497,7 @@
         },
         tableProps: [],
         userOrOrgCount: 0,
-        sortType: ''
+        ordering: ''
       };
     },
     computed: {
@@ -740,11 +740,10 @@
           const params = {
             id: this.id,
             limit,
-            offset: limit * (current - 1),
-            is_sorted: !!this.sortType
+            offset: limit * (current - 1)
           };
-          if (this.sortType) {
-            params.sort_type = this.sortType;
+          if (this.ordering) {
+            params.ordering = this.ordering;
           }
           if (this.keyword) {
             params.keyword = this.keyword;
@@ -955,9 +954,9 @@
       // 有效期排序
       handleSortChange ({ column, order }) {
         if (order) {
-          this.sortType = ['descending'].includes(order) ? 'desc' : 'asc';
+          this.ordering = ['descending'].includes(order) ? '-expired_at' : 'expired_at';
         } else {
-          this.sortType = order;
+          this.ordering = order;
         }
         this.fetchUserOrOrgList();
       },
