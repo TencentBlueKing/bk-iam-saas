@@ -68,31 +68,51 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
 
     try:
         # 1. SaaS 从用户管理同步组织架构
-        # 用户
-        user_sync_service = DBUserSyncService()
         # 部门
+        logger.info("===========【开始初始化【部门】数据】===========")
         department_sync_service = DBDepartmentSyncService()
+        logger.info("===========【初始化部门数据完成】===========")
+        with transaction.atomic():
+            logger.info("===========部门数据开始入库===========")
+            department_sync_service.sync_to_db()
+            logger.info("===========部门数据完成入库===========")
+
+        # 用户
+        logger.info("===========开始初始化【用户】数据===========")
+        user_sync_service = DBUserSyncService()
+        logger.info("===========【初始化用户数据完成】===========")
+        with transaction.atomic():
+            logger.info("===========用户数据开始入库===========")
+            user_sync_service.sync_to_db()
+            logger.info("===========用户数据完成入库===========")
+
         # 部门与用户关系
+        logger.info("===========【开始初始化【部门和用户关系】数据】===========")
         department_member_sync_service = DBDepartmentMemberSyncService()
+        logger.info("===========【初始化部门和用户数据完成】===========")
+        with transaction.atomic():
+            logger.info("===========部门与用户关系开始入库===========")
+            department_member_sync_service.sync_to_db()
+            logger.info("===========部门与用户关系完成入库===========")
+
         # 用户与Leader关系
+        logger.info("===========【开始初始化【用户和上级关系】数据】===========")
         user_leader_service = DBUserLeaderSyncService()
+        logger.info("===========【初始化用户和上级关系数据完成】===========")
+        with transaction.atomic():
+            logger.info("===========用户与Leader关系开始入库===========")
+            user_leader_service.sync_to_db()
+            logger.info("===========用户与Leader关系完成入库===========")
 
         # 开始执行同步变更
         with transaction.atomic():
-            services = [
-                user_sync_service,
-                department_sync_service,
-                department_member_sync_service,
-                user_leader_service,
-            ]
-            # 执行DB变更
-            for service in services:
-                service.sync_to_db()
-
             # 计算和同步部门的冗余数据
+            logger.info("===========【开始计算和同步部门的冗余数据】===========")
             DBDepartmentSyncExactInfo().sync_to_db()
+            logger.info("===========【计算和同步部门的冗余数据完成】===========")
 
         # 2. SaaS 将DB存储的组织架构同步给IAM后台
+        logger.info("===========【开始 SaaS 将DB存储的组织架构同步给IAM后台】===========")
         iam_backend_user_sync_service = IAMBackendUserSyncService()
         iam_backend_department_sync_service = IAMBackendDepartmentSyncService()
         iam_backend_user_department_sync_service = IAMBackendUserDepartmentSyncService()
@@ -104,6 +124,7 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
 
         for iam_service in iam_services:
             iam_service.sync_to_iam_backend()
+        logger.info("===========【 SaaS 将DB存储的组织架构同步给IAM后台：完成】===========")
 
         sync_status, exception_msg, traceback_msg = SyncTaskStatus.Succeed.value, "", ""
     except Exception:  # pylint: disable=broad-except
@@ -112,7 +133,8 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
         logger.exception(exception_msg)
         traceback_msg = traceback.format_exc()
 
-    SyncRecord.objects.filter(id=record.id).update(status=sync_status, updated_time=timezone.now())
+    SyncRecord.objects.filter(id=record.id).update(status=sync_status,
+                                                   updated_time=timezone.now())
     if sync_status == SyncTaskStatus.Failed.value:
         SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
 

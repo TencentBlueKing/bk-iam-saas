@@ -47,7 +47,10 @@ class DBDepartmentMemberSyncService(BaseSyncDBService):
         if not deleted_ids:
             return
 
-        DepartmentMember.objects.filter(id__in=deleted_ids).delete()
+        batch_size = 1000
+        for i in range(0, len(deleted_ids), batch_size):
+            batch = deleted_ids[i:i + batch_size]
+            DepartmentMember.objects.filter(id__in=batch).delete()
 
     def sync_to_db(self):
         """SaaS DB 相关变更"""
