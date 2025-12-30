@@ -33,6 +33,12 @@ urlpatterns = [
         views.AdminGroupPolicyViewSet.as_view({"post": "create"}),
         name="open.admin.group_policy",
     ),
+    # 批量创建模板
+    path(
+        "batch/templates/",
+        views.AdminBatchTemplateViewSet.as_view({"post": "create"}),
+        name="open.admin.template",
+    ),
     # 模板
     path(
         "templates/",

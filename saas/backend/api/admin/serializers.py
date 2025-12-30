@@ -118,3 +118,7 @@ class AdminTemplateCreateSLZ(TemplateCreateSLZ):
 
 class AdminTemplateIdSLZ(TemplateIdSLZ):
     pass
+
+
+class AdminBatchTemplateCreateSLZ(TemplateCreateSLZ):
+    role_ids = serializers.ListField(label="角色ID列表", child=serializers.IntegerField(label="角色ID"), allow_empty=False)
