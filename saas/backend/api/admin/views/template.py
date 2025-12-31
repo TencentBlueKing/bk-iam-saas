@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -17,7 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import (
-    AdminBatchTemplateCreateSLZ,
+    AdminGradeManagerTemplateBatchCreateSLZ,
     AdminTemplateCreateSLZ,
     AdminTemplateIdSLZ,
     AdminTemplateListSchemaSLZ,
@@ -108,7 +107,7 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         return Response({"id": template.id}, status=status.HTTP_201_CREATED)
 
 
-class AdminBatchTemplateViewSet(GenericViewSet):
+class AdminGradeManagerBatchTemplateViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
 
@@ -121,30 +120,31 @@ class AdminBatchTemplateViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="批量创建模板",
-        request_body=AdminBatchTemplateCreateSLZ(label="模板"),
-        responses={status.HTTP_201_CREATED: AdminTemplateIdSLZ(label="模板ID")},
-        tags=["admin.batch.template"],
+        request_body=AdminGradeManagerTemplateBatchCreateSLZ(label="模板"),
+        responses={status.HTTP_201_CREATED: AdminTemplateIdSLZ(label="模板ID", many=True)},
+        tags=["admin.grade_manager.batch_template"],
     )
     def create(self, request, *args, **kwargs):
         request.data["system_id"] = request.data.pop("system_id")
-        serializer = AdminBatchTemplateCreateSLZ(data=request.data)
+        serializer = AdminGradeManagerTemplateBatchCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_id = request.user.username
         data = serializer.validated_data
         role_ids = data["role_ids"]
-        for role_id in role_ids:
-            role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=role_id)
+        roles = Role.objects.filter(type=RoleType.GRADE_MANAGER.value, id__in=role_ids)
+        template_ids = []
+        for role in roles:
+            role_id = role.id
 
             # 检查模板的授权是否满足管理员的授权范围
             scope_checker = RoleAuthorizationScopeChecker(role)
             scope_checker.check_actions(data["system_id"], data["action_ids"])
 
-            with gen_template_upsert_lock(role_ids[0], data["name"]):
+            with gen_template_upsert_lock(role_id, data["name"]):
                 # 检查权限模板是否在角色内唯一
                 self.template_check_biz.check_role_template_name_exists(role_id, data["name"])
 
                 template = self.template_biz.create(role_id, TemplateCreateBean.parse_obj(data), user_id)
+                template_ids.append(template.id)
 
-            audit_context_setter(template=template)
-
-        return Response({})
+        return Response([{"id": template_id} for template_id in template_ids], status=status.HTTP_201_CREATED)
