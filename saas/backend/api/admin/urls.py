@@ -35,7 +35,7 @@ urlpatterns = [
     ),
     # 批量创建模板
     path(
-        "grade_managers/templates/",
+        "grade_managers/-/templates/",
         views.AdminGradeManagerBatchTemplateViewSet.as_view({"post": "create"}),
         name="open.admin.grade_managers.batch_template",
     ),

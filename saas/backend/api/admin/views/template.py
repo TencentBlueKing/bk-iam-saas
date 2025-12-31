@@ -27,7 +27,7 @@ from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.template.audit import TemplateCreateAuditProvider
 from backend.apps.template.views import TemplateQueryMixin
-from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery
 from backend.biz.template import TemplateBiz, TemplateCheckBiz, TemplateCreateBean
 from backend.common.lock import gen_template_upsert_lock
@@ -112,7 +112,7 @@ class AdminGradeManagerBatchTemplateViewSet(GenericViewSet):
     permission_classes = [AdminAPIPermission]
 
     admin_api_permission = {
-        "create": AdminAPIEnum.TEMPLATE_CREATE.value,
+        "create": AdminAPIEnum.TEMPLATE_CREATE_IN_DIFFERENT_GRADEMANAGER.value,
     }
 
     template_biz = TemplateBiz()
@@ -126,25 +126,31 @@ class AdminGradeManagerBatchTemplateViewSet(GenericViewSet):
     )
     def create(self, request, *args, **kwargs):
         request.data["system_id"] = request.data.pop("system_id")
+
         serializer = AdminGradeManagerTemplateBatchCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         user_id = request.user.username
         data = serializer.validated_data
+
         role_ids = data["role_ids"]
         roles = Role.objects.filter(type=RoleType.GRADE_MANAGER.value, id__in=role_ids)
+
         template_ids = []
+
         for role in roles:
-            role_id = role.id
 
             # 检查模板的授权是否满足管理员的授权范围
             scope_checker = RoleAuthorizationScopeChecker(role)
             scope_checker.check_actions(data["system_id"], data["action_ids"])
 
-            with gen_template_upsert_lock(role_id, data["name"]):
+            with gen_template_upsert_lock(role.id, data["name"]):
                 # 检查权限模板是否在角色内唯一
-                self.template_check_biz.check_role_template_name_exists(role_id, data["name"])
+                self.template_check_biz.check_role_template_name_exists(role.id, data["name"])
 
-                template = self.template_biz.create(role_id, TemplateCreateBean.parse_obj(data), user_id)
+                template = self.template_biz.create(role.id, TemplateCreateBean.parse_obj(data), user_id)
                 template_ids.append(template.id)
+
+                add_audit(TemplateCreateAuditProvider, request, template=template)
 
         return Response([{"id": template_id} for template_id in template_ids], status=status.HTTP_201_CREATED)
