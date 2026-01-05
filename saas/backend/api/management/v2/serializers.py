@@ -21,14 +21,7 @@ from backend.apps.group.serializers import GroupAuthorizationSLZ
 from backend.apps.role.models import Role, RoleUser
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.apps.subject_template.models import SubjectTemplate
-from backend.apps.template.serializers import (
-    TemplateCreateSLZ,
-    TemplateGroupAuthorationPreUpdateSLZ,
-    TemplateIdSLZ,
-    TemplateListSchemaSLZ,
-    TemplateListSLZ,
-    TemplatePreUpdateSLZ,
-)
+from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.common.serializers import GroupMemberSLZ
@@ -491,6 +484,8 @@ class GroupBatchUpdateMemberSLZ(serializers.Serializer):
         return members
 
 
-class ManagementTemplateUpdateSLZ(TemplateGroupAuthorationPreUpdateSLZ, TemplatePreUpdateSLZ):
-    name = serializers.CharField(label="模板名称", max_length=128)
-    description = serializers.CharField(label="描述", max_length=255, allow_blank=True)
+class ManagementTemplateUpdateSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="模板ID")
+    name = serializers.CharField(label="模板名称", max_length=128, allow_blank=True, required=False)
+    description = serializers.CharField(label="描述", max_length=255, required=False, default="")
+    action_ids = serializers.ListField(label="操作ID", child=serializers.CharField(label="操作ID"), allow_empty=True)

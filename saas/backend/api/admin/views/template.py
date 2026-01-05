@@ -112,7 +112,7 @@ class AdminGradeManagerBatchTemplateViewSet(GenericViewSet):
     permission_classes = [AdminAPIPermission]
 
     admin_api_permission = {
-        "create": AdminAPIEnum.TEMPLATE_CREATE_IN_DIFFERENT_GRADEMANAGER.value,
+        "create": AdminAPIEnum.TEMPLATE_CREATE_IN_DIFFERENT.value,
     }
 
     template_biz = TemplateBiz()

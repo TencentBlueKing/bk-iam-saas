@@ -7,13 +7,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
-from pydantic.tools import parse_obj_as
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -32,17 +29,13 @@ from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.template.audit import TemplateCreateAuditProvider
 from backend.apps.template.filters import TemplateFilter
-from backend.apps.template.models import PermTemplate, PermTemplatePreUpdateLock
+from backend.apps.template.models import PermTemplate
 from backend.apps.template.views import TemplateQueryMixin
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.action import ActionCheckBiz, ActionResourceGroupForCheck
+from backend.biz.action import ActionCheckBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery
-from backend.biz.template import TemplateBiz, TemplateCheckBiz, TemplateCreateBean, TemplateGroupPreCommitBean
-from backend.common import error_codes
+from backend.biz.template import TemplateBiz, TemplateCheckBiz, TemplateCreateBean
 from backend.common.lock import gen_template_upsert_lock
-from backend.long_task.constants import TaskType
-from backend.long_task.models import TaskDetail
-from backend.long_task.tasks import TaskFactory
 from backend.service.constants import RoleType
 
 
@@ -138,38 +131,28 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         tags=["management.role.template"],
     )
     def update(self, request, *args, **kwargs):
-        template = self.get_object()
 
+        role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
         slz = ManagementTemplateUpdateSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
+        action_ids = slz.validated_data["action_ids"]
+        name = slz.validated_data.get("name")
+
+        # 检查模板的授权是否满足管理员的授权范围
+        scope_checker = RoleAuthorizationScopeChecker(role)
+        scope_checker.check_actions(kwargs["system_id"], action_ids)
+
         with transaction.atomic():
-            template.name = slz.validated_data["name"]
+            template = PermTemplate.objects.filter(id=slz.validated_data["id"]).first()
+
+            if not name:
+                # 检查权限模板是否在角色内唯一
+                self.template_check_biz.check_role_template_name_exists(role.id, slz.validated_data["name"])
+                template.name = slz.validated_data["name"]
+
             template.description = slz.validated_data["description"]
+            template.action_ids = action_ids
             template.save()
 
-        lock = self.template_biz.create_template_update_lock(template, slz.validated_data["action_ids"])
-
-        for group in slz.validated_data["groups"]:
-            self.action_check_biz.check_action_resource_group(
-                template.system_id, parse_obj_as(List[ActionResourceGroupForCheck], group["actions"])
-            )
-
-        # 检查数据
-        pre_commits = parse_obj_as(List[TemplateGroupPreCommitBean], slz.validated_data["groups"])
-
-        add_action_ids = list(set(lock.action_ids) - set(template.action_ids))
-        if not add_action_ids:
-            return Response([])
-        self.template_check_biz.check_group_update_pre_commit(template.id, pre_commits, add_action_ids)
-
-        # 新增获取更新
-        self.template_biz.create_or_update_group_pre_commit(template.id, pre_commits)
-        if not PermTemplatePreUpdateLock.objects.update_waiting_to_running(template.id):
-            # 任务已经开始运行了
-            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在, 禁止提交!"))
-
-        # 使用长时任务实现用户组授权更新
-        task = TaskDetail.create(TaskType.TEMPLATE_UPDATE.value, [template.id])
-        TaskFactory().run(task.id)
         audit_context_setter(template=template)
         return Response({})
