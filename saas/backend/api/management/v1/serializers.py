@@ -163,6 +163,7 @@ class ManagementGradeManagerMembersDeleteSLZ(serializers.Serializer):
 class ManagementGroupBasicInfoSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=2, max_length=512)
     description = serializers.CharField(label="描述", allow_blank=True)
+    apply_disable = serializers.BooleanField(label="是否禁用申请", required=False)
 
     class Meta:
         ref_name = "V1ManagementGroupBasicInfoSLZ"
