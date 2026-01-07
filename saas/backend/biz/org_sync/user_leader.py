@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from backend.apps.organization.models import UserLeader
 from backend.component import usermgr
+from backend.util.basic import chunked
 
 from .base import BaseSyncDBService
 
@@ -44,9 +45,7 @@ class DBUserLeaderSyncService(BaseSyncDBService):
         if not deleted_ids:
             return
 
-        batch_size = 1000
-        for i in range(0, len(deleted_ids), batch_size):
-            batch = deleted_ids[i:i + batch_size]
+        for batch in chunked(deleted_ids, 1000):
             UserLeader.objects.filter(id__in=batch).delete()
 
     def sync_to_db(self):

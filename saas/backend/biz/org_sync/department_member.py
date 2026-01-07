@@ -12,7 +12,7 @@ from backend.apps.organization.models import DepartmentMember
 from backend.component import usermgr
 
 from .base import BaseSyncDBService
-
+from backend.util.basic import chunked
 
 class DBDepartmentMemberSyncService(BaseSyncDBService):
     """部门成员同步服务"""
@@ -47,9 +47,7 @@ class DBDepartmentMemberSyncService(BaseSyncDBService):
         if not deleted_ids:
             return
 
-        batch_size = 1000
-        for i in range(0, len(deleted_ids), batch_size):
-            batch = deleted_ids[i:i + batch_size]
+        for batch in chunked(deleted_ids, 1000):
             DepartmentMember.objects.filter(id__in=batch).delete()
 
     def sync_to_db(self):

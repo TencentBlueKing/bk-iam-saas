@@ -19,6 +19,7 @@ from backend.service.constants import SubjectType
 
 from .base import BaseSyncDBService
 from .util import convert_list_for_mptt
+from backend.util.basic import chunked
 
 logger = logging.getLogger("organization")
 
@@ -29,12 +30,7 @@ class DBDepartmentSyncService(BaseSyncDBService):
     def __init__(self):
         """初始数据"""
         self.new_departments = usermgr.list_department()
-        self.old_department_objs = Department.objects.all()
-        self.old_departments = list(self.old_department_objs)
-        self.deparment_map = {
-            dept.id: dept for dept in self.old_department_objs
-        }
-        self.batch_size = 1000
+        self.old_departments = list(Department.objects.all())
 
     def created_handler(self):
         """关于新建部门，DB的处理"""
@@ -66,22 +62,18 @@ class DBDepartmentSyncService(BaseSyncDBService):
             parent_department = None
             if dept.parent_id:
                 try:
-                    parent_department = self.deparment_map[dept.parent_id]
+                    parent_department = Department.objects.get(id=dept.parent_id)
                 except Exception:  # pylint: disable=broad-except
-                    # 记录错误信息，但是跳过不存在的部门
+                    # 记录错误信息，然后将异常往上抛，因为Django QuerySet get异常并不会输出具体ID是什么，不利于问题排查
                     logger.exception(f"parent department(id:{dept.parent_id}) not found")
-                    continue
+                    raise
             # 对于mptt，必须是parent实例对象，无法使用parent_id代替
             dept.parent = parent_department
             dept.save()
 
         # 移除待删除的部门
-        batch_size = 1000
-        for i in range(0, len(created_departments), batch_size):
-            batch = [str(dept.id) for dept in created_departments[i:i + batch_size]]
-            SubjectToDelete.objects.filter(
-                subject_type=SubjectType.DEPARTMENT.value, subject_id__in=batch
-            ).delete()
+        for ids in chunked([str(i.id) for i in created_departments], 1000):
+            SubjectToDelete.objects.filter(subject_type=SubjectType.DEPARTMENT.value, subject_id__in=ids).delete()
 
     def deleted_handler(self):
         """关于删除部门，DB的处理"""

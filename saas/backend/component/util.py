@@ -38,7 +38,7 @@ def list_all_data_by_paging(
     # 最大循环次数，避免死循环
     maximum = int(total / page_size + 1)
     # 返回数据数量等于page_size且已获取的总数小于total
-    while result_count and count < total and page <= maximum:
+    while result_count == page_size and count < total and page <= maximum:
         page += 1
         _, results = paging_func(page, page_size)
         result_count = len(results)
