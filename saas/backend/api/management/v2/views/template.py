@@ -8,7 +8,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -27,7 +26,7 @@ from backend.api.management.v2.serializers import (
 )
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
-from backend.apps.template.audit import TemplateCreateAuditProvider
+from backend.apps.template.audit import TemplateCreateAuditProvider, TemplateUpdateAuditProvider
 from backend.apps.template.filters import TemplateFilter
 from backend.apps.template.models import PermTemplate
 from backend.apps.template.views import TemplateQueryMixin
@@ -130,6 +129,7 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         request_body=ManagementTemplateUpdateSLZ(label="模板"),
         tags=["management.role.template"],
     )
+    @view_audit_decorator(TemplateUpdateAuditProvider)
     def update(self, request, *args, **kwargs):
 
         role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
@@ -142,17 +142,16 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         scope_checker = RoleAuthorizationScopeChecker(role)
         scope_checker.check_actions(kwargs["system_id"], action_ids)
 
-        with transaction.atomic():
-            template = PermTemplate.objects.filter(id=slz.validated_data["id"]).first()
+        template = PermTemplate.objects.filter(id=slz.validated_data["id"]).first()
 
-            if not name:
-                # 检查权限模板是否在角色内唯一
-                self.template_check_biz.check_role_template_name_exists(role.id, slz.validated_data["name"])
-                template.name = slz.validated_data["name"]
+        if not name:
+            # 检查权限模板是否在角色内唯一
+            self.template_check_biz.check_role_template_name_exists(role.id, slz.validated_data["name"])
+            template.name = slz.validated_data["name"]
 
-            template.description = slz.validated_data["description"]
-            template.action_ids = action_ids
-            template.save()
+        template.description = slz.validated_data["description"]
+        template.action_ids = action_ids
+        template.save()
 
         audit_context_setter(template=template)
         return Response({})

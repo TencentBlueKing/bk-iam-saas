@@ -60,7 +60,7 @@ class AdminAPIEnum(BaseAPIEnum):
     SUBJECT_PERMISSION_EXISTS = auto()
 
     # 不同管理空间下创建相同权限模板
-    TEMPLATE_CREATE_IN_DIFFERENT = auto()
+    BATCH_GRADE_MANAGER_TEMPLATE_CREATE = auto()
 
     _choices_labels = skip(
         (
@@ -83,7 +83,7 @@ class AdminAPIEnum(BaseAPIEnum):
             (SUBJECT_FREEZE_UNFREEZE, "冻结/解冻Subject"),
             (SUBJECT_PERMISSION_CLEANUP, "权限清理"),
             (SUBJECT_PERMISSION_EXISTS, "权限是否存在"),
-            (TEMPLATE_CREATE_IN_DIFFERENT, "不同管理空间下创建相同权限模板"),
+            (BATCH_GRADE_MANAGER_TEMPLATE_CREATE, "不同管理空间下创建相同权限模板"),
         )
     )
 

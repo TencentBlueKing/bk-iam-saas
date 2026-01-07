@@ -107,12 +107,12 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         return Response({"id": template.id}, status=status.HTTP_201_CREATED)
 
 
-class AdminGradeManagerBatchTemplateViewSet(GenericViewSet):
+class AdminBatchGradeManagerTemplateViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
 
     admin_api_permission = {
-        "create": AdminAPIEnum.TEMPLATE_CREATE_IN_DIFFERENT.value,
+        "create": AdminAPIEnum.BATCH_GRADE_MANAGER_TEMPLATE_CREATE.value,
     }
 
     template_biz = TemplateBiz()
@@ -136,7 +136,7 @@ class AdminGradeManagerBatchTemplateViewSet(GenericViewSet):
         role_ids = data["role_ids"]
         roles = Role.objects.filter(type=RoleType.GRADE_MANAGER.value, id__in=role_ids)
 
-        template_ids = []
+        templates = []
 
         for role in roles:
 
@@ -149,8 +149,10 @@ class AdminGradeManagerBatchTemplateViewSet(GenericViewSet):
                 self.template_check_biz.check_role_template_name_exists(role.id, data["name"])
 
                 template = self.template_biz.create(role.id, TemplateCreateBean.parse_obj(data), user_id)
-                template_ids.append(template.id)
+                templates.append(template)
 
-                add_audit(TemplateCreateAuditProvider, request, template=template)
+        # 批量添加审计记录
+        for template in templates:
+            add_audit(TemplateCreateAuditProvider, request, template=template)
 
-        return Response([{"id": template_id} for template_id in template_ids], status=status.HTTP_201_CREATED)
+        return Response([{"id": template.id} for template in templates], status=status.HTTP_201_CREATED)
