@@ -9,13 +9,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import List
 from datetime import timedelta
+from typing import List
 
 from celery import shared_task
 from django.core.paginator import Paginator
-from pydantic import parse_obj_as
 from django.utils import timezone
+from pydantic import parse_obj_as
 
 from backend.biz.application import ApplicationBiz, ApplicationRenewPolicyInfoBean
 from backend.service.constants import ApplicationStatus
