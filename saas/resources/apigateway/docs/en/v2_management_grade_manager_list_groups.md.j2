@@ -1,0 +1,67 @@
+### Query User Groups under Grade Manager
+
+#### Parameters
+| Field | Type | Location | Required | Description |
+|---|---|---|---|---|
+| system_id | string | path | Yes | System unique identifier |
+| id| int | path | Yes | Grade manager ID |
+| inherit | bool | query | No | Whether to inherit user groups from subset managers, default is true |
+| action_id | string | query | No | Action ID filter, only supports custom actions |
+| resource_type_system_id | string | query | No | RBAC resource instance filter |
+| resource_type_id | string | query | No | RBAC resource instance filter |
+| resource_id | string | query | No | RBAC resource instance filter |
+| bk_iam_path | string | query | No | RBAC resource instance filter, optional parent path information |
+| name | string | query | No | User group name filter |
+| id | int | query | No | User group ID filter |
+| description | string | query | No | User group description filter |
+| page_size | int | query | Yes | Page size, maximum 500 |
+| page | int | query | Yes | Page number |
+
+`Note`:
+
+- When only action_id is passed without resource parameters, it filters user groups with custom permission actions, template action permissions are not supported
+- For resource instance filtering, resource_type_system_id, resource_type_id, resource_id must be passed together, only supports RBAC resource instance permission filtering, ABAC permissions are not supported
+- When both action_id and resource parameters are passed, it filters user groups with RBAC operation permissions
+- When filtering resource instances, bk_iam_path can be optionally passed to specify the parent resource path, e.g.: `/system_id,resource_type_id,resource_id/`
+
+#### Request
+```
+GET /api/v2/open/management/systems/demo/grade_managers/1/groups/?page_size=100&page=1
+```
+
+#### Response
+
+> Status: 200 OK
+
+| Field | Type | Description |
+|---|---|---|
+| id| int | User Group ID |
+| name| string | User Group Name |
+| description| string | User Group Description |
+| readonly| bool| The user group is read-only. If true, the user group cannot be deleted on the IAM (Identity and Access Management) product |
+| user_count| int| Number of user members |
+| department_count| int| Number of department members |
+| apply_disable| bool | User group apply to disable |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "count": 1,
+    "results": [
+      {
+        "id": 1,
+        "name": "User Group",
+        "description": "User Group",
+        "readonly": false,
+        "user_count": 1,
+        "department_count": 1,
+        "apply_disable":true
+      }
+    ]
+  }
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

@@ -363,6 +363,7 @@ class ManagementGroupSLZ(serializers.ModelSerializer):
             "creator",
             "created_time",
             "readonly",
+            "apply_disable",
         )
 
     def __init__(self, *args, **kwargs):
