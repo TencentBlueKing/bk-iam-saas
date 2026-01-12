@@ -20,6 +20,17 @@
       </div>
     </div>
     <div class="user fr">
+      <div v-if="IAM_V4_URL" :class="`switch-vision-flag ${$i18n.locale}`">
+        <div class="switch-vision-text">
+          <Icon type="qiehuan" />
+          <span class="text">{{ $t(`m.common['切换新版']`) }}</span>
+        </div>
+        <div class="dropdown-panel">
+          <div class="item" @click="handleOpenNewIAM">
+            {{ $t(`m.common['切换至新版权限中心']`) }}
+          </div>
+        </div>
+      </div>
       <div class="help-flag">
         <Icon type="help-fill" />
         <div :class="[
@@ -117,7 +128,7 @@
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
   import { formatI18nKey, jsonpRequest, getManagerMenuPerm, navDocCenterPath } from '@/common/util';
-  import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
+  import { NEED_CONFIRM_DIALOG_ROUTER, IAMV4_ROUTES_ENUM } from '@/common/constants';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
   import SystemLog from '../system-log';
   import Cookies from 'js-cookie';
@@ -180,6 +191,7 @@
     },
     data () {
       return {
+        IAM_V4_URL: window.BK_IAM_V4_URL,
         isShowUserDropdown: false,
         showSystemLog: false,
         isShowGradingWrapper: false,
@@ -424,6 +436,23 @@
 
       handleOpenSource () {
         window.open(`https://github.com/TencentBlueKing/bk-iam`);
+      },
+
+      handleOpenNewIAM () {
+        // 标记是否匹配到路由
+        let isMatched = false;
+        for (const [oldRoutes, newRoutes] of IAMV4_ROUTES_ENUM.entries()) {
+          // 检查跳转的v4路由是否存在于当前v3路由中
+          if (oldRoutes.includes(this.$route.name)) {
+            window.open(`${this.IAM_V4_URL}/${newRoutes}`, '_self');
+            isMatched = true;
+            break;
+          }
+        }
+        // 路由没匹配到执行默认跳转到v4权限申请页面
+        if (!isMatched) {
+          window.open(`${this.IAM_V4_URL}/permission/apply`, '_self');
+        }
       },
 
       back () {

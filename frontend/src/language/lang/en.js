@@ -307,7 +307,9 @@ export const m = {
         '复制成功': 'Copy successful',
         '暂无可复制数据': 'There is currently no replicable data',
         '了解更多': 'Learn more',
-        '前往申请': 'Go apply'
+        '前往申请': 'Go apply',
+        '切换新版': 'Switch to the new version',
+        '切换至新版权限中心': "Switch to the new version of the BKIAM"
     },
     // 校验
     verify: {
