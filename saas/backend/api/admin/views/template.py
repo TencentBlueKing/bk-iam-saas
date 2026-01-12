@@ -124,6 +124,7 @@ class AdminBatchGradeManagerTemplateViewSet(GenericViewSet):
         responses={status.HTTP_201_CREATED: AdminTemplateIdSLZ(label="模板ID", many=True)},
         tags=["admin.grade_manager.batch_template"],
     )
+    @view_audit_decorator(TemplateCreateAuditProvider)
     def create(self, request, *args, **kwargs):
         request.data["system_id"] = request.data.pop("system_id")
 
