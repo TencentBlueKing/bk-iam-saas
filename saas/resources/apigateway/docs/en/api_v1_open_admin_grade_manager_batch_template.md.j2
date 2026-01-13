@@ -1,0 +1,43 @@
+#### Administrator Batch Create Permission Template
+
+#### Parameters
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| name | string | Permission template name |
+| system_id | string | System ID |
+| action_ids | list | Action ID list |
+| description | string | Permission template description |
+| role_ids | list | Grade management space ID list |
+
+#### Request
+```json
+{
+  "name": "Permission Template Name",
+  "system_id": "bk_sops",
+  "action_ids": [
+    "project_create"
+  ],
+  "description": "Permission Template Description",
+  "role_ids": [
+    410
+  ]
+}
+```
+
+#### Response
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | int | Permission template ID |
+
+```json
+{
+  "data": [
+    {
+      "id": 49
+    }
+  ],
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}
+```
