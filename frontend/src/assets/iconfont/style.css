@@ -461,6 +461,9 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-auth-scope:before {
 	content: "\e21a";
 }
+.iamcenter-filter:before {
+	content: "\e24e";
+}
 .iamcenter-mingandengji:before {
 	content: "\e221";
 }
@@ -550,4 +553,10 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .iamcenter-guanlikongjian-3:before {
 	content: "\e24c";
+}
+.iamcenter-quanbu-xuanzhong:before {
+	content: "\e24f";
+}
+.iamcenter-qiehuan:before {
+	content: "\e250";
 }

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -27,7 +27,7 @@ class VueTemplateView(TemplateView):
                 "SITE_URL": settings.SITE_URL,
                 # 去除末尾的 /, 前端约定
                 "STATIC_URL": settings.STATIC_URL.rstrip("/"),
-                # 去除开头的 . document.domain需要
+                # 去除开头的 . document.domain 需要
                 "SESSION_COOKIE_DOMAIN": settings.SESSION_COOKIE_DOMAIN.lstrip("."),
                 # csrftoken name
                 "CSRF_COOKIE_NAME": settings.CSRF_COOKIE_NAME,
@@ -40,7 +40,7 @@ class VueTemplateView(TemplateView):
                 "BK_SHARED_RES_URL": settings.BK_SHARED_RES_URL.rstrip("/"),
                 # App Code
                 "BK_APP_CODE": settings.APP_CODE,
-                # 不允许作为用户组成员的部门 ID,用英文逗号分割
+                # 不允许作为用户组成员的部门 ID，用英文逗号分割
                 "DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER": settings.DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER,
                 # 问题反馈地址
                 "BK_CE_URL": settings.BK_CE_URL,
@@ -48,6 +48,8 @@ class VueTemplateView(TemplateView):
                 "GROUP_AUTH_TEMPLATE_ONCE_LIMIT": settings.SUBJECT_AUTHORIZATION_LIMIT.get(
                     "group_auth_template_once_limit"
                 ),
+                # IAM V4 地址
+                "BK_IAM_V4_URL": settings.BK_IAM_V4_URL.rstrip("/"),
             }
 
             # 添加前端功能启用开关

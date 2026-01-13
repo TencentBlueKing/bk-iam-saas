@@ -10,10 +10,12 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from typing import List
+from datetime import timedelta
 
 from celery import shared_task
 from django.core.paginator import Paginator
 from pydantic import parse_obj_as
+from django.utils import timezone
 
 from backend.biz.application import ApplicationBiz, ApplicationRenewPolicyInfoBean
 from backend.service.constants import ApplicationStatus
@@ -29,9 +31,10 @@ def check_or_update_application_status():
     检查并更新申请单据状态
     由于对接第三方审批系统后，回调权限中心可能出现极小概率回调失败，所以需要周期任务检查补偿
     """
-    # 查询未结束的申请单据
-    # TODO: 是否需要过滤超过多久没处理才查询，但也有可能导致某些单据无法快速回调
-    qs = Application.objects.filter(status=ApplicationStatus.PENDING.value)
+
+    # 查询最近30天的未结束申请单据
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    qs = Application.objects.filter(status=ApplicationStatus.PENDING.value, created_time__gte=thirty_days_ago)
 
     # 分页处理，避免调用ITSM查询超时问题
     paginator = Paginator(qs, 20)

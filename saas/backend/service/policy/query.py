@@ -83,7 +83,7 @@ class PolicyQueryService:
         qs = PolicyModel.objects.filter(system_id=system_id, subject_type=subject.type, subject_id=subject.id)
 
         if action_ids is not None and len(action_ids) > 0:
-            qs.filter(action_id__in=action_ids)
+            qs = qs.filter(action_id__in=action_ids)
 
         return self._trans_from_queryset(system_id, subject, qs)
 

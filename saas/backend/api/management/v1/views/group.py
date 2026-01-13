@@ -150,6 +150,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
                 "created_at": int(g.created_time.timestamp()),
                 "updated_at": int(g.updated_time.timestamp()),
                 "updater": g.updater,
+                "apply_disable": g.apply_disable,
             }
             for g in groups
         ]
