@@ -24,7 +24,7 @@ from django.utils import timezone
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.constants import NotificationTypeEnum
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleUser
+from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
@@ -32,7 +32,7 @@ from backend.biz.constants import StaffStatus
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleWithPermGroupBiz, get_user_expired_groups_policies
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz, get_global_notification_config
+from backend.biz.role import RoleBiz, RoleCheckBiz, get_global_notification_config
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.common.time import db_time, get_expired_at, need_run_expired_remind
@@ -187,16 +187,23 @@ def user_group_policy_expire_remind():
     # 2. 查询用户组成员过期
     group_biz = GroupBiz()
     group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_before)
+    role_check_biz = RoleCheckBiz()
     for gs in group_subjects:
         if gs.subject.type != SubjectType.USER.value:
             continue
 
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=gs.group.id
+        ).first()
+        if not relation:
+            continue
+
         # note:若用户组在二级管理空间，禁用的是其一级管理空间，这时候用户组续期通知不应该发送
-        if not check_parent_manager_is_enabled(gs.group.id):
+        if not role_check_biz.check_grade_manager_is_enabled(relation.role_id):
             continue
 
         # 用户组对应空间禁用后，用户组续期通知不应该发送
-        if not check_grade_manager_is_enabled(gs.group.id):
+        if not role_check_biz.check_grade_manager_is_enabled(relation.role_id):
             continue
 
         # 判断过期时间是否在区间内
@@ -426,44 +433,3 @@ def clean_user_permission_clean_record():
     UserPermissionCleanupRecord.objects.filter(
         created_time__lt=day_before, status=UserPermissionCleanupRecordStatusEnum.SUCCEED.value
     ).delete()
-
-
-def check_grade_manager_is_enabled(group_id: str):
-    """
-    检查分级管理管理空间是否启用
-    """
-    relation = RoleRelatedObject.objects.filter(group_id=group_id).first()
-    if not relation:
-        return False
-    return Role.objects.filter(id=relation.role_id, enabled=True).exists()
-
-
-def check_parent_manager_is_enabled(group_id: str) -> bool:
-    """
-    检查上级管理空间是否启用 - 卫语句版本
-    """
-    # 1. 检查用户组与角色的关联关系
-    relation = RoleRelatedObject.objects.filter(
-        object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
-    ).first()
-    if not relation:
-        return False
-
-    # 2. 检查角色是否存在且启用
-    role = Role.objects.filter(id=relation.role_id, enabled=True).first()
-    if not role:
-        return False
-
-    # 3. 非二级管理空间直接返回True
-    if role.type != RoleType.SUBSET_MANAGER.value:
-        return True
-
-    # 4. 检查父级管理空间关系
-    role_relation = RoleRelation.objects.filter(role_id=role.id).first()
-    if not role_relation:
-        return False
-
-    # 5. 检查父级管理空间状态
-    parent_role = Role.objects.filter(id=role_relation.parent_id, type=RoleType.GRADE_MANAGER.value).first()
-
-    return parent_role.enabled if parent_role else False

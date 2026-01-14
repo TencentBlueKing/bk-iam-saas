@@ -553,6 +553,30 @@ class RoleCheckBiz:
         if exists_count >= limit:
             raise serializers.ValidationError(_("系统({}): 可创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
 
+    def check_grade_manager_is_enabled(self, role_id: int) -> bool:
+        """
+        检查分级管理管理空间是否启用
+        """
+        return Role.objects.filter(id=role_id, enabled=True).exists()
+
+    def check_parent_manager_is_enabled(self, role_id: int) -> bool:
+        """
+        检查上级管理空间是否启用
+        """
+
+        role = Role.objects.filter(id=role_id).first()
+        if role.type == RoleType.SUBSET_MANAGER.value:
+            role_relation = RoleRelation.objects.filter(role_id=role.id).first()
+            if not role_relation:
+                return False
+
+            parent_role = Role.objects.filter(
+                id=role_relation.parent_id, type=RoleType.GRADE_MANAGER.value, enabled=True
+            ).first()
+            if not parent_role:
+                return False
+        return True
+
 
 class RoleListQuery:
     system_svc = SystemService()

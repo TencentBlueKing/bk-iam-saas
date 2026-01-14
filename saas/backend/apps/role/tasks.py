@@ -46,7 +46,6 @@ from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleMember
 from backend.util.url import url_join
 from backend.util.uuid import gen_uuid
 
-from ..user.tasks import check_parent_manager_is_enabled
 from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffixEnum, NotificationTypeEnum
 
 logger = logging.getLogger("celery")
@@ -209,10 +208,6 @@ def role_group_expire_remind():
         if gs.subject.type == SubjectType.USER.value:
             continue
 
-        # note:若用户组在二级管理空间，禁用的是其一级管理空间，这时候用户组续期通知不应该发送
-        if not check_parent_manager_is_enabled(gs.group.id):
-            continue
-
         # 判断过期时间是否在区间内
         if gs.expired_at < expired_at_after:
             continue
@@ -247,8 +242,13 @@ def _add_group_role_set(group_id_set: Set[int], role_id_set: Set[int], group_id:
     if not relation:
         return
 
-    role = Role.objects.filter(id=relation.role_id, enabled=False).first()
-    if role:
+    role_check_biz = RoleCheckBiz()
+
+    # note:若用户组在二级管理空间，禁用的是其一级管理空间，这时候用户组续期通知不应该发送
+    if not role_check_biz.check_parent_manager_is_enabled(relation.role_id):
+        return
+
+    if not role_check_biz.check_grade_manager_is_enabled(relation.role_id):
         return
 
     role_id_set.add(relation.role_id)
