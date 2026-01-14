@@ -16,6 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import (
+    AdminGradeManagerTemplateBatchCreateSLZ,
     AdminTemplateCreateSLZ,
     AdminTemplateIdSLZ,
     AdminTemplateListSchemaSLZ,
@@ -26,7 +27,7 @@ from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.apps.template.audit import TemplateCreateAuditProvider
 from backend.apps.template.views import TemplateQueryMixin
-from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery
 from backend.biz.template import TemplateBiz, TemplateCheckBiz, TemplateCreateBean
 from backend.common.lock import gen_template_upsert_lock
@@ -104,3 +105,55 @@ class AdminTemplateViewSet(TemplateQueryMixin, GenericViewSet):
         audit_context_setter(template=template)
 
         return Response({"id": template.id}, status=status.HTTP_201_CREATED)
+
+
+class AdminBatchGradeManagerTemplateViewSet(GenericViewSet):
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {
+        "create": AdminAPIEnum.BATCH_GRADE_MANAGER_TEMPLATE_CREATE.value,
+    }
+
+    template_biz = TemplateBiz()
+    template_check_biz = TemplateCheckBiz()
+
+    @swagger_auto_schema(
+        operation_description="批量创建模板",
+        request_body=AdminGradeManagerTemplateBatchCreateSLZ(label="模板"),
+        responses={status.HTTP_201_CREATED: AdminTemplateIdSLZ(label="模板ID", many=True)},
+        tags=["admin.grade_manager.batch_template"],
+    )
+    @view_audit_decorator(TemplateCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        request.data["system_id"] = request.data.pop("system_id")
+
+        serializer = AdminGradeManagerTemplateBatchCreateSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_id = request.user.username
+        data = serializer.validated_data
+
+        role_ids = data["role_ids"]
+        roles = Role.objects.filter(type=RoleType.GRADE_MANAGER.value, id__in=role_ids)
+
+        templates = []
+
+        for role in roles:
+
+            # 检查模板的授权是否满足管理员的授权范围
+            scope_checker = RoleAuthorizationScopeChecker(role)
+            scope_checker.check_actions(data["system_id"], data["action_ids"])
+
+            with gen_template_upsert_lock(role.id, data["name"]):
+                # 检查权限模板是否在角色内唯一
+                self.template_check_biz.check_role_template_name_exists(role.id, data["name"])
+
+                template = self.template_biz.create(role.id, TemplateCreateBean.parse_obj(data), user_id)
+                templates.append(template)
+
+        # 批量添加审计记录
+        for template in templates:
+            add_audit(TemplateCreateAuditProvider, request, template=template)
+
+        return Response([{"id": template.id} for template in templates], status=status.HTTP_201_CREATED)
