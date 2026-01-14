@@ -483,3 +483,10 @@ class GroupBatchUpdateMemberSLZ(serializers.Serializer):
                 members.append(m)
 
         return members
+
+
+class ManagementTemplateUpdateSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="模板ID")
+    name = serializers.CharField(label="模板名称", max_length=128, allow_blank=True, required=False)
+    description = serializers.CharField(label="描述", max_length=255, required=False, default="")
+    action_ids = serializers.ListField(label="操作ID", child=serializers.CharField(label="操作ID"), allow_empty=True)

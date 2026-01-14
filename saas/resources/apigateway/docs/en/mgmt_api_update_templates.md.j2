@@ -1,0 +1,41 @@
+#### Grade Manager Update Permission Template
+
+#### Parameters
+
+Path Parameters
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | integer | Grade management space ID |
+| system_id | string | System ID |
+
+Request Parameters
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | integer | Permission template ID |
+| name | string | Permission template name |
+| system_id | string | System ID |
+| action_ids | list | Action ID list |
+| description | string | Permission template description |
+
+#### Request
+```json
+{
+  "id": 1,  // Permission template ID
+  "name": "Permission Template Name",
+  "description": "Permission Template Description",
+  "action_ids": [
+    "project_create", "project_view"
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "data": [],
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}
+```

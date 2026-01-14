@@ -7,6 +7,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -21,14 +22,16 @@ from backend.api.management.v2.serializers import (
     ManagementTemplateIdSLZ,
     ManagementTemplateListSchemaSLZ,
     ManagementTemplateListSLZ,
+    ManagementTemplateUpdateSLZ,
 )
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
-from backend.apps.template.audit import TemplateCreateAuditProvider
+from backend.apps.template.audit import TemplateCreateAuditProvider, TemplateUpdateAuditProvider
 from backend.apps.template.filters import TemplateFilter
 from backend.apps.template.models import PermTemplate
 from backend.apps.template.views import TemplateQueryMixin
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.biz.action import ActionCheckBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery
 from backend.biz.template import TemplateBiz, TemplateCheckBiz, TemplateCreateBean
 from backend.common.lock import gen_template_upsert_lock
@@ -50,11 +53,16 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
             VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
             ManagementAPIEnum.V2_GRADE_MANAGER_TEMPLATE_CREATE.value,
         ),
+        "update": (
+            VerifyApiParamLocationEnum.TEMPLATE_IN_PATH.value,
+            ManagementAPIEnum.V2_GRADE_MANAGER_TEMPLATE_UPDATE.value,
+        ),
     }
     queryset = PermTemplate.objects.all()
     lookup_field = "id"
     template_biz = TemplateBiz()
     template_check_biz = TemplateCheckBiz()
+    action_check_biz = ActionCheckBiz()
     filterset_class = TemplateFilter
 
     @swagger_auto_schema(
@@ -114,4 +122,36 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
         audit_context_setter(template=template)
 
+        return Response({})
+
+    @swagger_auto_schema(
+        operation_description="分级管理员更新模板",
+        request_body=ManagementTemplateUpdateSLZ(label="模板"),
+        tags=["management.role.template"],
+    )
+    @view_audit_decorator(TemplateUpdateAuditProvider)
+    def update(self, request, *args, **kwargs):
+
+        role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
+        slz = ManagementTemplateUpdateSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+        action_ids = slz.validated_data["action_ids"]
+        name = slz.validated_data.get("name")
+
+        # 检查模板的授权是否满足管理员的授权范围
+        scope_checker = RoleAuthorizationScopeChecker(role)
+        scope_checker.check_actions(kwargs["system_id"], action_ids)
+
+        template = PermTemplate.objects.filter(id=slz.validated_data["id"]).first()
+
+        if not name:
+            # 检查权限模板是否在角色内唯一
+            self.template_check_biz.check_role_template_name_exists(role.id, slz.validated_data["name"])
+            template.name = slz.validated_data["name"]
+
+        template.description = slz.validated_data["description"]
+        template.action_ids = action_ids
+        template.save()
+
+        audit_context_setter(template=template)
         return Response({})

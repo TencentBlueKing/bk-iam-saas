@@ -3551,6 +3551,32 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+    put:
+      operationId: mgmt_api_update_templates
+      description: 分级管理员更新权限模板
+      tags:
+        - open
+        - v2
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/templates/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/batch_expired_at/:
     put:
       operationId: v2_management_update_group_members_batch_expired_at
@@ -3707,4 +3733,31 @@ paths:
           userVerifiedRequired: false
           appVerifiedRequired: true
           resourcePermissionRequired: false
+        descriptionEn:
+  /api/v1/open/admin/grade_managers/-/templates/:
+    post:
+      operationId: api_v1_open_admin_grade_manager_batch_template
+      description: 超管批量创建权限模板
+      tags:
+        - open
+        - v1
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/admin/grade_managers/-/templates/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
         descriptionEn:

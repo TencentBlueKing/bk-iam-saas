@@ -1,0 +1,45 @@
+#### 管理员批量创建权限模板
+
+
+#### Parameters
+| 参数 | 类型 | 描述 |
+|------|------|------|
+| name | string | 权限模板名称 |
+| system_id | string | 系统id |
+| action_ids | list | 操作id列表 |
+| description | string | 权限模板描述 |
+| role_ids | list | 分级管理空间id列表 |
+
+#### Request
+```json
+{
+  "name": "权限模板名称",
+  "system_id": "bk_sops",
+  "action_ids": [
+    "project_create"
+  ],
+  "description": "权限模板描述",
+  "role_ids": [
+    410
+  ]
+}
+```
+
+#### Response
+| 参数 | 类型 | 描述 |
+|------|------|------|
+| id | int | 权限模板id |
+
+
+```json
+{
+  "data": [
+    {
+      "id": 49
+    }
+  ],
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}
+```

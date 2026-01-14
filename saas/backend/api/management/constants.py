@@ -91,6 +91,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 权限模版
     V2_GRADE_MANAGER_TEMPLATE_LIST = auto()
     V2_GRADE_MANAGER_TEMPLATE_CREATE = auto()
+    V2_GRADE_MANAGER_TEMPLATE_UPDATE = auto()
 
     _choices_labels = skip(
         (
@@ -161,6 +162,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             # 权限模版
             (V2_GRADE_MANAGER_TEMPLATE_LIST, "[V2]获取分级管理员权限模版列表"),
             (V2_GRADE_MANAGER_TEMPLATE_CREATE, "[V2]创建分级管理员权限模版"),
+            (V2_GRADE_MANAGER_TEMPLATE_UPDATE, "[V2]更新分级管理员权限模版"),
         )
     )
 
@@ -181,6 +183,7 @@ class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
     GROUPS_IN_BODY = auto()
     SYSTEM_IN_PATH = auto()
     GROUP_IDS_IN_QUERY = auto()
+    TEMPLATE_IN_PATH = auto()
 
     _choices_labels = skip(
         (
@@ -192,6 +195,7 @@ class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
             (GROUPS_IN_BODY, "在body data里的groups参数"),
             (SYSTEM_IN_PATH, "在路径里的system参数"),
             (GROUP_IDS_IN_QUERY, "在get请求query里的groups_ids参数"),
+            (TEMPLATE_IN_PATH, "在路径里的template id参数"),
         )
     )
 
