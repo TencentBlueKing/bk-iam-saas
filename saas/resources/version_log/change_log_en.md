@@ -1,3 +1,24 @@
+<!-- 2026-01-15 -->
+# V1.10.51 Version Update Log
+
+### Features
+* Supported creating permission templates via API
+* Added entry point to switch from IAM V3 to IAM V4
+* User group list now supports filtering by the "not available for application" field
+* Added time filter condition for periodic task that compensates for unupdated application form status
+* Supported configuring page_size for user management API requests via environment variable
+
+### Feature Enhancements
+* Improved audit logging by truncating policy instances to prevent oversized logs
+
+### Fixes
+* Fixed an issue where user group renewal email reminders were not taking effect
+* Fixed an issue where user/department data was not batch inserted during synchronization
+* Fixed incorrect registration address for grade manager API
+* Fixed API performance issues
+
+---
+
 <!-- 2025-12-19 -->
 # V1.10.50 Version Update Log
 
