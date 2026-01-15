@@ -242,13 +242,10 @@ def _add_group_role_set(group_id_set: Set[int], role_id_set: Set[int], group_id:
     if not relation:
         return
 
+    # 检查角色及其父级（如果是二级管理空间）是否都启用
+    # 若用户组在二级管理空间，且其一级管理空间被禁用，则不发送续期通知
     role_check_biz = RoleCheckBiz()
-
-    # note:若用户组在二级管理空间，禁用的是其一级管理空间，这时候用户组续期通知不应该发送
-    if not role_check_biz.check_parent_manager_is_enabled(relation.role_id):
-        return
-
-    if not role_check_biz.check_grade_manager_is_enabled(relation.role_id):
+    if not role_check_biz.is_role_enabled(relation.role_id):
         return
 
     role_id_set.add(relation.role_id)

@@ -192,22 +192,16 @@ def user_group_policy_expire_remind():
         if gs.subject.type != SubjectType.USER.value:
             continue
 
+        # 判断过期时间是否在区间内
+        if gs.expired_at < expired_at_after:
+            continue
+
+        # 检查用户组对应的分级管理员是否启用
+        # 若分级管理员被禁用，或是二级管理空间且其一级管理空间被禁用，则不发送续期通知
         relation = RoleRelatedObject.objects.filter(
             object_type=RoleRelatedObjectType.GROUP.value, object_id=gs.group.id
         ).first()
-        if not relation:
-            continue
-
-        # note:若用户组在二级管理空间，禁用的是其一级管理空间，这时候用户组续期通知不应该发送
-        if not role_check_biz.check_grade_manager_is_enabled(relation.role_id):
-            continue
-
-        # 用户组对应空间禁用后，用户组续期通知不应该发送
-        if not role_check_biz.check_grade_manager_is_enabled(relation.role_id):
-            continue
-
-        # 判断过期时间是否在区间内
-        if gs.expired_at < expired_at_after:
+        if not relation or not role_check_biz.is_role_enabled(relation.role_id):
             continue
 
         username = gs.subject.id
