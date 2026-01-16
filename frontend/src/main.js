@@ -27,7 +27,6 @@
 import './public-path';
 import '../static/lib.bundle.js';
 import Vue from 'vue';
-import VueDOMPurifyHTML from 'vue-dompurify-html';
 import App from './App.vue';
 import IframeEntry from './IframeEntry.vue';
 import router from './router/index';
