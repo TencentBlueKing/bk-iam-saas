@@ -20,6 +20,10 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
+# Monkey Patch: rest_framework.serializers.Serializer
+import backend.util.serializer_patch  # noqa
+from backend.common.vue import LoginSuccessView, VueTemplateView
+
 schema_view = get_schema_view(
     openapi.Info(
         title="IAM_APP API",
@@ -91,6 +95,6 @@ if settings.IS_LOCAL or settings.ENABLE_SWAGGER:
 
 # static file
 urlpatterns += [
-    re_path(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-    re_path(r"^.*$", never_cache(VueTemplateView.as_view())),
+    url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
+    url(r"^.*$", never_cache(VueTemplateView.as_view())),
 ]

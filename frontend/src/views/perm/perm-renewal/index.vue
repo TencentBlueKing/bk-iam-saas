@@ -134,7 +134,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemsLayout', 'externalSystemId']),
+      ...mapGetters(['user', 'externalSystemsLayout', 'externalSystemId']),
       getTableList () {
           const panelData = this.panels.find(item => item.name === this.active);
           if (panelData) {
@@ -252,7 +252,10 @@
             && this.$refs.tabRef.$refs.tabLabel
             && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
         });
-        window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`);
+        window.history.replaceState({}, '', `?${buildURLParams({
+          tab: payload,
+          role_name: this.user.role.name
+        })}`);
       },
 
       handleFilterSystem (payload) {

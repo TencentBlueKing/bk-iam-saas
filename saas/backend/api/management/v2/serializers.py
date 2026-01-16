@@ -381,6 +381,7 @@ class ManagementGroupSLZ(serializers.ModelSerializer):
             "creator",
             "created_time",
             "readonly",
+            "apply_disable",
         )
 
     def __init__(self, *args, **kwargs):
@@ -422,6 +423,7 @@ class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
         label="同步用户组名称", max_length=512, required=False, allow_blank=True, default=""
     )
     sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
+    enabled = serializers.BooleanField(label="是否启用", required=False, default=True)
 
 
 class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):
@@ -439,6 +441,7 @@ class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):
             "updater",
             "members",
             "sync_perm",
+            "enabled",
         )
 
     def get_members(self, obj):
@@ -502,3 +505,10 @@ class GroupBatchUpdateMemberSLZ(serializers.Serializer):
                 members.append(m)
 
         return members
+
+
+class ManagementTemplateUpdateSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="模板ID")
+    name = serializers.CharField(label="模板名称", max_length=128, allow_blank=True, required=False)
+    description = serializers.CharField(label="描述", max_length=255, required=False, default="")
+    action_ids = serializers.ListField(label="操作ID", child=serializers.CharField(label="操作ID"), allow_empty=True)

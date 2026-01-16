@@ -34,7 +34,6 @@
             <div
               v-if="isHasPermTemplate"
               class="aggregate-action-group"
-              style="min-width: 108px; position: relative"
             >
               <div
                 v-for="item in AGGREGATION_EDIT_ENUM"

@@ -15,6 +15,7 @@
 | id | int | User group ID |
 | name | string | User group name |
 | description | string | User group description |
+| apply_disable | bool | User group apply to disable |
 
 ```json
 {
@@ -25,16 +26,19 @@
        "id": 1,
        "name": "test1",
        "description": "test1",
+       "apply_disable" :false
      },
      {
        "id": 2,
        "name": "test2",
        "description": "test2",
+       "apply_disable" :true
      },
      {
        "id": 2,
        "name": "test2",
        "description": "test",
+       "apply_disable" :true
      }
   ]
 }

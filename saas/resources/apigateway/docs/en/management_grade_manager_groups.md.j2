@@ -6,31 +6,31 @@
 #### Parameters
 
 | Field | Type | Required | Location | Description |
-| --------|--------|--------|--------|--------|--------|--------|
-| id | int | yes | path | grade_manager_id |
+| --------|--------|--------|--------|--------|
+| id | int | yes | path | Grade manager ID |
 | page_size | int | Yes | query | One of the paging query parameters, page_size indicates the number of queries, `maximum is 100` |
-| page | int | is | query | one of the paging query parameters, page means the number of pages to be queried, page starts from 0 |
+| page | int | Yes | query | One of the paging query parameters, page means the number of pages to be queried, page starts from 0 |
 
 #### Response
 
 | Field | Type | Description |
 | -----------|-----------|-----------|
-| count | int | total number |
-| results | array[object] | paginated query to results |
+| count | int | Total number |
+| results | array[object] | Paginated query results |
 
-results
+**results**
 | Field | Type | Description |
 | -----------|-----------|-----------|
 | id | int | User group ID |
 | name | string | User group name |
 | description | string | User group description |
+| apply_disable | bool | User group application disabled |
 | attributes | array[object] | User group attributes |
 
-attributes
+**attributes**
 | Field | Type | Description |
 | -----------|-----------|-----------|
 | readonly | bool | The user group is read-only. If true, the user group cannot be deleted on the IAM (Identity and Access Management) product |
-
 
 ```json
 {
@@ -43,6 +43,7 @@ attributes
        "id": 1,
        "name": "test1",
        "description": "test1",
+       "apply_disable": true,
        "attributes": {
          "readonly": true
        }
@@ -51,18 +52,11 @@ attributes
        "id": 2,
        "name": "test2",
        "description": "test2",
+       "apply_disable": true,
        "attributes": {
          "readonly": false
        }
-     },
-     {
-       "id": 2,
-       "name": "test2",
-       "description": "test",
-       "attributes": {
-         "readonly": true
-       }
-     },
+     }
    ]
  }
 }

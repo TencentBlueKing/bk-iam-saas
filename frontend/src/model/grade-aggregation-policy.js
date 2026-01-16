@@ -40,51 +40,93 @@ export default class GradeAggregationPolicy {
     this.system_name = payload.system_name;
     this.$id = payload.$id || '';
     this.selectedIndex = payload.selectedIndex || 0;
+    this.tag = payload.tag || 'add';
     this.canPaste = false;
+    // 是否需要展示无限制
+    this.isNeedNoLimited = payload.isNeedNoLimited || false;
+    // 是否是无限制操作
+    this.isNoLimited = payload.isNoLimited || false;
+    // 是否是批量无限制
+    this.isBatchNoLimited = payload.isBatchNoLimited || false;
+    // 是否是新增操作, 处理新增操作取消批量无限制后回显上一次操作实例
+    this.isAddActions = payload.isAddActions || false;
+    this.initAggregateResourceType();
+  }
+
+  initAggregateResourceType () {
+    let displayContent = '';
+    this.aggregateResourceType.forEach((item, index) => {
+      const displayData = this.instancesDisplayData[item.id];
+      if (displayData) {
+        // 如果是批量无限制直接填充无限制
+        const isExistNoLimited = this.isBatchNoLimited
+          || (this.isNoLimited && (this.selectedIndex === index || displayData.length === 0));
+        if (displayData.length > 1) {
+          for (const key in this.instancesDisplayData) {
+            if (item.id === key) {
+              displayContent = language === 'zh-cn'
+                ? `${displayContent}，已选择${this.instancesDisplayData[item.id].length}个${item.name}`
+                : `${displayContent}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
+              Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : displayContent.substring(1, displayContent.length));
+              displayContent = '';
+            }
+          }
+        } else {
+          // 这里防止切换tab下存在空数据，需要重新判断下
+          if (displayData.length) {
+            displayContent = `${displayContent}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
+            Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : displayContent.substring(1, displayContent.length));
+          } else {
+            Vue.set(item, 'displayValue', isExistNoLimited ? il8n('common', '无限制') : '');
+          }
+          displayContent = '';
+        }
+      } else {
+        this.instancesDisplayData[item.id] = [];
+        Vue.set(item, 'displayValue', '');
+        displayContent = '';
+      }
+    });
+    const aggregateResourceType = _.cloneDeep(this.aggregateResourceType[this.selectedIndex].displayValue);
+    return aggregateResourceType;
   }
 
   get empty () {
-    return this.instances.length < 1;
+    const isExistMultipleResourceType = ['', il8n('verify', '请选择')].includes(this.aggregateResourceType[this.selectedIndex].displayValue);
+    if (this.isNeedNoLimited) {
+      if ((this.instances.length === 1 && this.instances[0] === 'none')) {
+        if (this.aggregateResourceType.length > 1) {
+          return isExistMultipleResourceType;
+        }
+        return true;
+      }
+      return false;
+    } else {
+      if (this.aggregateResourceType.length > 1) {
+        return isExistMultipleResourceType;
+      }
+      return this.instances.length < 1;
+    }
   }
 
   get value () {
     if (this.empty) {
       return il8n('verify', '请选择');
     }
-    let str = '';
-    this.aggregateResourceType.length && this.aggregateResourceType.forEach(item => {
-      if (this.instancesDisplayData[item.id]) {
-        if (this.instancesDisplayData[item.id].length > 1) {
-          for (const key in this.instancesDisplayData) {
-            if (item.id === key) {
-              str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
-              Vue.set(item, 'displayValue', str.substring(1, str.length));
-              str = '';
-            }
-          }
-        } else {
-          // 这里防止切换tab下存在空数据，需要重新判断下
-          if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-            str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
-          }
-          Vue.set(item, 'displayValue', str.substring(1, str.length));
-          str = '';
-        }
-      } else {
-        this.instancesDisplayData[item.id] = [];
-        Vue.set(item, 'displayValue', '');
-        str = '';
+    if ((this.isNoLimited || (!this.instances.length && !['add'].includes(this.tag)))) {
+      if (this.aggregateResourceType.length > 1) {
+        return this.aggregateResourceType[this.selectedIndex].displayValue;
       }
-    });
-    const aggregateResourceType = _.cloneDeep(this.aggregateResourceType.map(item => item.displayValue));
-    return aggregateResourceType.join();
+      return il8n('common', '无限制');
+    }
+    return this.initAggregateResourceType();
   }
 
   get name () {
     if (this.actions.length < 1) {
       return '';
     }
-    return this.actions.map(item => item.name).join('，');
+    return this.actions.map(item => item.name).filter(name => name).join('，');
   }
 
   get key () {

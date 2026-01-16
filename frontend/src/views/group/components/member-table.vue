@@ -111,6 +111,7 @@
         @page-limit-change="handleLimitChange"
         @select="handlerChange"
         @select-all="handlerAllChange"
+        @sort-change="handleSortChange"
         v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
       >
         <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
@@ -194,6 +195,7 @@
               :key="item.prop"
               :label="item.label"
               :prop="item.prop"
+              :sortable="['userOrgPerm'].includes(tabActive) ? 'custom' : false"
               :render-header="renderHeader"
             />
           </template>
@@ -494,7 +496,8 @@
           }
         },
         tableProps: [],
-        userOrOrgCount: 0
+        userOrOrgCount: 0,
+        ordering: ''
       };
     },
     computed: {
@@ -737,9 +740,14 @@
           const params = {
             id: this.id,
             limit,
-            offset: limit * (current - 1),
-            keyword: this.keyword
+            offset: limit * (current - 1)
           };
+          if (this.ordering) {
+            params.ordering = this.ordering;
+          }
+          if (this.keyword) {
+            params.keyword = this.keyword;
+          }
           let url = 'userGroup/getUserGroupMemberList';
           if (this.curModeMap[this.routeMode]) {
             url = this.curModeMap[this.routeMode].list.url;
@@ -941,6 +949,16 @@
 
       handlerChange (selection, row) {
         this.fetchSelectedGroups('multiple', selection, row);
+      },
+
+      // 有效期排序
+      handleSortChange ({ column, order }) {
+        if (order) {
+          this.ordering = ['descending'].includes(order) ? '-expired_at' : 'expired_at';
+        } else {
+          this.ordering = order;
+        }
+        this.fetchUserOrOrgList();
       },
 
       handleDropdownShow () {

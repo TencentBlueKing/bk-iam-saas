@@ -20,7 +20,7 @@ from .subject import (
     AdminSubjectRoleViewSet,
 )
 from .system import AdminSystemProviderConfigViewSet, AdminSystemViewSet
-from .template import AdminTemplateViewSet
+from .template import AdminBatchGradeManagerTemplateViewSet, AdminTemplateViewSet
 
 __all__ = [
     "AdminGroupViewSet",
@@ -38,4 +38,5 @@ __all__ = [
     "AdminTemplateViewSet",
     "AdminGroupPolicyViewSet",
     "AdminSystemProviderConfigViewSet",
+    "AdminBatchGradeManagerTemplateViewSet",
 ]

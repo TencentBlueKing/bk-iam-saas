@@ -492,6 +492,7 @@ ROLE_RESOURCE_RELATION_TYPE = [
 
 ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
 
+
 # 对接审计中心相关配置，包括注册权限模型到权限中心后台的配置
 BK_IAM_SYSTEM_ID = "bk_iam"
 if BK_IAM_HOST_TYPE == "direct":
@@ -506,17 +507,25 @@ BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
 
+
 # BCS 初始化 ROLE 网关 api 配置
 BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
 
+
 # BK BOT approval 审批机器人通知
 BK_BOT_APPROVAL_APIGW_URL = env.str("BK_BOT_APPROVAL_APIGW_URL", default="")
+
 
 # BK BOT approval 审批机器人通知
 BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL", default="")
 
 # 通知的豁免名单，企业内部分人员不接收通知
 BK_NOTIFICATION_EXEMPTION_USERS = env.list("BK_NOTIFICATION_EXEMPTION_USERS", default=[])
+
+# 不接收自定义权限续期通知的系统列表
+CUSTOM_POLICY_RENEWAL_NOTIFICATION_EXEMPTION_SYSTEMS = env.list(
+    "CUSTOM_POLICY_RENEWAL_NOTIFICATION_EXEMPTION_SYSTEMS", default=[]
+)
 
 # 文档地址
 BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/")
@@ -529,3 +538,6 @@ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED
 
 # 问题反馈地址
 BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
+
+# 接入用户管理的接口page_size默认值
+USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1000)

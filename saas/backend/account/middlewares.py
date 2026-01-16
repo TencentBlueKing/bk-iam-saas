@@ -57,7 +57,10 @@ class LoginMiddleware:
             return False
 
         exempt_paths = ["/api/v1/open/", "/api/v1/iam/"]
-        return not any(p in request.path for p in exempt_paths)
+        if any([p in request.path for p in exempt_paths]):
+            return False
+
+        return True
 
     def __call__(self, request):
         form = AuthenticationForm(request.COOKIES)

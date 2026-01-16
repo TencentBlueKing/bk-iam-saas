@@ -1,8 +1,102 @@
+<!-- 2026-01-15 -->
+# V1.10.51 Version Update Log
+
+### Features
+* Supported creating permission templates via API
+* Added entry point to switch from IAM V3 to IAM V4
+* User group list now supports filtering by the "not available for application" field
+* Added time filter condition for periodic task that compensates for unupdated application form status
+* Supported configuring page_size for user management API requests via environment variable
+
+### Feature Enhancements
+* Improved audit logging by truncating policy instances to prevent oversized logs
+
+### Fixes
+* Fixed an issue where user group renewal email reminders were not taking effect
+* Fixed an issue where user/department data was not batch inserted during synchronization
+* Fixed incorrect registration address for grade manager API
+* Fixed API performance issues
+
+---
+
+<!-- 2025-12-19 -->
+# V1.10.50 Version Update Log
+
+### Features
+* Supported sorting user group members by expiration date.
+
+### Fixes
+* Fixed an issue where the custom duration failed to display when applying for custom or temporary permissions.
+* Fixed the unique constraint error in the authorization whitelist table.
+
+---
+
+<!-- 2025-12-04 -->
+# V1.10.49 Version Update Log
+
+### Features
+* Supported exempting system whitelists in the notification configuration for custom permission renewals.
+
+### Fixes
+* Removed the mandatory field indicator from the user group description.
+
+---
+
+<!-- 2025-11-21 -->
+# V1.10.48 Version Update Log
+
+### Features
+* Permission initialization for business-based space management now supports the bksam system
+* OpenAPI supports querying user groups and cleaning group members under system management spaces via API
+* My Management Space, Management Space, and Space Information modules now support batch unlimited operations
+* My Management Space, Management Space, and Space Information now support batch unlimited aggregation, batch copy and paste
+* Custom permission policy applications for multiple resource types now support approval by business-based space management administrators
+
+### Fixes
+* Fixed privilege escalation issue on pages after switching high-privilege users to low-privilege users
+
+---
+
+<!-- 2025-10-14 -->
+# V1.10.47 Version Update Log
+
+### Features
+* OpenAPI - `management_grade_manager_groups` now supports returning metadata fields such as updater and update time.
+* Disabling notification for project renewals in BlueKing for deactivated projects.
+* User organization options now allow filtering group members by validity period.
+* Added Django command for super admin user authorization.
+
+### Fixes
+* Fixed an issue where the application form status was not updated after approval callback due to unsupported transactions, leading to execution authorization problems.
+* Fixed an issue where instances of dependent operations were empty after editing resource instances in a standard IT operation within a user group.
+* Fixed inconsistencies of role types during role cleanup.
+
+---
+
+<!-- 2025-08-21 -->
+# V1.10.46 Version Update Log
+
+### Features
+* Clean up permissions before the user-specified time
+
+---
+
+<!-- 2025-08-06 -->
+# V1.10.45 Version Update Log
+
+### Features
+* Added Japanese internationalization support for Blueking Devops
+* Enhanced XSS protection optimization
+
+---
+
 <!-- 2025-05-28 -->
 # V1.10.44 Version Update Log
 
 ### Fixes
 * Fixed an issue where login authentication was executed after role identity authentication, potentially leading to security issues if the role identity session was leaked.
+* Fixed an exception when deleting an administrator in the secondary management space of the Grade Manager.
+* Optimized the style of the no-permission application table and handled the deduplication issue of temporary permission application aggregation.
 
 ---
 

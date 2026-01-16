@@ -25,7 +25,7 @@
       </div>
       <div class="layout-right">
         <scroll-faker class="content-wraper">
-          <div v-dompurify-html="logContent" class="markdowm-container" />
+          <div v-bk-xss-html="logContent" class="markdowm-container" />
         </scroll-faker>
         <!-- <Icon bk type="close" class="log-close" @click="handleClose" /> -->
       </div>
