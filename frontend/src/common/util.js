@@ -25,7 +25,6 @@
 */
 
 import il8n from '@/language';
-import DOMPurify from 'dompurify';
 import { messageWarn, messageSuccess } from '@/common/bkmagic';
 import { rootPath } from '@blueking/sub-saas/dist/main.js';
 import { filterXss } from '@blueking/xss-filter';
