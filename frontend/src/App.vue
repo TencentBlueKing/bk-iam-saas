@@ -165,9 +165,10 @@
         this.routeName = to.name;
         this.userGroupId = to.params.id;
         if (this.user.role && this.user.role.id > 0) {
-          window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
-            role_name: this.user.role.name
-          }))}`);
+          window.history.replaceState({}, '', `?${buildURLParams({
+            ...to.query,
+             role_name: this.user.role.name
+          })}`);
         }
         this.$store.commit('updateRoute', from.name);
         this.getRouteInstanceSearch({ routeName: to.name });

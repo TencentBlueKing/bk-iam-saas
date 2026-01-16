@@ -68,7 +68,9 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SYSTEM_MANAGER.value]).order_by(
+        "-updated_time"
+    )
     pagination_class = CompatiblePagination
 
     group_biz = GroupBiz()
@@ -143,6 +145,13 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
                 "name": g.name,
                 "description": g.description,
                 "attributes": group_attrs[g.id].get_attributes(),
+                "user_count": g.user_count,
+                "department_count": g.department_count,
+                "creator": g.creator,
+                "created_at": int(g.created_time.timestamp()),
+                "updated_at": int(g.updated_time.timestamp()),
+                "updater": g.updater,
+                "apply_disable": g.apply_disable,
             }
             for g in groups
         ]

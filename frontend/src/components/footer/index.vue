@@ -14,7 +14,7 @@
         </a>
         <span v-if="index !== footerList.length - 1" :key="index + 'gap'" class="gap"> | </span>
       </div> -->
-      <div v-dompurify-html="contact" />
+      <div v-bk-xss-html="contact" />
     </div>
     <div>{{ copyright }} {{ version }}</div>
   </div>

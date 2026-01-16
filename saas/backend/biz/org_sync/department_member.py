@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 
 from backend.apps.organization.models import DepartmentMember
 from backend.component import usermgr
+from backend.util.basic import chunked
 
 from .base import BaseSyncDBService
 
@@ -48,7 +49,8 @@ class DBDepartmentMemberSyncService(BaseSyncDBService):
         if not deleted_ids:
             return
 
-        DepartmentMember.objects.filter(id__in=deleted_ids).delete()
+        for batch in chunked(deleted_ids, 1000):
+            DepartmentMember.objects.filter(id__in=batch).delete()
 
     def sync_to_db(self):
         """SaaS DB 相关变更"""

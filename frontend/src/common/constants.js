@@ -484,3 +484,11 @@ export const DS_TYPE = [
   'approval.group.update',
   'template.preupdate.create'
 ];
+
+// iam V3 ——> V4路由重定向
+export const IAMV4_ROUTES_ENUM = new Map([
+  [['apply'], 'self-manage/apply'],
+  [['myPerm', 'permTransfer', 'permRenewal'], 'permission/my-own/overview'],
+  [['myManageSpace'], 'space/my-own'],
+  [['myManageSpaceCreate'], 'space/create']
+]);

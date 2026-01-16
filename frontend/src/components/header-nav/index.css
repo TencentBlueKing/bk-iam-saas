@@ -79,7 +79,8 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         font-size: 0;
         line-height: 51px;
         color: #FFFFFF;
-        .help-flag {
+        .help-flag,
+        .switch-vision-flag {
             display: inline-flex;
             align-items: center;
             .iamcenter-help-fill {
@@ -94,15 +95,21 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     visibility: visible;
                     z-index: 9999;
                     transform: translateY(0);
+                    background-color: #ffffff;
+                    border: 1px solid #dcdee5;
+                    box-shadow: 0 2px 6px 0 #0000001a;
+
                 }
             }
         }
-        .help-flag, .lang-flag {
+        .help-flag, 
+        .lang-flag, 
+        .switch-vision-flag {
             position: absolute;
             top: 11px;
             left: -30px;
-            width: 32px;
-            height: 32px;
+            width: 24px;
+            height: 24px;
             padding: 0 10px;
             font-size: 16px;
             color: #FFFFFF;
@@ -191,6 +198,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             margin: 0;
             font-size: 14px;
             font-weight: bold;
+            line-height: 46px;
             cursor: pointer;
             .user-name-angle {
                 display: inline-block;
@@ -486,6 +494,59 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                                 color: #ff9c01;
                             }
                         }
+                    }
+                }
+            }
+        }
+        .switch-vision-flag {
+            left: -160px;
+            height: 24px;
+            .switch-vision-text {
+                min-width: 84px;
+                background-color: #1f2c42;
+                color: #96a2b9;
+                line-height: 24px;
+                padding: 0 8px;
+                display: flex;
+                align-items: center;
+                border-radius: 2px;
+                .iam-icon {
+                    font-size: 16px;
+                }
+                .text {
+                    font-size: 12px;
+                    margin-left: 4px;
+                }
+                &:hover {
+                    background-color: #2c3e5e;
+                    color: #ffffff;
+                }
+            }
+            .dropdown-panel {
+                min-width: 150px;
+            }
+            &.en {
+                left: -260px;
+                .switch-vision-text {
+                    min-width: 184px;
+                }
+                .dropdown-panel {
+                    min-width: 300px;
+                    left: -100px;
+                    &:before {
+                        right: 140px;
+                    }
+                }
+            }
+            &.ja {
+                left: -200px;
+                .switch-vision-text {
+                    min-width: 124px;
+                }
+                .dropdown-panel {
+                    min-width: 260px;
+                    &:before {
+                        right: 130px;
                     }
                 }
             }

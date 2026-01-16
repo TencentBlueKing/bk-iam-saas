@@ -1,6 +1,6 @@
 <template>
   <div :class="['iam-instance-content', { 'set-marging-top': hasGap }]">
-    <p class="iam-instance-title" v-dompurify-html="title" />
+    <p class="iam-instance-title" v-bk-xss-html="title" />
     <div class="iam-instance-item">
       <p v-for="(item, index) in data" :key="index" class="value">
         <render-span :content="item.name" :status="item.status" :visible="true" />
