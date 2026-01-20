@@ -95,6 +95,6 @@ if settings.IS_LOCAL or settings.ENABLE_SWAGGER:
 
 # static file
 urlpatterns += [
-    url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-    url(r"^.*$", never_cache(VueTemplateView.as_view())),
+    re_path(r"^login_success/", never_cache(LoginSuccessView.as_view())),
+    re_path(r"^.*$", never_cache(VueTemplateView.as_view())),
 ]
