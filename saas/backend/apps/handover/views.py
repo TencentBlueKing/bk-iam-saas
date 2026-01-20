@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -63,7 +63,7 @@ class HandoverViewSet(GenericViewSet):
 
         lock = gen_permission_handover_lock(handover_from)
         if not lock.acquire():
-            # 拿不到锁, 直接返回
+            # 拿不到锁，直接返回
             raise error_codes.TASK_EXIST
 
         try:
@@ -71,7 +71,7 @@ class HandoverViewSet(GenericViewSet):
                 handover_from=handover_from, status=HandoverStatus.RUNNING.value
             ).first()
             if handover_record is not None:
-                # 已存在正在运行的任务, 不能新建任务
+                # 已存在正在运行的任务，不能新建任务
                 raise error_codes.TASK_EXIST
 
             with transaction.atomic():
@@ -85,10 +85,10 @@ class HandoverViewSet(GenericViewSet):
                 # 创建子任务信息
                 if handover_task_details:
                     HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
-
-                execute_handover_task.delay(
-                    handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
-                )
+            # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
+            execute_handover_task.delay(
+                handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
+            )
         finally:
             # 释放锁
             lock.release()
@@ -125,7 +125,7 @@ class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
         return HandoverRecord.objects.filter(handover_from=request.user.username).order_by("-created_time")
 
     @swagger_auto_schema(
-        operation_description="交接记录-查询",
+        operation_description="交接记录 - 查询",
         responses={status.HTTP_200_OK: HandoverRecordSLZ(label="交接记录")},
         tags=["handover"],
     )
@@ -135,7 +135,7 @@ class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
 
 class HandoverTasksViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
-        operation_description="交接任务-查询",
+        operation_description="交接任务 - 查询",
         responses={status.HTTP_200_OK: HandoverTaskSLZ(label="交接任务")},
         tags=["handover"],
     )
