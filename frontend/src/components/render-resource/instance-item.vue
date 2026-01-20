@@ -26,10 +26,8 @@
             font-size: 12px;
             color: #63656e;
             .value {
-                max-width: 400px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+              line-height: 20px;
+              word-break: break-all;
             }
             &::-webkit-scrollbar {
                 width: 4px;
