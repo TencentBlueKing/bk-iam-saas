@@ -51,7 +51,7 @@
           7776000: this.$t(`m.common['3个月']`),
           15552000: this.$t(`m.common['6个月']`),
           31104000: this.$t(`m.common['12个月']`),
-          // 4102444800: this.$t(`m.common['永久']`),
+          4102444800: this.$t(`m.common['永久']`),
           'custom': this.$t(`m.common['自定义']`)
         },
         currentActive: 4102444800,
