@@ -323,7 +323,12 @@
           </template>
           <template v-else>
             <div class="set-user-deadline">
-              <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
+              <iam-deadline
+                type="dialog"
+                :value="expiredAt"
+                :show-permanent-renewal="isShowPermanentRenewal"
+                @on-change="handleDeadlineChange"
+              />
             </div>
           </template>
         </div>
@@ -598,6 +603,15 @@
       // 不需要校验组织架构授权范围的页面模块
       isUnLimitedScope () {
         return getParamsValue('search_scene') === 'add' || NO_VERIFY_ORG_ROUTES.includes(this.$route.name);
+      },
+      // 所选成员只包含部门的或者是超管，才可以有永久续期选项
+      isShowPermanentRenewal () {
+        if (this.hasSelectedDepartments.length > 0
+          && this.hasSelectedUsers.length < 1
+          && this.hasSelectedTemplates.length < 1) {
+          return true;
+        }
+        return false;
       }
     },
     watch: {
