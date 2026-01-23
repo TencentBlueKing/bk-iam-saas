@@ -106,7 +106,7 @@
         };
 
         // 超管或需展示永久选项时，添加永久选项
-        const shouldShowPermanent = this.isSuperManager || this.showPermanentRenewal;
+        const shouldShowPermanent = this.isSuper || this.showPermanentRenewal;
         if (shouldShowPermanent) {
           return {
             ...baseFilters,
