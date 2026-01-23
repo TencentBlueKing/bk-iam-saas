@@ -23,7 +23,11 @@
           <label :class="{ 'en': !curLanguageIsCn }">
             {{ $t(`m.common['授权期限']`) }}<span class="required">*</span>
           </label>
-          <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
+          <iam-deadline
+            :value="expiredAt"
+            :show-permanent-renewal="['depart', 'department'].includes(data.type)"
+            @on-change="handleDeadlineChange"
+          />
         </div>
         <div class="item">
           <label :class="{ 'en': !curLanguageIsCn }">{{ $t(`m.common['有效期']`) }}</label>
@@ -53,7 +57,10 @@
           <label :class="{ 'en': !curLanguageIsCn }">
             {{ $t(`m.common['授权期限']`) }}<span class="required">*</span>
           </label>
-          <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
+          <iam-deadline
+            :value="expiredAt"
+            :show-permanent-renewal="showPermanentRenewal"
+            @on-change="handleDeadlineChange" />
         </div>
         <div class="item item-expiration">
           <label
@@ -172,6 +179,34 @@
       },
       formatNoRenewal () {
         return this.selectNoRenewalList.map((item) => item.id && ['user'].includes(item.type) ? `${item.name}(${item.id})` : item.name);
+      },
+      // 所选成员只包含部门的或者是超管，才可以有永久续期选项
+      showPermanentRenewal () {
+        if (!this.curLabelList.length) return false;
+
+        const isAllValuesEmpty = this.curLabelList.every(item => {
+        // 提取values，无则默认空数组
+        const values = item.values || [];
+          return values.length === 0;
+        });
+        // 所有values都为空 → 直接返回false
+        if (isAllValuesEmpty) {
+            return false;
+        }
+  
+        for (const item of this.curLabelList) {
+          // 跳过type为部门的场景
+          if (['depart', 'department'].includes(item.type)) {
+            continue;
+          }
+
+          const values = item.values || [];
+          if (values.length > 0) {
+            return false;
+          }
+        }
+        // 所有非user类型的values都为空，返回true
+        return true;
       }
     },
     watch: {
