@@ -12,14 +12,13 @@ specific language governing permissions and limitations under the License.
 """
 
 import inspect
+import threading
 
 from celery.app.task import Task
-from werkzeug.local import Local as _Local
-from werkzeug.local import release_local
-
 from backend.util.uuid import gen_uuid
 
-_local = _Local()
+# 主线程或请求线程使用的 local
+_main_local = threading.local()
 
 
 def new_request_id():
@@ -43,14 +42,12 @@ class Local(Singleton):
     @property
     def request(self):
         """获取全局request对象"""
-        return getattr(_local, "request", None)
-        # if not request:
-        #     raise RuntimeError("request object not in local")
+        return getattr(_main_local, "request", None)
 
     @request.setter
     def request(self, value):
         """设置全局request对象"""
-        _local.request = value
+        _main_local.request = value
 
     @property
     def request_id(self):
@@ -62,31 +59,58 @@ class Local(Singleton):
 
     def get_http_request_id(self):
         """从接入层获取request_id，或者生成一个新的request_id"""
-        # 在从header中获取
-        request_id = self.request.META.get("HTTP_X_REQUEST_ID") or self.request.META.get("HTTP_X_BKAPI_REQUEST_ID", "")
-        if request_id:
-            return request_id
+        try:
+            request_id = (
+                self.request.META.get("HTTP_X_REQUEST_ID")
+                or self.request.META.get("HTTP_X_BKAPI_REQUEST_ID", "")
+            )
+            if request_id:
+                return request_id
+        except Exception:
+            pass
 
-        # 最后主动生成一个
         return new_request_id()
 
     @property
     def request_username(self) -> str:
         try:
-            # celery后台，openAPI都可能没有user，需要判断
             if self.request and hasattr(self.request, "user"):
                 return self.request.user.username
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             return ""
 
         return ""
 
     def release(self):
-        release_local(_local)
+        if hasattr(_main_local, "request"):
+            delattr(_main_local, "request")
 
 
 local = Local()
 
+# ========== celery 专用区域 ==========
+
+
+def inspect_task_id():
+    for info in inspect.stack()[1:]:
+        locals_ = info.frame.f_locals
+        if "self" in locals_ and isinstance(locals_["self"], Task):
+            return locals_["self"].request.id
+    return ""
+
+
+# celery worker 中专用的 thread-local 存储
+class CeleryThreadLocal(threading.local):
+    def __init__(self):
+        super().__init__()
+        self._task_id = inspect_task_id()
+
+
+celery_local = CeleryThreadLocal()
+
 
 def get_local():
-    return _local
+    """根据是否有 request 判断使用哪种 local"""
+    if getattr(_main_local, "request", None) is not None:
+        return _main_local
+    return celery_local
