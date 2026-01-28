@@ -157,15 +157,14 @@ class GroupAddMemberSLZ(serializers.Serializer):
         return [m for m in value if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER)]
 
     def validate(self, attrs):
-        super().validate(attrs)
-        members = attrs["members"]
-        expired_at = attrs["expired_at"]
-        if expired_at == PERMANENT_SECONDS:
-            for member in members:
-                if member["type"] != GroupMemberType.DEPARTMENT.value:
-                    raise serializers.ValidationError(
-                        "If the expired_at field is 'PERMANENT_SECONDS', then the member's type must be 'department'."
-                    )
+        if attrs["expired_at"] == PERMANENT_SECONDS:
+            invalid_members = [m for m in attrs["members"] if m["type"] != GroupMemberType.DEPARTMENT.value]
+            if invalid_members:
+                raise serializers.ValidationError(
+                    "when the expire time is permanent, all members must be departments. invalid member: %s",
+                    invalid_members,
+                )
+
         return attrs
 
 
