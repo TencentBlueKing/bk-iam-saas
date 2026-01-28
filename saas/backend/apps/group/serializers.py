@@ -156,6 +156,17 @@ class GroupAddMemberSLZ(serializers.Serializer):
         # 屏蔽admin授权
         return [m for m in value if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER)]
 
+    def validate(self, attrs):
+        if attrs["expired_at"] == PERMANENT_SECONDS:
+            invalid_members = [m for m in attrs["members"] if m["type"] != GroupMemberType.DEPARTMENT.value]
+            if invalid_members:
+                raise serializers.ValidationError(
+                    "when the expire time is permanent, all members must be departments. invalid member: %s",
+                    invalid_members,
+                )
+
+        return attrs
+
 
 class GroupsAddMemberSLZ(GroupAddMemberSLZ):
     group_ids = serializers.ListField(label="用户组ID列表")
