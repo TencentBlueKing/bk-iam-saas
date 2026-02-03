@@ -160,9 +160,7 @@ class AuditEventHandler:
 
         return [audit_event]
 
-    def _truncate_policies_instances(
-        self, extra_data: Dict[str, Any], max_instances: int = 10, max_paths: int = 10
-    ):
+    def _truncate_policies_instances(self, extra_data: Dict[str, Any], max_instances: int = 10, max_paths: int = 10):
         """
         裁剪 policies 中的资源实例数据，避免单条审计日志过大
 

@@ -1,3 +1,17 @@
+<!-- 2026-02-03 -->
+# V1.10.52 Version Update Log
+
+### Features
+* Organization authorization now supports permanent validity period
+
+### Fixes
+* Fixed an issue where clicking to switch navigation bar on handover history page was not working
+* Fixed an intermittent handover failure issue
+* Fixed an issue where custom permission instance path count was out of sync in user group permissions
+* Fixed an issue where overly long instance path in policy caused oversized audit logs
+
+---
+
 <!-- 2026-01-15 -->
 # V1.10.51 Version Update Log
 
