@@ -1,3 +1,11 @@
+<!-- 2026-02-04 -->
+# V1.10.53 Version Update Log
+
+### Fixes
+* Fixed an issue with permanent validity parameter validation when adding members to user groups
+
+---
+
 <!-- 2026-02-03 -->
 # V1.10.52 Version Update Log
 
