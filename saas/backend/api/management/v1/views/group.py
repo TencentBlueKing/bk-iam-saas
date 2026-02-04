@@ -163,7 +163,7 @@ class ManagementGroupViewSet(BizMixin, GenericViewSet):
     lookup_field = "id"
 
     def get_queryset(self):
-        return Group.objects.filter(tenant=self.tenant_id)
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="修改用户组",
@@ -232,7 +232,7 @@ class ManagementGroupMemberViewSet(BizMixin, GenericViewSet):
     pagination_class = CompatiblePagination
 
     def get_queryset(self):
-        return Group.objects.filter(tenant=self.tenant_id)
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
@@ -321,7 +321,7 @@ class ManagementGroupPolicyViewSet(BizMixin, TransMixin, GenericViewSet):
     lookup_field = "id"
 
     def get_queryset(self):
-        return Group.objects.filter(tenant=self.tenant_id)
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组授权",
@@ -416,7 +416,7 @@ class ManagementGroupActionPolicyViewSet(BizMixin, GenericViewSet):
     lookup_field = "id"
 
     def get_queryset(self):
-        return Group.objects.filter(tenant=self.tenant_id)
+        return Group.objects.filter(tenant_id=self.tenant_id)
 
     @swagger_auto_schema(
         operation_description="用户组权限删除",
