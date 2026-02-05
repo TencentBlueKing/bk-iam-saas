@@ -2,7 +2,6 @@
 
 from django.db import migrations
 
-from backend.apps.role.models import Role, RoleUser, RoleUserSystemPermission
 from backend.service.constants import RoleType
 
 
@@ -13,17 +12,34 @@ def add_admin_to_super_manager_member(apps, schema_editor):
     #  由于admin的特殊性，IAM后台判断super permission时是先判断是否super user，然后再判断是否super role
     #  所以不向后台将admin添加为super role并不会影响admin的鉴权（admin在后台代码里默认初始化为super user）
 
+    # 使用 apps.get_model 获取历史模型，避免访问未创建的字段
+    Role = apps.get_model('role', 'Role')
+    RoleUser = apps.get_model('role', 'RoleUser')
+    RoleUserSystemPermission = apps.get_model('role', 'RoleUserSystemPermission')
+
     username = "admin"
     role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
     # 判断是否已存在
-    if username in role.members:
+    if RoleUser.objects.filter(role_id=role.id, username=username).exists():
         return
 
     # 添加成员
     RoleUser.objects.create(role_id=role.id, username=username)
 
     # 拥有所有系统的权限
-    RoleUserSystemPermission.add_enabled_users(role.id, username)
+    # 直接获取或创建记录，避免调用可能不存在的类方法
+    permission, created = RoleUserSystemPermission.objects.get_or_create(role_id=role.id)
+    if created:
+        import json
+        content = json.loads(permission.content) if permission.content else {"enabled_users": [], "global_enabled": False}
+    else:
+        import json
+        content = json.loads(permission.content)
+    
+    if username not in content.get("enabled_users", []):
+        content["enabled_users"].append(username)
+        permission.content = json.dumps(content)
+        permission.save()
 
 
 class Migration(migrations.Migration):
