@@ -23,4 +23,13 @@ class Migration(migrations.Migration):
                 verbose_name="API类型",
             ),
         ),
+        migrations.AlterUniqueTogether(
+            name='authapiallowlistconfig',
+            unique_together={('system_id', 'object_id', 'type')},
+        ),
+        migrations.AlterIndexTogether(
+            name='authapiallowlistconfig',
+            index_together=set(),
+        ),
+
     ]
