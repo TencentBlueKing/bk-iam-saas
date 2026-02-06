@@ -120,7 +120,7 @@ export default {
         use: {
           loader: 'url-loader',
           options: {
-            // limit: 10000,
+            limit: 10000,
             name: assetsPath('fonts/[name].[hash:7].[ext]')
           }
         }
