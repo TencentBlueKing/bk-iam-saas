@@ -31,7 +31,7 @@ from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.biz.template import TemplateBiz
 from backend.common.serializers import GroupMemberSLZ, GroupSearchSLZ  # noqa
-from backend.common.time import PERMANENT_SECONDS, expired_at_display
+from backend.common.time import DEFAULT_EXPIRED_DURATION, PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import ADMIN_USER, GroupMemberType, RoleRelatedObjectType
 from backend.service.group_saas_attribute import GroupAttributeService
 
@@ -289,7 +289,7 @@ class GroupTransferSLZ(serializers.Serializer):
 class GroupMemberExpiredAtSLZ(GroupMemberSLZ, ExpiredAtSLZ):
     def validate_expired_at(self, value):
         # 过期时间不能大于一年
-        if value > (time.time() + 365 * 24 * 60 * 60):
+        if value > DEFAULT_EXPIRED_DURATION:
             raise serializers.ValidationError("The expiration date must not exceed one year.")
         return value
 
