@@ -50,6 +50,8 @@ class VueTemplateView(TemplateView):
                 ),
                 # IAM V4 地址
                 "BK_IAM_V4_URL": settings.BK_IAM_V4_URL.rstrip("/"),
+                # 是否开启超管拥有所有权限配置
+                "ENABLE_SUPER_ADMIN_HAS_ALL_PERMISSIONS": settings.ENABLE_SUPER_ADMIN_HAS_ALL_PERMISSIONS,
             }
 
             # 添加前端功能启用开关
