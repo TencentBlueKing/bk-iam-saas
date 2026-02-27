@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+from .audit_manager import AuditManagerViewSet
 from .group_member import (
     RoleGroupMemberCleanViewSet,
     RoleGroupMemberDepartmentGroupViewSet,
@@ -42,6 +43,7 @@ from .role import (
 )
 
 __all__ = [
+    "AuditManagerViewSet",
     "QueryAuthorizedSubjectsViewSet",
     "AuthScopeIncludeUserRoleView",
     "GradeManagerViewSet",

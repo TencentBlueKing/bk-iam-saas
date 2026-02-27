@@ -117,6 +117,7 @@ class RoleType(ChoicesEnum, LowerStrEnum):
         "rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
     )
     SUBSET_MANAGER = auto()
+    AUDIT_MANAGER = auto()  # 审计管理员
 
     _choices_labels = skip(
         (
@@ -125,6 +126,7 @@ class RoleType(ChoicesEnum, LowerStrEnum):
             (SYSTEM_MANAGER, "系统管理员"),
             (GRADE_MANAGER, "管理空间管理员"),
             (SUBSET_MANAGER, "二级管理空间管理员"),
+            (AUDIT_MANAGER, "审计管理员"),
         )
     )
 

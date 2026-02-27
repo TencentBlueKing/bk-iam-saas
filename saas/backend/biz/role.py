@@ -805,11 +805,17 @@ class RoleListQuery:
             type_order = Case(
                 When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
                 When(type=RoleType.SYSTEM_MANAGER.value, then=Value(2)),
-                When(type=RoleType.GRADE_MANAGER.value, then=Value(3)),
+                When(type=RoleType.AUDIT_MANAGER.value, then=Value(3)),
+                When(type=RoleType.GRADE_MANAGER.value, then=Value(4)),
             )
             queryset = (
                 Role.objects.filter(
-                    type__in=[RoleType.SUPER_MANAGER, RoleType.SYSTEM_MANAGER, RoleType.GRADE_MANAGER.value]
+                    type__in=[
+                        RoleType.SUPER_MANAGER.value,
+                        RoleType.SYSTEM_MANAGER.value,
+                        RoleType.AUDIT_MANAGER.value,
+                        RoleType.GRADE_MANAGER.value,
+                    ]
                 )
                 .alias(type_order=type_order)
                 .order_by("type_order", "-updated_time")

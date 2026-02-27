@@ -360,6 +360,65 @@ export default {
          */
     getScopeHasUser ({ commit, state, dispatch }, config) {
       return http.get(`${AJAX_URL_PREFIX}/roles/auth_scope_include_user_roles/`, config);
+    },
+
+    /**
+         * 获取审计管理员成员列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+    getAuditManager ({ commit, state, dispatch }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/roles/audit_managers/`, config);
+    },
+
+    /**
+         * 添加审计管理员成员
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+    addAuditManager ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/audit_managers/`, params, config);
+    },
+
+    /**
+         * 批量添加审计管理员成员
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+    batchAddAuditManager ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/audit_managers/batch/`, params, config);
+    },
+
+    /**
+         * 删除审计管理员成员
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+    deleteAuditManager ({ commit, state, dispatch }, params, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/roles/audit_managers/${params.username}/`, config);
     }
   }
 };
