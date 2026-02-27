@@ -228,7 +228,7 @@
         navData: [
           { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: ['staff'] },
           { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: ['all_manager'] },
-          { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: ['super_manager'] },
+          { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: ['super_manager', 'audit_manager'] },
           { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: ['super_manager'] }
         ],
         defaultRouteList: ['myPerm', 'userGroup', 'audit', 'user', 'addGroupPerm'],
@@ -680,7 +680,9 @@
       setTabRoleData () {
         const superManager = this.curRoleList.find((e) => e.type === 'super_manager');
         const systemManager = this.curRoleList.find((e) => e.type === 'system_manager');
-        const allManager = this.curRoleList.find((e) => e.type !== 'staff');
+        const auditManager = this.curRoleList.find((e) => e.type === 'audit_manager');
+        const manageSpaceRoleTypes = ['super_manager', 'system_manager', 'rating_manager', 'subset_manager'];
+        const allManager = this.curRoleList.find((e) => manageSpaceRoleTypes.includes(e.type));
         this.navData.forEach((element, i) => {
           element.active = i === this.index;
           const rolesMap = [
@@ -694,6 +696,12 @@
               () => element.type.includes('system_manager') && systemManager && !superManager,
               () => {
                 element = Object.assign(element, { id: systemManager.id, show: true });
+              }
+            ],
+            [
+              () => element.type.includes('audit_manager') && auditManager && !superManager,
+              () => {
+                element = Object.assign(element, { id: auditManager.id, show: true });
               }
             ],
             [
@@ -713,9 +721,11 @@
 
       setNavData () {
         this.$nextTick(() => {
+          const manageSpaceRoleTypes = ['super_manager', 'system_manager', 'rating_manager', 'subset_manager'];
+          const hasManageSpaceRole = this.roleList.some((item) => manageSpaceRoleTypes.includes(item.type));
           for (let i = 0; i < this.navData.length; i++) {
             if (this.navData[i].type.includes('all_manager')) {
-              this.navData[i].show = !!this.roleList.length;
+              this.navData[i].show = hasManageSpaceRole;
               break;
             }
           }

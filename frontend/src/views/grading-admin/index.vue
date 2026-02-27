@@ -942,7 +942,7 @@
       },
 
       handleOpenDocu () {
-        navDocCenterPath(this.versionLogs, `/UserGuide/Feature/ManagerCreate.md`, true);
+        navDocCenterPath(this.versionLogs, `/UserGuide/Feature/GradingManager.md`, true);
       }
     }
   };

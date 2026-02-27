@@ -14,17 +14,16 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
-from backend.account.permissions import role_perm_class
 from backend.audit.models import get_event_model
+from backend.audit.permissions import IsAuditManagerOrSuperManager
 from backend.common.filters import NoCheckModelFilterBackend
-from backend.service.constants import PermissionCodeEnum, RoleType
 
 from .filters import EventFilter
 from .serializers import EventDetailSchemaSLZ, EventDetailSLZ, EventListSchemaSLZ, EventListSLZ, EventQuerySLZ
 
 
 class EventViewSet(mixins.ListModelMixin, GenericViewSet):
-    permission_classes = [role_perm_class(PermissionCodeEnum.AUDIT.value)]
+    permission_classes = [IsAuditManagerOrSuperManager]
 
     lookup_field = "id"
     serializer_class = EventListSLZ
@@ -34,15 +33,7 @@ class EventViewSet(mixins.ListModelMixin, GenericViewSet):
     def get_queryset(self):
         month = self.request.query_params.get("month", "")
         Event = get_event_model(month)  # noqa: N806
-        queryset = Event.objects.order_by("-created_time")
-
-        role = self.request.role
-        if role.type == RoleType.SUPER_MANAGER.value:
-            return queryset
-        if role.type in [RoleType.SYSTEM_MANAGER.value, RoleType.GRADE_MANAGER.value]:
-            return queryset.filter(role_id=role.id)
-
-        return queryset.none()
+        return Event.objects.order_by("-created_time")
 
     @swagger_auto_schema(
         operation_description="审计事件列表",
