@@ -207,7 +207,7 @@
             }
         }
         .edit-content {
-            max-width: calc(100% - 25px);
+            max-width: calc(-280px + 75vw);
             line-height: 32px;
             white-space: nowrap;
             overflow: hidden;

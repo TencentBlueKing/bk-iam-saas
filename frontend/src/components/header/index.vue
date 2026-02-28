@@ -232,7 +232,7 @@
             };
           }
           return {
-            'max-width': `calc(100vw - ${this.navStick ? 280 : 80}px)`
+            'max-width': `calc(95vw - ${this.navStick ? 280 : 80}px)`
           };
         };
       }
