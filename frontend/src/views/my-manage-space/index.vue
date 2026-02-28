@@ -1041,7 +1041,7 @@
       },
 
       handleOpenDocu () {
-        navDocCenterPath(this.versionLogs, `/UserGuide/Feature/UserApply.md`, true);
+        navDocCenterPath(this.versionLogs, `/UserGuide/Feature/GradingManager.md`, true);
       }
     }
   };
