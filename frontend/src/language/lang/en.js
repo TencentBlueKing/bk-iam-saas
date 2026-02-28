@@ -1066,7 +1066,10 @@ export const m = {
     set: {
         '超级管理员提示': 'Super administrators have all authorization permissions default',
         '系统管理员提示': 'The system administrators have all authorization permissions of the corresponding system default',
+        '审计管理员': 'Audit Administrator',
+        '审计管理员提示': 'Audit administrators are allowed to view all audit logs',
         '添加超级管理员': 'Add super administrators',
+        '添加审计管理员': 'Add audit administrators',
         '名称': 'Name',
         '更多权限设置': 'More permissions setting',
         '拥有蓝鲸平台所有操作权限': 'Have all  permissions',
@@ -1076,7 +1079,8 @@ export const m = {
         '管理员列表': 'administrators List',
         '设置成功': 'Set successfully',
         '取消设置成功': 'Undo successfully',
-        '确定删除该超级管理员': 'Confirm to delete the super administrator?'
+        '确定删除该超级管理员': 'Confirm to delete the super administrator?',
+        '确定删除该审计管理员': 'Confirm to delete the audit administrator?'
     },
     approvalProcess: {
         '自定义权限': 'Custom Permission',

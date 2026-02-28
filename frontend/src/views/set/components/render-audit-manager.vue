@@ -101,7 +101,6 @@
     },
     data () {
       return {
-        subTitle: '审计管理员拥有查看所有审计日志的权限',
         saveDisableTip: '',
         auditUserList: [],
         userApi: window.BK_USER_API,
@@ -116,6 +115,9 @@
     },
     computed: {
       ...mapGetters(['user']),
+      subTitle () {
+        return this.$t(`m.set['审计管理员提示']`);
+      },
       isDisabled () {
         return (payload) => {
           if (!payload.user.length) {

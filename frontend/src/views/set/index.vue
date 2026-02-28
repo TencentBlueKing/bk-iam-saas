@@ -32,7 +32,7 @@
         panels: [
           { name: 'SuperManager', label: this.$t(`m.myApproval['超级管理员']`) },
           { name: 'SystemManager', label: this.$t(`m.nav['系统管理员']`) },
-          { name: 'AuditManager', label: '审计管理员' }
+          { name: 'AuditManager', label: this.$t(`m.set['审计管理员']`) }
         ],
         active: 'SuperManager',
         curRole: 'staff',
