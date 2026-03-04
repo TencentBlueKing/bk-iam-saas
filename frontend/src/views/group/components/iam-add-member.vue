@@ -748,10 +748,10 @@
         };
       },
       formatAllSelectedUsers () {
-       return [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+        return [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
       },
       formatAllSelectedDeparts () {
-       return [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+        return [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
       },
       isStaff () {
         return this.user.role.type === 'staff';
@@ -1016,6 +1016,18 @@
               } else {
                 item.checked = this.exactSearchList.some(ex => ex === item.username)
                   || hasSelectedUsers.includes(`${item.username}${item.name}`);
+              }
+              // 同步更新组织架构已选择的数据，取消勾选时需要从已选择的数据中去掉
+              if (!item.checked) {
+                if (['depart', 'department'].includes(item.type)) {
+                  this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter((depart) =>
+                    `${depart.name}&${depart.id}` !== `${item.name}&${item.id}`
+                  );
+                } else {
+                  this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter((user) =>
+                    `${user.username}${user.name}` !== `${item.username}${item.name}`
+                  );
+                }
               }
               this.$refs.manualTableRef.toggleRowSelection(
                 item,
