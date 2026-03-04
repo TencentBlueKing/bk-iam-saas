@@ -883,9 +883,8 @@
         this.$nextTick(() => {
           if (this.$refs.manualTableRef) {
             this.manualTableList.forEach((item) => {
-              const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers].map((v) => `${v.username}${v.name}`);
-              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments]
-                .map((v) => String(v.id));
+              const hasSelectedUsers = [...this.hasSelectedUsers].map((v) => `${v.username}${v.name}`);
+              const hasSelectedDepartments = [...this.hasSelectedDepartments].map((v) => String(v.id));
               item.checked = (hasSelectedUsers.includes(`${item.username}${item.name}`))
                 || (['depart', 'department'].includes(item.type) && hasSelectedDepartments.includes(String(item.id)));
               this.$refs.manualTableRef.toggleRowSelection(
