@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 from collections import defaultdict
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -574,6 +574,50 @@ class RoleService:
             return 0
 
         return relation.parent_id
+
+    def get_group_role_info_by_ids(self, group_ids: List[int]) -> Dict[int, Tuple[str, str]]:
+        """
+        批量查询用户组对应的角色名及父角色名
+        """
+        if not group_ids:
+            return {}
+
+        # 1. 批量查询 group_id -> role_id 映射
+        role_related_objects = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id__in=group_ids
+        ).values("object_id", "role_id")
+        group_to_role_id: Dict[int, int] = {obj["object_id"]: obj["role_id"] for obj in role_related_objects}
+
+        role_ids = list(group_to_role_id.values())
+        if not role_ids:
+            return {}
+
+        # 2. 批量查询 role_id -> role 映射
+        roles = Role.objects.filter(id__in=role_ids).values("id", "name")
+        role_id_to_name: Dict[int, str] = {role["id"]: role["name"] for role in roles}
+
+        # 3. 批量查询 role_id -> parent_role_id 映射
+        relations = RoleRelation.objects.filter(role_id__in=role_ids).values("role_id", "parent_id")
+        role_to_parent_id: Dict[int, int] = {rel["role_id"]: rel["parent_id"] for rel in relations}
+
+        # 4. 批量查询父角色名称
+        parent_role_ids = list(role_to_parent_id.values())
+        parent_roles = Role.objects.filter(id__in=parent_role_ids).values("id", "name") if parent_role_ids else []
+        parent_role_id_to_name: Dict[int, str] = {role["id"]: role["name"] for role in parent_roles}
+
+        # 5. 组装结果
+        result: Dict[int, Tuple[str, str]] = {}
+        for group_id in group_ids:
+            role_id = group_to_role_id.get(group_id)
+            if role_id is None:
+                result[group_id] = ("", "")
+                continue
+            role_name = role_id_to_name.get(role_id, "")
+            parent_role_id = role_to_parent_id.get(role_id)
+            parent_role_name = parent_role_id_to_name.get(parent_role_id, "") if parent_role_id else ""
+            result[group_id] = (role_name, parent_role_name)
+
+        return result
 
     def list_user_role_for_system(self, user_id: str, system_id: str) -> List[UserRole]:
         """

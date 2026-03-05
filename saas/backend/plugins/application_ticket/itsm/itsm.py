@@ -22,6 +22,7 @@ from backend.service.models import (
     GroupApplicationData,
     TypeUnionApplicationData,
 )
+from backend.service.role import RoleService
 
 from ..base import ApplicationTicketProvider
 from .constants import TicketStatus
@@ -143,7 +144,17 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 if data.type == ApplicationType.JOIN_GROUP
                 else f"申请续期 {len(data.content.groups)} 个用户组"
             )
-        title = "{}：{}".format(title_prefix, "、".join([f"({one.role_name}){one.name}" for one in data.content.groups]))
+        group_ids = [one.id for one in data.content.groups]
+        group_role_info = RoleService().get_group_role_info_by_ids(group_ids)
+        result = []
+        for one in data.content.groups:
+            role_name, parent_role_name = group_role_info.get(one.id, ("", ""))
+            if parent_role_name:
+                result.append(f"{parent_role_name}的({role_name}){one.name}")
+            else:
+                result.append(f"({role_name}){one.name}")
+
+        title = "{}：{}".format(title_prefix, "、".join(result))
         if len(title) > 64:
             title = title[:64] + "..."
 
