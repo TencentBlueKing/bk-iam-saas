@@ -50,6 +50,8 @@ class VueTemplateView(TemplateView):
                 ),
                 # IAM V4 地址
                 "BK_IAM_V4_URL": settings.BK_IAM_V4_URL.rstrip("/"),
+                # 个人中心地址
+                "BK_PERSONAL_CENTER_URL": settings.BK_PERSONAL_CENTER_URL.rstrip("/"),
             }
 
             # 添加前端功能启用开关
