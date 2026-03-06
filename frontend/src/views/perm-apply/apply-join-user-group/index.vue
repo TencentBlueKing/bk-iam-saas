@@ -1,16 +1,22 @@
 <template>
   <smart-action class="iam-join-user-group-wrapper">
-    <render-member
-      :required="false"
-      :users="users"
-      :departments="departments"
-      :is-all="isAll"
-      :render-title="addMemberTitle"
-      :render-text="addMemberText"
-      :tips="addMemberTips"
-      @on-add="handleAddMember"
-      @on-delete="handleMemberDelete"
-    />
+    <render-horizontal-block :label="addMemberTitle" :required="true">
+      <render-member
+        ref="addMemberRef"
+        class="perm-recipient-wrapper"
+        :required="false"
+        :label-width="0"
+        :users="users"
+        :departments="departments"
+        :is-all="isAll"
+        :render-title="''"
+        :render-text="addMemberText"
+        :tips="addMemberTips"
+        @on-add="handleAddMember"
+        @on-delete="handleMemberDelete"
+      />
+      <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p>
+    </render-horizontal-block>
     <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
       <div
         ref="selectTableRef"
@@ -450,7 +456,6 @@
         isShowAddMemberDialog: false,
         isShowExpiredError: false,
         isShowGroupError: false,
-        isShowMemberError: false,
         isShowMemberAdd: false,
         isShowMemberEmptyError: false,
         tableList: [],
@@ -619,9 +624,12 @@
       // 查找权限获得者是不是只是当前登录的成员
       isLoginSelf () {
         if (!this.allMembersList.length) {
-          return true;
+          return false;
         }
         return this.allMembersList.every(item => item.username === this.user.username);
+      },
+      isShowMemberError () {
+        return this.allMembersList.length < 1;
       }
     },
     watch: {
@@ -1163,7 +1171,6 @@
         this.isAll = false;
         this.users = _.cloneDeep(users);
         this.departments = _.cloneDeep(departments);
-        // this.isShowMemberAdd = false;
         this.isShowAddMemberDialog = false;
         this.isShowMemberEmptyError = false;
         this.formatCheckedUserGroup();
@@ -1529,6 +1536,10 @@
         //     }
         //   }
         // }
+        if (this.isShowMemberEmptyError) {
+          this.scrollToLocation(this.$refs.addMemberRef);
+          return;
+        }
         if (!groupsList.length) {
           this.isShowGroupError = true;
           this.scrollToLocation(this.$refs.selectTableRef);
@@ -1784,6 +1795,16 @@
     min-width: 80px;
     line-height: 1;
     margin-left: 5px;
+  }
+}
+
+/deep/ .perm-recipient-wrapper {
+  .horizontal-item {
+    padding: 0;
+    box-shadow: none;
+    .label {
+      width: 0;
+    }
   }
 }
 </style>
