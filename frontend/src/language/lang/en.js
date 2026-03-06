@@ -309,7 +309,8 @@ export const m = {
         '了解更多': 'Learn more',
         '前往申请': 'Go apply',
         '切换新版': 'Switch to the new version',
-        '切换至新版权限中心': "Switch to the new version of the BKIAM"
+        '切换至新版权限中心': "Switch to the new version of the BKIAM",
+        "个人中心链接未配置": "Personal center link not configured"
     },
     // 校验
     verify: {

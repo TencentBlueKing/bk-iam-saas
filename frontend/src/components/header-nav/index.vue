@@ -47,6 +47,9 @@
           <div class="item" @click="handleOpenSource">
             {{ $t(`m.common['开源社区']`) }}
           </div>
+          <div class="item" @click="handleOpenPersonalCenter">
+            {{ $t(`m.common['个人中心']`) }}
+          </div>
         </div>
       </div>
       <div class="lang-flag">
@@ -436,6 +439,15 @@
 
       handleOpenSource () {
         window.open(`https://github.com/TencentBlueKing/bk-iam`);
+      },
+
+      handleOpenPersonalCenter () {
+        const url = window.BK_PERSONAL_CENTER_URL;
+        if (!url) {
+          this.messageWarn(this.$t(`m.common['个人中心链接未配置']`));
+          return;
+        }
+        window.open(url);
       },
 
       handleOpenNewIAM () {
