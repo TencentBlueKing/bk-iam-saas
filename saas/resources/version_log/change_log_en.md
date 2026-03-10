@@ -1,3 +1,20 @@
+<!-- 2026-03-05 -->
+# V1.10.55 Version Update Log
+
+### Features
+* Supported sub-path deployment
+
+### Feature Enhancements
+* Organization selector now only auto-selects when there is an exact match
+* When applying for custom permissions, existing personal permissions are only displayed when the permission recipient is the current logged-in user
+* When applying to join user groups, existing user groups are only displayed when the permission recipient is the current logged-in user
+
+### Fixes
+* Fixed an issue where switching to organization option in organization selector would auto-select by default
+* Fixed an issue where switching to personnel template option in organization selector would auto-select by default
+
+---
+
 <!-- 2026-02-04 -->
 # V1.10.53 Version Update Log
 
