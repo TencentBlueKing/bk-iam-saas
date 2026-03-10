@@ -530,4 +530,6 @@ BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/communit
 USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1000)
 
 # 是否开启超级管理员拥有所有权限配置
-ENABLE_SUPER_ADMIN_HAS_ALL_PERMISSIONS = env.bool("ENABLE_SUPER_ADMIN_HAS_ALL_PERMISSIONS", default=False)
+ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING = env.bool(
+    "ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING", default=False
+)
