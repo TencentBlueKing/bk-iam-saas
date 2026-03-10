@@ -27,12 +27,36 @@
 </template>
 <script>
   import { mapGetters } from 'vuex';
+
+  // 提取常量：避免魔法值，便于统一维护
+  const TIME_CONSTANTS = {
+    // 月数对应的秒数（30天/月）
+    MONTH_SECONDS_MAP: {
+      1: 2592000,
+      3: 7776000,
+      6: 15552000,
+      12: 31104000
+    },
+    // 永久续期的时间戳
+    PERMANENT_TIMESTAMP: 4102444800,
+    // 自定义天数最大值
+    MAX_CUSTOM_DAY: 365,
+    // 文案key常量
+    TEXT_KEYS: {
+      ONE_MONTH: 'm.common["1个月"]',
+      THREE_MONTH: 'm.common["3个月"]',
+      SIX_MONTH: 'm.common["6个月"]',
+      TWELVE_MONTH: 'm.common["12个月"]',
+      PERMANENT: 'm.common["永久"]',
+      CUSTOM: 'm.common["自定义"]'
+    }
+  };
+
   export default {
-    name: '',
     props: {
       value: {
         type: [String, Number],
-        default: 4102444800
+        default: TIME_CONSTANTS.PERMANENT_TIMESTAMP
       },
       // type：normal，dialog
       type: {
@@ -42,18 +66,16 @@
       curRole: {
         type: String,
         default: ''
+      },
+      // 是否展示永久续期选项
+      showPermanentRenewal: {
+        type: Boolean,
+        default: false,
+        required: false
       }
     },
     data () {
       return {
-        timeFilters: {
-          2592000: this.$t(`m.common['1个月']`),
-          7776000: this.$t(`m.common['3个月']`),
-          15552000: this.$t(`m.common['6个月']`),
-          31104000: this.$t(`m.common['12个月']`),
-          // 4102444800: this.$t(`m.common['永久']`),
-          'custom': this.$t(`m.common['自定义']`)
-        },
         currentActive: 4102444800,
         customTime: 1,
         isFocus: false
@@ -72,34 +94,57 @@
       },
       isSuper () {
           return this.user.role.type === 'super_manager';
+      },
+      timeFilters () {
+        // 基础时间选项（1/3/6/12个月 + 自定义）
+        const baseFilters = {
+          [TIME_CONSTANTS.MONTH_SECONDS_MAP[1]]: this.$t(TIME_CONSTANTS.TEXT_KEYS.ONE_MONTH),
+          [TIME_CONSTANTS.MONTH_SECONDS_MAP[3]]: this.$t(TIME_CONSTANTS.TEXT_KEYS.THREE_MONTH),
+          [TIME_CONSTANTS.MONTH_SECONDS_MAP[6]]: this.$t(TIME_CONSTANTS.TEXT_KEYS.SIX_MONTH),
+          [TIME_CONSTANTS.MONTH_SECONDS_MAP[12]]: this.$t(TIME_CONSTANTS.TEXT_KEYS.TWELVE_MONTH),
+          custom: this.$t(TIME_CONSTANTS.TEXT_KEYS.CUSTOM)
+        };
+
+        // 超管或需展示永久选项时，添加永久选项
+        const shouldShowPermanent = this.isSuper || this.showPermanentRenewal;
+        if (shouldShowPermanent) {
+          return {
+            ...baseFilters,
+            [TIME_CONSTANTS.PERMANENT_TIMESTAMP]: this.$t(TIME_CONSTANTS.TEXT_KEYS.PERMANENT)
+          };
+        }
+
+        return baseFilters;
+      },
+      // 所有合法的固定时间戳集合（用于value校验）
+      validFixedTimestamps () {
+        return [
+          ...Object.values(TIME_CONSTANTS.MONTH_SECONDS_MAP),
+          TIME_CONSTANTS.PERMANENT_TIMESTAMP
+        ];
       }
     },
-
     watch: {
       value: {
-        handler (payload) {
-          if (![2592000, 7776000, 15552000, 31104000, 4102444800].includes(payload)) {
+        handler (newValue) {
+          const numValue = Number(newValue);
+          // 非固定时间戳则选中自定义
+          if (!this.validFixedTimestamps.includes(numValue)) {
             this.currentActive = 'custom';
+            // 反向计算自定义天数（兼容父组件传入自定义时间戳的场景）
+            this.customTime = Math.min(
+              Math.floor(numValue / (24 * 3600)) || 1,
+              TIME_CONSTANTS.MAX_CUSTOM_DAY
+            );
             return;
           }
-          this.$set(this.timeFilters, 'custom', this.$t(`m.common['自定义']`));
-          this.currentActive = payload;
+          this.currentActive = numValue;
         },
         immediate: true
       }
     },
-
     created () {
-      if (this.isSuper) {
-        this.timeFilters = {
-          2592000: this.$t(`m.common['1个月']`),
-          7776000: this.$t(`m.common['3个月']`),
-          15552000: this.$t(`m.common['6个月']`),
-          31104000: this.$t(`m.common['12个月']`),
-          4102444800: this.$t(`m.common['永久']`),
-          'custom': this.$t(`m.common['自定义']`)
-        };
-      }
+      
     },
     methods: {
       handleTimeFilter (payload) {
@@ -126,30 +171,29 @@
       },
 
       handleTimeInput (e) {
-        if (!/^[0-9]*$/.test(e.target.value)) {
+        // 过滤所有非数字字符
+        let inputValue = e.target.value.replace(/\D/g, '');
+
+        if (!/^[0-9]*$/.test(inputValue)) {
           this.customTime = 1;
           this.handleTrigger();
           return;
         }
-        if (e.target.value.length === 1) {
-          this.customTime = e.target.value.replace(/[^1-9]/g, '');
-        } else {
-          this.customTime = e.target.value.replace(/\D/g, '');
+
+        // 限制最大365天
+        if (inputValue.length > 3 || Number(inputValue) > TIME_CONSTANTS.MAX_CUSTOM_DAY) {
+          inputValue = String(TIME_CONSTANTS.MAX_CUSTOM_DAY);
         }
-        if (e.target.value > 365 && e.target.value.length === 3) {
-          this.customTime = 365;
-        } else {
-          if (e.target.value.length > 3) {
-            this.customTime = parseInt(e.target.value.slice(0, 3), 10);
-          }
-        }
+
+        this.customTime = inputValue.length === 1 ? inputValue.replace(/[^1-9]/g, '') : inputValue;
         this.handleTrigger();
       },
 
       handleTrigger () {
         let timestamp = 0;
         if (this.currentActive === 'custom') {
-          timestamp = this.customTime * 24 * 3600;
+          // 自定义天数转秒数，确保至少1天
+          timestamp = Math.max(Number(this.customTime) || 1, 1) * 24 * 3600;
         } else {
           timestamp = Number(this.currentActive);
         }

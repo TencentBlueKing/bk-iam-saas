@@ -36,18 +36,20 @@
             </template>
           </template>
         </bk-table-column>
-        <!-- <bk-table-column :label="$t(`m.set['更多权限设置']`)">
-          <template slot-scope="{ row }">
-            <bk-checkbox
-              :true-value="true"
-              :false-value="false"
-              :disabled="row.username === 'admin'"
-              :value="row.system_permission_enabled"
-              @change="handleEnabledChange(...arguments, row)">
-              {{ $t(`m.set['拥有蓝鲸平台所有操作权限']`) }}
-            </bk-checkbox>
-          </template>
-        </bk-table-column> -->
+        <template v-if="enableAccessSystemSuperPermissionSetting">
+          <bk-table-column :label="$t(`m.set['更多权限设置']`)">
+            <template slot-scope="{ row }">
+              <bk-checkbox
+                :true-value="true"
+                :false-value="false"
+                :disabled="row.username === 'admin'"
+                :value="row.system_permission_enabled"
+                @change="handleEnabledChange(...arguments, row)">
+                {{ $t(`m.set['拥有蓝鲸平台所有操作权限']`) }}
+              </bk-checkbox>
+            </template>
+          </bk-table-column>
+        </template>
         <bk-table-column :label="$t(`m.common['操作-table']`)" width="120">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit">
@@ -129,6 +131,7 @@
     },
     data () {
       return {
+        enableAccessSystemSuperPermissionSetting: window.ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING.toLowerCase() === 'true',
         subTitle: this.$t(`m.set['超级管理员提示']`),
         saveDisableTip: '',
         superUserList: [],

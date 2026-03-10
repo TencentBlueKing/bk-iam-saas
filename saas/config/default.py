@@ -530,6 +530,9 @@ BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/communit
 # 接入用户管理的接口page_size默认值
 USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1000)
 
+# 个人中心地址
+BK_PERSONAL_CENTER_URL = env.str("BK_PERSONAL_CENTER_URL", default="")
+
 # PCG 离职交接相关配置
 PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
 PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")

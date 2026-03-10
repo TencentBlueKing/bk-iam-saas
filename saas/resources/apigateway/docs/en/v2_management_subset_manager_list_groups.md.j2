@@ -1,0 +1,53 @@
+### Query User Groups under Subset Manager
+
+#### Parameters
+| Field | Type | Location | Required | Description |
+|---|---|---|---|---|
+| system_id | string | path | Yes | System unique identifier |
+| subset_manager_id| int | path | Yes | Subset manager ID |
+| name | string | query | No | User group name filter |
+| id | int | query | No | User group ID filter |
+| page_size | int | query | Yes | Page size, maximum 500 |
+| page | int | query | Yes | Page number |
+
+#### Request
+```
+GET /api/v2/open/management/systems/demo/subset_managers/1/groups/?page_size=100&page=1
+```
+
+#### Response
+
+> Status: 200 OK
+
+| Field | Type | Description |
+|---|---|---|
+| id| int | User Group ID |
+| name| string | User Group Name |
+| description| string | User Group Description |
+| readonly| bool| The user group is read-only. If true, the user group cannot be deleted on the IAM (Identity and Access Management) product |
+| user_count| int| Number of user members |
+| department_count| int| Number of department members |
+| apply_disable| bool | User group apply to disable |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "count": 1,
+    "results": [
+      {
+        "id": 1,
+        "name": "User Group",
+        "description": "User Group",
+        "readonly": false,
+        "user_count": 1,
+        "department_count": 1,
+        "apply_disable":true
+      }
+    ]
+  }
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

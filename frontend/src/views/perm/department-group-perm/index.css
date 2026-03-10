@@ -2,7 +2,7 @@
 .my-perm-group-perm {
     height: 100%;
     .iam-perm-ext-cls {
-        margin-top: 1px;
+        margin-top: 10px;
     }
     .bk-table {
         border-right: none;

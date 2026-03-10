@@ -115,19 +115,24 @@ export default class Instance {
       const len = item.length;
       const displayName = item.map(sub => sub.name).join('/');
       const tempPath = item.filter(v => v.id !== '*');
-      // 过滤重复id的数据，且最后一条path的实例范围不是无限制
-      const isUnique = !tempList.some(sub => sub.id === item[len - 1].id && item[len - 1].id !== '*');
+    
+      // 生成完整路径的唯一标识（拼接所有节点ID）
+      const fullPathId = item.map(sub => sub.id).join('_');
+      // 判断重复时基于完整路径ID
+      const isUnique = !tempList.some(sub => sub.fullPathId === fullPathId && item[len - 1].id !== '*');
+
       if (isUnique) {
         let disabled = false;
         if (this.instanceNotDisabled) {
           disabled = false;
         } else {
-        // disabled = ['', 'custom'].includes(this.flag) ? !item.some(v => v.tag === 'add') : false;
           disabled = item.some(v => v.tag === 'add') ? false : item.some(subItem => subItem.disabled);
         }
+        // 把完整路径fullPathId存入，供后续去重判断
         tempList.push({
           name: item[len - 1].name,
           id: item[len - 1].id,
+          fullPathId: fullPathId,
           level: len - 1,
           type: item[len - 1].type,
           parentChain: tempPath.slice(0, tempPath.length - 1),

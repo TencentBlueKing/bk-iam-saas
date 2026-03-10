@@ -24,7 +24,7 @@ from django.utils import timezone
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.constants import NotificationTypeEnum
-from backend.apps.role.models import Role, RoleUser
+from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
@@ -32,13 +32,13 @@ from backend.biz.constants import StaffStatus
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleWithPermGroupBiz, get_user_expired_groups_policies
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz, get_global_notification_config
+from backend.biz.role import RoleBiz, RoleCheckBiz, get_global_notification_config
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.common.time import db_time, get_expired_at, need_run_expired_remind
 from backend.component import esb
 from backend.component.bkbot import send_iam_ticket
-from backend.service.constants import RoleType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
 from backend.util.time import timestamp_to_local
 from backend.util.url import url_join
@@ -187,12 +187,21 @@ def user_group_policy_expire_remind():
     # 2. 查询用户组成员过期
     group_biz = GroupBiz()
     group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_before)
+    role_check_biz = RoleCheckBiz()
     for gs in group_subjects:
         if gs.subject.type != SubjectType.USER.value:
             continue
 
         # 判断过期时间是否在区间内
         if gs.expired_at < expired_at_after:
+            continue
+
+        # 检查用户组对应的分级管理员是否启用
+        # 若分级管理员被禁用，或是二级管理空间且其一级管理空间被禁用，则不发送续期通知
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=gs.group.id
+        ).first()
+        if not relation or not role_check_biz.is_role_enabled(relation.role_id):
             continue
 
         username = gs.subject.id

@@ -3,6 +3,22 @@
   <div>
     <!-- 申请自定义权限正常跳转 -->
     <smart-action class="biz-perm-apply" v-if="!isNoPermApply && !isNoPermissionsSet">
+      <render-horizontal-block :label="$t(`m.permApply['选择权限获得者']`)" :required="true">
+        <section ref="permRecipientRef">
+          <bk-user-selector
+            :value="permMembers"
+            :api="userApi"
+            :placeholder="$t(`m.permApply['请输入权限获得者']`)"
+            :style="{ width: '60%' }"
+            :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+            :empty-text="$t(`m.common['无匹配人员']`)"
+            data-test-id="grading_userSelector_member"
+            @focus="handleRtxFocus"
+            @blur="handleRtxBlur"
+            @change="handleRtxChange" />
+          <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p>
+        </section>
+      </render-horizontal-block>
       <render-horizontal-block :required="true" ext-cls="apply-way-wrapper" :label="$t(`m.permApply['选择操作']`)">
         <render-search>
           <bk-select
@@ -255,22 +271,6 @@
           </div>
         </div>
       </render-horizontal-block>
-      <render-horizontal-block :label="$t(`m.permApply['选择权限获得者']`)" :required="false">
-        <section ref="permRecipientRef">
-          <bk-user-selector
-            :value="permMembers"
-            :api="userApi"
-            :placeholder="$t(`m.permApply['请输入权限获得者']`)"
-            :style="{ width: '60%' }"
-            :class="isShowMemberError ? 'is-member-empty-cls' : ''"
-            :empty-text="$t(`m.common['无匹配人员']`)"
-            data-test-id="grading_userSelector_member"
-            @focus="handleRtxFocus"
-            @blur="handleRtxBlur"
-            @change="handleRtxChange" />
-          <!-- <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p> -->
-        </section>
-      </render-horizontal-block>
       <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
         <section ref="resInstanceReasonRef">
           <bk-input
@@ -460,7 +460,7 @@
                 text
                 theme="primary"
                 style="font-size: 12px;"
-                @click="handleToCustompermissions">
+                @click="handleNavPermission">
                 {{ $t(`m.info['申请自定义权限']`) }}
               </bk-button>
             </div>
@@ -560,7 +560,7 @@
               text
               theme="primary"
               style="font-size: 12px;"
-              @click="handleToCustompermissions">
+              @click="handleNavPermission">
               {{ $t(`m.info['申请自定义权限']`) }}
             </bk-button>
           </div>
@@ -757,77 +757,83 @@
       };
     },
     computed: {
-        ...mapGetters(['user', 'externalSystemId']),
-        // 是否无权限申请
-        isNoPermApply () {
-            return this.routerQuery.system_id;
-        },
-        // 无权限组时
-        isNoPermissionsSet () {
-            return this.routerQuery.cache_id;
-        },
-        isShowGroupTitle () {
-            return (item) => {
-              const isExistActions = item.actions && item.actions.length > 0;
-                const isExistSubGroup = (item.sub_groups || []).some(v =>
-                (v.sub_groups && v.sub_groups.length > 0)
-                 || (v.actions && v.actions.length > 0)
-                 );
-              return isExistSubGroup || isExistActions;
-            };
-        },
-        isShowGroupAction () {
-            return (item) => {
-                const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
-                return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
-            };
-        },
-        isShowGroupSubAction () {
-            return (item) => {
-              const isExistSubGroup = (item.sub_groups || []).some(v =>
-                (v.sub_groups && v.sub_groups.length > 0)
-                 || (v.actions && v.actions.length > 0)
-                 );
-              return item.sub_groups && item.sub_groups.length > 0 && isExistSubGroup;
-            };
-        },
-        customLoading () {
-            return this.requestQueue.length > 0;
-        },
-        isAggregateDisabled () {
-            const isDisabled = this.tableData.length < 1 || this.aggregations.length < 1
-            || (this.tableData.length === 1 && !this.tableData[0].isAggregate);
-            return isDisabled;
-        },
-        isUnlimitedDisabled () {
-          const isDisabled = this.tableData.every(item =>
-           ((!item.resource_groups || (item.resource_groups && !item.resource_groups.length)) && !item.instances)
-           );
-           if (isDisabled) {
-            this.isAllUnlimited = false;
-           }
-          return isDisabled;
-        },
-        curSelectActions () {
-            const allActionIds = [];
-            this.originalCustomTmplList.forEach(payload => {
-              if (!payload.actionsAllDisabled) {
-                payload.actions.forEach(item => {
-                    if (item.checked) {
-                        allActionIds.push(item.id);
-                    }
-                });
-                (payload.sub_groups || []).forEach(subItem => {
-                    (subItem.actions || []).forEach(act => {
-                        if (act.checked) {
-                            allActionIds.push(act.id);
-                        }
-                    });
-                });
+      ...mapGetters(['user', 'externalSystemId']),
+      // 是否无权限申请
+      isNoPermApply () {
+        return this.routerQuery.system_id;
+      },
+      // 无权限组时
+      isNoPermissionsSet () {
+        return this.routerQuery.cache_id;
+      },
+      isShowGroupTitle () {
+        return (item) => {
+          const isExistActions = item.actions && item.actions.length > 0;
+          const isExistSubGroup = (item.sub_groups || []).some(v =>
+            (v.sub_groups && v.sub_groups.length > 0)
+            || (v.actions && v.actions.length > 0));
+          return isExistSubGroup || isExistActions;
+        };
+      },
+      isShowGroupAction () {
+        return (item) => {
+          const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
+          return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
+        };
+      },
+      isShowGroupSubAction () {
+        return (item) => {
+          const isExistSubGroup = (item.sub_groups || []).some(v =>
+            (v.sub_groups && v.sub_groups.length > 0)
+              || (v.actions && v.actions.length > 0)
+              );
+          return item.sub_groups && item.sub_groups.length > 0 && isExistSubGroup;
+        };
+      },
+      customLoading () {
+        return this.requestQueue.length > 0;
+      },
+      isAggregateDisabled () {
+        const isDisabled = this.tableData.length < 1 || this.aggregations.length < 1
+        || (this.tableData.length === 1 && !this.tableData[0].isAggregate);
+        return isDisabled;
+      },
+      isUnlimitedDisabled () {
+        const isDisabled = this.tableData.every(item =>
+          ((!item.resource_groups || (item.resource_groups && !item.resource_groups.length)) && !item.instances)
+        );
+        if (isDisabled) {
+          this.isAllUnlimited = false;
+        }
+        return isDisabled;
+      },
+      curSelectActions () {
+        const allActionIds = [];
+        this.originalCustomTmplList.forEach(payload => {
+          if (!payload.actionsAllDisabled) {
+            payload.actions.forEach(item => {
+              if (item.checked) {
+                allActionIds.push(item.id);
               }
             });
-            return allActionIds;
+            (payload.sub_groups || []).forEach(subItem => {
+              (subItem.actions || []).forEach(act => {
+                if (act.checked) {
+                  allActionIds.push(act.id);
+                }
+              });
+            });
+          }
+        });
+        return allActionIds;
+      },
+      // 查找权限获得者是不是只是当前登录的成员
+      isLoginSelf () {
+        if (!this.permMembers.length) {
+          return false;
         }
+        return this.permMembers.every(item => item === this.user.username);
+      }
     },
     watch: {
       '$route': {
@@ -920,7 +926,7 @@
           name: 'applyJoinUserGroup'
         });
       },
-      handleToCustompermissions () {
+      handleNavPermission () {
         this.$router.push({
           name: 'applyCustomPerm'
         });
@@ -952,9 +958,10 @@
         this.isShowMemberError = this.permMembers.length < 1;
       },
 
-      handleRtxChange (payload) {
-        this.isShowMemberError = false;
+      async handleRtxChange (payload) {
+        this.isShowMemberError = payload.length < 1;
         this.permMembers = [...payload];
+        await this.fetchSystemActions(this.systemValue);
       },
       setDefaultSelect (payload) {
         return !this.curUserGroup.includes(payload.id.toString());
@@ -1025,29 +1032,6 @@
           this.messageAdvancedError(e);
         }
       },
-      /**
-       * 获取页面数据
-       */
-      // async fetchPageData () {
-      //     await this.fetchSystems();
-      //     if (this.systemValue) {
-      //         await Promise.all([
-      //             this.fetchPolicies(this.systemValue),
-      //             this.fetchAggregationAction(this.systemValue),
-      //             this.fetchCommonActions(this.systemValue)
-      //         ]);
-      //     }
-      //     if (this.sysAndtid) {
-      //         await Promise.all([
-      //             // 获取用户组数据
-      //             this.fetchUserGroupList(),
-      //             // 获取个人用户的用户组列表
-      //             this.fetchCurUserGroup(),
-      //             // 获取推荐操作
-      //             this.fetchRecommended()
-      //         ]);
-      //     }
-      // },
       async fetchPageData () {
         await this.fetchSystems();
         if (this.systemValue) {
@@ -2191,8 +2175,8 @@
           }
           item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
-            this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id));
-            this.$set(act, 'disabled', act.tag === 'readonly');
+            this.$set(act, 'checked', this.isLoginSelf ? ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id) : false);
+            this.$set(act, 'disabled', this.isLoginSelf ? act.tag === 'readonly' : false);
             linearActions.push(act);
             if (act.checked) {
               ++count;
@@ -2210,8 +2194,8 @@
             }
             sub.actions = sub.actions.filter(v => !v.hidden);
             sub.actions.forEach(act => {
-              this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id));
-              this.$set(act, 'disabled', act.tag === 'readonly');
+              this.$set(act, 'checked', this.isLoginSelf ? ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id) : false);
+              this.$set(act, 'disabled', this.isLoginSelf ? act.tag === 'readonly' : false);
               linearActions.push(act);
               if (act.checked) {
                 ++count;
@@ -2319,7 +2303,7 @@
         try {
           const res = await this.$store.dispatch('permApply/getPolicies', params);
           // 无权限申请过滤需要隐藏的操作
-          if (res.data && res.data.length > 0) {
+          if (res.data && res.data.length > 0 && this.isLoginSelf) {
             const allPolicyList = this.linearActionList.filter((v) => !v.hidden).map((item) => `${item.name}&${item.id}`);
             const result = res.data.filter((item) => allPolicyList.includes(`${item.name}&${item.id}`));
             const data = result.map(item => {
@@ -2372,7 +2356,6 @@
           this.tableDataBackup = _.cloneDeep(this.tableData);
           this.aggregationsTableData = _.cloneDeep(this.tableData);
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           if (this.requestQueue.length > 0) {
@@ -2389,9 +2372,11 @@
        */
       async fetchActions (systemId) {
         const params = {
-          system_id: systemId,
-          user_id: this.user.username
+          system_id: systemId
         };
+        if (this.isLoginSelf) {
+          params.user_id = this.user.username;
+        }
         if (this.routerQuery.cache_id) {
           params.cache_id = this.routerQuery.cache_id;
         }
@@ -2437,35 +2422,34 @@
           this.isShowReasonError = true;
         }
       },
+
+      /**
+       * 批量获取系统相关的各类操作数据
+       * @param {String} value - 系统ID
+       * @returns {Promise<void>}
+       */
+      async fetchSystemActions (value) {
+        // 切换系统时重置数据
+        this.fetchResetData();
+        await this.fetchActions(value);
+        await Promise.all([
+          this.fetchPolicies(value),
+          this.fetchAggregationAction(value),
+          this.fetchCommonActions(value)
+        ]);
+      },
+
       /**
        * 系统选择回调函数
        *
        * @param {String} 系统id
        * @param {Object} option
        */
-      // async handleSysSelected (value, option) {
-      //     // 切换系统时重置数据
-      //     this.reason = '';
-      //     this.isShowReasonError = false;
-      //     this.isShowActionError = false;
-      //     this.fetchResetData();
-      //     await Promise.all([
-      //         this.fetchActions(value),
-      //         this.fetchPolicies(value),
-      //         this.fetchAggregationAction(value),
-      //         this.fetchCommonActions(value)
-      //     ]);
-      // },
-      async handleSysSelected (value, option) {
-        // 切换系统时重置数据
+      handleSysSelected (value, option) {
         this.reason = '';
         this.isShowReasonError = false;
         this.isShowActionError = false;
-        this.fetchResetData();
-        await this.fetchActions(value);
-        await this.fetchPolicies(value);
-        await this.fetchAggregationAction(value);
-        await this.fetchCommonActions(value);
+        this.fetchSystemActions(value);
       },
 
       /**
@@ -2477,7 +2461,12 @@
         let actions = tableData.actions;
         let recommendActions = [];
         let recommendFlag = false;
-                
+        // 默认权限申请页权限获得者至少选择一项
+        if (!this.permMembers.length && (!this.isNoPermApply && !this.isNoPermissionsSet)) {
+          this.isShowMemberError = true;
+          this.scrollToLocation(this.$refs.permRecipientRef);
+          return;
+        }
         if (this.$refs.resInstanceRecommendTableRef) {
           const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
           recommendActions = tableRecommendData.actions;
@@ -2511,11 +2500,6 @@
             return;
           }
         }
-        // if (!this.permMembers.length) {
-        // this.isShowMemberError = true;
-        // this.scrollToLocation(this.$refs.permRecipientRef);
-        // return;
-        // }
         const curSystem = this.systemList.find(item => item.id === this.systemValue);
         const params = {
           system: {

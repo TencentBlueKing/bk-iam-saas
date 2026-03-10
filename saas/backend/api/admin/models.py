@@ -19,7 +19,7 @@ from .constants import AdminAPIEnum
 class AdminAPIAllowListConfig(BaseModel):
     """Admin API允许app_code白名单"""
 
-    api = models.CharField("API", choices=AdminAPIEnum.get_choices(), max_length=32, help_text="*代表任意")
+    api = models.CharField("API", choices=AdminAPIEnum.get_choices(), max_length=64, help_text="*代表任意")
     app_code = models.CharField("API调用者", max_length=32)
 
     class Meta:

@@ -1,0 +1,42 @@
+#### 分级管理员更新权限模板
+
+
+#### Parameters
+
+路径参数
+|参数名 | 类型 | 描述 |
+|------|------|------|
+| id | integer | 分级管理空间id |
+|system_id | string | 系统id |
+
+请求参数
+| 参数 | 类型 | 描述 |
+|------|------|------|
+| id | integer | 权限模板id |
+| name | string | 权限模板名称 |
+| system_id | string | 系统id |
+| action_ids | list | 操作id列表 |
+| description | string | 权限模板描述 |
+
+#### Request
+```json
+{
+  "id": 1,  // 权限模板id
+  "name": "权限模板名称",
+  "description": "权限模板描述",
+  "action_ids": [
+    "project_create", "project_view"
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "data": [],
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}
+```

@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from datetime import timedelta
-from typing import List
+from typing import Any, Dict, List
 
 from bk_audit.log.exporters import LoggerExporter
 from bk_audit.log.models import AuditEvent
@@ -40,7 +40,7 @@ def log_audit_event(suffix: str, id: str):
     AuditModel = get_event_model(suffix)
     event = AuditModel.objects.get(id=id)
 
-    # 处理审计事件转换成日志, 并记录日志
+    # 处理审计事件转换成日志，并记录日志
     AuditEventHandler().log(event)
 
 
@@ -143,6 +143,9 @@ class AuditEventHandler:
             "id": event.object_id,
         }
 
+        # 裁剪 policies 中的资源实例数据，避免单条审计日志过大
+        self._truncate_policies_instances(extra_data)
+
         audit_event = AuditEvent(
             event_id=event.id.hex,
             request_id=event.source_data_request_id,
@@ -157,6 +160,38 @@ class AuditEventHandler:
 
         return [audit_event]
 
+    def _truncate_policies_instances(self, extra_data: Dict[str, Any], max_instances: int = 10, max_paths: int = 10):
+        """
+        裁剪 policies 中的资源实例数据，避免单条审计日志过大
+
+        当 condition 中的 instances 数量超过 max_instances 时：
+        - 只保留前 max_instances 个 instances
+        - 添加 instances_total_count 记录原始总数
+        - 添加 instances_truncated = True 标记数据已被裁剪
+
+        当 instance 中的 path 数量超过 max_paths 时：
+        - 只保留前 max_paths 条路径
+        - 添加 path_total_count 记录原始总数
+        - 添加 path_truncated = True 标记数据已被裁剪
+        """
+        policies = extra_data.get("policies", [])
+        for policy in policies:
+            for resource_group in policy.get("resource_groups", []):
+                for related_resource_type in resource_group.get("related_resource_types", []):
+                    for condition in related_resource_type.get("condition", []):
+                        instances = condition.get("instances", [])
+                        if len(instances) > max_instances:
+                            condition["instances_total_count"] = len(instances)
+                            condition["instances"] = instances[:max_instances]
+                            condition["instances_truncated"] = True
+
+                        for instance in condition.get("instances", []):
+                            paths = instance.get("path", [])
+                            if len(paths) > max_paths:
+                                instance["path_total_count"] = len(paths)
+                                instance["path"] = paths[:max_paths]
+                                instance["path_truncated"] = True
+
     def handle_policy_update(self, event: Event) -> List[AuditEvent]:
         extra_data = event.extra
         # 如果是用户组模板策略更新
@@ -165,6 +200,9 @@ class AuditEventHandler:
                 "type": event.object_type,
                 "id": event.object_id,
             }
+
+            # 裁剪 policies 中的资源实例数据，避免单条审计日志过大
+            self._truncate_policies_instances(extra_data)
 
             return [
                 AuditEvent(
@@ -221,6 +259,9 @@ class AuditEventHandler:
             "type": event.object_type,
             "id": event.object_id,
         }
+
+        # 裁剪 policies 中的资源实例数据，避免单条审计日志过大
+        self._truncate_policies_instances(extra_data)
 
         audit_event = AuditEvent(
             event_id=event.id.hex,

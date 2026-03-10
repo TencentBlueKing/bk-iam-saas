@@ -323,7 +323,12 @@
           </template>
           <template v-else>
             <div class="set-user-deadline">
-              <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
+              <iam-deadline
+                type="dialog"
+                :value="expiredAt"
+                :show-permanent-renewal="isShowPermanentRenewal"
+                @on-change="handleDeadlineChange"
+              />
             </div>
           </template>
         </div>
@@ -479,6 +484,8 @@
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
         hasSelectedManualUsers: [],
+        // 模糊匹配的时候不需要默认勾选；仅当精确匹配的时候才默认勾选的数据
+        exactSearchList: [],
         regValue: /，|,|；|;|、|\\|\n|\s/
       };
     },
@@ -598,6 +605,15 @@
       // 不需要校验组织架构授权范围的页面模块
       isUnLimitedScope () {
         return getParamsValue('search_scene') === 'add' || NO_VERIFY_ORG_ROUTES.includes(this.$route.name);
+      },
+      // 所选成员只包含部门的或者是超管，才可以有永久续期选项
+      isShowPermanentRenewal () {
+        if (this.hasSelectedDepartments.length > 0
+          && this.hasSelectedUsers.length < 1
+          && this.hasSelectedTemplates.length < 1) {
+          return true;
+        }
+        return false;
       }
     },
     watch: {
@@ -714,9 +730,8 @@
         this.$nextTick(() => {
           this.manualTableList.forEach((item) => {
             if (this.$refs.manualTableRef) {
-              const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers].map((v) => `${v.username}${v.name}`);
-              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments]
-                .map((v) => String(v.id));
+              const hasSelectedUsers = [...this.hasSelectedUsers].map((v) => `${v.username}${v.name}`);
+              const hasSelectedDepartments = [...this.hasSelectedDepartments].map((v) => String(v.id));
               this.$refs.manualTableRef.toggleRowSelection(
                 item,
                 (hasSelectedUsers.includes(`${item.username}${item.name}`))
@@ -821,6 +836,42 @@
         this.manualInputError = false;
       },
 
+      // 处理首次解析并添加后仅当精确匹配的时候才默认勾选
+      getManualTableDefaultChecked () {
+        if (this.$refs.manualTableRef) {
+          const hasSelectedUsers = this.hasSelectedUsers.map((v) => `${v.username}${v.name}`);
+          const hasSelectedDepartments = this.hasSelectedDepartments.map((v) => `${v.name}&${v.id}`);
+          this.$nextTick(() => {
+            this.manualTableList.forEach((item) => {
+              // 只有精准匹配才默认勾选中
+              if (['depart', 'department'].includes(item.type)) {
+                item.checked = this.exactSearchList.some(ex => ex === item.name)
+                  || hasSelectedDepartments.includes(`${item.name}&${item.id}`);
+              } else {
+                item.checked = this.exactSearchList.some(ex => ex === item.username)
+                  || hasSelectedUsers.includes(`${item.username}${item.name}`);
+              }
+              // 同步更新组织架构已选择的数据，取消勾选时需要从已选择的数据中去掉
+              if (!item.checked) {
+                if (['depart', 'department'].includes(item.type)) {
+                  this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter((depart) =>
+                    `${depart.name}&${depart.id}` !== `${item.name}&${item.id}`
+                  );
+                } else {
+                  this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter((user) =>
+                    `${user.username}${user.name}` !== `${item.username}${item.name}`
+                  );
+                }
+              }
+              this.$refs.manualTableRef.toggleRowSelection(
+                item,
+                item.checked
+              );
+            });
+          });
+        }
+      },
+
       // 处理同步异步操作数据
       async formatSearchData (data, curData) {
         if (data) {
@@ -836,7 +887,11 @@
                 return !hasSelectedUsers.map((subItem) =>
                   `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
               });
-              this.hasSelectedUsers.push(...userTemp);
+              // 筛选精确匹配的个人用户
+              const exactList = userTemp.filter(item =>
+                this.exactSearchList.some(ex => ex === item.username)
+              );
+              this.hasSelectedUsers.push(...exactList);
               this.hasSelectedManualUsers.push(...userTemp);
               // 保存原有格式
               let formatStr = _.cloneDeep(this.manualValue);
@@ -875,8 +930,12 @@
                 return !hasSelectedDepartments.map((subItem) =>
                   subItem.id.toString()).includes(item.id.toString());
               });
+              // 筛选精确匹配的部门
+              const exactList = departTemp.filter(item =>
+                this.exactSearchList.some(ex => ex === item.name)
+              );
+              this.hasSelectedDepartments.push(...exactList);
               this.hasSelectedManualDepartments.push(...departTemp);
-              this.hasSelectedDepartments.push(...departTemp);
               // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
               let clipboardValue = _.cloneDeep(this.manualValue);
               // 处理不相连的数据之间存在特殊符号的情况
@@ -901,13 +960,13 @@
           try {
             if (manualInputValue.length < 10) {
               const { data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
-              //
               await this.formatSearchData(data, manualInputValue[i]);
             } else {
               this.$store.dispatch('organization/getSearchOrganizations', params).then(async ({ data }) => {
                 this.formatSearchData(data, manualInputValue[i]);
               });
             }
+            this.exactSearchList.push(manualInputValue[i]);
           } catch (e) {
             console.error(e);
             this.messageAdvancedError(e);
@@ -919,33 +978,29 @@
       async handleAddManualUser () {
         this.fetchRegOrgData();
         this.manualAddLoading = true;
+        this.exactSearchList = this.filterUserList.map((item) => {
+          return getUsername(item);
+        });
         try {
           const url = this.isRatingManager ? 'role/queryRolesUsers' : 'organization/verifyManualUser';
           const res = await this.$store.dispatch(url, {
-            usernames: this.filterUserList.map((item) => {
-              return getUsername(item);
-            })
+            usernames: this.exactSearchList
           });
-          const temps = res.data.filter((item) => {
+          let temps = res.data.filter((item) => {
             this.$set(item, 'type', 'user');
             this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
             return !this.hasSelectedUsers.map((subItem) => subItem.username).includes(item.username);
           });
-          this.hasSelectedUsers.push(...temps);
+          temps = temps.filter(item =>
+            !this.hasSelectedManualUsers.map((subItem) => `${subItem.username}${subItem.name}`).includes(`${item.username}${item.name}`)
+          );
+          const exactList = temps.filter(item =>
+            this.exactSearchList.some(ex => ex === item.username)
+          );
+          this.hasSelectedUsers.push(...exactList);
           this.hasSelectedManualUsers.push(...temps);
           if (res.data.length) {
             this.usernameList = res.data.map((item) => item.username);
-            // 分号拼接
-            // const templateArr = [];
-            // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
-            // this.manualValueBackup.forEach(item => {
-            //     const name = getUsername(item);
-            //     if (!usernameList.includes(name)) {
-            //         templateArr.push(item);
-            //     }
-            // });
-            // this.manualValue = templateArr.join(';');
-
             // 保存原有格式
             let formatStr = _.cloneDeep(this.manualValue);
             this.usernameList.forEach((item) => {
@@ -983,10 +1038,10 @@
             this.formatOrgAndUser();
           }
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.manualAddLoading = false;
+          this.getManualTableDefaultChecked();
         }
       },
 
@@ -1785,7 +1840,7 @@
 
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
-          multiple: async () => {
+          multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (['depart', 'department'].includes(row.type)) {
               if (isChecked) {
@@ -1794,11 +1849,18 @@
                 if (hasSelectedDepart.length) {
                   hasSelectedDepartIds = hasSelectedDepart.map((v) => String(v.id));
                 }
-                if (!hasSelectedDepartIds.includes(String(row.id))) {
+                // 如果表格里已经存在该部门了，就不再添加到已选部门里了
+                const isExistDepart = hasSelectedDepartIds.includes(String(row.id)) && !row.checked;
+                if (isExistDepart) {
+                  row.checked = true;
                   this.hasSelectedDepartments.push(row);
-                  this.hasSelectedManualDepartments.push(row);
+                } else {
+                  row.checked = true;
+                  this.hasSelectedDepartments.push(row);
+                  this.hasSelectedDepartments.push(row);
                 }
               } else {
+                row.checked = false;
                 this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
                   (item) => item.id.toString() !== row.id.toString()
                 );
@@ -1828,7 +1890,7 @@
               }
             }
           },
-          all: async () => {
+          all: () => {
             const isAllCheck = payload.length > 0;
             this.manualTableList.forEach((item) => {
               if (['depart', 'department'].includes(item.type)) {
@@ -1838,11 +1900,18 @@
                   if (hasSelectedDepart.length) {
                     hasSelectedDepartIds = hasSelectedDepart.map((v) => String(v.id));
                   }
-                  if (!hasSelectedDepartIds.includes(String(item.id))) {
+                  // 如果表格里已经存在该部门了，就不再添加到已选部门里了
+                  const isExistDepart = hasSelectedDepartIds.includes(String(item.id)) && !item.checked;
+                  if (isExistDepart) {
+                    item.checked = true;
+                    this.hasSelectedDepartments.push(item);
+                  } else {
+                    item.checked = true;
                     this.hasSelectedDepartments.push(item);
                     this.hasSelectedManualDepartments.push(item);
                   }
                 } else {
+                  item.checked = false;
                   this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
                     (v) => item.id.toString() !== v.id.toString()
                   );
@@ -1862,7 +1931,18 @@
                     this.hasSelectedUsers.push(item);
                     this.hasSelectedManualUsers.push(item);
                   }
+                  // 如果表格里已经存在该用户了，就不再添加到已选用户里了
+                  const isExistUser = hasSelectedUsersIds.includes(`${item.username}${item.name}`) && !item.checked;
+                  if (isExistUser) {
+                    item.checked = true;
+                    this.hasSelectedUsers.push(item);
+                  } else {
+                    item.checked = true;
+                    this.hasSelectedUsers.push(item);
+                    this.hasSelectedManualUsers.push(item);
+                  }
                 } else {
+                  item.checked = false;
                   this.hasSelectedUsers = this.hasSelectedUsers.filter(
                     (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
                   );
@@ -2284,7 +2364,7 @@
   }
 
   .set-user-deadline {
-    padding: 0 24px;
+    padding: 16px 24px;
   }
 }
 

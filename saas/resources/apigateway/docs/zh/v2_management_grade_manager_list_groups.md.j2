@@ -41,6 +41,7 @@ GET /api/v2/open/management/systems/demo/grade_managers/1/groups/?page_size=100&
 | readonly| bool| 是否是只读用户组|
 | user_count| int| 用户组成员user数量|
 | department_count| int| 用户组成员department数量|
+| apply_disable| bool | 是否可被申请|
 
 ```json
 {
@@ -55,7 +56,8 @@ GET /api/v2/open/management/systems/demo/grade_managers/1/groups/?page_size=100&
         "description": "用户组",
         "readonly": false,
         "user_count": 1,
-        "department_count": 1
+        "department_count": 1,
+        "apply_disable":true
       }
     ]
   }

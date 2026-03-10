@@ -1,3 +1,63 @@
+<!-- 2026-03-05 -->
+# V1.10.55 Version Update Log
+
+### Features
+* Supported sub-path deployment
+
+### Feature Enhancements
+* Organization selector now only auto-selects when there is an exact match
+* When applying for custom permissions, existing personal permissions are only displayed when the permission recipient is the current logged-in user
+* When applying to join user groups, existing user groups are only displayed when the permission recipient is the current logged-in user
+
+### Fixes
+* Fixed an issue where switching to organization option in organization selector would auto-select by default
+* Fixed an issue where switching to personnel template option in organization selector would auto-select by default
+
+---
+
+<!-- 2026-02-04 -->
+# V1.10.53 Version Update Log
+
+### Fixes
+* Fixed an issue with permanent validity parameter validation when adding members to user groups
+
+---
+
+<!-- 2026-02-03 -->
+# V1.10.52 Version Update Log
+
+### Features
+* Organization authorization now supports permanent validity period
+
+### Fixes
+* Fixed an issue where clicking to switch navigation bar on handover history page was not working
+* Fixed an intermittent handover failure issue
+* Fixed an issue where custom permission instance path count was out of sync in user group permissions
+* Fixed an issue where overly long instance path in policy caused oversized audit logs
+
+---
+
+<!-- 2026-01-15 -->
+# V1.10.51 Version Update Log
+
+### Features
+* Supported creating permission templates via API
+* Added entry point to switch from IAM V3 to IAM V4
+* User group list now supports filtering by the "not available for application" field
+* Added time filter condition for periodic task that compensates for unupdated application form status
+* Supported configuring page_size for user management API requests via environment variable
+
+### Feature Enhancements
+* Improved audit logging by truncating policy instances to prevent oversized logs
+
+### Fixes
+* Fixed an issue where user group renewal email reminders were not taking effect
+* Fixed an issue where user/department data was not batch inserted during synchronization
+* Fixed incorrect registration address for grade manager API
+* Fixed API performance issues
+
+---
+
 <!-- 2025-12-19 -->
 # V1.10.50 Version Update Log
 

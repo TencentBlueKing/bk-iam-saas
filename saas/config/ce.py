@@ -262,7 +262,6 @@ CORS_ORIGIN_WHITELIST = (
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 # 站点 URL
 SITE_URL = env.str("BKPAAS_SUB_PATH", default="/")
-FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = env.str("BKPAAS_STATIC_URL", default=SITE_URL + "staticfiles/")
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
@@ -418,3 +417,6 @@ BK_PAAS_INNER_HOST = env.str("BK_PAAS2_URL", default=env.str("BK_PAAS_INNER_HOST
 
 # 对接审计中心相关配置
 BK_IAM_RESOURCE_API_HOST = env.str("BK_IAM_RESOURCE_API_HOST", default=APP_URL)
+
+# IAM V4 页面地址
+BK_IAM_V4_URL = env.str("BK_IAM_V4_URL", default="")

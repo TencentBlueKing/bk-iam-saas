@@ -87,6 +87,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
         if param_source in [
             VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
             VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
+            VerifyApiParamLocationEnum.TEMPLATE_IN_PATH.value,
         ]:
             # 取URL中的参数值
             object_id_key = view.lookup_url_kwarg or view.lookup_field
