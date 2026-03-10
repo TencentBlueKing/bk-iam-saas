@@ -169,7 +169,7 @@ def exception_handler(exc, context):
         status_code = status.HTTP_200_OK
 
     if request.path in settings.PCG_API_LIST:
-        if request.path == "/api/resign/getAssets":
+        if request.path.endswith("/getAssets"):
             return Response(
                 {"code": error.code_num, "message": f"{error.message} ({error.code})", "assets": []},
                 status=status_code,

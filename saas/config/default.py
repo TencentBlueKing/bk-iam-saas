@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "backend.api.admin",
     "backend.api.management",
     "backend.api.bkci",
+    "backend.api.external.staff_movement",
 ]
 
 # 登录中间件
@@ -533,7 +534,10 @@ USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1
 PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
 PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")
 
-PCG_DEPARTMENT_IDS = env.list("PCG_DEPARTMENT_IDS", default=[])
-PCG_DEPARTMENT_IDS_SET = set(PCG_DEPARTMENT_IDS)
+PCG_DEPARTMENT_ID = env.list("PCG_DEPARTMENT_ID", default=0)
 
-PCG_API_LIST = ["/api/resign/getAssets", "/api/resign/handover", "/api/resign/recycle"]
+PCG_API_LIST = [
+    "/api/v1/external/staff_movement/getAssets",
+    "/api/v1/external/staff_movement/handover",
+    "/api/v1/external/staff_movement/recycle",
+]

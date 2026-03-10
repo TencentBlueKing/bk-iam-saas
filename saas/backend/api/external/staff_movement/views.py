@@ -11,12 +11,18 @@ specific language governing permissions and limitations under the License.
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.api.resign.authentication import ResignApiAuthentication
-from backend.api.resign.renders import GetAssetsRenderer, HandoverRenderer
-from backend.api.resign.serializers import AssetSLZ, HandoverResultSLZ, RecycleSLZ, ResignHandoverSLZ, RtxSLZ
+from backend.api.external.staff_movement.authentication import ResignApiAuthentication
+from backend.api.external.staff_movement.serializers import (
+    AssetSLZ,
+    HandoverResultSLZ,
+    RecycleSLZ,
+    ResignHandoverSLZ,
+    RtxSLZ,
+)
 from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.apps.handover.tasks import execute_handover_task
@@ -32,8 +38,8 @@ class GetAssetsViewSet(GenericViewSet):
     """资产列表"""
 
     permission_classes = []  # type: ignore[var-annotated]
-    renderer_classes = [GetAssetsRenderer]
     authentication_classes = [ResignApiAuthentication]
+    renderer_classes = [JSONRenderer]
 
     group_biz = GroupBiz()
     policy_query_biz = PolicyQueryBiz()
@@ -50,18 +56,11 @@ class GetAssetsViewSet(GenericViewSet):
         rtx = serializer.validated_data["rtx"]
 
         subject = Subject.from_username(username=rtx)
-        limit = 100
-        offset = 0
-        groups = []
-        while True:
-            count, current_groups = self.group_biz.list_paging_subject_group(subject, limit=limit, offset=offset)
-            groups.extend(current_groups)
-            offset += limit
-            if count <= offset:
-                break
+        groups = self.group_biz.list_all_subject_group(subject=subject)
 
         systems = self.policy_query_biz.list_system_counter_by_subject(subject)
         assets = []
+
         group_role_dict = self.group_biz.get_group_role_dict_by_ids(group_ids=[group.id for group in groups])
         for group in groups:
             assets.append(
@@ -78,7 +77,7 @@ class GetAssetsViewSet(GenericViewSet):
             assets.append(
                 {"id": 0, "info": system.id, "role_type": "细粒度操作权限", "remark": "", "info_key": "", "info_url": ""}
             )
-        return Response(data=assets)
+        return Response({"assets": assets, "code": 0, "msg": "OK"})
 
 
 class ResignHandoverViewSet(HandoverViewSet):
@@ -86,7 +85,8 @@ class ResignHandoverViewSet(HandoverViewSet):
 
     permission_classes = []  # type: ignore[var-annotated]
     authentication_classes = [ResignApiAuthentication]
-    renderer_classes = [HandoverRenderer]
+    renderer_classes = [JSONRenderer]
+
     policy_query_biz = PolicyQueryBiz()
 
     @swagger_auto_schema(
@@ -135,16 +135,16 @@ class ResignHandoverViewSet(HandoverViewSet):
                 if handover_task_details:
                     HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
 
-                execute_handover_task.delay(
-                    handover_from=activity_rtx, handover_to=handover_rtx, handover_record_id=handover_record.id
-                )
+            execute_handover_task.delay(
+                handover_from=activity_rtx, handover_to=handover_rtx, handover_record_id=handover_record.id
+            )
         except Exception as e:  # pylint: disable=broad-except
             err_list.append({"fail_reason": str(e), "info": []})
         finally:
             # 释放锁
             lock.release()
 
-        return Response(data=err_list)
+        return Response({"err_list": err_list, "code": 0, "msg": "OK"})
 
 
 class RecycleViewSet(GenericViewSet):
@@ -152,7 +152,8 @@ class RecycleViewSet(GenericViewSet):
 
     permission_classes = []  # type: ignore[var-annotated]
     authentication_classes = [ResignApiAuthentication]
-    renderer_classes = [HandoverRenderer]
+    renderer_classes = [JSONRenderer]
+
     group_biz = GroupBiz()
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
@@ -187,4 +188,4 @@ class RecycleViewSet(GenericViewSet):
                 err_list.append({"fail_reason": str(e), "info": asset})
                 continue
 
-        return Response(data=err_list)
+        return Response({"err_list": err_list, "code": 0, "msg": "OK"})
