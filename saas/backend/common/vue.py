@@ -49,8 +49,10 @@ class VueTemplateView(TemplateView):
                     "group_auth_template_once_limit"
                 ),
                 # IAM V4 地址
-                "BK_IAM_V4_URL": settings.BK_IAM_V4_URL.rstrip("/"),
-                # 是否开启超管拥有所有权限配置
+                "BK_IAM_V4_URL": settings.BK_IAM_V4_URL,
+                # 个人中心地址
+                "BK_PERSONAL_CENTER_URL": settings.BK_PERSONAL_CENTER_URL,
+                # 是否开启超级管理员拥有所有权限配置
                 "ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING": (
                     settings.ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING
                 ),
