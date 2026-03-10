@@ -11,6 +11,6 @@ specific language governing permissions and limitations under the License.
 from django.apps import AppConfig
 
 
-class ExternalAPIConfig(AppConfig):
+class StaffMovementAPIConfig(AppConfig):
     name = "backend.api.external.staff_movement"
-    label = "api_external"
+    label = "staff_movement"
