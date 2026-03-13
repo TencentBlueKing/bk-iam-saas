@@ -222,10 +222,27 @@ CELERY_IMPORTS = (
     "backend.api.bkci.tasks",
     "backend.apps.handover.tasks",
 )
+
+ORGANIZATION_SYNC_PERIOD = env.int("BKAPP_ORGANIZATION_SYNC_PERIOD", default=86400)  # 默认 24 小时
+
+# 根据同步周期计算 crontab 表达式
+if ORGANIZATION_SYNC_PERIOD < 3600:
+    _org_sync_minutes = ORGANIZATION_SYNC_PERIOD // 60
+    _org_sync_schedule = crontab(minute=f"*/{_org_sync_minutes}")
+elif ORGANIZATION_SYNC_PERIOD < 86400:
+    _org_sync_hours = ORGANIZATION_SYNC_PERIOD // 3600
+    _org_sync_schedule = crontab(minute=0, hour=f"*/{_org_sync_hours}")
+else:  # 大于等于1天，使用天级别
+    _org_sync_days = ORGANIZATION_SYNC_PERIOD // 86400
+    if _org_sync_days == 1:
+        _org_sync_schedule = crontab(minute=0, hour=0)
+    else:
+        _org_sync_schedule = crontab(minute=0, hour=0, day_of_month=f"*/{_org_sync_days}")
+
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
-        "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
+        "schedule": _org_sync_schedule,  # 根据环境变量值计算
     },
     "periodic_clean_subject_to_delete": {
         "task": "backend.apps.organization.tasks.clean_subject_to_delete",

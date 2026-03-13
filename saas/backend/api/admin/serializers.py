@@ -99,6 +99,21 @@ class SubjectSLZ(serializers.Serializer):
         ref_name = "AdminSubjectSLZ"
 
 
+class AdminOrganizationSyncConfigSLZ(serializers.Serializer):
+    """组织架构同步配置"""
+
+    sync_period = serializers.IntegerField(
+        label="同步周期(秒)", min_value=60, required=False, help_text="同步周期，单位：秒，最小值60秒。如不传则只触发同步"
+    )
+
+
+class AdminOrganizationSyncResultSLZ(serializers.Serializer):
+    """组织架构同步结果"""
+
+    task_id = serializers.IntegerField(label="任务ID")
+    message = serializers.CharField(label="提示信息")
+
+
 class FreezeSubjectResponseSLZ(serializers.Serializer):
     type = serializers.CharField(label="SubjectType")
     id = serializers.CharField(label="SubjectID")
