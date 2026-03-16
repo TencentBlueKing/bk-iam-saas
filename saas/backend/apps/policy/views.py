@@ -59,6 +59,7 @@ class PolicyViewSet(GenericViewSet):
 
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
+    related_policy_biz = RelatedPolicyBiz()
 
     application_policy_list_cache = ApplicationPolicyListCache()
 
@@ -84,6 +85,19 @@ class PolicyViewSet(GenericViewSet):
                 system_id, parse_obj_as(List[PolicyTagBean], cached_policy_list.policies)
             )
             apply_policy_list.set_tag(PolicyTag.ADD.value)
+
+            # 查找依赖操作
+            related_policies = []
+            for policy in apply_policy_list.policies:
+                # 为每个策略生成其依赖操作的权限
+                deps = self.related_policy_biz.create_related_policies(system_id, policy)
+                related_policies.extend(deps)
+
+            # 合并依赖操作到结果列表
+            if related_policies:
+                related_policy_list = PolicyTagBeanList(system_id, parse_obj_as(List[PolicyTagBean], related_policies))
+                related_policy_list.set_tag(PolicyTag.ADD.value)
+                apply_policy_list.add(related_policy_list)
 
             return Response([p.dict() for p in apply_policy_list.policies])
 
