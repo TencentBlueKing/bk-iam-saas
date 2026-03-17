@@ -32,15 +32,33 @@
               { 'active': selectedNode(item) && !item.disabled }
             ]"
           />
-          <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
-            {{ item.name }}
-          </span>
-          <span
-            v-if="item.showCount && enableOrganizationCount"
-            class="node-user-count"
-          >
-            {{ '(' + item.count + ')' }}
-          </span>
+          <div v-if="showFullName" class="node-full-name-box">
+            <div class="node-full-name">
+              <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
+                {{ item.name }}
+              </span>
+              <span
+                v-if="item.showCount && enableOrganizationCount"
+                class="node-user-count"
+              >
+                {{ '(' + item.count + ')' }}
+              </span>
+            </div>
+            <span class="extra-full-name">
+              {{ item.full_name }}
+            </span>
+          </div>
+          <template v-else>
+            <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
+              {{ item.name }}
+            </span>
+            <span
+              v-if="item.showCount && enableOrganizationCount"
+              class="node-user-count"
+            >
+              {{ '(' + item.count + ')' }}
+            </span>
+          </template>
         </div>
       </div>
       <div class="user-content">
@@ -72,14 +90,24 @@
               { 'active': selectedNode(item) && !item.disabled }
             ]"
           />
-          <span
-            :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]"
-          >
-            {{ item.username }}
-            <template v-if="item.name !== ''">
-              ({{ item.name }})
-            </template>
-          </span>
+          <div v-if="showFullName" class="node-full-name-box">
+            <div class="node-full-name">
+              <span :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]">
+                {{ item.name }}
+              </span>
+            </div>
+            <span class="extra-full-name">
+              {{ item.full_name }}
+            </span>
+          </div>
+          <template v-else>
+            <span :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]">
+              {{ item.username }}
+              <template v-if="item.name !== ''">
+                ({{ item.name }})
+              </template>
+            </span>
+          </template>
         </div>
       </div>
     </div>
@@ -115,6 +143,11 @@
       },
 
       isDisabled: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示完整组织架构
+      showFullName: {
         type: Boolean,
         default: false
       },
@@ -476,6 +509,25 @@
           color: #3a84ff;
         }
       }
+      .node-full-name-box {
+        width: 100%;
+        overflow-x: hidden;
+        .node-full-name {
+          display: flex;
+        }
+        .node-user-count {
+          flex-shrink: 0;
+          margin-left: 4px;
+          white-space: nowrap;
+        }
+      }
+      .extra-full-name {
+        display: block;
+        line-height: 20px;
+        font-size: 14px;
+        color: #999999;
+        word-break: break-all;
+      }
       .node-user-count {
         color: #c4c6cc;
       }
@@ -484,7 +536,8 @@
         color: #3a84ff;
         background: #eef4ff;
         .node-icon,
-        .node-user-count {
+        .node-user-count,
+        .extra-full-name {
           color: #3a84ff;
         }
       }
@@ -493,7 +546,8 @@
         background-color: transparent;
         cursor: not-allowed;
         .node-icon,
-        .node-user-count {
+        .node-user-count,
+        .extra-full-name {
           color: #c4c6cc;
         }
         &:hover {
