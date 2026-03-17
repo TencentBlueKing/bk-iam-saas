@@ -558,9 +558,11 @@
       }
       .extra-full-name {
         display: block;
+        padding-bottom: 8px;
         line-height: 20px;
         font-size: 14px;
         color: #999999;
+        white-space: normal;
         word-break: break-all;
       }
     }
