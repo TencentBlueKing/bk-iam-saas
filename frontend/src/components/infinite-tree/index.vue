@@ -12,13 +12,15 @@
           { 'active': item.isSelected && !item.disabled },
           { 'is-disabled': item.disabled || isDisabled }
         ]"
-        @click.stop="nodeClick(item)">
+        @click.stop="nodeClick(item)"
+      >
         <Icon
           bk
           v-if="item.async"
           class="arrow-icon"
           :type="item.expanded ? 'down-shape' : 'right-shape'"
-          @click.stop="expandNode(item)" />
+          @click.stop="expandNode(item)"
+        />
         <div class="node-radio" v-if="item.showRadio">
           <span class="node-checkbox"
             :class="{
@@ -46,17 +48,41 @@
           type="personal-user"
           :class="['node-icon', { 'active': item.isSelected && !item.disabled }]"
         />
-        <!-- eslint-disable max-len -->
-        <span
+        <div
           :style="nameStyle(item)"
-          :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
+          :class="[
+            'single-hide node-title',
+            { 'node-selected': item.isSelected && !item.disabled }
+          ]"
         >
-          {{ item.type === 'user' ? item.username : item.name }}
-          <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
-        </span>
-        <span class="red-dot" v-if="item.isNewMember"></span>
+          <!-- 区分需要外显完整组织架构的排版 -->
+          <template v-if="showFullName">
+            <span class="node-full-name-box">
+              <span class="single-hide node-full-name">
+                {{ item.type === 'user' ? item.username : item.name }}
+                <template v-if="item.type === 'user' && item.name !== ''">
+                  ({{ item.name }})
+                </template>
+              </span>
+              <span
+                v-if="item.showCount && enableOrganizationCount"
+                class="node-user-count"
+              >
+                {{ '(' + item.count + `)` }}
+              </span>
+            </span>
+            <span class="extra-full-name">
+              {{ item.full_name }}
+            </span>
+          </template>
+          <template v-else>
+            {{ item.type === 'user' ? item.username : item.name }}
+            <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
+          </template>
+        </div>
+        <span v-if="item.isNewMember" class="red-dot" />
         <span
-          v-if="item.showCount && enableOrganizationCount"
+          v-if="item.showCount && enableOrganizationCount && !showFullName"
           class="node-user-count"
         >
           {{ '(' + item.count + `)` }}
@@ -130,6 +156,11 @@
         type: Boolean,
         default: true
       },
+      // 是否显示完整组织架构
+      showFullName: {
+        type: Boolean,
+        default: false
+      },
       // 根据状态码渲染落地空内容
       emptyData: {
         type: Object,
@@ -195,7 +226,7 @@
               otherOffset += 14;
           }
           return {
-              'maxWidth': `calc(100% - ${otherOffset}px)`
+              'maxWidth': !payload.level ? '100%' : `calc(100% - ${otherOffset}px)`
           };
         };
       },
@@ -508,11 +539,32 @@
       position: relative;
       display: inline-block;
       min-width: 14px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       vertical-align: top;
       user-select: none;
+      .node-full-name-box {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        .node-full-name {
+          min-width: 0;
+          flex-shrink: 1;
+          flex-grow: 0;
+        }
+        .node-user-count {
+          flex-shrink: 0;
+          margin-left: 4px;
+          white-space: nowrap;
+        }
+      }
+      .extra-full-name {
+        display: block;
+        padding-bottom: 8px;
+        line-height: 20px;
+        font-size: 14px;
+        color: #999999;
+        white-space: normal;
+        word-break: break-all;
+      }
     }
     .node-user-count {
       color: #c4c6cc;
@@ -582,7 +634,8 @@
       color: #3a84ff;
       background-color: #eef4ff;
       .node-icon,
-      .node-user-count {
+      .node-user-count,
+      .extra-full-name {
         color: #3a84ff;
       }
     }
@@ -591,7 +644,8 @@
       background-color: transparent;
       cursor: not-allowed;
       .node-icon,
-      .node-user-count {
+      .node-user-count,
+      .extra-full-name {
         color: #c4c6cc;
       }
       &:hover {
