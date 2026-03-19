@@ -73,25 +73,36 @@ def sync_system_manager():
 
         # 遍历创建还未创建的系统管理员
         for system_id in set(systems.keys()) - set(exists_system_ids):
+            # 创建前再次检查，防止并发导致重复创建
+            if Role.objects.filter(
+                type=RoleType.SYSTEM_MANAGER.value, tenant_id=tenant["id"], code=system_id
+            ).exists():
+                continue
+
             system = systems[system_id]
             logger.info("create system_manager for system_id: %s", system_id)
 
-            # 查询系统管理员配置
-            members = biz.list_system_manger(system_id)
+            try:
+                # 查询系统管理员配置
+                members = biz.list_system_manger(system_id)
 
-            data = {
-                "type": RoleType.SYSTEM_MANAGER.value,
-                "code": system_id,
-                "name": f"{system.name}",
-                "name_en": f"{system.name_en}",
-                "description": "",
-                "members": [{"username": username} for username in members],
-                "authorization_scopes": [
-                    {"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}
-                ],
-                "subject_scopes": [{"type": "*", "id": "*"}],
-            }
-            RoleBiz(tenant["id"]).create_grade_manager(RoleInfoBean.parse_obj(data), "admin")
+                data = {
+                    "type": RoleType.SYSTEM_MANAGER.value,
+                    "code": system_id,
+                    "name": f"{system.name}",
+                    "name_en": f"{system.name_en}",
+                    "description": "",
+                    "members": [{"username": username} for username in members],
+                    "authorization_scopes": [
+                        {"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}
+                    ],
+                    "subject_scopes": [{"type": "*", "id": "*"}],
+                }
+                RoleBiz(tenant["id"]).create_grade_manager(RoleInfoBean.parse_obj(data), "admin")
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(
+                    "create system_manager failed for system_id: %s, tenant_id: %s", system_id, tenant["id"]
+                )
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
