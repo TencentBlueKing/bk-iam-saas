@@ -152,7 +152,7 @@
         try {
           const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id: this.id, grouping: true });
           this.basicInfo = Object.assign({}, {
-            name: `${res.data.name}63aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`,
+            name: res.data.name,
             description: res.data.description,
             systemName: res.data.system.name,
             systemId: res.data.system.id,
