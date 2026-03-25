@@ -12,7 +12,6 @@ import logging
 from functools import wraps
 from typing import List
 
-from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from pydantic import parse_obj_as
@@ -375,7 +374,8 @@ class SubjectTemplateGroupViewSet(SubjectTemplateQueryMixin, GenericViewSet):
         tags=["subject-template"],
     )
     def list(self, request, *args, **kwargs):
-        template = get_object_or_404(self.queryset, pk=kwargs["id"])
+
+        template = self.get_object()
 
         subject_template_groups = list(
             SubjectTemplateGroup.objects.filter(template_id=template.id).values(
