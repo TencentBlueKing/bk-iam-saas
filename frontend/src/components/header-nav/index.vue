@@ -21,12 +21,12 @@
     </div>
     <div class="user fr">
       <div v-if="IAM_V4_URL" :class="`switch-vision-flag ${$i18n.locale}`">
-        <div class="switch-vision-text">
+        <div class="switch-vision-text" @click="handleOpenNewIAM">
           <Icon type="qiehuan" />
           <span class="text">{{ $t(`m.common['切换新版']`) }}</span>
         </div>
         <div class="dropdown-panel">
-          <div class="item" @click="handleOpenNewIAM">
+          <div class="item">
             {{ $t(`m.common['切换至新版权限中心']`) }}
           </div>
         </div>
