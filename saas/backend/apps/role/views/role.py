@@ -18,6 +18,7 @@ from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins, views
@@ -41,7 +42,7 @@ from backend.apps.role.audit import (
     RolePolicyAuditProvider,
     RoleUpdateAuditProvider,
     RoleUpdateGroupConfigProvider,
-    RoleUpdateNotificationConfigProvider,
+    RoleUpdateNotificationConfigProvider, RoleDeleteAuditProvider,
 )
 from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter, RoleSearchFilter
 from backend.apps.role.models import (
@@ -51,7 +52,7 @@ from backend.apps.role.models import (
     RolePolicyExpiredNotificationConfig,
     RoleRelatedObject,
     RoleRelation,
-    RoleUser,
+    RoleUser, RoleScope, ScopeSubject, RoleResourceRelation,
 )
 from backend.apps.role.serializers import (
     BaseGradeMangerSchemaSLZ,
@@ -289,6 +290,62 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         return Response({})
 
+    @swagger_auto_schema(
+        operation_description="删除分级管理员（一级管理空间）",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["role"],
+    )
+    @view_audit_decorator(RoleDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        """删除一级管理空间"""
+        role = self.get_object()
+
+        if not can_user_manage_role(request.user.username, role.id):
+            return Response({
+                "result": False,
+                "code": 403,
+                "message": _("非该管理空间的管理员，无权限删除")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # 执行删除
+        user_id = request.user.username
+        self.biz.delete_grade_manager(role.id, user_id)
+
+        audit_context_setter(role=role)
+        return Response({})
+
+class ManagementSpaceDeletionPreviewViewSet(GenericViewSet):
+    """
+    管理空间删除预览（支持一级和二级管理空间）
+    """
+
+    lookup_field = "id"
+    biz = RoleBiz()
+
+    @swagger_auto_schema(
+        operation_description="管理空间删除预览",
+        tags=["role"],
+    )
+    @action(detail=True, methods=['get'], url_path='deletion_preview')
+    def deletion_preview(self, request, *args, **kwargs):
+        """管理空间删除预览接口（一级和二级管理空间通用）"""
+        role_id = kwargs.get('id')
+
+        # 获取角色信息（不限制类型）
+        role = get_object_or_404(Role, id=role_id)
+
+        # 权限校验
+        if not can_user_manage_role(request.user.username, role.id):
+            return Response({
+                "result": False,
+                "code": 403,
+                "message": _("非该管理空间的管理员，无权限删除")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # 使用biz层获取删除预览数据
+        preview_data = self.biz.get_deletion_preview_data(role_id)
+
+        return Response(preview_data)
 
 class RoleMemberView(views.APIView):
     """
@@ -970,6 +1027,93 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         audit_context_setter(role=role)
 
         return Response({})
+
+    @swagger_auto_schema(
+        operation_description="删除子集管理员（二级管理空间）",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["role"],
+    )
+    @view_audit_decorator(RoleDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        """删除二级管理空间"""
+        role = self.get_object()
+
+        if not can_user_manage_role(request.user.username, role.id):
+            return Response({
+                "result": False,
+                "code": 403,
+                "message": _("非该管理空间的管理员，无权限删除")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # 执行删除
+        user_id = request.user.username
+        self.biz.delete_subset_manager(role.id, user_id)
+
+        audit_context_setter(role=role)
+        return Response({})
+
+    @swagger_auto_schema(
+        operation_description="批量删除二级管理空间",
+        request_body=serializers.Serializer(),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["role"],
+    )
+    @action(detail=False, methods=['delete'])
+    def batch_delete(self, request, *args, **kwargs):
+        """批量删除二级管理空间"""
+        # 获取要删除的二级管理空间ID列表
+        role_ids = request.data.get('role_ids', [])
+
+        if not role_ids:
+            return Response({
+                "result": False,
+                "code": 400,
+                "message": _("请提供要删除的二级管理空间ID列表")
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if not isinstance(role_ids, list):
+            return Response({
+                "result": False,
+                "code": 400,
+                "message": _("role_ids参数必须是列表格式")
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user_id = request.user.username
+        success_count = 0
+        failed_count = 0
+        failed_details = []
+
+        # 批量删除每个二级管理空间
+        for role_id in role_ids:
+            try:
+                # 检查权限
+                if not can_user_manage_role(user_id, role_id):
+                    failed_details.append({
+                        "role_id": role_id,
+                        "error": _("非该管理空间的管理员，无权限删除")
+                    })
+                    failed_count += 1
+                    continue
+
+                # 执行删除
+                self.biz.delete_subset_manager(role_id, user_id)
+                success_count += 1
+
+            except Exception as e:
+                failed_details.append({
+                    "role_id": role_id,
+                    "error": str(e)
+                })
+                failed_count += 1
+
+        # 返回批量删除结果
+        result = {
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "failed_details": failed_details
+        }
+
+        return Response(result)
 
 
 class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):

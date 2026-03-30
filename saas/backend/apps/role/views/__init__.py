@@ -39,6 +39,7 @@ from .role import (
     SystemManagerViewSet,
     UserSubsetManagerViewSet,
     UserView,
+    ManagementSpaceDeletionPreviewViewSet,
 )
 
 __all__ = [
@@ -69,4 +70,5 @@ __all__ = [
     "RoleGroupMemberDepartmentGroupViewSet",
     "RoleGroupMemberCleanViewSet",
     "RoleGroupMemberResetViewSet",
+    "ManagementSpaceDeletionPreviewViewSet",
 ]

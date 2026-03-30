@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Case, Q, Value, When
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -428,6 +428,95 @@ class RoleBiz:
                 return common_action
 
         return None
+
+    # 删除管理空间
+
+    def delete_grade_manager(self, role_id: int, operator: str):
+        """
+        删除一级管理空间（分级管理员）
+        """
+        # 获取角色信息
+        role = Role.objects.filter(id=role_id, type=RoleType.GRADE_MANAGER.value).first()
+        if not role:
+            raise error_codes.NOT_FOUND.format(_("分级管理员不存在"))
+
+        # 校验是否存在二级空间
+        subset_count = RoleRelation.objects.filter(parent_id=role_id).count()
+        if subset_count > 0:
+            raise error_codes.VALIDATE_ERROR.format(
+                _("存在{}个二级管理空间，请先删除所有二级空间").format(subset_count)
+            )
+
+        with transaction.atomic():
+            # 删除用户组及关联数据
+            self.svc._delete_grade_manager_groups(role_id)
+
+            # 删除权限配置
+            self.svc._delete_grade_manager_auth_scopes(role_id)
+
+            # 删除人员配置
+            self.svc._delete_grade_manager_subject_scopes(role_id)
+
+            # 删除分级管理员关联
+            self.svc._delete_grade_manager_relations(role_id)
+
+            # 最后删除一级空间本身
+            role.delete()
+
+    def delete_subset_manager(self, role_id: int, operator: str):
+        """
+        删除二级管理空间（子集管理员）
+        """
+        # 获取角色信息
+        role = Role.objects.filter(id=role_id, type=RoleType.SUBSET_MANAGER.value).first()
+        if not role:
+            raise error_codes.NOT_FOUND.format(_("子集管理员不存在"))
+
+        with transaction.atomic():
+            # 删除用户组及关联数据
+            self.svc._delete_subset_manager_groups(role_id)
+
+            # 删除权限配置
+            self.svc._delete_subset_manager_auth_scopes(role_id)
+
+            # 删除人员配置
+            self.svc._delete_subset_manager_subject_scopes(role_id)
+
+            # 删除分级管理员关联
+            self.svc._delete_subset_manager_relations(role_id)
+
+            # 最后删除二级空间本身
+            role.delete()
+
+    def get_deletion_preview_data(self, role_id: int) -> Dict[str, Any]:
+        """
+        获取管理空间删除预览数据
+        """
+        role = Role.objects.filter(id=role_id).first()
+        if not role:
+            raise error_codes.NOT_FOUND.format(_("管理空间不存在"))
+
+        # 使用service层进行数据统计
+        user_group_count = self.svc.count_role_related_groups(role_id)
+        permission_policy_count = self.svc.count_role_authorization_scopes(role_id)
+        subject_policy_count = self.svc.count_role_subject_scopes(role_id)
+        admin_user_count = self.svc.count_role_members(role_id)
+
+        # 仅一级管理空间返回二级空间数量
+        sub_space_count = 0
+        if role.type == RoleType.GRADE_MANAGER.value:
+            sub_space_count = self.svc.count_subset_managers(role_id)
+
+        return {
+            "id": role.id,
+            "name": role.name,
+            "type": role.type,
+            "sub_space_count": sub_space_count,
+            "admin_user_count": admin_user_count,
+            "user_group_count": user_group_count,
+            "policy_count": permission_policy_count,
+            "subject_count": subject_policy_count,
+        }
 
 
 class RoleCheckBiz:
