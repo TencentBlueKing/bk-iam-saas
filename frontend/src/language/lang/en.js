@@ -1077,7 +1077,8 @@ export const m = {
         '管理员列表': 'administrators List',
         '设置成功': 'Set successfully',
         '取消设置成功': 'Undo successfully',
-        '确定删除该超级管理员': 'Confirm to delete the super administrator?'
+        '确定删除该超级管理员': 'Confirm to delete the super administrator?',
+        '超级管理员{name}不可删除': 'Super administrator {name} cannot be deleted'
     },
     approvalProcess: {
         '自定义权限': 'Custom Permission',
