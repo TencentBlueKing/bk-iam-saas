@@ -29,7 +29,7 @@ from .constants import TemplateTag
 
 
 class TemplateCreateSLZ(serializers.Serializer):
-    name = serializers.CharField(label="模板名称", max_length=128)
+    name = serializers.CharField(label="模板名称", max_length=32)
     system_id = serializers.CharField(label="系统id", max_length=32)
     action_ids = serializers.ListField(label="操作策略", child=serializers.CharField(), allow_empty=False)
     description = serializers.CharField(label="描述", max_length=255, allow_blank=True)
@@ -192,7 +192,7 @@ class TemplateDetailQuerySLZ(serializers.Serializer):
 
 
 class TemplatePartialUpdateSLZ(serializers.Serializer):
-    name = serializers.CharField(label="模板名称", max_length=128)
+    name = serializers.CharField(label="模板名称", max_length=32)
     description = serializers.CharField(label="描述", max_length=255, allow_blank=True)
 
 
