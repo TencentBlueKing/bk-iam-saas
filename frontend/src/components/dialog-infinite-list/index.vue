@@ -44,7 +44,7 @@
                 {{ '(' + item.count + ')' }}
               </span>
             </div>
-            <span class="extra-full-name">
+            <span v-if="item.full_name" class="extra-full-name">
               {{ item.full_name }}
             </span>
           </div>
@@ -96,7 +96,7 @@
                 {{ item.name }}
               </span>
             </div>
-            <span class="extra-full-name">
+            <span v-if="item.full_name" class="extra-full-name">
               {{ item.full_name }}
             </span>
           </div>
