@@ -33,8 +33,10 @@ from backend.apps.role.models import (
     RoleRelatedObject,
     RoleRelation,
     RoleResourceRelation,
+    RoleScope,
     RoleSource,
     RoleUser,
+    ScopeSubject,
 )
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplate
@@ -438,27 +440,25 @@ class RoleBiz:
         # 获取角色信息
         role = Role.objects.filter(id=role_id, type=RoleType.GRADE_MANAGER.value).first()
         if not role:
-            raise error_codes.NOT_FOUND.format(_("分级管理员不存在"))
+            raise error_codes.NOT_FOUND_ERROR.format(_("分级管理员不存在"))
 
         # 校验是否存在二级空间
         subset_count = RoleRelation.objects.filter(parent_id=role_id).count()
         if subset_count > 0:
-            raise error_codes.VALIDATE_ERROR.format(
-                _("存在{}个二级管理空间，请先删除所有二级空间").format(subset_count)
-            )
+            raise error_codes.VALIDATE_ERROR.format(_("存在{}个二级管理空间，请先删除所有二级空间").format(subset_count))
 
         with transaction.atomic():
             # 删除用户组及关联数据
-            self.svc._delete_grade_manager_groups(role_id)
+            self._delete_grade_manager_groups(role_id)
 
             # 删除权限配置
-            self.svc._delete_grade_manager_auth_scopes(role_id)
+            self._delete_grade_manager_auth_scopes(role_id)
 
             # 删除人员配置
-            self.svc._delete_grade_manager_subject_scopes(role_id)
+            self._delete_grade_manager_subject_scopes(role_id)
 
             # 删除分级管理员关联
-            self.svc._delete_grade_manager_relations(role_id)
+            self._delete_grade_manager_relations(role_id)
 
             # 最后删除一级空间本身
             role.delete()
@@ -470,20 +470,20 @@ class RoleBiz:
         # 获取角色信息
         role = Role.objects.filter(id=role_id, type=RoleType.SUBSET_MANAGER.value).first()
         if not role:
-            raise error_codes.NOT_FOUND.format(_("子集管理员不存在"))
+            raise error_codes.NOT_FOUND_ERROR.format(_("子集管理员不存在"))
 
         with transaction.atomic():
             # 删除用户组及关联数据
-            self.svc._delete_subset_manager_groups(role_id)
+            self._delete_subset_manager_groups(role_id)
 
             # 删除权限配置
-            self.svc._delete_subset_manager_auth_scopes(role_id)
+            self._delete_subset_manager_auth_scopes(role_id)
 
             # 删除人员配置
-            self.svc._delete_subset_manager_subject_scopes(role_id)
+            self._delete_subset_manager_subject_scopes(role_id)
 
             # 删除分级管理员关联
-            self.svc._delete_subset_manager_relations(role_id)
+            self._delete_subset_manager_relations(role_id)
 
             # 最后删除二级空间本身
             role.delete()
@@ -494,7 +494,7 @@ class RoleBiz:
         """
         role = Role.objects.filter(id=role_id).first()
         if not role:
-            raise error_codes.NOT_FOUND.format(_("管理空间不存在"))
+            raise error_codes.NOT_FOUND_ERROR.format(_("管理空间不存在"))
 
         # 使用service层进行数据统计
         user_group_count = self.svc.count_role_related_groups(role_id)
@@ -517,6 +517,94 @@ class RoleBiz:
             "policy_count": permission_policy_count,
             "subject_count": subject_policy_count,
         }
+
+    def _delete_subset_manager_groups(self, role_id: int):
+        """删除二级空间下的用户组及关联数据"""
+        # 获取关联的用户组ID
+        group_ids = RoleRelatedObject.objects.filter(
+            role_id=role_id, object_type=RoleRelatedObjectType.GROUP.value
+        ).values_list("object_id", flat=True)
+
+        if not group_ids:
+            return
+
+        # 使用GroupBiz的删除方法（复用用户组删除逻辑）
+        from .group import GroupBiz
+
+        group_biz = GroupBiz()
+        for group_id in group_ids:
+            group_biz.delete(group_id)
+
+    def _delete_subset_manager_auth_scopes(self, role_id: int):
+        """删除权限配置"""
+        # 删除授权范围具体数据
+        RoleResourceRelation.objects.filter(role_id=role_id).delete()
+
+        # 删除授权范围配置
+        RoleScope.objects.filter(role_id=role_id, type="authorization").delete()
+
+    def _delete_subset_manager_subject_scopes(self, role_id: int):
+        """删除人员配置"""
+        # 删除人员范围具体数据
+        ScopeSubject.objects.filter(role_id=role_id).delete()
+
+        # 删除人员范围配置
+        RoleScope.objects.filter(role_id=role_id, type="subject").delete()
+
+    def _delete_subset_manager_relations(self, role_id: int):
+        """删除分级管理员关联"""
+        # 删除管理员用户
+        RoleUser.objects.filter(role_id=role_id).delete()
+
+        # 删除分级管理员关系（与父级的关系）
+        RoleRelation.objects.filter(role_id=role_id).delete()
+
+        # 删除管理空间和用户组的关联关系
+        RoleRelatedObject.objects.filter(role_id=role_id).delete()
+
+    def _delete_grade_manager_groups(self, role_id: int):
+        """删除一级空间下的用户组及关联数据"""
+        # 获取关联的用户组ID
+        group_ids = RoleRelatedObject.objects.filter(
+            role_id=role_id, object_type=RoleRelatedObjectType.GROUP.value
+        ).values_list("object_id", flat=True)
+
+        if not group_ids:
+            return
+
+        # 使用GroupBiz的删除方法（复用用户组删除逻辑）
+        from .group import GroupBiz
+
+        group_biz = GroupBiz()
+        for group_id in group_ids:
+            group_biz.delete(group_id)
+
+    def _delete_grade_manager_auth_scopes(self, role_id: int):
+        """删除权限配置"""
+        # 删除授权范围具体数据
+        RoleResourceRelation.objects.filter(role_id=role_id).delete()
+
+        # 删除授权范围配置
+        RoleScope.objects.filter(role_id=role_id, type="authorization").delete()
+
+    def _delete_grade_manager_subject_scopes(self, role_id: int):
+        """删除人员配置"""
+        # 删除人员范围具体数据
+        ScopeSubject.objects.filter(role_id=role_id).delete()
+
+        # 删除人员范围配置
+        RoleScope.objects.filter(role_id=role_id, type="subject").delete()
+
+    def _delete_grade_manager_relations(self, role_id: int):
+        """删除分级管理员关联"""
+        # 删除管理员用户
+        RoleUser.objects.filter(role_id=role_id).delete()
+
+        # 删除分级管理员关联对象
+        RoleRelatedObject.objects.filter(role_id=role_id).delete()
+
+        # 删除分级管理员关系（虽然一级空间没有父级，但清理可能存在的异常数据）
+        RoleRelation.objects.filter(Q(parent_id=role_id) | Q(role_id=role_id)).delete()
 
 
 class RoleCheckBiz:

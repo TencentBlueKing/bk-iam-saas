@@ -21,12 +21,9 @@ urlpatterns = [
     ),
     path(
         "grade_managers/<int:id>/",
-        views.GradeManagerViewSet.as_view({
-            "get": "retrieve",
-            "put": "update",
-            "patch": "partial_update",
-            "delete": "destroy"
-        }),
+        views.GradeManagerViewSet.as_view(
+            {"get": "retrieve", "put": "update", "patch": "partial_update", "delete": "destroy"}
+        ),
         name="role.grade_manager_detail",
     ),
     path(
@@ -91,11 +88,12 @@ urlpatterns = [
         views.QueryAuthorizedSubjectsViewSet.as_view({"post": "export"}),
         name="role.query_authorized_subjects.export",
     ),
-
     # 删除管理空间前预览
-    path('management_spaces/<int:id>/deletion_preview/', views.ManagementSpaceDeletionPreviewViewSet.as_view({'get': 'deletion_preview'}), name='management_space_deletion_preview'),
-
-
+    path(
+        "management_spaces/<int:id>/deletion_preview/",
+        views.ManagementSpaceDeletionPreviewViewSet.as_view({"get": "deletion_preview"}),
+        name="management_space_deletion_preview",
+    ),
     # 子集管理员
     path(
         "subset_managers/",
@@ -104,7 +102,9 @@ urlpatterns = [
     ),
     path(
         "subset_managers/<int:id>/",
-        views.SubsetManagerViewSet.as_view({"get": "retrieve", "put": "update", "patch": "partial_update", "delete": "destroy"}),
+        views.SubsetManagerViewSet.as_view(
+            {"get": "retrieve", "put": "update", "patch": "partial_update", "delete": "destroy"}
+        ),
         name="role.subset_manager_detail",
     ),
     path(

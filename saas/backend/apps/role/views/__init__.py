@@ -22,6 +22,7 @@ from .permission_audit import QueryAuthorizedSubjectsViewSet
 from .role import (
     AuthScopeIncludeUserRoleView,
     GradeManagerViewSet,
+    ManagementSpaceDeletionPreviewViewSet,
     MemberSystemPermissionView,
     RoleAuthorizationScopeView,
     RoleCommonActionViewSet,
@@ -39,7 +40,6 @@ from .role import (
     SystemManagerViewSet,
     UserSubsetManagerViewSet,
     UserView,
-    ManagementSpaceDeletionPreviewViewSet,
 )
 
 __all__ = [

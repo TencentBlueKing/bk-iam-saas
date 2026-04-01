@@ -35,6 +35,7 @@ from backend.apps.role.audit import (
     CommonActionCreateAuditProvider,
     CommonActionDeleteAuditProvider,
     RoleCreateAuditProvider,
+    RoleDeleteAuditProvider,
     RoleGroupRenewAuditProvider,
     RoleMemberCreateAuditProvider,
     RoleMemberDeleteAuditProvider,
@@ -42,7 +43,7 @@ from backend.apps.role.audit import (
     RolePolicyAuditProvider,
     RoleUpdateAuditProvider,
     RoleUpdateGroupConfigProvider,
-    RoleUpdateNotificationConfigProvider, RoleDeleteAuditProvider,
+    RoleUpdateNotificationConfigProvider,
 )
 from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter, RoleSearchFilter
 from backend.apps.role.models import (
@@ -52,7 +53,7 @@ from backend.apps.role.models import (
     RolePolicyExpiredNotificationConfig,
     RoleRelatedObject,
     RoleRelation,
-    RoleUser, RoleScope, ScopeSubject, RoleResourceRelation,
+    RoleUser,
 )
 from backend.apps.role.serializers import (
     BaseGradeMangerSchemaSLZ,
@@ -301,11 +302,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         role = self.get_object()
 
         if not can_user_manage_role(request.user.username, role.id):
-            return Response({
-                "result": False,
-                "code": 403,
-                "message": _("非该管理空间的管理员，无权限删除")
-            }, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"result": False, "code": 403, "message": _("非该管理空间的管理员，无权限删除")}, status=status.HTTP_403_FORBIDDEN
+            )
 
         # 执行删除
         user_id = request.user.username
@@ -313,6 +312,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         audit_context_setter(role=role)
         return Response({})
+
 
 class ManagementSpaceDeletionPreviewViewSet(GenericViewSet):
     """
@@ -326,26 +326,25 @@ class ManagementSpaceDeletionPreviewViewSet(GenericViewSet):
         operation_description="管理空间删除预览",
         tags=["role"],
     )
-    @action(detail=True, methods=['get'], url_path='deletion_preview')
+    @action(detail=True, methods=["get"], url_path="deletion_preview")
     def deletion_preview(self, request, *args, **kwargs):
         """管理空间删除预览接口（一级和二级管理空间通用）"""
-        role_id = kwargs.get('id')
+        role_id = kwargs.get("id")
 
         # 获取角色信息（不限制类型）
         role = get_object_or_404(Role, id=role_id)
 
         # 权限校验
         if not can_user_manage_role(request.user.username, role.id):
-            return Response({
-                "result": False,
-                "code": 403,
-                "message": _("非该管理空间的管理员，无权限删除")
-            }, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"result": False, "code": 403, "message": _("非该管理空间的管理员，无权限删除")}, status=status.HTTP_403_FORBIDDEN
+            )
 
         # 使用biz层获取删除预览数据
         preview_data = self.biz.get_deletion_preview_data(role_id)
 
         return Response(preview_data)
+
 
 class RoleMemberView(views.APIView):
     """
@@ -1039,11 +1038,9 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         role = self.get_object()
 
         if not can_user_manage_role(request.user.username, role.id):
-            return Response({
-                "result": False,
-                "code": 403,
-                "message": _("非该管理空间的管理员，无权限删除")
-            }, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"result": False, "code": 403, "message": _("非该管理空间的管理员，无权限删除")}, status=status.HTTP_403_FORBIDDEN
+            )
 
         # 执行删除
         user_id = request.user.username
@@ -1058,25 +1055,21 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
-    @action(detail=False, methods=['delete'])
+    @action(detail=False, methods=["delete"])
     def batch_delete(self, request, *args, **kwargs):
         """批量删除二级管理空间"""
         # 获取要删除的二级管理空间ID列表
-        role_ids = request.data.get('role_ids', [])
+        role_ids = request.data.get("role_ids", [])
 
         if not role_ids:
-            return Response({
-                "result": False,
-                "code": 400,
-                "message": _("请提供要删除的二级管理空间ID列表")
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"result": False, "code": 400, "message": _("请提供要删除的二级管理空间ID列表")}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         if not isinstance(role_ids, list):
-            return Response({
-                "result": False,
-                "code": 400,
-                "message": _("role_ids参数必须是列表格式")
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"result": False, "code": 400, "message": _("role_ids参数必须是列表格式")}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         user_id = request.user.username
         success_count = 0
@@ -1088,10 +1081,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             try:
                 # 检查权限
                 if not can_user_manage_role(user_id, role_id):
-                    failed_details.append({
-                        "role_id": role_id,
-                        "error": _("非该管理空间的管理员，无权限删除")
-                    })
+                    failed_details.append({"role_id": role_id, "error": _("非该管理空间的管理员，无权限删除")})
                     failed_count += 1
                     continue
 
@@ -1100,18 +1090,11 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
                 success_count += 1
 
             except Exception as e:
-                failed_details.append({
-                    "role_id": role_id,
-                    "error": str(e)
-                })
+                failed_details.append({"role_id": role_id, "error": str(e)})
                 failed_count += 1
 
         # 返回批量删除结果
-        result = {
-            "success_count": success_count,
-            "failed_count": failed_count,
-            "failed_details": failed_details
-        }
+        result = {"success_count": success_count, "failed_count": failed_count, "failed_details": failed_details}
 
         return Response(result)
 
