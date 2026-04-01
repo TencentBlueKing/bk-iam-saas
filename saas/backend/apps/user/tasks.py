@@ -24,7 +24,7 @@ from django.utils import timezone
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.constants import NotificationTypeEnum
-from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
+from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject, RoleUser
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
@@ -43,6 +43,7 @@ from backend.service.models import Subject
 from backend.util.time import timestamp_to_local
 from backend.util.url import url_join
 
+from ..organization.tasks import update_role_subject_scope
 from .constants import UserPermissionCleanupRecordStatusEnum
 
 logger = logging.getLogger("celery")
@@ -393,6 +394,12 @@ class UserPermissionCleaner:
                 members = self.role_biz.list_members_by_role_id(role.id)
                 members.remove(username)
                 self.role_biz.modify_system_manager_members(role_id=role.id, members=members)
+
+        # 清理角色用户组冗余数据
+        RoleGroupMember.objects.filter(role_id__in=role_ids, subject_id=username).delete()
+
+        # 更新授权范围数据
+        update_role_subject_scope([username], SubjectType.USER.value)
 
 
 @shared_task(ignore_result=True)
