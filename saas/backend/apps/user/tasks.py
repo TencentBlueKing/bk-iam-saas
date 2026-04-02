@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import json
 import logging
 from datetime import timedelta
 from itertools import groupby
@@ -24,7 +25,7 @@ from django.utils import timezone
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.constants import NotificationTypeEnum
-from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject, RoleUser
+from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject, RoleScope, RoleUser, ScopeSubject
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
@@ -38,12 +39,11 @@ from backend.biz.system import SystemBiz
 from backend.common.time import db_time, get_expired_at, need_run_expired_remind
 from backend.component import esb
 from backend.component.bkbot import send_iam_ticket
-from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleType, SubjectType
 from backend.service.models import Subject
 from backend.util.time import timestamp_to_local
 from backend.util.url import url_join
 
-from ..organization.tasks import update_role_subject_scope
 from .constants import UserPermissionCleanupRecordStatusEnum
 
 logger = logging.getLogger("celery")
@@ -378,6 +378,18 @@ class UserPermissionCleaner:
                 ).values_list("role_id", flat=True)
             )
 
+            # 清理人员模板
+            SubjectTemplateRelation.objects.filter(
+                subject_type=self._subject.type,
+                subject_id=self._subject.id,
+                created_time__lte=timestamp_to_local(before_at),
+            ).delete()
+        else:
+            # 清理人员模板
+            SubjectTemplateRelation.objects.filter(
+                subject_type=self._subject.type, subject_id=self._subject.id
+            ).delete()
+
         roles = Role.objects.filter(id__in=role_ids)
 
         for role in roles:
@@ -387,6 +399,21 @@ class UserPermissionCleaner:
             ):
                 self.role_with_perm_group_biz.delete_role_member(role, username)
 
+                # 清理角色用户组冗余数据
+                RoleGroupMember.objects.filter(role_id=role.id, subject_id=username).delete()
+
+                # 更新授权范围数据
+                ScopeSubject.objects.filter(role_id=role.id, subject_id=username).delete()
+                role_scopes = RoleScope.objects.filter(role_id=role.id, type=RoleScopeType.SUBJECT.value)
+                for role_scope in role_scopes:
+                    content = json.loads(role_scope.content)
+                    content = [
+                        c for c in content if not (c.get("type") == SubjectType.USER.value and c.get("id") == username)
+                    ]
+                    role_scope.content = json.dumps(content)
+
+                RoleScope.objects.bulk_update(role_scopes, ["content"], batch_size=100)
+
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
 
@@ -394,12 +421,6 @@ class UserPermissionCleaner:
                 members = self.role_biz.list_members_by_role_id(role.id)
                 members.remove(username)
                 self.role_biz.modify_system_manager_members(role_id=role.id, members=members)
-
-        # 清理角色用户组冗余数据
-        RoleGroupMember.objects.filter(role_id__in=role_ids, subject_id=username).delete()
-
-        # 更新授权范围数据
-        update_role_subject_scope([username], SubjectType.USER.value)
 
 
 @shared_task(ignore_result=True)

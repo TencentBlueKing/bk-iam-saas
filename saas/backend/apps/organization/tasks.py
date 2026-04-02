@@ -195,25 +195,39 @@ def batch_delete_subject_relations(subject_type: str, subject_ids: List[str]):
     RoleGroupMember.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).delete()
 
 
-def update_role_subject_scope(subject_ids: List[str], subject_type: str):
+def update_role_subject_scope(usernames: List[str], department_ids: List[str]):
     # 删除用户属于角色的授权范围
-    role_scope_ids = list(
-        ScopeSubject.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).values_list(
+    user_role_scope_ids = list(
+        ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=usernames).values_list(
             "role_scope_id", flat=True
         )
     )
+    department_role_scope_ids = list(
+        ScopeSubject.objects.filter(
+            subject_type=SubjectType.DEPARTMENT.value, subject_id__in=department_ids
+        ).values_list("role_scope_id", flat=True)
+    )
 
+    role_scope_ids = list(set(user_role_scope_ids + department_role_scope_ids))
     if role_scope_ids:
         scopes = list(RoleScope.objects.filter(id__in=role_scope_ids))
         for scope in scopes:
             scope_subjects = json.loads(scope.content)
             scope.content = json_dumps(
-                [one for one in scope_subjects if not ((one["type"] == subject_type and one["id"] in subject_ids))]
+                [
+                    one
+                    for one in scope_subjects
+                    if not (
+                        (one["type"] == SubjectType.USER.value and one["id"] in usernames)
+                        or (one["type"] == SubjectType.DEPARTMENT.value and one["id"] in department_ids)
+                    )
+                ]
             )
 
         RoleScope.objects.bulk_update(scopes, ["content"], batch_size=100)
 
-        ScopeSubject.objects.filter(subject_type=subject_type, subject_id__in=subject_ids).delete()
+        ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=usernames).delete()
+        ScopeSubject.objects.filter(subject_type=SubjectType.DEPARTMENT.value, subject_id__in=department_ids).delete()
 
 
 def batch_delete_subject_policy(subject_type: str, subject_ids: List[str]):
