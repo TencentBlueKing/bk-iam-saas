@@ -537,10 +537,4 @@ BK_PERSONAL_CENTER_URL = env.str("BK_PERSONAL_CENTER_URL", default="")
 PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
 PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")
 
-PCG_DEPARTMENT_ID = env.list("PCG_DEPARTMENT_ID", default=0)
-
-PCG_API_LIST = [
-    "/api/v1/external/staff_movement/getAssets",
-    "/api/v1/external/staff_movement/handover",
-    "/api/v1/external/staff_movement/recycle",
-]
+PCG_DEPARTMENT_ID = env.int("PCG_DEPARTMENT_ID", default=None)

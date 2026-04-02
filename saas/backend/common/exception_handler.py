@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 import logging
 import traceback
@@ -167,17 +168,6 @@ def exception_handler(exc, context):
         and error.code_num not in ignore_error_codes
     ):
         status_code = status.HTTP_200_OK
-
-    if request.path in settings.PCG_API_LIST:
-        if request.path.endswith("/getAssets"):
-            return Response(
-                {"code": error.code_num, "message": f"{error.message} ({error.code})", "assets": []},
-                status=status_code,
-            )
-        return Response(
-            {"code": error.code_num, "message": f"{error.message} ({error.code})", "err_list": []},
-            status=status_code,
-        )
 
     return Response(
         {"result": False, "code": error.code_num, "message": f"{error.message} ({error.code})", "data": error.data},

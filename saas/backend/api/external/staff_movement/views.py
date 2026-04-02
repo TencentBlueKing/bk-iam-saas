@@ -30,6 +30,7 @@ from backend.apps.handover.views import HandoverViewSet
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.error_codes import error_codes
+from backend.common.exception_handler import exception_handler
 from backend.common.lock import gen_permission_handover_lock
 from backend.service.models.subject import Subject
 
@@ -43,6 +44,17 @@ class GetAssetsViewSet(GenericViewSet):
 
     group_biz = GroupBiz()
     policy_query_biz = PolicyQueryBiz()
+
+    def handle_exception(self, exc):
+        context = self.get_exception_handler_context()
+        response = exception_handler(exc, context)
+        if response is None:
+            return None
+        data = response.data
+        return Response(
+            {"code": data.get("code"), "message": data.get("message"), "assets": []},
+            status=response.status_code,
+        )
 
     @swagger_auto_schema(
         operation_description="PCG权限交接-获取资产列表",
@@ -88,6 +100,17 @@ class ResignHandoverViewSet(HandoverViewSet):
     renderer_classes = [JSONRenderer]
 
     policy_query_biz = PolicyQueryBiz()
+
+    def handle_exception(self, exc):
+        context = self.get_exception_handler_context()
+        response = exception_handler(exc, context)
+        if response is None:
+            return None
+        data = response.data
+        return Response(
+            {"code": data.get("code"), "message": data.get("message"), "err_list": []},
+            status=response.status_code,
+        )
 
     @swagger_auto_schema(
         operation_description="PCG权限交接-交接",
@@ -147,7 +170,7 @@ class ResignHandoverViewSet(HandoverViewSet):
         return Response({"err_list": err_list, "code": 0, "msg": "OK"})
 
 
-class RecycleViewSet(GenericViewSet):
+class RecycleViewSet(ResignHandoverViewSet):
     """回收"""
 
     permission_classes = []  # type: ignore[var-annotated]

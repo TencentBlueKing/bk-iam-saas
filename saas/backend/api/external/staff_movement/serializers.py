@@ -15,7 +15,7 @@ from backend.apps.organization.models import User
 
 
 def validate_rtx(value):
-    if settings.PCG_DEPARTMENT_ID == 0:
+    if not settings.PCG_DEPARTMENT_ID:
         raise serializers.ValidationError("PCG_DEPARTMENT_ID未配置")
 
     user = User.objects.get(username=value)

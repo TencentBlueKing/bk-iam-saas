@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import hashlib
 import logging
 import time
 
@@ -15,7 +16,6 @@ from django.conf import settings
 from rest_framework import authentication, exceptions
 
 from backend.common.error_codes import error_codes
-from backend.util.md5 import md5
 
 logger = logging.getLogger("app")
 
@@ -30,10 +30,6 @@ class ResignApiAuthentication(authentication.BaseAuthentication):
         """
         签名认证方法
         """
-        # 检查是否是需要重签名验证的API路径
-        if request.path not in settings.PCG_API_LIST:
-            # 对于不需要重签名验证的路径，返回None表示跳过认证
-            return None
 
         try:
             # 提取并验证请求头参数
@@ -85,7 +81,7 @@ class ResignApiAuthentication(authentication.BaseAuthentication):
 
         # 验证签名
         sign_content = f"{timestamp}{resign_secret_key}{resign_app_id}"
-        expected_sign = md5(sign_content)
+        expected_sign = hashlib.md5(sign_content.encode("utf-8")).hexdigest()
 
         if resign_sign != expected_sign:
             logger.warning("签名认证失败：签名不匹配，app_id=%s", resign_app_id)
