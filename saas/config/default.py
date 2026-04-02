@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "backend.api.admin",
     "backend.api.management",
     "backend.api.bkci",
+    "backend.api.external.staff_movement",
 ]
 
 # 登录中间件
@@ -536,3 +537,9 @@ BK_PERSONAL_CENTER_URL = env.str("BK_PERSONAL_CENTER_URL", default="")
 ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING = env.bool(
     "ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING", default=False
 )
+
+# PCG 离职交接相关配置
+PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
+PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")
+
+PCG_DEPARTMENT_ID = env.int("PCG_DEPARTMENT_ID", default=None)
