@@ -37,7 +37,6 @@ from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.component.iam import list_all_subject_groups
 from backend.service.constants import SubjectRelationType
-from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
 from .serializers import (
@@ -306,8 +305,8 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
         return {int(one["id"]): one for one in groups}
 
     def get_page_result(self, group_dict, page):
-        relations = [SubjectGroup(**group_dict[one.id]) for one in page]
-        return self.biz._convert_to_subject_group_beans(relations)
+        # 直接从字典中获取SubjectGroupBean对象
+        return [group_dict[one.id] for one in page]
 
 
 class UserGroupSearchViewSet(SubjectGroupSearchMixin):
@@ -401,6 +400,41 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
         return subject
+
+
+class UserGroupRenewSearchViewSet(SubjectGroupSearchMixin):
+    """
+    搜索/过滤即将过期的用户组权限
+    """
+
+    group_biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户即将过期用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def search(self, request, *args, **kwargs):
+        return super().search(request, *args, **kwargs)
+
+    def get_group_dict(self, subject: Subject):
+        """
+        重写：只返回即将过期的用户组
+        """
+        # 获取所有即将过期的用户组（不分页，获取全部）
+        expired_at = get_soon_expire_ts()
+        # 使用足够大的limit获取所有即将过期的用户组
+        limit = 10000
+        offset = 0
+
+        # 获取用户所有即将过期的用户组
+        count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
+            subject, expired_at=expired_at, limit=limit, offset=offset
+        )
+
+        # 转换为字典格式，与父类格式保持一致
+        return {one.id: one for one in relations}
 
 
 class UserSubjectTemplateGroupViewSet(GenericViewSet):

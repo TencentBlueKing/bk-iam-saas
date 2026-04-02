@@ -25,6 +25,11 @@ urlpatterns = [
         "expire_soon/", views.PolicyExpireSoonViewSet.as_view({"get": "list"}), name="policy.list_policy_expire_soon"
     ),
     path(
+        "policies_expire_soon/search/",
+        views.UserPolicyRenewSearchViewSet.as_view({"post": "search"}),
+        name="policy.policy_renew_search",
+    ),
+    path(
         "related/",
         views.RelatedPolicyViewSet.as_view({"post": "create"}),
         name="policy.generate_related_policy",

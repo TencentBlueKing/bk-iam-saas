@@ -63,3 +63,7 @@ class GroupSearchSLZ(serializers.Serializer):
     )
     apply_disable = serializers.BooleanField(label="是否不可申请", required=False)
     hidden = serializers.BooleanField(label="是否隐藏", default=True)
+
+
+class ExpiringPolicySearchSLZ(serializers.Serializer):
+    action_name = serializers.CharField(required=False, default="", allow_blank=True, help_text="操作名称，用于模糊匹配")

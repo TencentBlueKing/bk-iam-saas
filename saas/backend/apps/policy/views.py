@@ -36,11 +36,13 @@ from backend.biz.policy import (
 from backend.biz.policy_tag import PolicyTagBean, PolicyTagBeanList
 from backend.biz.related_policy import RelatedPolicyBiz
 from backend.common.error_codes import error_codes
-from backend.common.serializers import ActionQuerySLZ
+from backend.common.serializers import ActionQuerySLZ, ExpiringPolicySearchSLZ
 from backend.common.time import get_soon_expire_ts
 from backend.service.action import ActionService
+from backend.service.models import Subject
 from backend.service.models import Subject as SvcSubject
 
+from ...common.pagination import CustomPageNumberPagination
 from .serializers import (
     PolicyDeleteSLZ,
     PolicyExpireSoonSLZ,
@@ -224,6 +226,46 @@ class PolicyExpireSoonViewSet(GenericViewSet):
         data = self.biz.list_expired(subject, get_soon_expire_ts())
 
         return Response([one.dict() for one in data])
+
+
+class UserPolicyRenewSearchViewSet(GenericViewSet):
+    """
+    搜索/过滤即将过期的自定义权限
+    """
+
+    pagination_class = CustomPageNumberPagination  # 如果需要分页
+    biz = PolicyQueryBiz()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户即将过期的权限策略（按操作名）",
+        request_body=ExpiringPolicySearchSLZ,
+        responses={status.HTTP_200_OK: PolicyExpireSoonSLZ(many=True)},
+        tags=["policy"],
+    )
+    def search(self, request, *args, **kwargs):
+        slz = ExpiringPolicySearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+        action_name = slz.validated_data.get("action_name")
+
+        subject = Subject.from_username(request.user.username)
+
+        # 获取所有即将过期的策略（列表）
+        all_policies = self.biz.list_expired(subject, get_soon_expire_ts())
+
+        # 使用操作中文名进行模糊搜索
+        if action_name:
+            all_policies = [
+                p for p in all_policies if p.action and p.action.name and action_name.lower() in p.action.name.lower()
+            ]
+
+        # 分页
+        page = self.paginate_queryset(all_policies)
+        if page is not None:
+            serializer = PolicyExpireSoonSLZ(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = PolicyExpireSoonSLZ(all_policies, many=True)
+        return Response(serializer.data)
 
 
 class RelatedPolicyViewSet(GenericViewSet):
