@@ -64,6 +64,8 @@ urlpatterns = [
                 url(r"^iam/", include("backend.iam.urls")),
                 # notice
                 url(r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")),
+                # 为外部系统提供API
+                url(r"^external/", include("backend.api.external.urls")),
             ]
         ),
     ),
