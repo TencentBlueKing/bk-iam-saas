@@ -252,7 +252,7 @@ class UserPolicyRenewSearchViewSet(GenericViewSet):
         # 获取所有即将过期的策略（列表）
         all_policies = self.biz.list_expired(subject, get_soon_expire_ts())
 
-        # 使用操作中文名进行模糊搜索
+        # 使用操作名进行模糊搜索
         if action_name:
             all_policies = [
                 p for p in all_policies if p.action and p.action.name and action_name.lower() in p.action.name.lower()

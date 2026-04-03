@@ -420,21 +420,21 @@ class UserGroupRenewSearchViewSet(SubjectGroupSearchMixin):
 
     def get_group_dict(self, subject: Subject):
         """
-        重写：只返回即将过期的用户组
+        返回用户加入的即将过期的用户组
         """
-        # 获取所有即将过期的用户组（不分页，获取全部）
+        # 到期时间在15天内
         expired_at = get_soon_expire_ts()
         # 使用足够大的limit获取所有即将过期的用户组
         limit = 10000
         offset = 0
 
         # 获取用户所有即将过期的用户组
-        count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
+        count, groups = self.group_biz.list_paging_subject_group_before_expired_at(
             subject, expired_at=expired_at, limit=limit, offset=offset
         )
 
         # 转换为字典格式，与父类格式保持一致
-        return {one.id: one for one in relations}
+        return {one.id: one for one in groups}
 
 
 class UserSubjectTemplateGroupViewSet(GenericViewSet):
