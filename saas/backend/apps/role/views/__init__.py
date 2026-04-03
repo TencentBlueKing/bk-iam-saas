@@ -21,8 +21,8 @@ from .group_member import (
 from .permission_audit import QueryAuthorizedSubjectsViewSet
 from .role import (
     AuthScopeIncludeUserRoleView,
+    GradeManagerPreviewViewSet,
     GradeManagerViewSet,
-    ManagementSpaceDeletionPreviewViewSet,
     MemberSystemPermissionView,
     RoleAuthorizationScopeView,
     RoleCommonActionViewSet,
@@ -70,5 +70,5 @@ __all__ = [
     "RoleGroupMemberDepartmentGroupViewSet",
     "RoleGroupMemberCleanViewSet",
     "RoleGroupMemberResetViewSet",
-    "ManagementSpaceDeletionPreviewViewSet",
+    "GradeManagerPreviewViewSet",
 ]

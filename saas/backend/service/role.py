@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, parse_obj_as
 from backend.apps.group.models import Group
 from backend.apps.role.models import (
     Role,
+    RoleCommonAction,
     RoleRelatedObject,
     RoleRelation,
     RoleResourceRelation,
@@ -662,19 +663,35 @@ class RoleService:
                 ).update(role_id=role_id)
 
     def count_role_related_groups(self, role_id: int) -> int:
-        """统计角色关联的用户组数量"""
+        """统计管理空间关联的用户组数量"""
         return RoleRelatedObject.objects.filter(role_id=role_id, object_type=RoleRelatedObjectType.GROUP.value).count()
 
     def count_role_authorization_scopes(self, role_id: int) -> int:
-        """统计角色授权范围数量"""
-        return RoleResourceRelation.objects.filter(role_id=role_id).count()
+        """统计管理空间权限策略数量"""
+        policy_count = 0
+
+        # 系统权限配置
+        policy_count += RoleUserSystemPermission.objects.filter(role_id=role_id).count()
+
+        # 通用操作配置
+        policy_count += RoleCommonAction.objects.filter(role_id=role_id).count()
+
+        # RoleScope中的实际权限策略
+        auth_scope = RoleScope.objects.filter(role_id=role_id, type=RoleScopeType.AUTHORIZATION.value).first()
+
+        if auth_scope:
+            systems = parse_obj_as(List[AuthScopeSystem], json.loads(auth_scope.content))
+            for system in systems:
+                policy_count += len(system.actions)  # 统计每个系统的操作数量
+
+        return policy_count
 
     def count_role_subject_scopes(self, role_id: int) -> int:
-        """统计角色人员范围数量"""
+        """统计管理空间人员策略数量"""
         return ScopeSubject.objects.filter(role_id=role_id).count()
 
     def count_role_members(self, role_id: int) -> int:
-        """统计角色成员数量"""
+        """统计管理空间管理成员数量"""
         return RoleUser.objects.filter(role_id=role_id).count()
 
     def count_subset_managers(self, role_id: int) -> int:

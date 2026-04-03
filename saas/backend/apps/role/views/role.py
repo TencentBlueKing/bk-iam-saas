@@ -86,7 +86,7 @@ from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.apps.subject_template.models import SubjectTemplateGroup
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
-from backend.biz.helper import RoleWithPermGroupBiz
+from backend.biz.helper import GradeManagerDeleteHelper, RoleDeleteHelper, RoleWithPermGroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import (
     RoleBiz,
@@ -302,19 +302,21 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         role = self.get_object()
 
         if not can_user_manage_role(request.user.username, role.id):
-            return Response(
-                {"result": False, "code": 403, "message": _("非该管理空间的管理员，无权限删除")}, status=status.HTTP_403_FORBIDDEN
-            )
+            raise error_codes.FORBIDDEN.format(message=_("非该管理空间{}的管理员，无权限删除").format(role.name), replace=True)
+
+        # 校验是否存在二级空间
+        subset_count = RoleRelation.objects.filter(parent_id=role.id).count()
+        if subset_count > 0:
+            raise error_codes.FORBIDDEN.format(message=_("存在{}个二级管理空间，请先删除所有二级空间").format(subset_count), replace=True)
 
         # 执行删除
-        user_id = request.user.username
-        self.biz.delete_grade_manager(role.id, user_id)
+        GradeManagerDeleteHelper(role.id).delete()
 
         audit_context_setter(role=role)
         return Response({})
 
 
-class ManagementSpaceDeletionPreviewViewSet(GenericViewSet):
+class GradeManagerPreviewViewSet(GenericViewSet):
     """
     管理空间删除预览（支持一级和二级管理空间）
     """
@@ -330,15 +332,6 @@ class ManagementSpaceDeletionPreviewViewSet(GenericViewSet):
     def deletion_preview(self, request, *args, **kwargs):
         """管理空间删除预览接口（一级和二级管理空间通用）"""
         role_id = kwargs.get("id")
-
-        # 获取角色信息（不限制类型）
-        role = get_object_or_404(Role, id=role_id)
-
-        # 权限校验
-        if not can_user_manage_role(request.user.username, role.id):
-            return Response(
-                {"result": False, "code": 403, "message": _("非该管理空间的管理员，无权限删除")}, status=status.HTTP_403_FORBIDDEN
-            )
 
         # 使用biz层获取删除预览数据
         preview_data = self.biz.get_deletion_preview_data(role_id)
@@ -1038,13 +1031,10 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         role = self.get_object()
 
         if not can_user_manage_role(request.user.username, role.id):
-            return Response(
-                {"result": False, "code": 403, "message": _("非该管理空间的管理员，无权限删除")}, status=status.HTTP_403_FORBIDDEN
-            )
+            raise error_codes.FORBIDDEN.format(message=_("非该管理空间({})的管理员，无权限删除").format(role.name), replace=True)
 
         # 执行删除
-        user_id = request.user.username
-        self.biz.delete_subset_manager(role.id, user_id)
+        GradeManagerDeleteHelper(role.id).delete()
 
         audit_context_setter(role=role)
         return Response({})
@@ -1062,14 +1052,10 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         role_ids = request.data.get("role_ids", [])
 
         if not role_ids:
-            return Response(
-                {"result": False, "code": 400, "message": _("请提供要删除的二级管理空间ID列表")}, status=status.HTTP_400_BAD_REQUEST
-            )
+            raise error_codes.INVALID_ARGS.format(message=_("请提供要删除的二级管理空间ID列表"))
 
         if not isinstance(role_ids, list):
-            return Response(
-                {"result": False, "code": 400, "message": _("role_ids参数必须是列表格式")}, status=status.HTTP_400_BAD_REQUEST
-            )
+            raise error_codes.INVALID_ARGS.format(message=_("role_ids参数必须是列表格式"))
 
         user_id = request.user.username
         success_count = 0
@@ -1086,7 +1072,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
                     continue
 
                 # 执行删除
-                self.biz.delete_subset_manager(role_id, user_id)
+                GradeManagerDeleteHelper(role_id).delete()
                 success_count += 1
 
             except Exception as e:

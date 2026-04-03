@@ -202,6 +202,22 @@ class RoleDeleteHelper:
                 RoleRelation.objects.filter(role_id=self._role.id).delete()
 
 
+class GradeManagerDeleteHelper(RoleDeleteHelper):
+    """
+    删除管理空间
+    专门用于一级和二级管理空间的删除操作
+    """
+
+    def __init__(self, role_id):
+        super().__init__(role_id)
+
+    def delete(self):
+        self._delete_role_group()
+        self._delete_role_subject_template()
+        self._delete_role_template()
+        self._delete_role()
+
+
 def get_role_expired_group_members(role: Role, expired_at_before: int, expired_at_after: int) -> List[Dict[str, Any]]:
     """
     获取角色已过期或即将过期的用户组成员

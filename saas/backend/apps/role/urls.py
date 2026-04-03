@@ -90,9 +90,9 @@ urlpatterns = [
     ),
     # 删除管理空间前预览
     path(
-        "management_spaces/<int:id>/deletion_preview/",
-        views.ManagementSpaceDeletionPreviewViewSet.as_view({"get": "deletion_preview"}),
-        name="management_space_deletion_preview",
+        "grade_manager/<int:id>/deletion_preview/",
+        views.GradeManagerPreviewViewSet.as_view({"get": "deletion_preview"}),
+        name="grade_manager_delete_preview",
     ),
     # 子集管理员
     path(

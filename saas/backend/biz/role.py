@@ -431,63 +431,6 @@ class RoleBiz:
 
         return None
 
-    # 删除管理空间
-
-    def delete_grade_manager(self, role_id: int, operator: str):
-        """
-        删除一级管理空间（分级管理员）
-        """
-        # 获取角色信息
-        role = Role.objects.filter(id=role_id, type=RoleType.GRADE_MANAGER.value).first()
-        if not role:
-            raise error_codes.NOT_FOUND_ERROR.format(_("分级管理员不存在"))
-
-        # 校验是否存在二级空间
-        subset_count = RoleRelation.objects.filter(parent_id=role_id).count()
-        if subset_count > 0:
-            raise error_codes.VALIDATE_ERROR.format(_("存在{}个二级管理空间，请先删除所有二级空间").format(subset_count))
-
-        with transaction.atomic():
-            # 删除用户组及关联数据
-            self._delete_grade_manager_groups(role_id)
-
-            # 删除权限配置
-            self._delete_grade_manager_auth_scopes(role_id)
-
-            # 删除人员配置
-            self._delete_grade_manager_subject_scopes(role_id)
-
-            # 删除分级管理员关联
-            self._delete_grade_manager_relations(role_id)
-
-            # 最后删除一级空间本身
-            role.delete()
-
-    def delete_subset_manager(self, role_id: int, operator: str):
-        """
-        删除二级管理空间（子集管理员）
-        """
-        # 获取角色信息
-        role = Role.objects.filter(id=role_id, type=RoleType.SUBSET_MANAGER.value).first()
-        if not role:
-            raise error_codes.NOT_FOUND_ERROR.format(_("子集管理员不存在"))
-
-        with transaction.atomic():
-            # 删除用户组及关联数据
-            self._delete_subset_manager_groups(role_id)
-
-            # 删除权限配置
-            self._delete_subset_manager_auth_scopes(role_id)
-
-            # 删除人员配置
-            self._delete_subset_manager_subject_scopes(role_id)
-
-            # 删除分级管理员关联
-            self._delete_subset_manager_relations(role_id)
-
-            # 最后删除二级空间本身
-            role.delete()
-
     def get_deletion_preview_data(self, role_id: int) -> Dict[str, Any]:
         """
         获取管理空间删除预览数据
@@ -511,100 +454,12 @@ class RoleBiz:
             "id": role.id,
             "name": role.name,
             "type": role.type,
-            "sub_space_count": sub_space_count,
-            "admin_user_count": admin_user_count,
-            "user_group_count": user_group_count,
-            "policy_count": permission_policy_count,
-            "subject_count": subject_policy_count,
+            "sub_space_count": sub_space_count,  # 二级管理空间数量
+            "admin_user_count": admin_user_count,  # 管理员数量
+            "user_group_count": user_group_count,  # 用户组数量
+            "policy_count": permission_policy_count,  # 权限策略数量
+            "subject_count": subject_policy_count,  # 人员策略数量
         }
-
-    def _delete_subset_manager_groups(self, role_id: int):
-        """删除二级空间下的用户组及关联数据"""
-        # 获取关联的用户组ID
-        group_ids = RoleRelatedObject.objects.filter(
-            role_id=role_id, object_type=RoleRelatedObjectType.GROUP.value
-        ).values_list("object_id", flat=True)
-
-        if not group_ids:
-            return
-
-        # 使用GroupBiz的删除方法（复用用户组删除逻辑）
-        from .group import GroupBiz
-
-        group_biz = GroupBiz()
-        for group_id in group_ids:
-            group_biz.delete(group_id)
-
-    def _delete_subset_manager_auth_scopes(self, role_id: int):
-        """删除权限配置"""
-        # 删除授权范围具体数据
-        RoleResourceRelation.objects.filter(role_id=role_id).delete()
-
-        # 删除授权范围配置
-        RoleScope.objects.filter(role_id=role_id, type="authorization").delete()
-
-    def _delete_subset_manager_subject_scopes(self, role_id: int):
-        """删除人员配置"""
-        # 删除人员范围具体数据
-        ScopeSubject.objects.filter(role_id=role_id).delete()
-
-        # 删除人员范围配置
-        RoleScope.objects.filter(role_id=role_id, type="subject").delete()
-
-    def _delete_subset_manager_relations(self, role_id: int):
-        """删除分级管理员关联"""
-        # 删除管理员用户
-        RoleUser.objects.filter(role_id=role_id).delete()
-
-        # 删除分级管理员关系（与父级的关系）
-        RoleRelation.objects.filter(role_id=role_id).delete()
-
-        # 删除管理空间和用户组的关联关系
-        RoleRelatedObject.objects.filter(role_id=role_id).delete()
-
-    def _delete_grade_manager_groups(self, role_id: int):
-        """删除一级空间下的用户组及关联数据"""
-        # 获取关联的用户组ID
-        group_ids = RoleRelatedObject.objects.filter(
-            role_id=role_id, object_type=RoleRelatedObjectType.GROUP.value
-        ).values_list("object_id", flat=True)
-
-        if not group_ids:
-            return
-
-        # 使用GroupBiz的删除方法（复用用户组删除逻辑）
-        from .group import GroupBiz
-
-        group_biz = GroupBiz()
-        for group_id in group_ids:
-            group_biz.delete(group_id)
-
-    def _delete_grade_manager_auth_scopes(self, role_id: int):
-        """删除权限配置"""
-        # 删除授权范围具体数据
-        RoleResourceRelation.objects.filter(role_id=role_id).delete()
-
-        # 删除授权范围配置
-        RoleScope.objects.filter(role_id=role_id, type="authorization").delete()
-
-    def _delete_grade_manager_subject_scopes(self, role_id: int):
-        """删除人员配置"""
-        # 删除人员范围具体数据
-        ScopeSubject.objects.filter(role_id=role_id).delete()
-
-        # 删除人员范围配置
-        RoleScope.objects.filter(role_id=role_id, type="subject").delete()
-
-    def _delete_grade_manager_relations(self, role_id: int):
-        """删除分级管理员关联"""
-        # 删除管理员用户
-        RoleUser.objects.filter(role_id=role_id).delete()
-
-        # 删除分级管理员关联对象
-        RoleRelatedObject.objects.filter(role_id=role_id).delete()
-
-        # 删除分级管理员关系（虽然一级空间没有父级，但清理可能存在的异常数据）
-        RoleRelation.objects.filter(Q(parent_id=role_id) | Q(role_id=role_id)).delete()
 
 
 class RoleCheckBiz:
