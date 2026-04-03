@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, get_origin
 
 from pydantic import BaseModel, PrivateAttr
 from pydantic.main import ModelMetaclass
@@ -145,23 +145,36 @@ class PartialModel(BaseModel):
                     return the empty value
                 return super(SubModel, SubModel)._get_empty_value(_type)
         """
-        try:
-            if issubclass(_type, str):
-                return ""
-            if issubclass(_type, int):
-                return 0
-            if issubclass(_type, bool):
-                return False
-            # 类似 List[...] 均可
-            if issubclass(_type, List):
-                return []
-            # 类似 Tuple[...] 均可
-            if issubclass(_type, Tuple):
-                return ()
-            # 类似 Dict[...] 或 dict 均可
-            if issubclass(_type, Dict):
-                return {}
-        except:  # noqa
-            pass
+        # 类型到空值的映射
+        type_empty_map = [
+            (str, ""),
+            (int, 0),
+            (bool, False),
+            (List, []),
+            (Tuple, ()),
+            (Dict, {}),
+        ]
+
+        for base_type, empty_value in type_empty_map:
+            try:
+                if issubclass(_type, base_type):
+                    return empty_value
+            except TypeError:
+                break
+
+        # 处理 typing 泛型类型，如 List[X], Dict[K, V], Tuple[...]
+        origin = get_origin(_type)
+        if origin is not None:
+            origin_empty_map = [
+                (list, []),
+                (tuple, ()),
+                (dict, {}),
+            ]
+            for base_origin, empty_value in origin_empty_map:
+                try:
+                    if issubclass(origin, base_origin):
+                        return empty_value
+                except TypeError:
+                    break
 
         raise TypeError(f"can't get empty value for {_type}")
