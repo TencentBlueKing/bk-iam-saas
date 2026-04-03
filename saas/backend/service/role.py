@@ -670,10 +670,10 @@ class RoleService:
         """统计管理空间权限策略数量"""
         policy_count = 0
 
-        # 系统权限配置
+        # 角色成员在系统中的全局权限配置
         policy_count += RoleUserSystemPermission.objects.filter(role_id=role_id).count()
 
-        # 通用操作配置
+        # 角色的通用操作快捷方式配置
         policy_count += RoleCommonAction.objects.filter(role_id=role_id).count()
 
         # RoleScope中的实际权限策略
@@ -682,7 +682,7 @@ class RoleService:
         if auth_scope:
             systems = parse_obj_as(List[AuthScopeSystem], json.loads(auth_scope.content))
             for system in systems:
-                policy_count += len(system.actions)  # 统计每个系统的操作数量
+                policy_count += len(system.actions)
 
         return policy_count
 

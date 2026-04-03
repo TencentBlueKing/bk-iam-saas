@@ -437,7 +437,7 @@ class RoleBiz:
         """
         role = Role.objects.filter(id=role_id).first()
         if not role:
-            raise error_codes.NOT_FOUND_ERROR.format(_("管理空间不存在"))
+            raise error_codes.NOT_FOUND_ERROR.format(_("id为{}的管理空间不存在").format(role_id), True)
 
         # 使用service层进行数据统计
         user_group_count = self.svc.count_role_related_groups(role_id)
