@@ -393,12 +393,13 @@ class UserPermissionCleaner:
                 # 更新授权范围数据
                 ScopeSubject.objects.filter(role_id=role.id, subject_id=username).delete()
                 role_scope = RoleScope.objects.filter(role_id=role.id, type=RoleScopeType.SUBJECT.value).first()
-                content = json.loads(role_scope.content)
-                content = [
-                    c for c in content if not (c.get("type") == SubjectType.USER.value and c.get("id") == username)
-                ]
-                role_scope.content = json.dumps(content)
-                role_scope.save()
+                if role_scope:
+                    content = json.loads(role_scope.content)
+                    content = [
+                        c for c in content if not (c.get("type") == SubjectType.USER.value and c.get("id") == username)
+                    ]
+                    role_scope.content = json.dumps(content)
+                    role_scope.save(update_fields=["content"])
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
