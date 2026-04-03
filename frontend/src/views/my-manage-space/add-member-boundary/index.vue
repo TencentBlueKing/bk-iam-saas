@@ -101,6 +101,7 @@
                   <div class="tree">
                     <infinite-tree
                       ref="memberTreeRef"
+                      show-full-name
                       :all-data="treeList"
                       :empty-data="emptyData"
                       :has-selected-users="formatAllSelectedUsers"
@@ -122,14 +123,14 @@
                       <dialog-infinite-list
                         ref="searchedResultsRef"
                         style="height: 309px"
+                        show-full-name
                         :all-data="searchedResult"
                         :focus-index.sync="focusItemIndex"
                         :is-disabled="isAll"
                         :has-selected-users="formatAllSelectedUsers"
                         :has-selected-departments="formatAllSelectedDeparts"
                         @on-checked="handleSearchResultSelected"
-                      >
-                      </dialog-infinite-list>
+                      />
                     </template>
                     <template v-if="isSearchResultTooMuch">
                       <div class="too-much-wrapper">

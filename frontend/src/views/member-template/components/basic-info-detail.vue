@@ -8,6 +8,7 @@
           <div class="basic-info-value">
             <iam-edit-input
               field="name"
+              style="width: 800px"
               :mode="formatEdit"
               :placeholder="$t(`m.memberTemplate['请输入模板名称']`)"
               :rules="rules"

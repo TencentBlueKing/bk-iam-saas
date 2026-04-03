@@ -2,7 +2,7 @@
 <template>
   <div>
     <!-- 申请自定义权限正常跳转 -->
-    <smart-action class="biz-perm-apply" v-if="!isNoPermApply && !isNoPermissionsSet">
+    <smart-action class="biz-perm-apply" v-if="isNormalApply">
       <render-horizontal-block :label="$t(`m.permApply['选择权限获得者']`)" :required="true">
         <section ref="permRecipientRef">
           <bk-user-selector
@@ -827,8 +827,16 @@
         });
         return allActionIds;
       },
+      // 是否是正常申请权限的流程，正常申请权限的流程是指：有权限可以申请，并且权限申请的页面不是因为没有权限组和权限而兜底的页面
+      isNormalApply () {
+        return !this.isNoPermApply && !this.isNoPermissionsSet;
+      },
       // 查找权限获得者是不是只是当前登录的成员
       isLoginSelf () {
+        // 如果不是正常申请，默认是自己
+        if (!this.isNormalApply) {
+          return true;
+        }
         if (!this.permMembers.length) {
           return false;
         }
@@ -2462,7 +2470,7 @@
         let recommendActions = [];
         let recommendFlag = false;
         // 默认权限申请页权限获得者至少选择一项
-        if (!this.permMembers.length && (!this.isNoPermApply && !this.isNoPermissionsSet)) {
+        if (!this.permMembers.length && this.isNormalApply) {
           this.isShowMemberError = true;
           this.scrollToLocation(this.$refs.permRecipientRef);
           return;
