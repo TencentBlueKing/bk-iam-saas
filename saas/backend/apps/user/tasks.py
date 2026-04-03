@@ -298,9 +298,9 @@ class UserPermissionCleaner:
 
         try:
             self._clean_policy()
-            self._clean_group(before_at)
             self._clean_subject_group(before_at)
             self._clean_role(before_at)
+            self._clean_group(before_at)
         except Exception as e:  # pylint: disable=broad-except
             self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
             self._record.error_info = str(e)
@@ -395,11 +395,12 @@ class UserPermissionCleaner:
                 role_scope = RoleScope.objects.filter(role_id=role.id, type=RoleScopeType.SUBJECT.value).first()
                 if role_scope:
                     content = json.loads(role_scope.content)
-                    content = [
+                    new_content = [
                         c for c in content if not (c.get("type") == SubjectType.USER.value and c.get("id") == username)
                     ]
-                    role_scope.content = json.dumps(content)
-                    role_scope.save(update_fields=["content"])
+                    if new_content != content:
+                        role_scope.content = json.dumps(new_content)
+                        role_scope.save(update_fields=["content"])
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
@@ -408,18 +409,6 @@ class UserPermissionCleaner:
                 members = self.role_biz.list_members_by_role_id(role.id)
                 members.remove(username)
                 self.role_biz.modify_system_manager_members(role_id=role.id, members=members)
-
-        # 清理人员模板
-        if before_at:
-            SubjectTemplateRelation.objects.filter(
-                subject_type=self._subject.type,
-                subject_id=self._subject.id,
-                created_time__lte=timestamp_to_local(before_at),
-            ).delete()
-        else:
-            SubjectTemplateRelation.objects.filter(
-                subject_type=self._subject.type, subject_id=self._subject.id
-            ).delete()
 
 
 @shared_task(ignore_result=True)
