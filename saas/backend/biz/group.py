@@ -277,6 +277,30 @@ class GroupBiz:
         """
         移除用户组成员
         """
+        # 在真正删除成员前，检查是否会导致对应角色没有管理员
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
+        ).first()
+
+        if relation:
+            try:
+                role = Role.objects.get(id=relation.role_id)
+            except Role.DoesNotExist:
+                role = None
+
+            if role:
+                # 只关心用户类型的成员（username）
+                remove_usernames = [m.id for m in subjects if m.type == SubjectType.USER.value]
+
+                if remove_usernames:
+                    current_members = set(
+                        RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True)
+                    )
+                    remaining = current_members - set(remove_usernames)
+                    if len(current_members) > 0 and len(remaining) == 0:
+                        # 阻止删除最后一个管理员
+                        raise error_codes.COMMON_ERROR.format(_("can not remove the last administrator of role"), True)
+    
         self._remove_members(group_id, subjects)
 
         relation = RoleRelatedObject.objects.filter(

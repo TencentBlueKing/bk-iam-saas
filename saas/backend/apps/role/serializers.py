@@ -14,6 +14,7 @@ from collections import defaultdict
 from django.conf import settings
 from django.db.models import QuerySet
 from rest_framework import serializers
+from django.utils.translation import gettext as _
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 from backend.apps.organization.models import Department, User
@@ -126,6 +127,29 @@ class GradeMangerBaseInfoSLZ(serializers.Serializer):
         child=RoleMember(label="成员"),
         max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
     )
+    def validate(self, data):
+        """校验 members 中的 username 不为空且用户存在"""
+        members = data.get("members", [])
+        if not members:
+            return data
+
+        if isinstance(members[0], dict):
+            usernames = [m.get("username") for m in members]
+        else:
+            usernames = members
+
+        # 检查空用户名
+        invalid = [u for u in usernames if not u or (isinstance(u, str) and u.strip() == "")]
+        if invalid:
+            raise serializers.ValidationError({"members": [_("member username must not be empty")]})
+
+        # 检查用户是否存在
+        exist_usernames = set(User.objects.filter(username__in=usernames).values_list("username", flat=True))
+        missing = set(usernames) - exist_usernames
+        if missing:
+            raise serializers.ValidationError({"members": [_("users not found: {}").format(",".join(sorted(missing)))]})
+
+        return data
 
 
 class GradeMangerCreateSLZ(GradeMangerBaseInfoSLZ):
