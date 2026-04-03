@@ -453,18 +453,17 @@
       handleOpenNewIAM () {
         // 标记是否匹配到路由
         let isMatched = false;
-        const url = this.IAM_V4_URL.endsWith('/') ? this.IAM_V4_URL.slice(0, -1) : this.IAM_V4_URL;
         for (const [oldRoutes, newRoutes] of IAMV4_ROUTES_ENUM.entries()) {
           // 检查跳转的v4路由是否存在于当前v3路由中
           if (oldRoutes.includes(this.$route.name)) {
-            window.open(`${url}/${newRoutes}`, '_self');
+            window.open(`${this.IAM_V4_URL}/${newRoutes}`, '_self');
             isMatched = true;
             break;
           }
         }
         // 路由没匹配到执行默认跳转到v4权限申请页面
         if (!isMatched) {
-          window.open(`${url}/permission/apply`, '_self');
+          window.open(`${this.IAM_V4_URL}/permission/apply`, '_self');
         }
       },
 
