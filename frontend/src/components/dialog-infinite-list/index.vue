@@ -44,7 +44,7 @@
                 {{ '(' + item.count + ')' }}
               </span>
             </div>
-            <span v-if="item.full_name" class="extra-full-name">
+            <span v-if="item.full_name" class="single-hide extra-full-name">
               {{ item.full_name }}
             </span>
           </div>
@@ -93,17 +93,20 @@
           <div v-if="showFullName" class="node-full-name-box">
             <div class="node-full-name">
               <span :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]">
-                {{ item.name }}
+                {{ item.username }}
+                <template v-if="Boolean(item.name)">
+                  ({{ item.name }})
+                </template>
               </span>
             </div>
-            <span v-if="item.full_name" class="extra-full-name">
+            <span v-if="item.full_name" class="single-hide extra-full-name">
               {{ item.full_name }}
             </span>
           </div>
           <template v-else>
             <span :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]">
               {{ item.username }}
-              <template v-if="item.name !== ''">
+              <template v-if="Boolean(item.name)">
                 ({{ item.name }})
               </template>
             </span>

@@ -101,7 +101,7 @@
                   <div class="tree">
                     <infinite-tree
                       ref="memberTreeRef"
-                      show-full-name
+                      :show-full-name="false"
                       :all-data="treeList"
                       :empty-data="emptyData"
                       :has-selected-users="formatAllSelectedUsers"

@@ -114,7 +114,7 @@
                       :is-rating-manager="curIsRatingManager"
                       :key="infiniteTreeKey"
                       :is-disabled="isAll"
-                      show-full-name
+                      :show-full-name="false"
                       :empty-data="emptyData"
                       :has-selected-users="formatAllSelectedUsers"
                       :has-selected-departments="formatAllSelectedDeparts"
