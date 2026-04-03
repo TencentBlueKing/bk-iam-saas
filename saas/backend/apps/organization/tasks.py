@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import json
 import logging
 import traceback
@@ -174,8 +175,7 @@ def clean_subject_to_delete():
             batch_delete_subject_relations(SubjectType.DEPARTMENT.value, department_ids)
 
         # 更新role的subject授权范围
-        update_role_subject_scope(usernames, SubjectType.USER.value)
-        update_role_subject_scope(department_ids, SubjectType.DEPARTMENT.value)
+        update_role_subject_scope(usernames, department_ids)
 
         if subjects:
             # 删除待删除的subject
