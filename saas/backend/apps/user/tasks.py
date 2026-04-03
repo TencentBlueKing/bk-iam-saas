@@ -392,27 +392,13 @@ class UserPermissionCleaner:
 
                 # 更新授权范围数据
                 ScopeSubject.objects.filter(role_id=role.id, subject_id=username).delete()
-                role_scopes = RoleScope.objects.filter(role_id=role.id, type=RoleScopeType.SUBJECT.value)
-                for role_scope in role_scopes:
-                    content = json.loads(role_scope.content)
-                    content = [
-                        c for c in content if not (c.get("type") == SubjectType.USER.value and c.get("id") == username)
-                    ]
-                    role_scope.content = json.dumps(content)
-
-                RoleScope.objects.bulk_update(role_scopes, ["content"], batch_size=100)
-
-                # 清理人员模板
-                if before_at:
-                    SubjectTemplateRelation.objects.filter(
-                        subject_type=self._subject.type,
-                        subject_id=self._subject.id,
-                        created_time__lte=timestamp_to_local(before_at),
-                    ).delete()
-                else:
-                    SubjectTemplateRelation.objects.filter(
-                        subject_type=self._subject.type, subject_id=self._subject.id
-                    ).delete()
+                role_scope = RoleScope.objects.filter(role_id=role.id, type=RoleScopeType.SUBJECT.value).first()
+                content = json.loads(role_scope.content)
+                content = [
+                    c for c in content if not (c.get("type") == SubjectType.USER.value and c.get("id") == username)
+                ]
+                role_scope.content = json.dumps(content)
+                role_scope.save()
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
@@ -421,6 +407,18 @@ class UserPermissionCleaner:
                 members = self.role_biz.list_members_by_role_id(role.id)
                 members.remove(username)
                 self.role_biz.modify_system_manager_members(role_id=role.id, members=members)
+
+        # 清理人员模板
+        if before_at:
+            SubjectTemplateRelation.objects.filter(
+                subject_type=self._subject.type,
+                subject_id=self._subject.id,
+                created_time__lte=timestamp_to_local(before_at),
+            ).delete()
+        else:
+            SubjectTemplateRelation.objects.filter(
+                subject_type=self._subject.type, subject_id=self._subject.id
+            ).delete()
 
 
 @shared_task(ignore_result=True)
