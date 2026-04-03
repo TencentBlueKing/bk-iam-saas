@@ -378,18 +378,6 @@ class UserPermissionCleaner:
                 ).values_list("role_id", flat=True)
             )
 
-            # 清理人员模板
-            SubjectTemplateRelation.objects.filter(
-                subject_type=self._subject.type,
-                subject_id=self._subject.id,
-                created_time__lte=timestamp_to_local(before_at),
-            ).delete()
-        else:
-            # 清理人员模板
-            SubjectTemplateRelation.objects.filter(
-                subject_type=self._subject.type, subject_id=self._subject.id
-            ).delete()
-
         roles = Role.objects.filter(id__in=role_ids)
 
         for role in roles:
@@ -413,6 +401,18 @@ class UserPermissionCleaner:
                     role_scope.content = json.dumps(content)
 
                 RoleScope.objects.bulk_update(role_scopes, ["content"], batch_size=100)
+
+                # 清理人员模板
+                if before_at:
+                    SubjectTemplateRelation.objects.filter(
+                        subject_type=self._subject.type,
+                        subject_id=self._subject.id,
+                        created_time__lte=timestamp_to_local(before_at),
+                    ).delete()
+                else:
+                    SubjectTemplateRelation.objects.filter(
+                        subject_type=self._subject.type, subject_id=self._subject.id
+                    ).delete()
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
