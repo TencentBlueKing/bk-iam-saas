@@ -3,7 +3,11 @@
     <div class="ghost-wrapper" :style="ghostStyle"></div>
     <div class="render-wrapper" ref="content">
       <div
-        v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
+        v-bk-tooltips="{
+          content: nameType(item),
+          placements: ['top-end'],
+          allowHtml: true
+        }"
         v-for="item in renderData"
         :key="item.id"
         :style="getNodeStyle(item)"
@@ -71,8 +75,13 @@
                 {{ '(' + item.count + `)` }}
               </span>
             </span>
-            <span v-if="item.full_name" class="single-hide extra-full-name">
-              {{ item.full_name }}
+            <span v-if="item.full_name" class="flex-align-center">
+              <span class="single-hide extra-full-name">
+                {{ getFullName(item.full_name) }}
+              </span>
+              <bk-tag v-if="getFullNameLen(item.full_name) > 1">
+                +{{ getFullNameLen(item.full_name) - 1 }}
+              </bk-tag>
             </span>
           </template>
           <template v-else>
@@ -232,23 +241,36 @@
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName, disabled } = payload;
+          const {
+            name = '',
+            type = '',
+            username = '',
+            full_name: fullName = '',
+            disabled = false
+          } = payload;
+
+          // 禁用状态优先返回
           if (disabled) {
             return this.$t(`m.common['该成员已添加']`);
           }
+
+          // 处理分号换行的函数，存在分号则替换为 <br/>，不存在则返回原字符串
+          const formatName = (text) => text.includes(';') ? text.replace(';', '<br/>') : text;
+
+          // 类型处理映射，根据不同类型返回不同的名称显示逻辑
           const typeMap = {
             user: () => {
-              if (fullName) {
-                return fullName;
-              } else {
-                return name ? `${username}(${name})` : username;
-              }
+              const formatted = formatName(fullName);
+              return formatted || (name ? `${username}(${name})` : username);
             },
             depart: () => {
-              return fullName || name;
+              const formatted = formatName(fullName);
+              return formatted || name;
             }
           };
-          return typeMap[type]();
+
+          // 不存在的类型默认走 user
+          return (typeMap[type] || typeMap.user)();
         };
       },
       disabledNode () {
@@ -483,6 +505,18 @@
 
       handleEmptyRefresh () {
         this.$emit('on-refresh', {});
+      },
+
+      // 获取fullName的长度，分号分隔开算一个，返回分号分隔的数组长度
+      getFullNameLen (fullName) {
+        const text = fullName.split(';');
+        return text.length || 0;
+      },
+      
+      // 存在分号则说明有换行，返回分号前的字符串，否则返回原字符串
+      getFullName (fullName) {
+        const text = fullName.split(';');
+        return this.getFullNameLen(fullName) > 1 ? text[0] : fullName;
       }
     }
   };
