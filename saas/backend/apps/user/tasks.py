@@ -39,8 +39,9 @@ from backend.biz.system import SystemBiz
 from backend.common.time import db_time, get_expired_at, need_run_expired_remind
 from backend.component import esb
 from backend.component.bkbot import send_iam_ticket
-from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.util.json import json_dumps
 from backend.util.time import timestamp_to_local
 from backend.util.url import url_join
 
@@ -298,9 +299,9 @@ class UserPermissionCleaner:
 
         try:
             self._clean_policy()
+            self._clean_group(before_at)
             self._clean_subject_group(before_at)
             self._clean_role(before_at)
-            self._clean_group(before_at)
         except Exception as e:  # pylint: disable=broad-except
             self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
             self._record.error_info = str(e)
@@ -390,17 +391,25 @@ class UserPermissionCleaner:
                 # 清理角色用户组冗余数据
                 RoleGroupMember.objects.filter(role_id=role.id, subject_id=username).delete()
 
-                # 更新授权范围数据
-                ScopeSubject.objects.filter(role_id=role.id, subject_id=username).delete()
-                role_scope = RoleScope.objects.filter(role_id=role.id, type=RoleScopeType.SUBJECT.value).first()
-                if role_scope:
-                    content = json.loads(role_scope.content)
-                    new_content = [
-                        c for c in content if not (c.get("type") == SubjectType.USER.value and c.get("id") == username)
-                    ]
-                    if new_content != content:
-                        role_scope.content = json.dumps(new_content)
-                        role_scope.save(update_fields=["content"])
+                # 清理授权范围
+                role_scope_ids = list(
+                    ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id=username).values_list(
+                        "role_scope_id", flat=True
+                    )
+                )
+                if role_scope_ids:
+                    scopes = list(RoleScope.objects.filter(id__in=role_scope_ids))
+                    for scope in scopes:
+                        scope_subjects = json.loads(scope.content)
+                        scope.content = json_dumps(
+                            [
+                                one
+                                for one in scope_subjects
+                                if not (one["type"] == SubjectType.USER.value and one["id"] == username)
+                            ]
+                        )
+                    RoleScope.objects.bulk_update(scopes, ["content"], batch_size=100)
+                    ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id=username).delete()
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
