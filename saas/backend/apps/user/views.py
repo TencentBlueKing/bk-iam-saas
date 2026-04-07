@@ -64,7 +64,7 @@ class UserGroupViewSet(GenericViewSet):
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
-        slz = QueryGroupSLZ(data=request.query_params)
+        slz = QueryGroupSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
         system_id = slz.validated_data["system_id"]
 
@@ -149,6 +149,8 @@ class UserGroupRenewViewSet(GenericViewSet):
         slz = QueryGroupSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         system_id = slz.validated_data["system_id"]
+        name = slz.validated_data.get("name", "")  # 组名搜索参数
+        description = slz.validated_data.get("description", "")  # 描述搜索参数
 
         subject = Subject.from_username(request.user.username)
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
@@ -156,14 +158,26 @@ class UserGroupRenewViewSet(GenericViewSet):
 
         if system_id:
             count, relations = self.group_biz.list_paging_system_subject_group_before_expired_at(
-                system_id, subject, expired_at=expired_at, limit=limit, offset=offset
+                system_id, subject, expired_at=expired_at, limit=10000, offset=0
             )
         else:
             count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
-                subject, expired_at=expired_at, limit=limit, offset=offset
+                subject, expired_at=expired_at, limit=10000, offset=0
             )
 
-        slz = GroupSLZ(instance=relations, many=True)
+        # 内存搜索过滤
+        if name or description:
+            relations = [
+                r
+                for r in relations
+                if (not name or (r.name and name.lower() in r.name.lower()))
+                and (not description or (r.description and description.lower() in r.description.lower()))
+            ]
+        count = len(relations)
+        # 手动处理分页
+        paginated_relations = relations[offset : offset + limit] if limit else relations
+
+        slz = GroupSLZ(instance=paginated_relations, many=True)
         return Response({"count": count, "results": slz.data})
 
 
@@ -400,41 +414,6 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
         return subject
-
-
-class UserGroupRenewSearchViewSet(SubjectGroupSearchMixin):
-    """
-    搜索/过滤即将过期的用户组权限
-    """
-
-    group_biz = GroupBiz()
-
-    @swagger_auto_schema(
-        operation_description="搜索用户即将过期用户组列表",
-        request_body=GroupSearchSLZ(label="用户组搜索"),
-        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
-        tags=["user"],
-    )
-    def search(self, request, *args, **kwargs):
-        return super().search(request, *args, **kwargs)
-
-    def get_group_dict(self, subject: Subject):
-        """
-        返回用户加入的即将过期的用户组
-        """
-        # 到期时间在15天内
-        expired_at = get_soon_expire_ts()
-        # 使用足够大的limit获取所有即将过期的用户组
-        limit = 10000
-        offset = 0
-
-        # 获取用户所有即将过期的用户组
-        count, groups = self.group_biz.list_paging_subject_group_before_expired_at(
-            subject, expired_at=expired_at, limit=limit, offset=offset
-        )
-
-        # 转换为字典格式，与父类格式保持一致
-        return {one.id: one for one in groups}
 
 
 class UserSubjectTemplateGroupViewSet(GenericViewSet):

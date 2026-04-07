@@ -96,6 +96,18 @@ class QueryRoleSLZ(serializers.Serializer):
 
 class QueryGroupSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统id", required=False, allow_blank=True, default="")
+    name = serializers.CharField(required=False, default="", allow_blank=True)
+    description = serializers.CharField(required=False, default="", allow_blank=True)
+
+
+class GroupRenewSearchSLZ(serializers.Serializer):
+    """用户组续期搜索序列化器"""
+
+    id = serializers.IntegerField(required=False, default=0)
+    name = serializers.CharField(required=False, default="", allow_blank=True)
+    description = serializers.CharField(required=False, default="", allow_blank=True)
+    hidden = serializers.BooleanField(required=False, default=True)
+    system_id = serializers.CharField(required=False, default="", allow_blank=True)
 
 
 class UserPolicySearchSLZ(serializers.Serializer):
