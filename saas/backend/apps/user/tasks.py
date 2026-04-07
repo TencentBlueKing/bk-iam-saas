@@ -392,24 +392,22 @@ class UserPermissionCleaner:
                 RoleGroupMember.objects.filter(role_id=role.id, subject_id=username).delete()
 
                 # 清理授权范围
-                role_scope_ids = list(
-                    ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id=username).values_list(
-                        "role_scope_id", flat=True
-                    )
-                )
-                if role_scope_ids:
-                    scopes = list(RoleScope.objects.filter(id__in=role_scope_ids))
-                    for scope in scopes:
-                        scope_subjects = json.loads(scope.content)
+                scope_subject = ScopeSubject.objects.filter(
+                    subject_type=SubjectType.USER.value, subject_id=username, role_id=role.id
+                ).first()
+                if scope_subject:
+                    scope = RoleScope.objects.filter(id=scope_subject.role_scope_id).first()
+                    if scope:
+                        content = json.loads(scope.content)
                         scope.content = json_dumps(
                             [
                                 one
-                                for one in scope_subjects
+                                for one in content
                                 if not (one["type"] == SubjectType.USER.value and one["id"] == username)
                             ]
                         )
-                    RoleScope.objects.bulk_update(scopes, ["content"], batch_size=100)
-                    ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id=username).delete()
+                        scope.save(update_fields=["content"])
+                    scope_subject.delete()
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
