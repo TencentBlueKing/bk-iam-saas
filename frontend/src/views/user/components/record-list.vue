@@ -119,8 +119,8 @@
           <div v-if="exceptionMsg || traceBackMsg"
             class="msg-content">
             <div>
-              <div v-dompurify-html="exceptionMsg" />
-              <div v-dompurify-html="traceBackMsg" />
+              <div v-bk-xss-html="exceptionMsg" />
+              <div v-bk-xss-html="traceBackMsg" />
             </div>
             <!-- <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div> -->
           </div>

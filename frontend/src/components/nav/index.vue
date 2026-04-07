@@ -458,9 +458,11 @@
           this.updateRouter(type);
           this.resetLocalStorage();
           if (id > 0) {
-            window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
-              role_name: this.user.role.name
-            }))}`);
+            const queryParams = Object.assign({}, {
+              ...this.$route.query,
+              role_name: name
+            });
+            window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -604,15 +606,15 @@
       },
 
       async handleRemoteTree  (value) {
-        this.keyWord = value;
+        this.keyWord = value.trim();
         if (this.$refs.select) {
-          this.$refs.select.searchValue = value;
+          this.$refs.select.searchValue = this.keyWord;
         }
         this.curRoleList = [];
         this.resetPagination();
         if (value) {
           this.isSearch = true;
-          await this.fetchSearchManageList(value);
+          await this.fetchSearchManageList(this.keyWord);
         } else {
           this.isSearch = false;
           if (this.$refs.select) {

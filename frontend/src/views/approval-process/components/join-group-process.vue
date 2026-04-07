@@ -18,9 +18,10 @@
     </render-search>
     <section class="loading-wrapper" v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
       <bk-table
-        :data="tableList"
         size="small"
+        ref="joinGroupRef"
         ext-cls="join-group-process-table"
+        :data="tableList"
         :outer-border="false"
         :header-border="false"
         :pagination="pagination"
@@ -115,7 +116,7 @@
   import { buildURLParams } from '@/common/url';
   import editProcessDialog from './edit-process-dialog';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, xssFilter } from '@/common/util';
   export default {
     name: '',
     components: {
@@ -292,11 +293,22 @@
           this.pagination.count = data.count;
           this.tableList = data.results;
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
+          const currentSelectList = this.currentSelectList.map(item => item.group_id);
+          if (currentSelectList.length) {
+            this.$nextTick(() => {
+              this.tableList.forEach(item => {
+                if (currentSelectList.includes(item.group_id) && this.$refs.joinGroupRef) {
+                  this.$refs.joinGroupRef.toggleRowSelection(item, true);
+                }
+              });
+            });
+          }
         } catch (e) {
           this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
+          this.fetchCustomTotal();
         }
       },
 
@@ -349,12 +361,48 @@
         this.fetchGroupProcessesList();
       },
 
+      // 自定义分页勾选后的总数
+      fetchCustomTotal () {
+        this.$nextTick(() => {
+          const tableRef = this.$refs.joinGroupRef;
+          if (tableRef && tableRef.$refs && tableRef.$refs.paginationWrapper) {
+            const paginationWrapper = tableRef.$refs.paginationWrapper;
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount && selectCount.length && selectCount[0].children) {
+              selectCount[0].children[0].innerHTML = xssFilter(this.currentSelectList.length);
+            }
+          }
+        });
+      },
+
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.currentSelectList.push(row);
+            } else {
+              this.currentSelectList = this.currentSelectList.filter((item) => item.group_id !== row.group_id);
+            }
+            this.fetchCustomTotal();
+          },
+          all: () => {
+            const list = payload.filter(item => !this.currentSelectList.includes(item.group_id));
+            const selectGroups = this.currentSelectList.filter(item =>
+              !this.tableList.map(v => v.group_id).includes(item.group_id));
+            this.currentSelectList = [...selectGroups, ...list];
+            this.fetchCustomTotal();
+          }
+        };
+        return typeMap[type]();
+      },
+
       handlerAllChange (selection) {
-        this.currentSelectList = [...selection];
+        this.fetchSelectedGroups('all', selection);
       },
 
       handlerChange (selection, row) {
-        this.currentSelectList = [...selection];
+        this.fetchSelectedGroups('multiple', selection, row);
       },
 
       handleProcessSelect (value, option, item) {

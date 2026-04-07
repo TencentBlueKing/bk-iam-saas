@@ -29,7 +29,8 @@ class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
 
     def __init__(self, tenant_id: str):
         self.tenant_id = tenant_id
-        super().__init__(tenant_id)
+        OpenCommonTrans.__init__(self, tenant_id)
+        ApplicationDataTrans.__init__(self, tenant_id)
 
     def to_policy_list(self, data: Dict) -> PolicyBeanList:
         """

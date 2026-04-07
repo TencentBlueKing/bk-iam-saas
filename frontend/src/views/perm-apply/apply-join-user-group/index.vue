@@ -1,5 +1,22 @@
 <template>
   <smart-action class="iam-join-user-group-wrapper">
+    <render-horizontal-block :label="addMemberTitle" :required="true">
+      <render-member
+        ref="addMemberRef"
+        class="perm-recipient-wrapper"
+        :required="false"
+        :label-width="0"
+        :users="users"
+        :departments="departments"
+        :is-all="isAll"
+        :render-title="''"
+        :render-text="addMemberText"
+        :tips="addMemberTips"
+        @on-add="handleAddMember"
+        @on-delete="handleMemberDelete"
+      />
+      <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p>
+    </render-horizontal-block>
     <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
       <div
         ref="selectTableRef"
@@ -207,7 +224,7 @@
                   {{ row.name }}
                 </span>
                 <span
-                  v-if="row.expired_at_display"
+                  v-if="row.expired_at_display && isLoginSelf"
                   class="user-group-name-expired"
                 >
                   <template v-if="user.timestamp > row.expired_at">
@@ -296,20 +313,6 @@
       </div>
       <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['尚未选择用户组']`) }}</p>
     </render-horizontal-block>
-    <section>
-      <render-member
-        :required="false"
-        :users="users"
-        :departments="departments"
-        :is-all="isAll"
-        :render-title="addMemberTitle"
-        :render-text="addMemberText"
-        :tips="addMemberTips"
-        @on-add="handleAddMember"
-        @on-delete="handleMemberDelete"
-      />
-      <!-- </template> -->
-    </section>
     <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
     <render-horizontal-block ext-cls="expired-at-wrapper" :label="$t(`m.common['申请期限']`)" :required="true">
       <section ref="expiredAtRef">
@@ -390,7 +393,7 @@
       </div>
     </bk-sideslider>
             
-    <confirmDialog
+    <ConfirmDialog
       :width="600"
       :show.sync="isShowConfirmDialog"
       :title="confirmDialogTitle"
@@ -452,7 +455,6 @@
         isShowAddMemberDialog: false,
         isShowExpiredError: false,
         isShowGroupError: false,
-        isShowMemberError: false,
         isShowMemberAdd: false,
         isShowMemberEmptyError: false,
         tableList: [],
@@ -613,6 +615,20 @@
       },
       originalCondition () {
           return _.cloneDeep(this.condition);
+      },
+      // 获取用户+部门组织机构成员
+      allMembersList () {
+        return [...this.users, ...this.departments];
+      },
+      // 查找权限获得者是不是只是当前登录的成员
+      isLoginSelf () {
+        if (!this.allMembersList.length) {
+          return false;
+        }
+        return this.allMembersList.every(item => item.username === this.user.username);
+      },
+      isShowMemberError () {
+        return this.allMembersList.length < 1;
       }
     },
     watch: {
@@ -644,7 +660,9 @@
           'is_selected': true
         }
       ];
-      this.searchData = this.enableGroupInstanceSearch ? this.initSearchData.filter(item => ['name', 'id', 'description', 'system_id', 'role_id'].includes(item.id)) : this.initSearchData;
+      this.searchData = this.enableGroupInstanceSearch
+        ? this.initSearchData.filter(item => ['name', 'id', 'description', 'system_id', 'role_id'].includes(item.id))
+        : this.initSearchData;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
         return Object.prototype.toString.call(payload) === '[object Object]';
@@ -916,25 +934,6 @@
       // 处理手动输入各种场景
       handleManualInput () {
         if (this.curSelectMenu) {
-          // let inputText = _.cloneDeep(this.curInputText);
-          // const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
-          // const isHasName = this.curInputText.indexOf(`${curItem.name}：`) > -1;
-          // if (isHasName) {
-          //   inputText = this.curInputText.split(`${curItem.name}：`);
-          // }
-          // const textValue = _.isArray(inputText) ? inputText[1] : inputText;
-          // this.$set(this.searchParams, this.curSelectMenu, textValue);
-          // this.searchList.push({
-          //   id: this.curSelectMenu,
-          //   name: curItem.name,
-          //   values: [
-          //     {
-          //       id: textValue,
-          //       name: textValue
-          //     }
-          //   ]
-          // });
-          // this.searchValue = _.cloneDeep(this.searchList);
           // 转换为tag标签后,需要清空输入框的值
           if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
             this.$refs.searchSelectRef.$refs.searchSelect.keySubmit();
@@ -1045,14 +1044,15 @@
               }
               if (this.defaultSelectedGroups.length) {
                 const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
-                if (hasSelected) {
+                if (hasSelected && this.isLoginSelf) {
                   this.$set(item, 'expired_at', hasSelected.expired_at);
                   this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
                   this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 }
               }
-              if (currentSelectedGroups.includes(item.id.toString())
-                || this.curUserGroup.includes(item.id.toString())) {
+              if (this.isLoginSelf
+                && (currentSelectedGroups.includes(item.id.toString())
+                  || this.curUserGroup.includes(item.id.toString()))) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1106,14 +1106,16 @@
               }
               if (this.defaultSelectedGroups.length) {
                 const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
-                if (hasSelected) {
+                if (hasSelected && this.isLoginSelf) {
                   this.$set(item, 'expired_at', hasSelected.expired_at);
                   this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
                   this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 }
               }
-              if (currentSelectedGroups.includes(item.id.toString())
-                || this.curUserGroup.includes(item.id.toString())) {
+              if (this.isLoginSelf
+                && (currentSelectedGroups.includes(item.id.toString())
+                  || this.curUserGroup.includes(item.id.toString()))
+              ) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1152,10 +1154,14 @@
 
       handleMemberDelete (type, payload) {
         window.changeDialog = true;
-        type === 'user' ? this.users.splice(payload, 1) : this.departments.splice(payload, 1);
+        if (type === 'user') {
+          this.users.splice(payload, 1);
+        } else {
+          this.departments.splice(payload, 1);
+        }
         // this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
         // 先注释掉此方法，新版交互用得到
-        // this.formatCheckedUserGroup();
+        this.formatCheckedUserGroup();
       },
 
       handleSubmitAdd (payload) {
@@ -1164,39 +1170,40 @@
         this.isAll = false;
         this.users = _.cloneDeep(users);
         this.departments = _.cloneDeep(departments);
-        // this.isShowMemberAdd = false;
         this.isShowAddMemberDialog = false;
         this.isShowMemberEmptyError = false;
-        // this.formatCheckedUserGroup();
+        this.formatCheckedUserGroup();
       },
 
-      // 处理权限获得者是非空并且不包含自己，不勾选个人已申请的用户组
+      // 只有权限获得者仅是登录用户自己才勾选个人已申请的用户组
       formatCheckedUserGroup () {
-        const allList = [...this.users, ...this.departments];
-        const isMine = allList.find(item => item.username === this.user.username);
+        // 查找每项是不是只有当前登录的成员
         const currentSelectedGroups = this.currentSelectedGroups.map(item => item.id.toString());
         this.curUserGroup = _.cloneDeep(this.defaultSelectedIds);
         this.tableList.forEach(item => {
-          if (isMine || !allList.length) {
+          const isSelected = this.curUserGroup.includes(item.id.toString());
+          if (this.isLoginSelf) {
             this.currentSelectedGroups = this.currentSelectedGroups.filter(
               v => !this.curUserGroup.includes(v.id.toString()));
-            if (currentSelectedGroups.includes(item.id.toString())
-              || this.curUserGroup.includes(item.id.toString())) {
+            if (currentSelectedGroups.includes(item.id.toString()) || isSelected) {
               this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
             }
           } else {
-            if (this.curUserGroup.includes(item.id.toString())) {
+            if (isSelected) {
               this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, false);
             }
           }
         });
         // 处理有选择权限获得者并不包含自己的情况
-        if (!isMine && allList.length) {
+        if (!this.isLoginSelf) {
           this.curUserGroup = [];
         }
       },
 
       setDefaultSelect (payload) {
+        if (!this.isLoginSelf) {
+          return true;
+        }
         return !this.curUserGroup.includes(payload.id.toString());
       },
 
@@ -1419,8 +1426,8 @@
         } catch (e) {
           this.$emit('toggle-loading', false);
           this.emptyData = formatCodeData(e.code, this.emptyData);
-          console.error(e);
           this.curUserGroup = [];
+          this.defaultSelectedIds = [];
           this.currentSelectedGroups = [];
           this.defaultSelectedGroups = [];
           this.messageAdvancedError(e);
@@ -1515,7 +1522,7 @@
         // if (subjects.length) {
         //   const isOther = subjects.filter(item => item.id !== this.user.username);
         //   if (isOther.length) {
-        //     // 如果权限获得者既包含了自己也包含了他人，就提交已申请过的加上勾选的
+        // 如果权限获得者既包含了自己也包含了他人，就提交已申请过的加上勾选的
         //     const isMine = subjects.find(item => item.id === this.user.username);
         //     if (isMine) {
         //       // 这里需要产品优化既包含了自己也包含了他人，单独提交已申请过了的用户组会报错，所以这里还需要判断下有没有勾选
@@ -1528,6 +1535,10 @@
         //     }
         //   }
         // }
+        if (this.isShowMemberEmptyError) {
+          this.scrollToLocation(this.$refs.addMemberRef);
+          return;
+        }
         if (!groupsList.length) {
           this.isShowGroupError = true;
           this.scrollToLocation(this.$refs.selectTableRef);
@@ -1561,7 +1572,6 @@
             name: 'apply'
           });
         } catch (e) {
-          console.error(e);
           const applyCount = this.defaultSelectedGroups.length + this.currentSelectedGroups.length;
           if (['admin'].includes(this.user.username)) {
             this.isShowConfirmDialog = true;
@@ -1784,6 +1794,16 @@
     min-width: 80px;
     line-height: 1;
     margin-left: 5px;
+  }
+}
+
+/deep/ .perm-recipient-wrapper {
+  .horizontal-item {
+    padding: 0;
+    box-shadow: none;
+    .label {
+      width: 0;
+    }
   }
 }
 </style>

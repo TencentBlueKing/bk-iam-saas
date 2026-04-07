@@ -226,13 +226,13 @@ export default class CompareCondition {
         }
         if (strList.length > 0) {
           if (this.attribute.length === deleteLen) {
-            return xssFilter(`<s style="color: #c4c6cc;">${isCn ? '已设置0' : '0 has been set'} <span style="font-weight: 600;">(${isCn ? '删' : 'delete'} ${deleteLen})</span>${isCn ? '个属性条件' : 'condition(s)'}</s>`);
+            return xssFilter(`<s style="color: #c4c6cc;">${isCn ? '已设置0' : '0 has been set'} <span style="font-weight: 600;">(${isCn ? '删' : 'delete'} ${String(deleteLen)})</span>${isCn ? '个属性条件' : 'condition(s)'}</s>`);
           }
           return xssFilter(isCn
             ? `已设置<span>${this.attribute.length - deleteLen}<span style="font-weight: 600;">(${strList.join('，')})</span>个属性条件</span>`
             : `<span>${this.attribute.length - deleteLen}<span style="font-weight: 600;">(${strList.join('，')})</span>condition(s) has been set</span>`);
         }
-        return xssFilter(`${il8n('resource', '已设置')} ${len} ${il8n('resource', '个属性条件')}`);
+        return xssFilter(`${il8n('resource', '已设置')} ${String(len)} ${il8n('resource', '个属性条件')}`);
       }
       return il8n('verify', '未设置任何条件');
     }

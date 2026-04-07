@@ -17,6 +17,9 @@
           <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]" />
         </div>
         <ul class="bk-dropdown-list" slot="dropdown-content">
+          <li class="dropdown-placeholder">
+            <a />
+          </li>
           <li>
             <a @click.stop="handleBatch('reset')">
               {{ $t(`m.userOrOrg['重置用户组']`) }}
@@ -584,6 +587,10 @@
         height: 0 !important;
       }
     }
+  }
+
+  .dropdown-placeholder {
+    display: none;
   }
 }
 </style>

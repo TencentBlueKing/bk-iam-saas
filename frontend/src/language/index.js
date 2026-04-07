@@ -25,11 +25,16 @@
 */
 import en from './lang/en';
 import cn from './lang/zh';
+import ja from './lang/ja';
 import magicbox from 'bk-magic-vue';
 import { formatI18nKey } from '@/common/util';
 
 const { lang } = magicbox;
 const messages = {
+  'ja': {
+    ...lang.jaJP,
+    ...ja
+  },
   'zh-cn': {
     ...lang.zhCN,
     ...cn

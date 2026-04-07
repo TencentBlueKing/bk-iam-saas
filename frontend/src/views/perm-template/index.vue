@@ -300,7 +300,10 @@
           ...this.queryParams
         };
         if (Object.keys(queryParams).length) {
-          window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+          window.history.replaceState({}, '', `?${buildURLParams({
+            ...queryParams,
+             role_name: this.user.role.name
+          })}`);
         }
         for (const key in this.searchParams) {
           const tempObj = this.searchData.find(item => key === item.id);

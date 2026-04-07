@@ -16,6 +16,8 @@ import openpyxl
 from django.http import StreamingHttpResponse
 from openpyxl.styles import Font, colors
 
+from backend.apps.group.models import Group
+from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
 from backend.biz.constants import PermissionTypeEnum
@@ -127,8 +129,29 @@ class QueryAuthorizedSubjects(object):
             "resource": resources,
             "limit": self.limit,
         }
+        subjects = self.engine_svc.query_subjects_by_resource_instance(query_data=query_data)
 
-        return self.engine_svc.query_subjects_by_resource_instance(query_data=query_data)
+        # 批量查询用户
+        usernames = set(
+            User.objects.filter(
+                username__in=[s["id"] for s in subjects if s["type"] == SubjectType.USER.value],
+                tenant_id=self.tenant_id,
+            ).values_list("username", flat=True)
+        )
+        # 批量查询用户组
+        group_ids = Group.objects.filter(
+            id__in=[s["id"] for s in subjects if s["type"] == SubjectType.GROUP.value], tenant_id=self.tenant_id
+        ).values_list("id", flat=True)
+        group_ids = {str(i) for i in group_ids}
+
+        return [
+            s
+            for s in subjects
+            if s["type"] == SubjectType.USER.value
+            and s["id"] in usernames
+            or s["type"] == SubjectType.GROUP.value
+            and s["id"] in group_ids
+        ]
 
     def _gen_resource_instance_info(self, resource_instances):
         """
@@ -147,7 +170,7 @@ class QueryAuthorizedSubjects(object):
         生成导出数据
         """
         system_name = SystemService().get(self.system_id).name
-        action_name = ActionService().get(self.system_id, self.action_id).name
+        action_name = ActionService(self.tenant_id).get(self.system_id, self.action_id).name
         subjects = self.query_by_permission_type()
         export_data = [["系统名", "系统 ID", "操作名", "操作 ID", "资源实例", "有权限成员", "成员 ID", "成员类型"]]
 

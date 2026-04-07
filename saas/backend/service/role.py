@@ -328,7 +328,9 @@ class RoleService:
 
         # 查询用户的已设置为 readonly 的成员
         readonly_usernames = set(
-            RoleUser.objects.filter(role_id=role_id, readonly=True).values_list("username", flat=True)
+            RoleUser.objects.filter(role_id=role_id, readonly=True, tenant_id=self.tenant_id).values_list(
+                "username", flat=True
+            )
         )
 
         # NOTE readonly 的成员只能通过其它逻辑处理
@@ -340,7 +342,7 @@ class RoleService:
         # 由于需要保持顺序不变，所以需要看是否变化了包括顺序，如果改变了则直接全删除，然后全添加
         if new_members != old_members:
             # 全删除
-            RoleUser.objects.filter(role_id=role_id, readonly=False).delete()
+            RoleUser.objects.filter(role_id=role_id, readonly=False, tenant_id=self.tenant_id).delete()
             # 重新全部添加
             self._add_members(role_id, new_members)
 
@@ -464,7 +466,7 @@ class RoleService:
 
         with transaction.atomic():
             # DB 数据更新
-            RoleUserSystemPermission.update_global_enabled(role_id, need_sync_backend_role)
+            RoleUserSystemPermission.update_global_enabled(role_id, need_sync_backend_role, self.tenant_id)
             # 向 IAM 后台同步更新，看 enabled 进行删除或增加操作
             usernames = RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True)
             if not usernames:
@@ -496,7 +498,7 @@ class RoleService:
 
         with transaction.atomic():
             # 1. DB 记录，拥有所有系统的权限
-            RoleUserSystemPermission.add_enabled_users(role.id, username)
+            RoleUserSystemPermission.add_enabled_users(role.id, username, self.tenant_id)
             # 2. 向 IAM 后台同步更新
             self._create_backend_role_member(role, created_members=[username])
 
@@ -514,7 +516,7 @@ class RoleService:
 
         with transaction.atomic():
             # 1. DB 记录，删除对应权限
-            RoleUserSystemPermission.delete_enabled_users(role.id, username)
+            RoleUserSystemPermission.delete_enabled_users(role.id, username, self.tenant_id)
             # 2. 向 IAM 后台同步更新
             self._delete_backend_role_member(role, deleted_members=[username])
 
@@ -532,13 +534,13 @@ class RoleService:
         with transaction.atomic():
             if need_sync_backend_role:
                 # 1. DB 记录，拥有所有系统的权限
-                RoleUserSystemPermission.add_enabled_users(role.id, username)
+                RoleUserSystemPermission.add_enabled_users(role.id, username, self.tenant_id)
                 # 2. 向 IAM 后台同步更新
                 self._create_backend_role_member(role, created_members=[username])
                 return
 
             # 1. DB 记录，删除对应权限
-            RoleUserSystemPermission.delete_enabled_users(role.id, username)
+            RoleUserSystemPermission.delete_enabled_users(role.id, username, self.tenant_id)
             # 2. 向 IAM 后台同步更新
             self._delete_backend_role_member(role, deleted_members=[username])
 

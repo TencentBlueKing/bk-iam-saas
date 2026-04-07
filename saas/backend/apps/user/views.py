@@ -271,7 +271,7 @@ class SubjectGroupSearchMixin(BizMixin, mixins.ListModelMixin, GenericViewSet):
         if page is not None:
             results = self.get_page_result(group_dict, page)
 
-            slz = GroupSLZ(instance=results, many=True)
+            slz = GroupSLZ(instance=results, many=True, context={"tenant_id": self.tenant_id})
             return Response({"count": queryset.count(), "results": slz.data})
 
         return Response({"count": 0, "results": []})

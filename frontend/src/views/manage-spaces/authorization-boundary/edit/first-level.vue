@@ -27,23 +27,33 @@
                 {{ $t(`m.common['添加']`) }}
               </bk-button>
             </section>
-            <div
-              v-if="isSelectSystem"
-              class="aggregate-action-group">
-              <div
-                v-for="item in AGGREGATION_EDIT_ENUM"
-                :key="item.value"
-                :class="[
-                  'aggregate-action-btn',
-                  { 'is-active': isAllExpanded === item.value },
-                  { 'is-disabled': isAggregateDisabled }
-                ]"
-                @click.stop="handleAggregateAction(item.value)"
-              >
-                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+            <div v-if="isSelectSystem" class="switch-action-group">
+              <div class="all-unlimited-switch">
+                <bk-switcher
+                  v-model="isAllUnlimited"
+                  theme="primary"
+                  size="small"
+                  :disabled="isUnlimitedDisabled"
+                  @change="handleUnlimitedActionChange"
+                />
+                <span class="expanded-text">{{ $t(`m.common['批量无限制']`) }}</span>
+              </div>
+              <div class="aggregate-action-group">
+ 
+                <div
+                  v-for="item in AGGREGATION_EDIT_ENUM"
+                  :key="item.value"
+                  :class="[
+                    'aggregate-action-btn',
+                    { 'is-active': isAllExpanded === item.value },
+                    { 'is-disabled': isAggregateDisabled }
+                  ]"
+                  @click.stop="handleAggregateActionChange(item.value)"
+                >
+                  <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+                </div>
               </div>
             </div>
-      
           </div>
           <div v-show="isSelectSystem">
             <div class="resource-instance-wrapper"
@@ -86,79 +96,6 @@
       </div>
     </render-horizontal-block>
 
-    <!-- <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
-            :label-width="renderLabelWidth('resource')"
-            :required="false">
-            <div class="grade-admin-select-wrapper">
-                <div class="showTableClick" @click.stop="isShowTableClick">
-                    <div class="action">
-                        <section class="action-wrapper" @click.stop="handleAddAction">
-                            <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
-                        </section>
-                        <Icon
-                            type="info-fill"
-                            class="info-icon"
-                            v-bk-tooltips.top="{ content: addActionTips, width: 236, extCls: 'iam-tooltips-cls' }" />
-                    </div>
-                    <div class="sub-title" v-if="policyList.length > 0 && !isShowTable">
-                        {{ $t(`m.common['共']`) }}
-                        <span class="number">{{policyList.length}}</span>
-                        {{ $t(`m.common['个']`) }}
-                        {{ $t(`m.perm['操作权限']`) }}
-                    </div>
-                </div>
-                <div v-show="isShowTable">
-                    <div class="info-wrapper">
-                        <p class="tips">{{ infoText }}</p>
-                        <section style="min-width: 108px;">
-                            <bk-switcher
-                                v-model="isAllExpanded"
-                                :disabled="isAggregateDisabled"
-                                size="small"
-                                theme="primary"
-                                @change="handleAggregateAction" />
-                            <span class="text">{{ expandedText }}</span>
-                        </section>
-                    </div>
-                    <div class="resource-instance-wrapper"
-                        ref="instanceTableContentRef"
-                        v-bkloading="{ isLoading, opacity: 1, extCls: 'loading-resource-instance-cls' }">
-                        <render-instance-table
-                            :is-all-expanded="isAllExpanded"
-                            ref="resourceInstanceRef"
-                            :data="policyList"
-                            :list="policyList"
-                            :group-id="$route.params.id"
-                            :backup-list="aggregationsTableData"
-                            @on-delete="handleDelete"
-                            @on-aggregate-delete="handleAggregateDelete"
-                            @on-select="handleResourceSelect" />
-                    </div>
-                </div>
-            </div>
-        </render-horizontal-block> -->
-    <!-- <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p> -->
-    <!-- <section v-if="isShowMemberAdd" ref="memberRef">
-            <render-action
-                :title="$t(`m.levelSpace['选择可授权人员边界']`)"
-                :tips="addMemberTips"
-                style="margin-bottom: 16px;"
-                @on-click="handleAddMember" />
-        </section> -->
-    <!-- <section ref="memberRef">
-            <render-member
-                :users="users"
-                :departments="departments"
-                :is-all="isAll"
-                :tip="addMemberTips"
-                :label-width="renderLabelWidth('member')"
-                @on-add="handleAddMember"
-                @on-delete="handleMemberDelete"
-                @on-delete-all="handleDeleteAll" />
-        </section>
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p> -->
     <render-horizontal-block
       v-if="isRatingManager"
       ext-cls="reason-wrapper"
@@ -189,7 +126,7 @@
       :all-checked="isAll"
       show-limit
       @on-cancel="handleCancelAdd"
-      @on-sumbit="handleSumbitAdd" />
+      @on-sumbit="handleSubmitAdd" />
 
     <add-action-sideslider
       :all="allSystem"
@@ -246,6 +183,7 @@
         isShowAddActionSideslider: false,
         isShowActionEmptyError: false,
         isExpanded: false,
+        isAllUnlimited: false,
         curSystem: '',
         curActionValue: [],
         addMemberTitle: this.$t(`m.levelSpace['选择可授权人员边界']`),
@@ -271,44 +209,53 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isSelectSystem () {
-                return this.originalList.length > 0;
-            },
-            defaultValue () {
-                if (this.originalList.length < 1) {
-                    return [];
-                }
-                const tempList = [];
-                this.originalList.forEach(item => {
-                    if (!tempList.some(sys => sys.system_id === item.system_id)) {
-                        tempList.push({
-                            system_id: item.system_id,
-                            system_name: item.system_name,
-                            list: [item]
-                        });
-                    } else {
-                        const curData = tempList.find(sys => sys.system_id === item.system_id);
-                        curData.list.push(item);
-                    }
-                });
+      ...mapGetters(['user']),
+      isSelectSystem () {
+        return this.originalList.length > 0;
+      },
+      defaultValue () {
+        if (this.originalList.length < 1) {
+          return [];
+        }
+        const tempList = [];
+        this.originalList.forEach(item => {
+          if (!tempList.some(sys => sys.system_id === item.system_id)) {
+            tempList.push({
+              system_id: item.system_id,
+              system_name: item.system_name,
+              list: [item]
+            });
+          } else {
+            const curData = tempList.find(sys => sys.system_id === item.system_id);
+            curData.list.push(item);
+          }
+        });
 
-                return tempList;
-            },
-            expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
-            },
-            isAggregateDisabled () {
-                return this.policyList.length < 1
-                    || this.aggregations.length < 1
-                    || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
-            },
-            isStaff () {
-                return this.user.role.type === 'staff';
-            },
-            isRatingManager () {
-                return this.user.role.type === 'rating_manager';
-            }
+        return tempList;
+      },
+      expandedText () {
+        return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
+      },
+      isAggregateDisabled () {
+        return this.policyList.length < 1
+          || this.aggregations.length < 1
+          || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
+      },
+      isUnlimitedDisabled () {
+        const isDisabled = this.policyList.every(item =>
+          ((!item.resource_groups || (item.resource_groups && !item.resource_groups.length)) && !item.instances)
+          );
+        if (isDisabled) {
+          this.isAllUnlimited = false;
+        }
+        return isDisabled;
+      },
+      isStaff () {
+        return this.user.role.type === 'staff';
+      },
+      isRatingManager () {
+        return this.user.role.type === 'rating_manager';
+      }
     },
     watch: {
       reason () {
@@ -450,7 +397,6 @@
           this.aggregationsBackup = _.cloneDeep(res.data.aggregations);
           this.aggregations = _.cloneDeep(data);
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
@@ -466,8 +412,8 @@
             curSelectActions.push(`${item.system_id}&${item.id}`);
           }
         });
-        let aggregations = []
-        ;(payload || []).forEach(item => {
+        let aggregations = [];
+        (payload || []).forEach(item => {
           const { actions, aggregate_resource_types, $id } = item;
           const curActions = actions.filter(_ => curSelectActions.includes(`${_.system_id}&${_.id}`));
           if (curActions.length > 0) {
@@ -497,7 +443,6 @@
         window.changeDialog = true;
         this.isAllExpanded = payload;
         const aggregationAction = this.aggregations;
-        console.log('aggregationAction', aggregationAction);
         const actionIds = [];
         aggregationAction.forEach(item => {
           actionIds.push(...item.actions.map(_ => `${_.system_id}&${_.id}`));
@@ -525,7 +470,11 @@
             const conditions = isExistActions.map(subItem => subItem.resource_groups[0]
               .related_resource_types[0].condition);
             // 是否都选择了实例
-            const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
+            const isAllHasInstance = conditions.every(subItem => subItem.length > 0 && subItem[0] !== 'none');
+            // 是否所有项都是空实例
+            const isAllEmptyInstance = conditions.every(subItem => subItem.length > 0 && subItem[0] === 'none');
+            // 是否所有项都是无限制
+            const isAllNoLimited = conditions.every(subItem => subItem.length === 0);
             if (isAllHasInstance) {
               const instances = conditions.map(subItem => subItem.map(v => v.instance));
               let isAllEqual = true;
@@ -535,20 +484,8 @@
                   break;
                 }
               }
-              console.log('instances: ');
-              console.log(instances);
-              console.log('isAllEqual: ' + isAllEqual);
               if (isAllEqual) {
-                console.log(instances[0][0]);
-                // const instanceData = instances[0][0][0];
-                // item.instances = instanceData.path.map(pathItem => {
-                //     return {
-                //         id: pathItem[0].id,
-                //         name: pathItem[0].name
-                //     };
-                // });
                 const instanceData = instances[0][0];
-                console.log('instanceData', instanceData);
                 item.instances = [];
                 instanceData.map(pathItem => {
                   const instance = pathItem.path.map(e => {
@@ -566,12 +503,19 @@
               }
             } else {
               item.instances = [];
+              if (isAllNoLimited) {
+                item.isNoLimited = true;
+                item.isNeedNoLimited = true;
+              }
+              if (isAllEmptyInstance) {
+                item.isAddActions = true;
+                item.instances = ['none'];
+              }
             }
             return new GradeAggregationPolicy(item);
           });
           this.policyList = this.policyList.filter(item => !actionIds.includes(`${item.system_id}&${item.id}`));
           this.policyList.unshift(...aggregations);
-          console.log('this.policyList', this.policyList);
           return;
         }
         const aggregationData = [];
@@ -638,6 +582,83 @@
         });
       },
 
+      // 批量无限制
+      handleUnlimitedActionChange (payload) {
+        this.setPolicyList(this.originalList);
+        const tableData = _.cloneDeep(this.policyList);
+        tableData.forEach((item, index) => {
+          if (!item.isAggregate) {
+            if (item.resource_groups && item.resource_groups.length) {
+              item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                  if (!payload && (types.condition.length > 0 && types.condition[0] !== 'none')) {
+                    return;
+                  }
+                  if (payload) {
+                    types.condition = [];
+                    types.isError = false;
+                  }
+                  // 取消批量无限制后，还原上一次的操作
+                  if (!payload && types.condition.length < 1 && types.conditionBackup.length > 0) {
+                    types.condition = _.cloneDeep(types.conditionBackup);
+                  }
+                });
+              });
+            } else {
+              item.name = item.name.split('，')[0];
+            }
+          }
+          if (item.instances && item.isAggregate) {
+            item = Object.assign(item, {
+              isNoLimited: false,
+              isNeedNoLimited: true,
+              isError: !(item.instances.length || (!item.instances.length && item.isNoLimited))
+            });
+            if (!payload || item.instances.length) {
+              item = Object.assign(item, {
+                isNoLimited: false,
+                isError: false
+              });
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item = Object.assign(item, {
+                isNoLimited: true,
+                isError: false,
+                instances: []
+              });
+            }
+            // 多项相同资源类型只要满足其中一项资源类型有实例就可提交
+            // 如果只是其中一项选择了资源，因为[]既代表是空集也代表是无限制，所以无法判断另外资源类型是无限制还是空集
+            const curAggregateTab = item.aggregateResourceType[this.$refs.resourceInstanceRef.selectedIndex];
+            if (curAggregateTab) {
+              const isExistIns = item.instances.length > 0 && item.instances.some(ins => ins.type === curAggregateTab.id && ins !== 'none');
+              if (!isExistIns && item.aggregateResourceType.length > 0) {
+                const isExistNoLimited = item.aggregateResourceType.length > 1
+                  ? Object.values(item.instancesDisplayData).flat(Infinity).length === 0
+                  : item.instancesDisplayData[curAggregateTab.id].length < 1;
+                // empty或者isAddActions为true代表是新增操作需要清空资源
+                const isUnlimited = item.empty || item.isAddActions ? false : isExistNoLimited;
+                item = Object.assign(item, {
+                  isNoLimited: payload || isUnlimited,
+                  isBatchNoLimited: payload
+                });
+              }
+            }
+            return this.$set(
+              tableData,
+              index,
+              new GradeAggregationPolicy(item)
+            );
+          }
+        });
+        this.policyList = _.cloneDeep(tableData);
+      },
+
+      handleAggregateActionChange (payload) {
+        this.handleAggregateAction(payload);
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
+      },
+
       // 设置InstancesDisplayData
       setInstancesDisplayData (data) {
         data.instancesDisplayData = data.instances.reduce((p, v) => {
@@ -661,7 +682,6 @@
           const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.$route.params.id });
           this.handleDetailData(res.data);
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         }
       },
@@ -781,7 +801,9 @@
         window.changeDialog = true;
         payload.forEach(e => {
           if (!e.resource_groups || !e.resource_groups.length) {
-            e.resource_groups = (e.related_resource_types && e.related_resource_types.length) ? [{ id: '', related_resource_types: e.related_resource_types }] : [];
+            e.resource_groups = (e.related_resource_types && e.related_resource_types.length)
+              ? [{ id: '', related_resource_types: e.related_resource_types }]
+              : [];
           }
         });
         this.originalList = _.cloneDeep(payload);
@@ -790,6 +812,8 @@
           this.handleAggregateAction(false);
           this.isAllExpanded = false;
         }
+        // 处理批量无限制，默认为新增的操作选中无实例
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
         this.isShowActionEmptyError = false;
         this.isShowAddActionSideslider = false;
       },
@@ -827,7 +851,7 @@
         this.isShowMemberAdd = true;
       },
 
-      handleSumbitAdd (payload) {
+      handleSubmitAdd (payload) {
         window.changeDialog = true;
         const { users, departments } = payload;
         this.isAll = payload.isAll;
@@ -844,7 +868,6 @@
       },
 
       async handleSubmitWithReason () {
-        this.submitLoading = true;
         const subjects = [];
         if (this.isAll) {
           subjects.push({
@@ -877,6 +900,7 @@
           id: this.$route.params.id,
           sync_perm
         };
+        this.submitLoading = true;
         const dispatchMethod = this.isRatingManager ? 'editRatingManagerWithGeneral' : 'editRatingManager';
         try {
           await this.$store.dispatch(`role/${dispatchMethod}`, params);
@@ -923,18 +947,6 @@
       },
 
       handleCancel () {
-        // let cancelHandler = Promise.resolve();
-        // if (window.changeDialog) {
-        //     cancelHandler = leavePageConfirm();
-        // }
-        // cancelHandler.then(() => {
-        //     this.$router.push({
-        //         name: 'authorBoundary',
-        //         params: {
-        //             id: this.$route.params.id
-        //         }
-        //     });
-        // }, _ => _);
         this.$router.push({
           name: 'authorBoundary',
           params: {
@@ -955,98 +967,21 @@
     }
   };
 </script>
+
 <style lang="postcss">
-    /* .iam-grading-admin-create-wrapper {
-        .grading-admin-render-perm-cls {
-            margin-bottom: 16px;
-        }
-        .action-empty-error {
-            position: relative;
-            top: -40px;
-            left: 230px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
-        .reason-empty-error{
-            position: relative;
-            top: -45px;
-            left: 160px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
-        .grade-admin-select-wrapper {
-            .showTableClick {
-                cursor: pointer;
-            .action {
-                display: flex;
-                justify-content: flex-start;
-                .action-wrapper {
-                    margin-left: 8px;
-                    font-size: 14px;
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                    i {
-                        position: relative;
-                        top: -1px;
-                        left: 2px;
-                    }
-                }
-                .info-icon {
-                    margin: 2px 0 0 2px;
-                    color: #c4c6cc;
-                    &:hover {
-                        color: #3a84ff;
-                    }
-                }
-            }
-            .sub-title {
-                margin-top:10px;
-                margin-left:10px;
-                font-size:14px;
-                color: #979ba5;
-            .number {
-                font-weight: 600;
-        }
+.iam-edit-rate-manager-reason-dialog {
+  .content-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    label {
+      display: block;
+      width: 70px;
+      span {
+        color: #ea3636;
+      }
     }
-        }
-            .info-wrapper {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 16px;
-                line-height: 24px;
-                .tips,
-                .text {
-                    line-height: 20px;
-                    font-size: 12px;
-                }
-            }
-            .resource-instance-wrapper {
-                min-height: 200px;
-            }
-            .loading-resource-instance-cls {
-                border: 1px solid #c4c6cc;
-            }
-        }
-    .horizontal-item .label {
-        width: 130px;
-    }
-    } */
-    .iam-edit-rate-manager-reason-dialog {
-        .content-wrapper {
-            display: flex;
-            justify-content: flex-start;
-            label {
-                display: block;
-                width: 70px;
-                span {
-                    color: #ea3636;
-                }
-            }
-        }
-    }
+  }
+}
 </style>
 
 <style lang="postcss" scoped>

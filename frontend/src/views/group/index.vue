@@ -587,8 +587,9 @@
       refreshCurrentQuery () {
         const params = {};
         let queryParams = {
-            ...this.searchParams,
-            ...this.queryParams
+          ...this.searchParams,
+          ...this.queryParams,
+          role_name: this.user.role.name
         };
         const groupStorage = localStorage.getItem('groupList') ? JSON.parse(localStorage.getItem('groupList')) : {};
         if (!Object.keys(queryParams).length && Object.keys(groupStorage).length > 0) {

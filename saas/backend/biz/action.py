@@ -124,8 +124,7 @@ class ActionBiz:
         self.resource_type_svc = ResourceTypeService()
         self.policy_svc = PolicyQueryService()
 
-    @cachedmethod(timeout=1 * 60)  # 缓存 1 分钟
-    def list(self, system_id: str) -> ActionBeanList:
+    def _list(self, tenant_id: str, system_id: str) -> ActionBeanList:
         actions = self.action_svc.list(system_id)
         action_list = ActionBeanList(parse_obj_as(List[ActionBean], actions))
         action_list.fill_related_resource_type_name()
@@ -135,6 +134,11 @@ class ActionBiz:
         action_list.fill_sensitivity_level(action_sensitivity_level)
 
         return action_list
+
+    # 缓存 1 分钟
+    @cachedmethod(timeout=1 * 60)
+    def list(self, system_id: str) -> ActionBeanList:
+        return self._list(self.tenant_id, system_id)
 
     def list_without_cache_sensitivity_level(self, system_id: str) -> ActionBeanList:
         action_list = self.list(system_id)

@@ -4,9 +4,9 @@
     padding-bottom: 50px;
     .actions-wrapper {
         .bk-checkbox-text {
-            font-size: 12px;
             .text {
                 display: inline-block;
+                font-size: 12px;
                 max-width: 135px;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -122,7 +122,7 @@
 
     .reason-wrapper {
         margin: 16px 0 20px 0 !important;
-        .perm-apply-reason-error {
+        /deep/ .perm-apply-reason-error {
             .bk-textarea-wrapper {
                 border-color: #ff5656;
             }
@@ -197,7 +197,7 @@
         margin-top: 16px;
     }
 }
-.applpForPermission,
+.applyForPermission,
 .noPermissionPage  {
     .horizontal-item {
         margin-bottom:0px
@@ -308,7 +308,7 @@
         }
         .reason-wrapper {
             margin: 16px 0 20px 0 !important;
-            .perm-apply-reason-error {
+            /deep/ .perm-apply-reason-error {
                 .bk-textarea-wrapper {
                     border-color: #ff5656;
                 }
