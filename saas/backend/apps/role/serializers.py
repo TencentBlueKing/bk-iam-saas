@@ -127,29 +127,15 @@ class GradeMangerBaseInfoSLZ(serializers.Serializer):
         child=RoleMember(label="成员"),
         max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
     )
-    def validate(self, data):
-        """校验 members 中的 username 不为空且用户存在"""
-        members = data.get("members", [])
-        if not members:
-            return data
 
-        if isinstance(members[0], dict):
-            usernames = [m.get("username") for m in members]
-        else:
-            usernames = members
-
-        # 检查空用户名
-        invalid = [u for u in usernames if not u or (isinstance(u, str) and u.strip() == "")]
-        if invalid:
-            raise serializers.ValidationError({"members": [_("member username must not be empty")]})
-
-        # 检查用户是否存在
+    def validate_members(self, value):
+        """校验 members 中的用户存在"""
+        usernames = [m["username"] for m in value]
         exist_usernames = set(User.objects.filter(username__in=usernames).values_list("username", flat=True))
         missing = set(usernames) - exist_usernames
         if missing:
-            raise serializers.ValidationError({"members": [_("users not found: {}").format(",".join(sorted(missing)))]})
-
-        return data
+            raise serializers.ValidationError(_("users not found: {}").format(",".join(sorted(missing))))
+        return value
 
 
 class GradeMangerCreateSLZ(GradeMangerBaseInfoSLZ):

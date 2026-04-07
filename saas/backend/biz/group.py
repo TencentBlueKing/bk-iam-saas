@@ -277,30 +277,6 @@ class GroupBiz:
         """
         移除用户组成员
         """
-        # 在真正删除成员前，检查是否会导致对应角色没有管理员
-        relation = RoleRelatedObject.objects.filter(
-            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
-        ).first()
-
-        if relation:
-            try:
-                role = Role.objects.get(id=relation.role_id)
-            except Role.DoesNotExist:
-                role = None
-
-            if role:
-                # 只关心用户类型的成员（username）
-                remove_usernames = [m.id for m in subjects if m.type == SubjectType.USER.value]
-
-                if remove_usernames:
-                    current_members = set(
-                        RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True)
-                    )
-                    remaining = current_members - set(remove_usernames)
-                    if len(current_members) > 0 and len(remaining) == 0:
-                        # 阻止删除最后一个管理员
-                        raise error_codes.COMMON_ERROR.format(_("can not remove the last administrator of role"), True)
-    
         self._remove_members(group_id, subjects)
 
         relation = RoleRelatedObject.objects.filter(
@@ -1082,6 +1058,27 @@ class GroupCheckBiz:
                 _("超过用户组最大可添加成员数{}").format(member_limit),
                 True,
             )
+
+    def check_remove_last_manager_member(self, group_id: int, usernames: List[str]):
+        """
+        检查移除指定用户后，用户组是否仍有管理员。若会导致管理员为空则抛出异常。
+        """
+        try:
+            role_related_object = RoleRelatedObject.objects.get(
+                object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
+            )
+        except RoleRelatedObject.DoesNotExist:
+            return
+
+        role_members = set(
+            RoleUser.objects.filter(role_id=role_related_object.role_id).values_list("username", flat=True)
+        )
+        if not role_members:
+            return
+
+        remaining_managers = role_members - set(usernames)
+        if not remaining_managers:
+            raise error_codes.VALIDATE_ERROR.format(_("can not remove the last manager {} of the group {}").format(usernames, group_id), True)
 
     def check_role_group_name_unique(self, role_id: int, name: str, group_id: int = 0):
         """

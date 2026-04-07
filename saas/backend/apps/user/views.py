@@ -27,7 +27,7 @@ from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
 from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.constants import PermissionTypeEnum
-from backend.biz.group import GroupBiz
+from backend.biz.group import GroupBiz, GroupCheckBiz
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import ActionScopeDiffer, RoleBiz
@@ -98,6 +98,9 @@ class UserGroupViewSet(GenericViewSet):
 
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:
+            # 校验是否会删除用户组的最后一个管理员
+            GroupCheckBiz().check_remove_last_manager_member(int(data["id"]), [subject.id])
+
             self.biz.remove_members(data["id"], [subject])
 
             # 写入审计上下文
