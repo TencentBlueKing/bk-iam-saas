@@ -1198,7 +1198,7 @@ class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     def list(self, request, *args, **kwargs):
-        group = self.get_object()
+        group = get_object_or_404(self.queryset, pk=kwargs["id"])
 
         # 查询用户组拥有的权限模板
         subject_template_qs = SubjectTemplateGroup.objects.filter(group_id=group.id).values(

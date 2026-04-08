@@ -201,7 +201,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
         # 查询role的system-actions set
         role_system_actions = RoleListQuery(request.role).get_scope_system_actions()
-        template = self.get_object()
+        template = get_object_or_404(self.queryset, pk=kwargs["id"])
         serializer = TemplateListSLZ(instance=template, role_system_actions=role_system_actions)
         data = serializer.data
         template_action_set = set(template.action_ids)
