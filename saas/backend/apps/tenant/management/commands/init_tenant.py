@@ -20,7 +20,7 @@ from backend.apps.tenant.helper import (
     create_super_manager,
     manual_sync_organization,
 )
-from backend.biz.role import get_global_notification_config
+from backend.biz.role import get_global_notification_config, update_periodic_permission_expire_remind_schedule
 from backend.component.client.bk_user import BkUserClient
 
 
@@ -93,7 +93,9 @@ class Command(BaseCommand):
         create_default_notification_config(tenant_id)
 
         # 创建租户的定时通知任务
-        self._setup_periodic_tasks(tenant_id)
+        config = get_global_notification_config(tenant_id)
+        hour, minute = [int(i) for i in config["send_time"].split(":")]
+        update_periodic_permission_expire_remind_schedule(tenant_id, hour, minute)
 
         # 同步组织架构
         # Note: 这里不异步，因为在租户初始化时，组织架构应该是最新的，有问题直接抛出异常
