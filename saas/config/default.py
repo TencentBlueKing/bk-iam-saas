@@ -231,7 +231,7 @@ _org_sync_schedule = crontab_from_string(ORGANIZATION_SYNC_CRONTAB)
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
-        "schedule": _org_sync_schedule, # 根据环境变量设置的同步周期动态调整
+        "schedule": _org_sync_schedule,  # 根据环境变量设置的同步周期动态调整
     },
     "periodic_clean_subject_to_delete": {
         "task": "backend.apps.organization.tasks.clean_subject_to_delete",

@@ -13,8 +13,8 @@ from collections import defaultdict
 
 from django.conf import settings
 from django.db.models import QuerySet
-from rest_framework import serializers
 from django.utils.translation import gettext as _
+from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 from backend.apps.organization.models import Department, User

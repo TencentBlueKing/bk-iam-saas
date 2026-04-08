@@ -111,5 +111,4 @@ urlpatterns = [
         views.AdminOrganizationSyncViewSet.as_view({"post": "sync"}),
         name="open.admin.organization.sync",
     ),
-
 ]
