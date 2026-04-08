@@ -1380,7 +1380,7 @@ def get_global_notification_config(tenant_id: str) -> Dict[str, Any]:
     return notification_config.config
 
 
-def update_periodic_permission_expire_remind_schedule(hour: int, minute: int, tenant_id: str) -> None:
+def update_periodic_permission_expire_remind_schedule(tenant_id: str, hour: int, minute: int) -> None:
     """更新周期性权限到期提醒调度"""
     name = f"periodic_permission_expire_remind_{tenant_id}"
 

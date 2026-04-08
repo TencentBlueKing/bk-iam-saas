@@ -11,6 +11,8 @@ specific language governing permissions and limitations under the License.
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.utils import timezone
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 from backend.apps.action.tasks import generate_action_aggregate
 from backend.apps.tenant.helper import (
@@ -18,6 +20,7 @@ from backend.apps.tenant.helper import (
     create_super_manager,
     manual_sync_organization,
 )
+from backend.biz.role import get_global_notification_config
 from backend.component.client.bk_user import BkUserClient
 
 
@@ -48,6 +51,34 @@ class Command(BaseCommand):
         # 生成操作聚合数据
         generate_action_aggregate()
 
+    def _setup_periodic_tasks(self, tenant_id: str):
+        name = f"periodic_permission_expire_remind_{tenant_id}"
+        config = get_global_notification_config(tenant_id)
+        hour, minute = [int(i) for i in config["send_time"].split(":")]
+
+        task = PeriodicTask.objects.filter(name=name).prefetch_related("crontab").first()
+        if task:
+            return
+
+        # 创建定时任务
+        schedule, _ = CrontabSchedule.objects.get_or_create(
+            minute=minute,
+            hour=hour,
+            day_of_week="*",
+            day_of_month="*",
+            month_of_year="*",
+            timezone=timezone.get_current_timezone(),
+        )
+
+        # 创建任务
+        PeriodicTask.objects.create(
+            crontab=schedule,
+            name=name,
+            task="backend.apps.tenant.tasks.permission_expire_remind",
+            kwargs={"tenant_id": tenant_id},
+            enabled=True,
+        )
+
     def handle(self, *args, **options):
         tenant_id = options["tenant_id"]
         if not self._check_tenant_exists(tenant_id):
@@ -60,6 +91,9 @@ class Command(BaseCommand):
         # sync_system_manager
         # 创建租户的通知配置
         create_default_notification_config(tenant_id)
+
+        # 创建租户的定时通知任务
+        self._setup_periodic_tasks(tenant_id)
 
         # 同步组织架构
         # Note: 这里不异步，因为在租户初始化时，组织架构应该是最新的，有问题直接抛出异常

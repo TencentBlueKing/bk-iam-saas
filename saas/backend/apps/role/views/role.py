@@ -1166,7 +1166,7 @@ class RoleNotificationConfigView(TenantMixin, views.APIView):
 
         # 更新定时任务配置
         hour, minute = [int(i) for i in data["send_time"].split(":")]
-        update_periodic_permission_expire_remind_schedule(hour, minute, self.tenant_id)
+        update_periodic_permission_expire_remind_schedule(self.tenant_id, hour, minute)
 
         audit_context_setter(role=request.role, data=data)
 
