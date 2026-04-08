@@ -3531,7 +3531,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/templates/:
