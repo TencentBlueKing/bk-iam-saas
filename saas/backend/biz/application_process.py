@@ -208,7 +208,9 @@ class InstanceApproverHandler(PolicyProcessHandler):
 
     @cached_property
     def system_manager_approver(self) -> List[str]:
-        return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=self.system_id).members
+        return Role.objects.get(
+            type=RoleType.SYSTEM_MANAGER.value, code=self.system_id, tenant_id=self.tenant_id
+        ).members
 
 
 class InstanceApproverMergeHandler(InstanceApproverHandler):
@@ -404,7 +406,9 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
 
     @cached_property
     def system_manager_approver(self) -> List[str]:
-        return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=self.system_id).members
+        return Role.objects.get(
+            type=RoleType.SYSTEM_MANAGER.value, code=self.system_id, tenant_id=self.tenant_id
+        ).members
 
     def _query_grade_manager_role_ids(
         self, system_id: str, resource_node: ResourceNodeBean, part_policy: PolicyBean

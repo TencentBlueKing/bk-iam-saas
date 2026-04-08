@@ -160,4 +160,5 @@ class BkITSMClient(BkApigwBaseClient):
         json_data = json.dumps(workflow_template, indent=2)
         # 以 BytesIO 的形式创建文件对象并以上传文件方式发送请求
         with io.BytesIO(json_data.encode("utf-8")) as f:
-            return self._call(http_post_20x, url_path, files={"file": f.getvalue()})
+            # Note: 设置更长的超时时间，避免导入过多工作流时超时
+            return self._call(http_post_20x, url_path, files={"file": f.getvalue()}, timeout=180)

@@ -63,6 +63,8 @@ class Action(BaseModel):
     related_environments: List[RelatedEnvironment] = []
     sensitivity: int = 1
 
+    tenant_id: str = ""
+
     def __init__(self, **data: Any):
         if "related_actions" in data and data["related_actions"] is None:
             data["related_actions"] = []

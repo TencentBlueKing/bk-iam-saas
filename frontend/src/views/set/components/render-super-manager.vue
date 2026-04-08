@@ -36,18 +36,20 @@
             </template>
           </template>
         </bk-table-column>
-        <!-- <bk-table-column :label="$t(`m.set['更多权限设置']`)">
-          <template slot-scope="{ row }">
-            <bk-checkbox
-              :true-value="true"
-              :false-value="false"
-              :disabled="row.username === 'admin'"
-              :value="row.system_permission_enabled"
-              @change="handleEnabledChange(...arguments, row)">
-              {{ $t(`m.set['拥有蓝鲸平台所有操作权限']`) }}
-            </bk-checkbox>
-          </template>
-        </bk-table-column> -->
+        <template v-if="enableAccessSystemSuperPermissionSetting">
+          <bk-table-column :label="$t(`m.set['更多权限设置']`)">
+            <template slot-scope="{ row }">
+              <bk-checkbox
+                :true-value="true"
+                :false-value="false"
+                :disabled="row.username === 'admin'"
+                :value="row.system_permission_enabled"
+                @change="handleEnabledChange(...arguments, row)">
+                {{ $t(`m.set['拥有蓝鲸平台所有操作权限']`) }}
+              </bk-checkbox>
+            </template>
+          </bk-table-column>
+        </template>
         <bk-table-column :label="$t(`m.common['操作-table']`)" width="120">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit">
@@ -64,13 +66,15 @@
                 {{ $t(`m.common['取消']`) }}
               </bk-button>
             </template>
-            <template v-else-if="row.user[0] === 'admin'">
-              <bk-button
-                theme="primary"
-                text
-                :disabled="row.user[0] === 'admin'">
-                {{ $t(`m.common['删除']`) }}
-              </bk-button>
+            <template v-else-if="row.user[0].includes('admin')">
+              <bk-popover :content="$t(`m.set['超级管理员{name}不可删除']`, { name: row.user[0] })" placement="top">
+                <bk-button
+                  theme="primary"
+                  text
+                  :disabled="row.user[0].includes('admin')">
+                  {{ $t(`m.common['删除']`) }}
+                </bk-button>
+              </bk-popover>
             </template>
             <template v-else>
               <iam-popover-confirm
@@ -127,6 +131,7 @@
     },
     data () {
       return {
+        enableAccessSystemSuperPermissionSetting: window.ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING.toLowerCase() === 'true',
         subTitle: this.$t(`m.set['超级管理员提示']`),
         saveDisableTip: '',
         superUserList: [],

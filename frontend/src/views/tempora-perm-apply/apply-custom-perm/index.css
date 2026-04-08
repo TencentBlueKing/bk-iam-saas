@@ -4,10 +4,10 @@
     padding-bottom: 50px;
     .actions-wrapper {
         .bk-checkbox-text {
-            font-size: 12px;
             .text {
                 display: inline-block;
                 max-width: 135px;
+                font-size: 12px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -191,7 +191,7 @@
         margin-top: 16px;
     }
 }
-.applpForPermission,
+.applyForPermission,
 .noPermissionPage  {
     .horizontal-item {
         margin-bottom:0px

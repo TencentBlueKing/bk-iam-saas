@@ -90,9 +90,10 @@ class HandoverViewSet(TenantMixin, GenericViewSet):
                 if handover_task_details:
                     HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
 
-                execute_handover_task.delay(
-                    handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
-                )
+            # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
+            execute_handover_task.delay(
+                handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
+            )
         finally:
             # 释放锁
             lock.release()

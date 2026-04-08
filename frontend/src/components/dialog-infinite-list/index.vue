@@ -41,13 +41,37 @@
               }
             )"
             :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
+            <template v-if="showFullName">
+              <div class="node-full-name-box">
+                <IamUserDisplayName
+                  class="node-full-name"
+                  :user-id="item.name"
+                  :tooltip-config="{ placement: 'right-start', disabled: Boolean(item.full_name) }"
+                />
+                <div
+                  v-if="item.showCount && enableOrganizationCount"
+                  class="node-user-count"
+                >
+                  {{ '(' + item.count + `)` }}
+                </div>
+              </div>
+              <div v-if="item.full_name" class="flex-center">
+                <div class="single-hide extra-full-name">
+                  {{ getFullName(item.full_name) }}
+                </div>
+                <bk-tag v-if="getFullNameLen(item.full_name) > 1">
+                  +{{ getFullNameLen(item.full_name) - 1 }}
+                </bk-tag>
+              </div>
+            </template>
             <IamUserDisplayName
+              v-else
               :user-id="item.name"
-              :tooltip-config="{ placement: 'right-start', disabled: !!item.full_name }"
+              :tooltip-config="{ placement: 'right-start', disabled: Boolean(item.full_name) }"
             />
           </div>
           <span
-            v-if="item.showCount && enableOrganizationCount"
+            v-if="item.showCount && enableOrganizationCount && !showFullName"
             v-bk-tooltips="getToolTip(
               item,
               {
@@ -97,9 +121,27 @@
             )"
             :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]"
           >
+            <template v-if="showFullName">
+              <div class="node-full-name-box">
+                <IamUserDisplayName
+                  class="node-full-name"
+                  :user-id="item.username || item.name"
+                  :tooltip-config="{ placement: 'right-start', disabled: Boolean(item.full_name) }"
+                />
+              </div>
+              <div v-if="item.full_name" class="flex-center">
+                <div class="single-hide extra-full-name">
+                  {{ getFullName(item.full_name) }}
+                </div>
+                <bk-tag v-if="getFullNameLen(item.full_name) > 1">
+                  +{{ getFullNameLen(item.full_name) - 1 }}
+                </bk-tag>
+              </div>
+            </template>
             <IamUserDisplayName
+              v-else
               :user-id="item.username || item.name"
-              :tooltip-config="{ placement: 'right-start', disabled: !!item.full_name }"
+              :tooltip-config="{ placement: 'right-start', disabled: Boolean(item.full_name) }"
             />
           </div>
         </div>
@@ -137,6 +179,11 @@
       },
 
       isDisabled: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示完整组织架构
+      showFullName: {
         type: Boolean,
         default: false
       },
@@ -192,19 +239,34 @@
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName, disabled } = payload;
+          const {
+            name = '',
+            type = '',
+            username = '',
+            full_name: fullName = '',
+            disabled = false
+          } = payload;
+
           if (disabled) {
             return this.$t(`m.common['该成员已添加']`);
           }
+          
+          // 处理分号换行的函数，存在分号则替换为 <br/>，不存在则返回原字符串
+          const formatName = (text) => text.includes(';') ? text.replace(';', '<br/>') : text;
+          
           const typeMap = {
             user: () => {
-              return fullName || username;
+              const formatted = formatName(fullName);
+              return formatted || (name ? `${username}(${name})` : username);
             },
             depart: () => {
-              return fullName || name;
+              const formatted = formatName(fullName);
+              return formatted || name;
             }
           };
-          return typeMap[type] ? typeMap[type]() : typeMap['user']();
+
+          // 不存在的类型默认走 user
+          return (typeMap[type] || typeMap.user)();
         };
       },
       selectedNode () {
@@ -406,8 +468,21 @@
         return {
           content: this.nameType(payload),
           placement: 'right-start',
+          allowHtml: true,
           disabled
         };
+      },
+
+      // 获取fullName的长度，分号分隔开算一个，返回分号分隔的数组长度
+      getFullNameLen (fullName) {
+        const text = fullName.split(';');
+        return text.length || 0;
+      },
+
+      // 存在分号则说明有换行，返回分号前的字符串，否则返回原字符串
+      getFullName (fullName) {
+        const text = fullName.split(';');
+        return this.getFullNameLen(fullName) > 1 ? text[0] : fullName;
       }
     }
   };
@@ -503,6 +578,28 @@
           color: #3a84ff;
         }
       }
+      .node-full-name-box {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        .node-full-name {
+          min-width: 10px;
+          line-height: 28px;
+          flex-shrink: 1;
+          flex-grow: 0;
+        }
+        .node-user-count {
+          flex-shrink: 0;
+          margin-left: 4px;
+          white-space: nowrap;
+        }
+      }
+      .extra-full-name {
+        line-height: 20px;
+        font-size: 14px;
+        color: #999999;
+        word-break: break-all;
+      }
       .node-user-count {
         color: #c4c6cc;
       }
@@ -511,7 +608,8 @@
         color: #3a84ff;
         background: #eef4ff;
         .node-icon,
-        .node-user-count {
+        .node-user-count,
+        .extra-full-name {
           color: #3a84ff;
         }
       }
@@ -520,7 +618,8 @@
         background-color: transparent;
         cursor: not-allowed;
         .node-icon,
-        .node-user-count {
+        .node-user-count,
+        .extra-full-name {
           color: #c4c6cc;
         }
         &:hover {

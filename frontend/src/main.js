@@ -27,7 +27,6 @@
 import './public-path';
 import '../static/lib.bundle.js';
 import Vue from 'vue';
-import VueDOMPurifyHTML from 'vue-dompurify-html';
 import App from './App.vue';
 import IframeEntry from './IframeEntry.vue';
 import router from './router/index';
@@ -53,6 +52,7 @@ import Icon from './components/icon';
 import VueI18n from 'vue-i18n';
 import magicbox from 'bk-magic-vue';
 import { subEnv } from '@blueking/sub-saas/dist/main.js';
+import { BkXssFilterDirective } from '@blueking/xss-filter';
 import { language, il8n as il8nNew } from './language';
 import { bus } from './common/bus';
 import { injectCSRFTokenToHeaders, injectTenantIdToHeaders } from './api';
@@ -64,7 +64,7 @@ import '@/directive';
 // 多租户人员选择器样式
 import '@blueking/bk-user-selector/vue2/vue2.css';
 
-Vue.use(VueDOMPurifyHTML);
+Vue.use(BkXssFilterDirective);
 
 Vue.component('app-exception', Exception);
 Vue.component('app-auth', AuthComponent);

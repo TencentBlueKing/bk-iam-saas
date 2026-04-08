@@ -17,7 +17,8 @@
           v-if="item.async"
           class="arrow-icon"
           :type="item.expanded ? 'down-shape' : 'right-shape'"
-          @click.stop="expandNode(item)" />
+          @click.stop="expandNode(item)"
+        />
         <div class="node-radio" v-if="item.showRadio">
           <span class="node-checkbox"
             :class="{
@@ -45,23 +46,52 @@
           type="personal-user"
           :class="['node-icon', { 'active': item.isSelected && !item.disabled }]"
         />
-        <!-- eslint-disable max-len -->
         <div
-          v-bk-tooltips="getToolTipData(item, {
-            disabled: !item.full_name
-          })"
+          v-bk-tooltips="getToolTipData(
+            item,
+            {
+              disabled: !item.full_name
+            }
+          )"
           :style="nameStyle(item)"
-          :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
+          :class="[
+            'node-title',
+            { 'node-selected': item.isSelected && !item.disabled }
+          ]"
         >
+          <template v-if="showFullName && Boolean(item.full_name)">
+            <div class="node-full-name-box">
+              <IamUserDisplayName
+                class="node-full-name"
+                :user-id="item.username || item.name"
+                :tooltip-config="{ placement: 'right-start', disabled: Boolean(item.full_name) }"
+              />
+              <div
+                v-if="item.showCount && enableOrganizationCount"
+                class="node-user-count"
+              >
+                {{ '(' + item.count + `)` }}
+              </div>
+            </div>
+            <div v-if="item.full_name" class="flex-center">
+              <div class="single-hide extra-full-name">
+                {{ getFullName(item.full_name) }}
+              </div>
+              <bk-tag v-if="getFullNameLen(item.full_name) > 1">
+                +{{ getFullNameLen(item.full_name) - 1 }}
+              </bk-tag>
+            </div>
+          </template>
           <IamUserDisplayName
+            v-else
             style="width: 100%"
             :user-id="item.username || item.name"
             :tooltip-config="{ placement: 'right-start', disabled: Boolean(item.full_name) }"
           />
         </div>
-        <span class="red-dot" v-if="item.isNewMember"></span>
+        <span class="red-dot" v-if="item.isNewMember" />
         <span
-          v-if="item.showCount && enableOrganizationCount"
+          v-if="item.showCount && enableOrganizationCount && !showFullName"
           class="node-user-count"
         >
           {{ '(' + item.count + `)` }}
@@ -135,6 +165,11 @@
         type: Boolean,
         default: true
       },
+      // 是否显示完整组织架构
+      showFullName: {
+        type: Boolean,
+        default: false
+      },
       // 根据状态码渲染落地空内容
       emptyData: {
         type: Object,
@@ -200,25 +235,40 @@
               otherOffset += 14;
           }
           return {
-              'maxWidth': `calc(100% - ${otherOffset}px)`
+              'maxWidth': !payload.level ? '100%' : `calc(100% - ${otherOffset}px)`
           };
         };
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName, disabled } = payload;
+          const {
+            name = '',
+            type = '',
+            username = '',
+            full_name: fullName = '',
+            disabled = false
+          } = payload;
+
           if (disabled) {
             return this.$t(`m.common['该成员已添加']`);
           }
+          
+          // 处理分号换行的函数，存在分号则替换为 <br/>，不存在则返回原字符串
+          const formatName = (text) => text.includes(';') ? text.replace(';', '<br/>') : text;
+          
           const typeMap = {
             user: () => {
-              return fullName || username || name;
+              const formatted = formatName(fullName);
+              return formatted || (name ? `${username}(${name})` : username);
             },
             depart: () => {
-              return fullName || name;
+              const formatted = formatName(fullName);
+              return formatted || name;
             }
           };
-          return typeMap[type]();
+
+          // 不存在的类型默认走 user
+          return (typeMap[type] || typeMap.user)();
         };
       },
       disabledNode () {
@@ -455,12 +505,25 @@
         return {
           content: this.nameType(payload),
           placements: ['right-start'],
+          allowHTML: true,
           disabled
         };
       },
 
       handleEmptyRefresh () {
         this.$emit('on-refresh', {});
+      },
+
+      // 获取fullName的长度，分号分隔开算一个，返回分号分隔的数组长度
+      getFullNameLen (fullName) {
+        const text = fullName.split(';');
+        return text.length || 0;
+      },
+
+      // 存在分号则说明有换行，返回分号前的字符串，否则返回原字符串
+      getFullName (fullName) {
+        const text = fullName.split(';');
+        return this.getFullNameLen(fullName) > 1 ? text[0] : fullName;
       }
     }
   };
@@ -517,11 +580,30 @@
       position: relative;
       display: inline-block;
       min-width: 14px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       vertical-align: top;
       user-select: none;
+      .node-full-name-box {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        .node-full-name {
+          min-width: 50px;
+          flex-shrink: 1;
+          flex-grow: 0;
+        }
+        .node-user-count {
+          flex-shrink: 0;
+          margin-left: 4px;
+          white-space: nowrap;
+        }
+      }
+      .extra-full-name {
+        padding-bottom: 8px;
+        line-height: 20px;
+        font-size: 14px;
+        color: #999999;
+        word-break: break-all;
+      }
     }
     .node-user-count {
       color: #c4c6cc;
@@ -596,7 +678,8 @@
       color: #3a84ff;
       background-color: #eef4ff;
       .node-icon,
-      .node-user-count {
+      .node-user-count,
+      .extra-full-name {
         color: #3a84ff;
       }
     }
@@ -605,7 +688,8 @@
       background-color: transparent;
       cursor: not-allowed;
       .node-icon,
-      .node-user-count {
+      .node-user-count,
+      .extra-full-name {
         color: #c4c6cc;
       }
       &:hover {

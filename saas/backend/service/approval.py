@@ -114,7 +114,9 @@ class ApprovalProcessService:
     def list_action_process(self, system_id: str, action_ids: List[str]) -> List[ActionApprovalProcess]:
         """获取某个系统下某些操作其对应的审批流程"""
         # 获取所有已配置 Action 的审批流程
-        action_process_relations = ActionProcessRelation.objects.filter(system_id=system_id, action_id__in=action_ids)
+        action_process_relations = ActionProcessRelation.objects.filter(
+            tenant_id=self.tenant_id, system_id=system_id, action_id__in=action_ids
+        )
         action_process_dict = {i.action_id: i.process_id for i in action_process_relations}
 
         # 默认审批流程
@@ -140,9 +142,9 @@ class ApprovalProcessService:
         """
         # 查询已存在的
         exist_ids = set(
-            ActionProcessRelation.objects.filter(system_id=system_id, action_id__in=action_ids).values_list(
-                "action_id", flat=True
-            )
+            ActionProcessRelation.objects.filter(
+                tenant_id=self.tenant_id, system_id=system_id, action_id__in=action_ids
+            ).values_list("action_id", flat=True)
         )
 
         # 对不存在的进行创建
@@ -163,9 +165,9 @@ class ApprovalProcessService:
 
         # 对已存在的进行更新
         if exist_ids:
-            ActionProcessRelation.objects.filter(system_id=system_id, action_id__in=exist_ids).update(
-                process_id=process_id, updater=operator, updated_time=timezone.now()
-            )
+            ActionProcessRelation.objects.filter(
+                tenant_id=self.tenant_id, system_id=system_id, action_id__in=exist_ids
+            ).update(process_id=process_id, updater=operator, updated_time=timezone.now())
 
     def batch_create_or_update_action_sensitivity_level(
         self, system_id: str, action_ids: List[str], sensitivity_level: str, operator: str
@@ -173,9 +175,9 @@ class ApprovalProcessService:
         """批量更新操作的敏感级别"""
         # 查询已存在的
         exist_ids = set(
-            ActionProcessRelation.objects.filter(system_id=system_id, action_id__in=action_ids).values_list(
-                "action_id", flat=True
-            )
+            ActionProcessRelation.objects.filter(
+                tenant_id=self.tenant_id, system_id=system_id, action_id__in=action_ids
+            ).values_list("action_id", flat=True)
         )
 
         # 对不存在的进行创建
@@ -198,14 +200,14 @@ class ApprovalProcessService:
 
         # 对已存在的进行更新
         if exist_ids:
-            ActionProcessRelation.objects.filter(system_id=system_id, action_id__in=exist_ids).update(
-                sensitivity_level=sensitivity_level, updater=operator, updated_time=timezone.now()
-            )
+            ActionProcessRelation.objects.filter(
+                tenant_id=self.tenant_id, system_id=system_id, action_id__in=exist_ids
+            ).update(sensitivity_level=sensitivity_level, updater=operator, updated_time=timezone.now())
 
     def list_group_process(self, group_ids: List[int]) -> List[GroupApprovalProcess]:
         """批量查询用户组对应的审批流程"""
         # 获取所有已配置的用户组的审批流程
-        group_process_relations = GroupProcessRelation.objects.filter(group_id__in=group_ids)
+        group_process_relations = GroupProcessRelation.objects.filter(tenant_id=self.tenant_id, group_id__in=group_ids)
         group_process_dict = {i.group_id: i.process_id for i in group_process_relations}
 
         # 默认审批流程
@@ -228,7 +230,11 @@ class ApprovalProcessService:
         默认情况下操作与流程的绑定都是存储在权限中心的
         """
         # 查询已存在
-        exist_ids = set(GroupProcessRelation.objects.filter(group_id__in=group_ids).values_list("group_id", flat=True))
+        exist_ids = set(
+            GroupProcessRelation.objects.filter(tenant_id=self.tenant_id, group_id__in=group_ids).values_list(
+                "group_id", flat=True
+            )
+        )
 
         # 对不存在的进行创建
         not_exist_ids = set(group_ids) - exist_ids
@@ -243,7 +249,7 @@ class ApprovalProcessService:
 
         # 对已存在的进行更新
         if exist_ids:
-            GroupProcessRelation.objects.filter(group_id__in=exist_ids).update(
+            GroupProcessRelation.objects.filter(tenant_id=self.tenant_id, group_id__in=exist_ids).update(
                 process_id=process_id, updater=operator, updated_time=timezone.now()
             )
 

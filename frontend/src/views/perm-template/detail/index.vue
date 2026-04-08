@@ -7,6 +7,7 @@
         :version="version"
         @on-back="handleBack">
       </component>
+      55555555
     </div>
   </div>
 </template>

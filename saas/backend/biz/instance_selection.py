@@ -91,7 +91,7 @@ class InstanceSelectionList:
 class InstanceSelectionBiz:
     def __init__(self, tenant_id: str):
         self.tenant_id = tenant_id
-        self.svc = InstanceSelectionService()
+        self.svc = InstanceSelectionService(tenant_id)
 
     def list_by_action_resource_type(
         self, system_id: str, action_id: str, resource_type_system_id: str, resource_type_id: str

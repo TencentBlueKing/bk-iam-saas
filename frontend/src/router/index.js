@@ -155,6 +155,14 @@ export const beforeEach = async (to, from, next) => {
     window.localStorage.setItem('index', index);
   }
 
+  // 设置roleList里查找不到的管理员身份
+  function setStaffOrSubSet ({ roleId, index }) {
+    [curRoleId, currentRoleId] = [roleId, roleId];
+    store.commit('updateCurRoleId', roleId);
+    store.commit('updateNavId', roleId);
+    navDiffMenuIndex(index);
+  }
+
   let curRoleList = [];
   const noFrom = !from.name;
   // 是否是嵌入系统
@@ -162,9 +170,12 @@ export const beforeEach = async (to, from, next) => {
   // 如果进入没有权限
   const isNoPerm = ['', 'staff'].includes(curRole) && navIndex > 0;
   // 跳转的页面是否需要非管理员用户界面
-  const isStaff = !getNavRouterDiff(0).includes(to.name) || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source));
+  let isStaff = !getNavRouterDiff(0).includes(to.name) || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source));
+  // 跳转的页面是否需要非超级管理员用户界面
+  const isAudit = !getNavRouterDiff(2).includes(to.name);
+  const isPlatForm = !getNavRouterDiff(3).includes(to.name);
   // 处理新标签页链接是管理员页面 ，但是上次用户信息是staff
-  const isManagerPage = !isStaff && noFrom && navIndex < 1;
+  let isManagerPage = !isStaff && noFrom && navIndex < 1;
   // 如果进入没有权限或者是拿到的上次用户信息是非管理员身份但是新开标签页是管理员页面， 蓝盾交互不需要判断
   if ((isNoPerm || isManagerPage || to.query.role_name) && isNoIframe) {
     const roleList = await store.dispatch('roleList', {
@@ -173,7 +184,9 @@ export const beforeEach = async (to, from, next) => {
       limit: 100,
       name: to.query.role_name
     });
-    if (roleList && roleList.length > 0) {
+    // roleList只能查找根节点的管理空间，比如系管、超管、分管，如果不存在roleList代表是个人用户或者是二级管理空间
+    const isManager = roleList && roleList.length > 0;
+    if (isManager) {
       curRoleList = [...roleList];
       // 只有管理员页面才需要提供默认管理员身份
       if (navIndex > 0 && !isStaff) {
@@ -182,6 +195,25 @@ export const beforeEach = async (to, from, next) => {
         store.commit('updateCurRoleId', id);
         store.commit('updateNavId', id);
         await getManagerInfo();
+      }
+    } else {
+      // 如果不存在roleList，查找是不是属于二级管理空间
+      const res = await store.dispatch('spaceManage/getSearchManagerList', {
+        page: 1,
+        page_size: 100,
+        name: to.query.role_name
+      });
+      const { code, data = {} } = res || {};
+      if (code === 0 && data.count > 0) {
+        isStaff = false;
+        isManagerPage = true;
+        setStaffOrSubSet({ roleId: data.results[0].id, index: 1 });
+        await getManagerInfo();
+      } else {
+        isStaff = true;
+        isManagerPage = false;
+        setStaffOrSubSet({ roleId: 0, index: 0 });
+        next({ path: `${SITE_URL}${defaultRoute[0]}` });
       }
     }
   }
@@ -289,8 +321,6 @@ export const beforeEach = async (to, from, next) => {
             if (isManagerPage) {
               const superData = curRoleList.find((v) => ['super_manager'].includes(v.type));
               const managerData = curRoleList.find((v) => !['staff'].includes(v.type));
-              const isAudit = !getNavRouterDiff(2).includes(to.name);
-              const isPlatForm = !getNavRouterDiff(3).includes(to.name);
               // 如果跳转的页面必须是超管身份才能访问
               if (superData && (isAudit || isPlatForm)) {
                 const { id } = superData;

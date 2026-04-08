@@ -41,7 +41,7 @@ export default {
        * @param {Object} state store state
        * @param {Function} dispatch store dispatch action handler
        * @param {Object} params 请求参数
-       * @param {Object?} config http config
+       * @param {Object} config http config
        *
        * @return {Promise} promise 对象
        */
@@ -56,12 +56,28 @@ export default {
        * @param {Object} state store state
        * @param {Function} dispatch store dispatch action handler
        * @param {Object} params 请求参数
-       * @param {Object?} config http config
+       * @param {Object} config http config
        *
        * @return {Promise} promise 对象
        */
     getTenantDisplayName ({ commit, state, dispatch }, params, config) {
       return http.get(`${BK_USER_WEB_APIGW_URL}/api/v3/open-web/tenant/users/-/display_info/?${json2Query(params)}`, { globalError: false });
+    },
+    
+    /**
+       * 多租户中英文语言切换接口
+       *
+       * @param {Function} commit store commit mutation handler
+       * @param {Object} state store state
+       * @param {Function} dispatch store dispatch action handler
+       * @param {Object} params 请求参数 apiName
+       * @param {Object} config http config
+       *
+       * @return {Promise} promise 对象
+       */
+    setTenantLocale ({ commit, state, dispatch }, params, config) {
+      const data = { ...params, globalError: false };
+      return http.put(`${BK_USER_WEB_APIGW_URL}/api/v3/open-web/tenant/current-user/language/`, data, config);
     }
   }
 };

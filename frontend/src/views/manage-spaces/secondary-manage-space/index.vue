@@ -333,7 +333,10 @@
           this.emptyData.tipType = 'search';
           queryParams.name = this.searchValue;
         }
-        window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+        window.history.replaceState({}, '', `?${buildURLParams({
+          ...queryParams,
+           role_name: this.user.role.name
+        })}`);
         return queryParams;
       },
 

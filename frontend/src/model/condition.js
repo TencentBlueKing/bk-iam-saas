@@ -115,7 +115,7 @@ export default class Condition {
         }
       });
       if (len > 0) {
-        return xssFilter(`${il8n('resource', '已设置')} <span style="color: #ff4d4d;font-weight: 700;">${len}</span> ${il8n('resource', '个属性条件')}`);
+        return xssFilter(`${il8n('resource', '已设置')} <span style="color: #ff4d4d;font-weight: 700;">${String(len)}</span> ${il8n('resource', '个属性条件')}`);
       }
       return il8n('verify', '未设置任何条件');
     }

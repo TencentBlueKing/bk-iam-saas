@@ -138,7 +138,6 @@
 </script>
 <style lang="postcss" scoped>
     .iam-member-display-wrapper {
-        margin-left: 10px;
         color: #63656e;
         .label {
             display: inline-block;

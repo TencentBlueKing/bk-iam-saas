@@ -307,7 +307,10 @@ export const m = {
         '复制成功': 'Copy successful',
         '暂无可复制数据': 'There is currently no replicable data',
         '了解更多': 'Learn more',
-        '前往申请': 'Go apply'
+        '前往申请': 'Go apply',
+        '切换新版': 'Switch to the new version',
+        '切换至新版权限中心': "Switch to the new version of the BKIAM",
+        "个人中心链接未配置": "Personal center link not configured"
     },
     // 校验
     verify: {
@@ -934,6 +937,7 @@ export const m = {
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',
         '无限制文案': 'If the action does not require restricted instances, select unlimited',
+        '当前操作授权范围不包含无限制，如需更改授权范围请前往空间信息进行变更': 'The current action authorization scope does not include unlimited. If you need to change the authorization scope, please go to the space information to make the change',
         '拓扑实例': 'Topology Instances',
         '属性条件': 'Attributes',
         '添加一组实例': 'Add One More',
@@ -1074,7 +1078,8 @@ export const m = {
         '管理员列表': 'administrators List',
         '设置成功': 'Set successfully',
         '取消设置成功': 'Undo successfully',
-        '确定删除该超级管理员': 'Confirm to delete the super administrator?'
+        '确定删除该超级管理员': 'Confirm to delete the super administrator?',
+        '超级管理员{name}不可删除': 'Super administrator {name} cannot be deleted'
     },
     approvalProcess: {
         '自定义权限': 'Custom Permission',

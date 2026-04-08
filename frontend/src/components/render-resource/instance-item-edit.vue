@@ -18,7 +18,12 @@
       <p v-for="(item, index) in resourceList"
         :key="index"
         class="value" :title="`ID: ${item.id}`">
-        <span class="name">{{ item.display_name }}</span>
+        <span
+          class="name"
+          :style="{ maxWidth: canEdit ? 'calc(100% - 32px)' : '100%' }"
+        >
+          {{ item.display_name }}
+        </span>
         <bk-checkbox
           v-if="canEdit"
           :true-value="true"
@@ -153,15 +158,13 @@
             font-size: 12px;
             color: #63656e;
             .value {
-                display: flex;
-                justify-content: space-between;
-                line-height: 24px;
-                .name {
-                    max-width: 400px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
+              display: flex;
+              align-items: baseline;
+              justify-content: space-between;
+              line-height: 24px;
+              .name {
+                word-break: break-all;
+              }
             }
             &::-webkit-scrollbar {
                 width: 4px;

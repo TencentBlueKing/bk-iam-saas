@@ -180,7 +180,6 @@
 
 <style lang="postcss" scoped>
 .action-wrapper {
-  margin-left: 8px;
   display: inline-block;
   font-size: 14px;
   color: #3a84ff;
@@ -191,7 +190,7 @@
   i {
     position: relative;
     top: -1px;
-    left: 2px;
+    left: 0;
   }
 }
 .info-icon {

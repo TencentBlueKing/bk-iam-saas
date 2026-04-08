@@ -172,7 +172,6 @@
                 <div class="mock-disabled-select">{{row.expired_display}}</div>
               </template>
               <template v-else>
-                <!-- 66{{row.expiredAtPlaceholder}}--{{user.timestamp}} -->
                 <bk-select
                   v-model="row.expired_at"
                   :clearable="false"
@@ -182,11 +181,12 @@
                   ext-popover-cls="iam-deadline-select-dropdown-content"
                   @toggle="handleExpiredToggle(...arguments, row)"
                   @selected="handleExpiredSelect(...arguments, row)">
-                  <bk-option v-for="option in durationList"
+                  <bk-option
+                    v-for="option in durationList"
                     :key="option.id"
                     :id="option.id"
-                    :name="option.name">
-                  </bk-option>
+                    :name="option.name"
+                  />
                   <div slot="extension" style="cursor: pointer;" @click.stop="handleOpenCustom(row, $index)">
                     <template v-if="!row.isShowCustom">
                       {{ $t(`m.common['自定义']`) }}
@@ -579,6 +579,14 @@
                 // 防止切换的时候修改只读name
                 e.name = e.name.split('，')[0];
               }
+              // 处理申请权限下option不存在的选项
+              this.$nextTick(() => {
+                const expiredAtRef = this.$refs[`${e.id}&expiredAtRef`];
+                const isExistSelect = expiredAtRef && expiredAtRef.$refs && expiredAtRef.$refs.bkSelect;
+                if (isExistSelect && !expiredAtRef.selectedName && e.expired_at) {
+                  expiredAtRef.$refs.bkSelect.querySelector('.bk-select-name').textContent = e.expiredAtPlaceholder;
+                }
+              });
             });
             this.emptyResourceGroupsList = []; // 重置变量
             this.tableList = value;
@@ -1349,12 +1357,20 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
-          if (tempCurData[0] === 'none') {
+          if (tempCurData.length > 0 && tempCurData[0] === 'none' && !this.curCopyNoLimited) {
             return;
           }
-          content.condition = _.cloneDeep(tempCurData);
+          if (content) {
+            content.condition = _.cloneDeep(tempCurData);
+          }
+          if (this.curCopyNoLimited && !content) {
+            payload.condition = [];
+            payload.isError = false;
+          }
         }
-        content.isError = false;
+        if (content) {
+          content.isError = false;
+        }
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
 
@@ -1750,7 +1766,9 @@
             }
           } else {
             const { actions, aggregateResourceType, instances, instancesDisplayData, isNoLimited } = item;
-            if (!isNoLimited && (instances.length < 1 || (instances.length === 1 && instances[0] === 'none'))) {
+            // 如果存在多个资源类型，只要有一项有值就允许提交
+            const isExistEmpty = aggregateResourceType.every(rs => ['', this.$t(`m.verify['请选择']`)].includes(rs.displayValue));
+            if (!isNoLimited && ((instances.length < 1 || (instances.length === 1 && instances[0] === 'none')) && isExistEmpty)) {
               actionList = _.cloneDeep(actions);
               item.isError = true;
               flag = true;

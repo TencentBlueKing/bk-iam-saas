@@ -27,7 +27,7 @@ class TemplateUpdateTask(StepTask):
 
     def __init__(self, template_id: int):
         self.template_id = template_id
-        self.tenant_id = PermTemplate.objects.get(id=self.template_id).only("tenant_id").tenant_id
+        self.tenant_id = PermTemplate.objects.only("tenant_id").get(id=self.template_id).tenant_id
         self.template_biz = TemplateBiz(self.tenant_id)
 
     def get_params(self) -> List[Any]:

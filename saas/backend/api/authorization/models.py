@@ -29,7 +29,7 @@ class AuthAPIAllowListConfig(BaseModel):
         verbose_name = "授权API白名单配置"
         verbose_name_plural = "授权API白名单配置"
         ordering = ["-id"]
-        unique_together = [["system_id", "object_id"]]
+        unique_together = [["system_id", "object_id", "type"]]
 
     @classmethod
     def delete_by_action(cls, system_id: str, action_id: str):

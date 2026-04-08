@@ -55,7 +55,7 @@ class Role(BaseModel, BaseSystemHiddenModel):
 
     @property
     def system_permission_enabled_content(self):
-        enabled_content, _ = RoleUserSystemPermission.objects.get_or_create(role_id=self.id)
+        enabled_content, _ = RoleUserSystemPermission.objects.get_or_create(role_id=self.id, tenant_id=self.tenant_id)
         return enabled_content
 
     @property
@@ -112,27 +112,27 @@ class RoleUserSystemPermission(BaseModel):
         return self.enabled_detail["global_enabled"]
 
     @classmethod
-    def get_enabled_detail(cls, role_id: int):
-        enabled_content, _ = cls.objects.get_or_create(role_id=role_id)
+    def get_enabled_detail(cls, role_id: int, tenant_id: str):
+        enabled_content, _ = cls.objects.get_or_create(role_id=role_id, tenant_id=tenant_id)
         return enabled_content.enabled_detail
 
     @classmethod
-    def update_global_enabled(cls, role_id: int, global_enabled: bool):
-        enabled_detail = cls.get_enabled_detail(role_id)
+    def update_global_enabled(cls, role_id: int, global_enabled: bool, tenant_id: str):
+        enabled_detail = cls.get_enabled_detail(role_id, tenant_id)
         enabled_detail["global_enabled"] = global_enabled
-        cls.objects.filter(role_id=role_id).update(content=json_dumps(enabled_detail))
+        cls.objects.filter(role_id=role_id, tenant_id=tenant_id).update(content=json_dumps(enabled_detail))
 
     @classmethod
-    def add_enabled_users(cls, role_id: int, username: str):
-        enabled_detail = cls.get_enabled_detail(role_id)
+    def add_enabled_users(cls, role_id: int, username: str, tenant_id: str):
+        enabled_detail = cls.get_enabled_detail(role_id, tenant_id)
         enabled_detail["enabled_users"].append(username)
-        cls.objects.filter(role_id=role_id).update(content=json_dumps(enabled_detail))
+        cls.objects.filter(role_id=role_id, tenant_id=tenant_id).update(content=json_dumps(enabled_detail))
 
     @classmethod
-    def delete_enabled_users(cls, role_id: int, username: str):
-        enabled_detail = cls.get_enabled_detail(role_id)
+    def delete_enabled_users(cls, role_id: int, username: str, tenant_id: str):
+        enabled_detail = cls.get_enabled_detail(role_id, tenant_id)
         enabled_detail["enabled_users"].remove(username)
-        cls.objects.filter(role_id=role_id).update(content=json_dumps(enabled_detail))
+        cls.objects.filter(role_id=role_id, tenant_id=tenant_id).update(content=json_dumps(enabled_detail))
 
 
 class Permission(models.Model):

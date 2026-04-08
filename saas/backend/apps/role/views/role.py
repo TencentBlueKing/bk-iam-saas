@@ -398,11 +398,15 @@ class MemberSystemPermissionView(BizMixin, views.APIView):
         if role.type == RoleType.SYSTEM_MANAGER.value and role.id != role_id:
             self.permission_denied(request, message=f"{request.role.id} role can not access role {role_id}")
 
+        role = Role.objects.filter(id=role_id, tenant_id=self.tenant_id).first()
+        if not role:
+            self.permission_denied(request, message=f"role {role_id} not found")
+
         enabled = serializer.validated_data["system_permission_global_enabled"]
 
         self.role_biz.modify_system_manager_member_system_permission(role_id, enabled)
 
-        audit_context_setter(role=Role.objects.filter(id=role_id).first(), enable=enabled)
+        audit_context_setter(role=role, enable=enabled)
 
         return Response({})
 
@@ -428,10 +432,13 @@ class SystemManagerMemberView(BizMixin, views.APIView):
         if role.type == RoleType.SYSTEM_MANAGER.value and role.id != role_id:
             self.permission_denied(request, message=f"{request.role.id} role can not access role {role_id}")
 
+        role = Role.objects.filter(id=role_id, tenant_id=self.tenant_id).first()
+        if not role:
+            self.permission_denied(request, message=f"role {role_id} not found")
+
         members = serializer.validated_data["members"]
         self.role_biz.modify_system_manager_members(role_id, members)
 
-        role = Role.objects.filter(id=role_id).first()
         audit_context_setter(role=role)
 
         return Response({})

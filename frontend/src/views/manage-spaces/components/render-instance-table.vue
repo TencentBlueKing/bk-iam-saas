@@ -62,13 +62,20 @@
                 {{ row.aggregateResourceType[0].name }}
               </label>
               <div class="bk-button-group tab-button" v-else>
-                <bk-button v-for="(item, index) in row.aggregateResourceType"
-                  :key="item.id" @click="selectResourceType(row, index)"
+                <bk-button
+                  v-for="(item, index) in row.aggregateResourceType"
+                  :key="item.id"
+                  size="small"
                   :class="row.selectedIndex === index ? 'is-selected' : ''"
-                  size="small">{{item.name}}
-                  <span v-if="!row.isNoLimited && row.instancesDisplayData[item.id]
-                    && row.instancesDisplayData[item.id].length">
-                    ({{row.instancesDisplayData[item.id].length}})</span>
+                  @click="selectResourceType(row, index)"
+                >
+                  {{item.name}}
+                  <span v-if="![$t(`m.common['无限制']`)].includes(row.aggregateResourceType[index].displayValue)
+                    && row.instancesDisplayData[item.id]
+                    && row.instancesDisplayData[item.id].length > 0"
+                  >
+                    ({{row.instancesDisplayData[item.id].length}})
+                  </span>
                 </bk-button>
               </div>
               <render-condition
@@ -180,6 +187,7 @@
       @on-after-leave="handlerPreviewDialogClose" />
 
     <render-aggregate-side-slider
+      ref="aggregateRef"
       :show.sync="isShowAggregateSideSlider"
       :params="aggregateResourceParams"
       :value="aggregateValue"
@@ -522,16 +530,27 @@
       },
 
       showAggregateResourceInstance (data, index) {
+        const aggregateResourceData = data.aggregateResourceType[data.selectedIndex];
         const aggregateResourceParams = {
-          ...data.aggregateResourceType[data.selectedIndex],
-          curAggregateSystemId: data.system_id
+          ...aggregateResourceData,
+          curAggregateSystemId: data.system_id,
+          isNoLimited: data.isNoLimited || false
         };
+        if (!data.instancesDisplayData[aggregateResourceData.id]) {
+          data.instancesDisplayData[aggregateResourceData.id] = [];
+        }
+        // 如果有多种聚合类型，根据当前点击索引展示对应选择实例
+        if (data.aggregateResourceType.length > 1) {
+          aggregateResourceParams.isNoLimited
+            = (data.instancesDisplayData[aggregateResourceData.id].length < 1
+              || [this.$t(`m.common['无限制']`)].includes(aggregateResourceData.displayValue))
+              && data.isNoLimited;
+        }
+        this.instanceKey = aggregateResourceData.id;
         this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
         this.aggregateIndex = !this.curFilterSystem ? index : this.tableList.findIndex(item => `${item.system_id}-${item.$id}` === this.curFilterSystem);
-        const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
-        this.instanceKey = instanceKey;
-        if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
-        this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
+        if (!data.instancesDisplayData[this.instanceKey]) data.instancesDisplayData[this.instanceKey] = [];
+        this.aggregateValue = _.cloneDeep(data.instancesDisplayData[this.instanceKey].map(item => {
           return {
             id: item.id,
             display_name: item.name
@@ -548,24 +567,46 @@
             name: item.display_name
           };
         });
-        this.tableList[this.aggregateIndex].isError = false;
-        this.selectedIndex = this.tableList[this.aggregateIndex].selectedIndex;
-        const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
-        const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
-        this.tableList[this.aggregateIndex].instancesDisplayData = {
-                    ...instancesDisplayData,
-                    [instanceKey]: instances
+        const curAggregateItem = this.tableList[this.aggregateIndex];
+        curAggregateItem.isError = false;
+        this.selectedIndex = curAggregateItem.selectedIndex;
+        const instanceKey = curAggregateItem.aggregateResourceType[this.selectedIndex].id;
+        const instancesDisplayData = curAggregateItem.instancesDisplayData;
+        curAggregateItem.instancesDisplayData = {
+          ...instancesDisplayData,
+          [instanceKey]: instances
         };
-        this.tableList[this.aggregateIndex].instances = [];
-
-        for (const key in this.tableList[this.aggregateIndex].instancesDisplayData) {
-          // eslint-disable-next-line max-len
-          this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
+        curAggregateItem.instances = [];
+        for (const key in curAggregateItem.instancesDisplayData) {
+          curAggregateItem.instances.push(...curAggregateItem.instancesDisplayData[key]);
         }
+        const conditionData = this.$refs.aggregateRef.handleGetValue();
+        const { isEmpty, data } = conditionData;
+        if (isEmpty) {
+          return;
+        }
+        const isConditionEmpty = data.length === 1 && data[0] === 'none';
+        if (isConditionEmpty) {
+          curAggregateItem.instances = ['none'];
+          curAggregateItem.isLimitExceeded = false;
+          curAggregateItem.isError = true;
+          curAggregateItem.isNoLimited = false;
+        } else {
+          // data和isEmpty都为false代表是无限制
+          const isNoLimited = !isEmpty && !data.length;
+          curAggregateItem.instances = data;
+          curAggregateItem.isError = !(isNoLimited || data.length);
+          if (curAggregateItem.aggregateResourceType.length > 1) {
+            curAggregateItem.isNoLimited = curAggregateItem.instancesDisplayData[instanceKey].length < 1 && isNoLimited;
+          } else {
+            curAggregateItem.isNoLimited = isNoLimited;
+          }
+        }
+        const aggregationPolicy = new GradeAggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } });
         this.$set(
           this.tableList,
           this.aggregateIndex,
-          new GradeAggregationPolicy(this.tableList[this.aggregateIndex])
+          aggregationPolicy
         );
         this.$emit('on-select', this.tableList[this.aggregateIndex]);
       },
@@ -886,12 +927,20 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
-          if (tempCurData[0] === 'none') {
+          if (tempCurData.length > 0 && tempCurData[0] === 'none' && !this.curCopyNoLimited) {
             return;
           }
-          content.condition = _.cloneDeep(tempCurData);
+          if (content) {
+            content.condition = _.cloneDeep(tempCurData);
+          }
+          if (this.curCopyNoLimited && !content) {
+            payload.condition = [];
+            payload.isError = false;
+          }
         }
-        content.isError = false;
+        if (content) {
+          content.isError = false;
+        }
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
 
@@ -1145,7 +1194,7 @@
               item.resource_groups && item.resource_groups.forEach(groupItem => {
                 groupItem.related_resource_types.forEach(subItem => {
                   if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                    subItem.condition = _.cloneDeep(tempCurData);
+                    subItem.condition = this.curCopyNoLimited ? [] : _.cloneDeep(tempCurData);
                     subItem.isError = false;
                   }
                 });
@@ -1307,14 +1356,19 @@
               actionList.push(params);
             }
           } else {
-            const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
-            if (instances.length < 1) {
+            const { actions, aggregateResourceType, instances, instancesDisplayData, isNoLimited } = item;
+            // 如果存在多个资源类型，只要有一项有值就允许提交
+            const isExistEmpty = aggregateResourceType.every(rs => ['', this.$t(`m.verify['请选择']`)].includes(rs.displayValue));
+            if (!isNoLimited && ((instances.length < 1 || (instances.length === 1 && instances[0] === 'none')) && isExistEmpty)) {
               item.isError = true;
               flag = true;
             }
             if (instances.length > 0) {
               const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
-                if (instancesDisplayData[e.id] && instancesDisplayData[e.id].length) {
+                if (instancesDisplayData[e.id]
+                  && instancesDisplayData[e.id].length > 0
+                  && ![this.$t(`m.common['无限制']`)].includes(e.displayValue)
+                ) {
                   const obj = {};
                   obj.id = e.id;
                   obj.system_id = e.system_id;
@@ -1428,8 +1482,9 @@
         };
       },
       selectResourceType (data, index) {
-        data.selectedIndex = index;
         this.selectedIndex = index;
+        data.selectedIndex = index;
+        data.isError = data.aggregateResourceType.every(item => ['', this.$t(`m.verify['请选择']`)].includes(item.displayValue));
       }
     }
   };

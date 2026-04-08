@@ -4,8 +4,14 @@
     @mouseleave="handleMouseleave"
     @click.stop="handleClick">
     <div class="iam-input-text" :style="style" :title="!isEmpty ? curValue : ''" @click.stop="handleClick">
-      <section :class="['iam-condition-input', { 'is-empty': isEmpty }]" @click.stop="handleClick">
-        {{ curValue }}
+      <section
+        :class="[
+          'iam-condition-input',
+          { 'is-empty': isEmpty || ['', $t(`m.verify['请选择']`)].includes(curValue) }
+        ]"
+        @click.stop="handleClick"
+      >
+        {{ curValue || $t(`m.verify['请选择']`) }}
       </section>
     </div>
     <!-- 预览 -->

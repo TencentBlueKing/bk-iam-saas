@@ -28,9 +28,10 @@
     </render-search>
     <section class="loading-wrapper" v-bkloading="{ isLoading: tableLoading, opacity: 1, zIndex: 2000 }">
       <bk-table
-        :data="tableList"
         size="small"
-        ext-cls="curtom-perm-process-table"
+        ref="customPermRef"
+        ext-cls="custom-perm-process-table"
+        :data="tableList"
         :outer-border="false"
         :header-border="false"
         :pagination="pagination"
@@ -110,7 +111,7 @@
   import il8n from '@/language';
   import editProcessDialog from './edit-process-dialog';
   import { buildURLParams } from '@/common/url';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, xssFilter } from '@/common/util';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   export default {
@@ -287,13 +288,22 @@
           this.tableList = data.results;
           this.pagination.count = data.count;
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
+          const currentSelectList = this.currentSelectList.map(item => item.action_id);
+          if (currentSelectList.length) {
+            this.$nextTick(() => {
+              this.tableList.forEach(item => {
+                if (this.$refs.customPermRef && currentSelectList.includes(item.action_id)) {
+                  this.$refs.customPermRef.toggleRowSelection(item, true);
+                }
+              });
+            });
+          }
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
+          this.fetchCustomTotal();
         }
       },
 
@@ -327,6 +337,7 @@
       },
 
       handleCascadeChange (payload) {
+        this.currentSelectList = [];
         this.requestQueue = ['list'];
         this.pagination = Object.assign({}, {
           current: 1,
@@ -427,12 +438,48 @@
         this.fetchActionProcessesList();
       },
 
+      // 自定义分页勾选后的总数
+      fetchCustomTotal () {
+        this.$nextTick(() => {
+          const tableRef = this.$refs.customPermRef;
+          if (tableRef && tableRef.$refs && tableRef.$refs.paginationWrapper) {
+            const paginationWrapper = tableRef.$refs.paginationWrapper;
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount && selectCount.length && selectCount[0].children) {
+              selectCount[0].children[0].innerHTML = xssFilter(this.currentSelectList.length);
+            }
+          }
+        });
+      },
+
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.currentSelectList.push(row);
+            } else {
+              this.currentSelectList = this.currentSelectList.filter((item) => item.action_id !== row.action_id);
+            }
+            this.fetchCustomTotal();
+          },
+          all: () => {
+            const list = payload.filter(item => !this.currentSelectList.includes(item.action_id));
+            const selectGroups = this.currentSelectList.filter(item =>
+              !this.tableList.map(v => v.action_id).includes(item.action_id));
+            this.currentSelectList = [...selectGroups, ...list];
+            this.fetchCustomTotal();
+          }
+        };
+        return typeMap[type]();
+      },
+
       handlerAllChange (selection) {
-        this.currentSelectList = [...selection];
+        this.fetchSelectedGroups('all', selection);
       },
 
       handlerChange (selection, row) {
-        this.currentSelectList = [...selection];
+        this.fetchSelectedGroups('multiple', selection, row);
       },
 
       handleProcessSelect (value, option, item) {
@@ -524,7 +571,7 @@
         .loading-wrapper {
             min-height: 255px;
         }
-        .curtom-perm-process-table {
+        .custom-perm-process-table {
             margin-top: 16px;
             border: none;
             .process-name {
