@@ -1398,13 +1398,7 @@ def update_periodic_permission_expire_remind_schedule(hour: int, minute: int, te
         PeriodicTask.objects.create(
             crontab=schedule,
             name=name,
-            task="backend.apps.role.tasks.role_group_expire_remind",
-            kwargs={"tenant_id": tenant_id},
-        )
-        PeriodicTask.objects.create(
-            crontab=schedule,
-            name=name,
-            task="backend.apps.user.tasks.user_group_policy_expire_remind",
+            task="backend.apps.tenant.tasks.permission_expire_remind",
             kwargs={"tenant_id": tenant_id},
         )
         return
