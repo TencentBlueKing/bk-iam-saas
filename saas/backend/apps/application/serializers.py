@@ -251,6 +251,7 @@ class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
 
     # 用户组申请时，过期时间校验
     def validate_expired_at(self, value):
+        super().validate_expired_at(value)
         # 过期时间不能大于一年
         if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
             raise serializers.ValidationError("The expiration date must not exceed one year")
@@ -268,6 +269,7 @@ class GradeManagerUpdateApplicationSLZ(GradeManagerCreatedApplicationSLZ):
 class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
     # 用户组续期申请时，过期时间校验
     def validate_expired_at(self, value):
+        super().validate_expired_at(value)
         # 过期时间不能大于一年
         if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
             raise serializers.ValidationError("The expiration date must not exceed one year.")
@@ -284,6 +286,7 @@ class IDExpiredAtSLZ(ExpiredAtSLZ):
 
     # 自定义权限续期申请时，过期时间校验
     def validate_expired_at(self, value):
+        super().validate_expired_at(value)
         # 过期时间不能大于一年
         if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
             raise serializers.ValidationError("The expiration date must not exceed one year.")
