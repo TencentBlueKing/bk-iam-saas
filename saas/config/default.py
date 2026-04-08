@@ -16,6 +16,8 @@ import environ
 import pymysql
 from celery.schedules import crontab
 
+from backend.util.crontab import crontab_from_string
+
 # connect mysql
 pymysql.install_as_MySQLdb()
 
@@ -223,10 +225,13 @@ CELERY_IMPORTS = (
     "backend.api.bkci.tasks",
     "backend.apps.handover.tasks",
 )
+ORGANIZATION_SYNC_CRONTAB = env.str("BKAPP_ORGANIZATION_SYNC_CRONTAB", default="0 0 * * *")  # 默认每天 0 时
+_org_sync_schedule = crontab_from_string(ORGANIZATION_SYNC_CRONTAB)
+
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
-        "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
+        "schedule": _org_sync_schedule, # 根据环境变量设置的同步周期动态调整
     },
     "periodic_clean_subject_to_delete": {
         "task": "backend.apps.organization.tasks.clean_subject_to_delete",

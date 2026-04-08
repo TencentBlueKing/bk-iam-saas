@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
+from celery.schedules import ParseException
 
 from backend.api.management.v2.serializers import ManagementGradeManagerGroupCreateSLZ
 from backend.apps.group.models import Group
@@ -18,6 +19,7 @@ from backend.apps.role.serializers import BaseGradeMangerSLZ
 from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
 from backend.common.serializers import GroupMemberSLZ
 from backend.service.constants import GroupMemberType, RoleType
+from backend.util.crontab import crontab_from_string
 
 
 class AdminGroupBasicSLZ(serializers.ModelSerializer):
@@ -97,6 +99,22 @@ class SubjectSLZ(serializers.Serializer):
 
     class Meta:
         ref_name = "AdminSubjectSLZ"
+
+
+class AdminOrganizationSyncConfigSLZ(serializers.Serializer):
+    """组织架构同步配置"""
+
+    sync_crontab = serializers.CharField(
+        label="同步周期(crontab)",
+        required=False,
+        help_text="crontab 格式，如 '0 2 * * *' 表示每天凌晨2点。如不传则只触发同步",
+    )
+
+    def validate_sync_crontab(self, value):
+        try:
+            return crontab_from_string(value)
+        except (ParseException, ValueError) as e:
+            raise serializers.ValidationError(f"invalid crontab expression: {str(e)}")
 
 
 class FreezeSubjectResponseSLZ(serializers.Serializer):

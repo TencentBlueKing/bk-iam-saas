@@ -105,4 +105,11 @@ urlpatterns = [
         views.AdminSubjectPermissionCleanupViewSet.as_view({"delete": "cleanup"}),
         name="open.admin.subject.cleanup",
     ),
+    # 组织架构同步
+    path(
+        "organization/sync/",
+        views.AdminOrganizationSyncViewSet.as_view({"post": "sync"}),
+        name="open.admin.organization.sync",
+    ),
+
 ]
