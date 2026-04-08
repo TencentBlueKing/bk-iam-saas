@@ -3178,7 +3178,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
     get:
@@ -3203,7 +3204,8 @@ paths:
                 transformHeaders: { }
             authConfig:
                 userVerifiedRequired: false
-                resourcePermissionRequired: false
+                appVerifiedRequired: true
+                resourcePermissionRequired: true
             disabledStages: [ ]
             descriptionEn:
   /api/v1/open/admin/groups/{id}/:
@@ -3229,7 +3231,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
     put:
@@ -3254,7 +3257,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/groups/{id}/policies/:
@@ -3280,7 +3284,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/groups/{id}/members/:
@@ -3306,7 +3311,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
     delete:
@@ -3331,7 +3337,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
     get:
@@ -3356,7 +3363,8 @@ paths:
                 transformHeaders: { }
             authConfig:
                 userVerifiedRequired: false
-                resourcePermissionRequired: false
+                appVerifiedRequired: true
+                resourcePermissionRequired: true
             disabledStages: [ ]
             descriptionEn:
   /api/v1/open/admin/subjects/{subject_type}/{subject_id}/groups/:
@@ -3382,7 +3390,8 @@ paths:
                   transformHeaders: { }
               authConfig:
                   userVerifiedRequired: false
-                  resourcePermissionRequired: false
+                  appVerifiedRequired: true
+                  resourcePermissionRequired: true
               disabledStages: [ ]
               descriptionEn:
   /api/v1/open/admin/systems/{system_id}/provider_config/:
@@ -3408,7 +3417,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/templates/:
@@ -3434,7 +3444,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
     post:
@@ -3459,7 +3470,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/systems/:
@@ -3473,8 +3485,8 @@ paths:
         default:
           description: ""
       x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
+        isPublic: true
+        allowApplyPermission: true
         matchSubpath: false
         backend:
           type: HTTP
@@ -3486,7 +3498,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/roles/system_managers/systems/{system_id}/members/:
@@ -3500,8 +3513,8 @@ paths:
         default:
           description: ""
       x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
+        isPublic: true
+        allowApplyPermission: true
         matchSubpath: false
         backend:
           type: HTTP
@@ -3513,7 +3526,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/model/share/systems/{system_id}/query:
@@ -3543,7 +3557,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/template/:
