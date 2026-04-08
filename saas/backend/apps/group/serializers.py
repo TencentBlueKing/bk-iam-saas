@@ -288,6 +288,7 @@ class GroupTransferSLZ(serializers.Serializer):
 
 class GroupMemberExpiredAtSLZ(GroupMemberSLZ, ExpiredAtSLZ):
     def validate_expired_at(self, value):
+        super().validate_expired_at(value)
         # 过期时间不能大于一年
         if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
             raise serializers.ValidationError("The expiration date must not exceed one year.")
