@@ -221,14 +221,14 @@ def role_group_expire_remind(tenant_id: str):
         if gs.expired_at < expired_at_after:
             continue
 
-        _add_group_role_set(group_id_set, role_id_set, int(gs.group.id), tenant_id)
+        _add_group_role_set(tenant_id, group_id_set, role_id_set, int(gs.group.id))
 
     # 查询人员模版过期的相关用户组
     qs = SubjectTemplateGroup.objects.filter(expired_at__range=(expired_at_after, expired_at_before))
     paginator = Paginator(qs, 100)
     for i in paginator.page_range:
         for stg in paginator.page(i):
-            _add_group_role_set(group_id_set, role_id_set, stg.group_id, tenant_id)
+            _add_group_role_set(tenant_id, group_id_set, role_id_set, stg.group_id)
 
     # 生成子任务
     for role_id in role_id_set:
@@ -237,7 +237,7 @@ def role_group_expire_remind(tenant_id: str):
         )
 
 
-def _add_group_role_set(group_id_set: Set[int], role_id_set: Set[int], group_id: int, tenant_id: str):
+def _add_group_role_set(tenant_id: str, group_id_set: Set[int], role_id_set: Set[int], group_id: int):
     if group_id in group_id_set:
         return
 
