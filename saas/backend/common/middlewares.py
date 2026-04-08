@@ -10,13 +10,17 @@ specific language governing permissions and limitations under the License.
 """
 
 from django.conf import settings
+from django.utils.translation import gettext as _
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
 from pyinstrument.middleware import ProfilerMiddleware
 
 from backend.common.base import is_open_api_request_path
 from backend.common.constants import DjangoLanguageEnum
+from backend.common.error_codes import error_codes
 from backend.common.local import local
+
+
 
 
 class CustomProfilerMiddleware(ProfilerMiddleware):
@@ -77,3 +81,26 @@ class LanguageMiddleware(MiddlewareMixin):
         if is_open_api_request_path(request.path):
             translation.activate(DjangoLanguageEnum.EN.value)
             request.LANGUAGE_CODE = translation.get_language()
+
+
+class TenantAuthMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        print("TENANT_MODE",settings.TENANT_MODE)
+        # 获取请求头中的租户ID
+        request_tenant = request.tenant_id
+        print("request_tenant",request_tenant)
+        # 根据配置模式确定租户ID
+        if settings.TENANT_MODE == "single":
+            # 单租户模式：使用配置的固定值
+            target_tenant = getattr(settings, 'SINGLE_TENANT_ID', 'default')
+            print("target_tenant",target_tenant,"request_tenant",request_tenant)
+            if request_tenant != target_tenant:
+                print("非本租户用户禁止访问")
+                raise error_codes.VALIDATE_ERROR.format(_("只允许租户{}访问").format(target_tenant))
+
+        response = self.get_response(request)
+        return response
+

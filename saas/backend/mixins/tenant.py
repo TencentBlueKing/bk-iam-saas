@@ -23,4 +23,5 @@ class TenantMixin:
     def tenant_id(self):
         # Web 请求会经用户认证，将用户租户设置导致 request.tenant_id;
         # APIGateway 请求，会在 JWT 认证后，将 Header 中的 tenant_id 设置到 request.tenant_id;
+        print("request.tenant_id",self.request.tenant_id)
         return self.request.tenant_id

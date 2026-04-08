@@ -118,7 +118,10 @@ MIDDLEWARE = [
     "backend.account.middlewares.RoleAuthenticationMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     "backend.common.middlewares.LanguageMiddleware",
+    "backend.common.middlewares.TenantAuthMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+
+
 ]
 
 ROOT_URLCONF = "urls"
@@ -544,3 +547,5 @@ ITSM_WORKERFLOW_TEMPLATE_FILE = os.path.join(BASE_DIR, "backend/plugins/approval
 # 蓝鲸用户管理网关
 BK_USER_APIGW_NAME = env.str("BK_USER_APIGW_NAME", default="bk-user")
 BK_USER_APIGW_STAGE = env.str("BK_USER_APIGW_STAGE", default="prod")
+
+
