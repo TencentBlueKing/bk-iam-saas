@@ -1059,27 +1059,6 @@ class GroupCheckBiz:
                 True,
             )
 
-    def check_remove_last_manager_member(self, group_id: int, usernames: List[str]):
-        """
-        检查移除指定用户后，用户组是否仍有管理员。若会导致管理员为空则抛出异常。
-        """
-        try:
-            role_related_object = RoleRelatedObject.objects.get(
-                object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
-            )
-        except RoleRelatedObject.DoesNotExist:
-            return
-
-        role_members = set(
-            RoleUser.objects.filter(role_id=role_related_object.role_id).values_list("username", flat=True)
-        )
-        if not role_members:
-            return
-
-        remaining_managers = role_members - set(usernames)
-        if not remaining_managers:
-            raise error_codes.VALIDATE_ERROR.format(_("can not remove the last manager {} of the group {}").format(usernames, group_id), True)
-
     def check_role_group_name_unique(self, role_id: int, name: str, group_id: int = 0):
         """
         检查角色的用户组名字是否已存在
