@@ -1,3 +1,33 @@
+<!-- 2026-04-09 -->
+# V1.10.56 Version Update Log
+
+### Features
+* Added a link to Personal Center in the user profile section
+* Super admin auto-possessing all operation permissions is now controlled by environment variable
+* Person selector now supports displaying organization structure
+* Added API for querying, cleaning, and handing over permissions of departed employees
+* Supported cleaning IAM grade manager data when employees leave or transfer
+* Added organization structure synchronization API for super admin APIs
+* Added admin_list_groups and admin_list_subject_groups APIs to the gateway
+
+### Feature Enhancements
+* IAM V3 now controls the display of IAM V4 entry via environment variable
+* Optimized organization structure display to only show for searched personnel
+* Supported quantity tag display when a member belongs to multiple organizations
+* Changed the maximum expired permission deletion period to 3 months
+
+### Fixes
+* Fixed incorrect display of overly long permission template names
+* Fixed abnormal permission recipient handling logic when applying for custom permissions
+* Fixed incorrect V4 access URL
+* Fixed an issue where admin user groups were inconsistent after modifying management space instances
+* Fixed insufficient input data validation in the admin modification API
+* Fixed admin API gateway permission issue
+* Fixed an issue where validity period could bypass frontend restrictions
+* Fixed missing permission check when deleting user group permission templates
+
+---
+
 <!-- 2026-03-05 -->
 # V1.10.55 Version Update Log
 
