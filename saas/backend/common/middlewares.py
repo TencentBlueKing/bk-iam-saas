@@ -94,7 +94,7 @@ class TenantAuthMiddleware:
             request.tenant_id = request_tenant
         # 根据配置模式确定租户ID
         if settings.TENANT_MODE == "single":
-            # 单租户模式：使用配置的固定值
+            # 单租户模式：仅指定租户可访问
             target_tenant = getattr(settings, "SINGLE_TENANT_ID", "system")
             if request_tenant != target_tenant:
                 return JsonResponse(
