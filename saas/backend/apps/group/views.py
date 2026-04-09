@@ -424,6 +424,12 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
 class GroupsMemberViewSet(GenericViewSet):
 
+    permission_classes = [RolePermission]
+    action_permission = {
+        "create": PermissionCodeEnum.MANAGE_GROUP.value,
+        "destroy": PermissionCodeEnum.MANAGE_GROUP.value,
+    }
+
     queryset = Group.objects.all()
     serializer_class = GroupsAddMemberSLZ
 
@@ -568,6 +574,10 @@ class GroupsMemberViewSet(GenericViewSet):
 
 
 class GroupsMemberRenewViewSet(GenericViewSet):
+    permission_classes = [RolePermission]
+    action_permission = {
+        "create": PermissionCodeEnum.MANAGE_GROUP.value,
+    }
 
     group_biz = GroupBiz()
 
