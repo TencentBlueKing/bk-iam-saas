@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import sys
+import time
 
 import pytz
 from django.conf import settings
@@ -16,7 +17,7 @@ from rest_framework import serializers
 
 from backend.apps.action.serializers import ActionSLZ
 from backend.common.serializers import BaseAction
-from backend.common.time import PERMANENT_SECONDS
+from backend.common.time import DEFAULT_EXPIRED_DURATION, PERMANENT_SECONDS
 from backend.service.constants import PolicyEnvConditionType, PolicyEnvType
 from backend.util.uuid import gen_uuid
 
@@ -325,6 +326,13 @@ class BasePolicyActionSLZ(serializers.Serializer):
 class PolicyActionSLZ(BasePolicyActionSLZ):
     policy_id = serializers.IntegerField(label="策略id", required=False)
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
+
+    # 验证自定义权限申请和临时权限申请的过期时间
+    def validate_expired_at(self, value):
+        # 过期时间不能大于一年
+        if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed one year.")
+        return value
 
 
 class PolicyActionExpiredAtSLZ(BasePolicyActionSLZ):

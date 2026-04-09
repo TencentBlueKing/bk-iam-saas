@@ -21,7 +21,7 @@ from backend.apps.role.serializers import GradeMangerCreateSLZ
 from backend.biz.application import ApplicationBiz
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
-from backend.common.time import PERMANENT_SECONDS, expired_at_display
+from backend.common.time import DEFAULT_EXPIRED_DURATION, PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import ApplicationType, SubjectType
 from backend.service.models import Subject
 
@@ -249,6 +249,14 @@ class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
     source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
     applicants = serializers.ListField(label="权限获得者", child=ApplicantSLZ("获得者"), required=False, default=list)
 
+    # 用户组申请时，过期时间校验
+    def validate_expired_at(self, value):
+        super().validate_expired_at(value)
+        # 过期时间不能大于一年
+        if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed one year")
+        return value
+
 
 class GradeManagerCreatedApplicationSLZ(GradeMangerCreateSLZ, ReasonSLZ):
     pass
@@ -259,7 +267,13 @@ class GradeManagerUpdateApplicationSLZ(GradeManagerCreatedApplicationSLZ):
 
 
 class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
-    pass
+    # 用户组续期申请时，过期时间校验
+    def validate_expired_at(self, value):
+        super().validate_expired_at(value)
+        # 过期时间不能大于一年
+        if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed one year.")
+        return value
 
 
 class RenewGroupApplicationSLZ(ReasonSLZ):
@@ -269,6 +283,14 @@ class RenewGroupApplicationSLZ(ReasonSLZ):
 
 class IDExpiredAtSLZ(ExpiredAtSLZ):
     id = serializers.IntegerField(label="ID")
+
+    # 自定义权限续期申请时，过期时间校验
+    def validate_expired_at(self, value):
+        super().validate_expired_at(value)
+        # 过期时间不能大于一年
+        if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed one year.")
+        return value
 
 
 class RenewPolicyApplicationSLZ(ReasonSLZ):

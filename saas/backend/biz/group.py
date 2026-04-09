@@ -950,9 +950,25 @@ class GroupBiz:
 
         subject = Subject.from_group_id(group_id)
         for template in templates:
-            # Note: 同步授权, 避免检查逻辑
-            # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
-            self.policy_operation_biz.alter(template.system_id, subject, template.policies)
+            # 同步场景中，已有操作需要覆盖更新以保证实例精确一致；不存在操作则新增
+            exists_policies = parse_obj_as(
+                List[PolicyBean], self.policy_query_svc.list_by_subject(template.system_id, subject)
+            )
+            exists_action_ids = {p.action_id for p in exists_policies}
+
+            update_policies = []
+            create_policies = []
+            for p in template.policies:
+                p.set_expired_at(PERMANENT_SECONDS)
+                if p.action_id in exists_action_ids:
+                    update_policies.append(p)
+                else:
+                    create_policies.append(p)
+
+            if update_policies:
+                self.policy_operation_biz.update(template.system_id, subject, update_policies)
+            if create_policies:
+                self.policy_operation_biz.alter(template.system_id, subject, create_policies)
 
     def _trans_auth_scope_to_grant_templates(self, auth_scopes) -> List[GroupTemplateGrantBean]:
         """
@@ -1003,7 +1019,7 @@ class GroupBiz:
 
             policy_ids = [action_policy_id[(system_id, action_id)] for action_id in system_action_ids[system_id]]
             if policy_ids:
-                self.policy_operation_biz.delete_by_ids(scope.system_id, subject, policy_ids)
+                self.policy_operation_biz.delete_by_ids(system_id, subject, policy_ids)
 
     def _update_sync_perm_group_member(self, role: Role, group_id: int):
         """

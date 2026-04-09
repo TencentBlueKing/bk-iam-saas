@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import json
 import logging
 from datetime import timedelta
 from itertools import groupby
@@ -24,7 +25,7 @@ from django.utils import timezone
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.constants import NotificationTypeEnum
-from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
+from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject, RoleScope, RoleUser, ScopeSubject
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
@@ -40,6 +41,7 @@ from backend.component import esb
 from backend.component.bkbot import send_iam_ticket
 from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.util.json import json_dumps
 from backend.util.time import timestamp_to_local
 from backend.util.url import url_join
 
@@ -385,6 +387,27 @@ class UserPermissionCleaner:
                 RoleType.SUBSET_MANAGER.value,
             ):
                 self.role_with_perm_group_biz.delete_role_member(role, username)
+
+                # 清理角色用户组冗余数据
+                RoleGroupMember.objects.filter(role_id=role.id, subject_id=username).delete()
+
+                # 清理授权范围
+                scope_subject = ScopeSubject.objects.filter(
+                    subject_type=SubjectType.USER.value, subject_id=username, role_id=role.id
+                ).first()
+                if scope_subject:
+                    scope = RoleScope.objects.filter(id=scope_subject.role_scope_id).first()
+                    if scope:
+                        content = json.loads(scope.content)
+                        scope.content = json_dumps(
+                            [
+                                one
+                                for one in content
+                                if not (one["type"] == SubjectType.USER.value and one["id"] == username)
+                            ]
+                        )
+                        scope.save(update_fields=["content"])
+                    scope_subject.delete()
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
