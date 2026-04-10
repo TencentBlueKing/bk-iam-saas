@@ -343,8 +343,6 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             }
             .operation {
                 position: absolute;
-                bottom:7px;
-                margin-top:10px;
                 color: #63656e;
                 width: 135px;
                 &.right{
@@ -497,7 +495,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         .switch-vision-flag {
             left: -160px;
             .switch-vision-text {
-                min-width: 84px;
+                min-width: 90px;
                 background-color: #1f2c42;
                 color: #96a2b9;
                 line-height: 24px;
@@ -523,7 +521,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             &.en {
                 left: -260px;
                 .switch-vision-text {
-                    min-width: 184px;
+                    min-width: 190px;
                 }
                 .dropdown-panel {
                     min-width: 300px;
@@ -536,7 +534,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             &.ja {
                 left: -200px;
                 .switch-vision-text {
-                    min-width: 124px;
+                    min-width: 130px;
                 }
                 .dropdown-panel {
                     min-width: 260px;
