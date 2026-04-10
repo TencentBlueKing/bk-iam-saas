@@ -130,7 +130,8 @@ class GradeMangerBaseInfoSLZ(serializers.Serializer):
 
     def validate_members(self, value):
         """校验 members 中的用户存在"""
-        usernames = [m["username"] for m in value]
+        # 子类(如ManagementSubsetMangerCreateSLZ)将members覆盖为字符串列表, 需要兼容两种格式
+        usernames = [m["username"] if isinstance(m, dict) else m for m in value]
         exist_usernames = set(User.objects.filter(username__in=usernames).values_list("username", flat=True))
         missing = set(usernames) - exist_usernames
         if missing:
