@@ -342,16 +342,11 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 width: 40px;
             }
             .operation {
-                display:flex;
                 position: absolute;
                 bottom:7px;
                 margin-top:10px;
                 color: #63656e;
                 width: 135px;
-                &:hover {
-                    background: #E1ECFF;
-                    color: #3A84FF;
-                }
                 &.right{
                     right:0px;
                 }
@@ -360,9 +355,10 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     padding: 0 10px;
                     line-height: 32px;
                     cursor: pointer;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
+                    &:hover {
+                      background-color: #e1ecff;
+                      color: #3a84ff;
+                    }
                     &.active {
                         background-color: #f5f6fa;
                         color: #313238;
@@ -500,7 +496,6 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         }
         .switch-vision-flag {
             left: -160px;
-            height: 24px;
             .switch-vision-text {
                 min-width: 84px;
                 background-color: #1f2c42;

@@ -47,9 +47,6 @@
           <div class="item" @click="handleOpenSource">
             {{ $t(`m.common['开源社区']`) }}
           </div>
-          <div class="item" @click="handleOpenPersonalCenter">
-            {{ $t(`m.common['个人中心']`) }}
-          </div>
         </div>
       </div>
       <div class="lang-flag">
@@ -74,7 +71,7 @@
         </div>
       </div>
       <p
-        class="user-name"
+        class="flex-center user-name"
         @click.stop="handleSwitchIdentity"
         data-test-id="header_btn_triggerSwitchRole"
       >
@@ -87,37 +84,29 @@
       <transition name="toggle-slide">
         <section
           class="iam-grading-admin-list-wrapper"
-          :style="style"
-          v-show="isShowGradingWrapper"
+          v-show="isShowUserDropdown"
           v-bk-clickoutside="handleClickOutSide"
         >
           <template>
-            <!-- <div class="operation auth-manager" v-if="roleList.length">
-                            <div class="user-dropdown-item " :title="$t(`m.nav['切换管理空间']`)" @click="handleManager">
-                                <Icon type="grade-admin" class="iam-manager-icon" />
-                                {{ $t(`m.nav['切换管理空间']`) }}
-                            </div>
-                        </div> -->
             <div class="operation">
+              <div
+                v-if="BK_PERSONAL_CENTER_URL"
+                class="user-dropdown-item"
+                :title="$t(`m.common['个人中心']`)"
+                @click="handleOpenPersonalCenter"
+              >
+                {{ $t(`m.common['个人中心']`) }}
+              </div>
               <div
                 class="user-dropdown-item"
                 :title="$t(`m.nav['退出登录']`)"
                 @click="handleLogout"
               >
-                <!-- <Icon type="logout" /> -->
                 {{ $t(`m.nav['退出登录']`) }}
               </div>
             </div>
           </template>
         </section>
-        <!-- <template>
-                    <div class="operation right">
-                        <div class="user-dropdown-item " @click="handleLogout">
-                            <Icon type="logout" />
-                            {{ $t(`m.nav['注销']`) }}
-                        </div>
-                    </div>
-                </template> -->
       </transition>
     </div>
     <system-log v-model="showSystemLog" />
@@ -195,9 +184,9 @@
     data () {
       return {
         IAM_V4_URL: window.BK_IAM_V4_URL,
+        BK_PERSONAL_CENTER_URL: window.BK_PERSONAL_CENTER_URL,
         isShowUserDropdown: false,
         showSystemLog: false,
-        isShowGradingWrapper: false,
         curIdentity: '',
         curRole: '',
         curRoleId: 0,
@@ -267,12 +256,6 @@
         'versionLogs'
       ]),
       ...mapGetters('userGlobalConfig', ['globalConfig']),
-      style () {
-        return {
-          // height: `${this.roleList.length ? this.curHeight : 46}px`
-          height: `46px`
-        };
-      },
       curAccountLogo () {
         return [].slice.call(this.user.username)[0].toUpperCase() || '-';
       },
@@ -323,7 +306,7 @@
         },
         immediate: true
       },
-      isShowGradingWrapper (value) {
+      isShowUserDropdown (value) {
         if (!value) {
           this.searchValue = '';
         }
@@ -401,7 +384,7 @@
         }
       },
       handleClickOutSide (e) {
-        this.isShowGradingWrapper = false;
+        this.isShowUserDropdown = false;
       },
 
       // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
@@ -442,12 +425,8 @@
       },
 
       handleOpenPersonalCenter () {
-        const url = window.BK_PERSONAL_CENTER_URL;
-        if (!url) {
-          this.messageWarn(this.$t(`m.common['个人中心链接未配置']`));
-          return;
-        }
-        window.open(url);
+        this.isShowUserDropdown = false;
+        window.open(this.BK_PERSONAL_CENTER_URL);
       },
 
       handleOpenNewIAM () {
@@ -578,7 +557,6 @@
         this.$set(currentData, 'active', true);
         this.$store.commit('updateIndex', index);
         window.localStorage.setItem('index', index);
-        this.isShowGradingWrapper = false;
         this.isShowUserDropdown = false;
         try {
           await this.$store.dispatch('role/updateCurrentRole', { id: currentData.id });
@@ -658,8 +636,7 @@
       },
 
       handleSwitchIdentity () {
-        // this.curHeight = document.getElementsByClassName('user-dropdown')[0].offsetHeight
-        this.isShowGradingWrapper = !this.isShowGradingWrapper;
+        this.isShowUserDropdown = !this.isShowUserDropdown;
       },
       
       handleLogout () {
