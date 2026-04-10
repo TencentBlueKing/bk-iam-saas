@@ -309,6 +309,7 @@ export const m = {
         '了解更多': 'Learn more',
         '前往申请': 'Go apply',
         '切换新版': 'Switch to the new version',
+        '个人中心': 'Personal Center',
         '切换至新版权限中心': "Switch to the new version of the BKIAM"
     },
     // 校验
