@@ -1,3 +1,15 @@
+<!-- 2026-04-13 -->
+# V1.10.57 Version Update Log
+
+### Feature Enhancements
+* Moved Personal Center option into the user profile section
+* Added internationalization support for Personal Center
+
+### Fixes
+* Fixed validate_members_compat_string_list member validation issue
+
+---
+
 <!-- 2026-04-09 -->
 # V1.10.56 Version Update Log
 
