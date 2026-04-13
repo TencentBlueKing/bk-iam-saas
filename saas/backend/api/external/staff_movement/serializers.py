@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -15,12 +15,11 @@ from backend.apps.organization.models import User
 
 
 def validate_rtx(value):
-    if not settings.PCG_DEPARTMENT_ID:
-        raise serializers.ValidationError("PCG_DEPARTMENT_ID未配置")
-
-    user = User.objects.get(username=value)
-    if settings.PCG_DEPARTMENT_ID not in user.ancestor_department_ids():
-        raise serializers.ValidationError("rtx不在部门内")
+    user = User.objects.filter(username=value).first()
+    if not user:
+        raise serializers.ValidationError("rtx not exists")
+    if len(set(settings.PCG_DEPARTMENT_IDS) & set(user.ancestor_department_ids())) == 0:
+        raise serializers.ValidationError("rtx is not in the specified organization")
     return value
 
 
