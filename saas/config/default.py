@@ -532,7 +532,7 @@ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED
 # 问题反馈地址
 BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
 
-# 接入用户管理的接口page_size默认值
+# 接入用户管理的接口 page_size 默认值
 USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1000)
 
 # 个人中心地址
@@ -546,5 +546,4 @@ ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING = env.bool(
 # PCG 离职交接相关配置
 PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
 PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")
-
-PCG_DEPARTMENT_ID = env.int("PCG_DEPARTMENT_ID", default=None)
+PCG_DEPARTMENT_IDS = env.list("PCG_DEPARTMENT_IDS", cast=int, default=[])
