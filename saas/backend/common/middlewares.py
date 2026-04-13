@@ -17,6 +17,7 @@ from pyinstrument.middleware import ProfilerMiddleware
 from backend.common.base import is_open_api_request_path
 from backend.common.constants import DjangoLanguageEnum
 from backend.common.local import local
+from backend.util.tenant import clear_current_request, set_current_request
 
 
 class CustomProfilerMiddleware(ProfilerMiddleware):
@@ -77,3 +78,16 @@ class LanguageMiddleware(MiddlewareMixin):
         if is_open_api_request_path(request.path):
             translation.activate(DjangoLanguageEnum.EN.value)
             request.LANGUAGE_CODE = translation.get_language()
+
+
+class TenantMiddleware(MiddlewareMixin):
+    """租户中间件"""
+
+    def process_request(self, request):
+        """处理请求，将请求对象存储到线程局部变量"""
+        set_current_request(request)
+
+    def process_response(self, request, response):
+        """处理响应，清理线程局部变量"""
+        clear_current_request()
+        return response

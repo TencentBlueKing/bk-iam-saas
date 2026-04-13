@@ -52,6 +52,7 @@ from backend.util.uuid import gen_uuid
 
 from .action import ActionCheckBiz, ActionResourceGroupForCheck
 from .subject import SubjectInfoList
+from ..util.tenant import get_current_tenant_id
 
 
 class GroupSystemCounterBean(BaseModel):
@@ -336,8 +337,8 @@ class GroupBiz:
 
         if len(policy_systems_count) == 0 and len(template_system_count) == 0:
             return []
-
-        systems = self.system_svc.list()
+        request_tenant_id = get_current_tenant_id()
+        systems = self.system_svc.list(request_tenant_id)
         group_systems: List[GroupSystemCounterBean] = []
         for system in systems:
             if system.id not in policy_system_count_dict and system.id not in template_system_count_dict:

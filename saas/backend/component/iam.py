@@ -22,7 +22,7 @@ from .constants import ComponentEnum
 from .http import http_delete, http_get, http_post, http_put
 from .util import do_blueking_http_request, execute_all_data_by_paging, list_all_data_by_paging
 
-DEFAULT_SYSTEM_FIELDS = "id,name,name_en,description,description_en"
+DEFAULT_SYSTEM_FIELDS = "id,name,name_en,description,description_en,tenant_id"
 DEFAULT_ACTION_FIELDS = "id,name,name_en,description,description_en"
 DEFAULT_RESOURCE_TYPE_FIELDS = "id,name,name_en"
 

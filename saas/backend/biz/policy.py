@@ -55,6 +55,7 @@ from backend.util.model import ExcludeModel
 from backend.util.uuid import gen_uuid
 
 from .resource import ResourceBiz, ResourceNodeBean
+from ..util.tenant import get_current_tenant_id
 
 logger = logging.getLogger("app")
 
@@ -1442,7 +1443,8 @@ class PolicyQueryBiz:
         return self._system_counter_to_system_counter_bean(system_counts)
 
     def _system_counter_to_system_counter_bean(self, system_counts: List[SystemCounter]) -> List[SystemCounterBean]:
-        system_list = self.system_svc.new_system_list()
+        request_tenant_id = get_current_tenant_id()
+        system_list = self.system_svc.new_system_list(request_tenant_id)
         system_count_beans = parse_obj_as(List[SystemCounterBean], system_counts)
 
         for scb in system_count_beans:
@@ -1481,7 +1483,8 @@ class PolicyQueryBiz:
         # 查询 system, action 的信息
         system_id_set = {one.system for one in backend_policies}
         action_list_dict = {system_id: self.action_svc.new_action_list(system_id) for system_id in system_id_set}
-        system_list = self.system_svc.new_system_list()
+        request_tenant_id = get_current_tenant_id()
+        system_list = self.system_svc.new_system_list(request_tenant_id)
 
         # 查询 saas policy id
         all_action_id = {p.action_id for p in backend_policies}

@@ -70,6 +70,7 @@ from .policy import (
     ThinSystem,
 )
 from .resource import ResourceNodeBean
+from ..util.tenant import get_current_tenant_id
 
 logger = logging.getLogger("app")
 
@@ -286,7 +287,8 @@ class RoleBiz:
         查询角色的 auth 授权范围 Bean
         """
         auth_systems = self.svc.list_auth_scope(role_id)
-        system_list = self.system_svc.new_system_list()
+        request_tenant_id = get_current_tenant_id()
+        system_list = self.system_svc.new_system_list(request_tenant_id)
 
         auth_system_beans = []
         for auth_system in auth_systems:
@@ -332,7 +334,8 @@ class RoleBiz:
         获取指定系统的 auth 授权范围 Bean
         """
         auth_systems = self.svc.list_auth_scope(role_id)
-        system_list = self.system_svc.new_system_list()
+        request_tenant_id = get_current_tenant_id()
+        system_list = self.system_svc.new_system_list(request_tenant_id)
 
         auth_system_bean = None
         for auth_system in auth_systems:
@@ -584,7 +587,8 @@ class RoleListQuery:
         """
         查询系统列表
         """
-        systems = self.system_svc.list()
+        request_tenant_id = get_current_tenant_id()
+        systems = self.system_svc.list(request_tenant_id=request_tenant_id)
 
         if self.role.type == RoleType.STAFF.value:
             return systems
