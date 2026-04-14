@@ -72,6 +72,7 @@ class ManagementGroupApplicationViewSet(BizMixin, GenericViewSet):
                 ],
                 applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
+            self.tenant_id,
         )
 
         return Response({"ids": [a.id for a in applications]})

@@ -827,7 +827,7 @@ class GroupSystemViewSet(BizMixin, GenericViewSet):
         hidden = slz.validated_data["hidden"]
 
         group = self.get_object()
-        data = self.group_biz.list_system_counter(group.id, hidden=hidden)
+        data = self.group_biz.list_system_counter(group.id, self.tenant_id, hidden=hidden)
         return Response([one.dict() for one in data])
 
 
@@ -1042,7 +1042,7 @@ class GradeManagerGroupTransferView(BizMixin, GroupQueryMixin, GenericViewSet):
             return Response({})
 
         # 2. 查询用户组所有授权信息，并扩张子集管理员的授权范围
-        auth_scope_systems = self._query_group_auth_scope(group)
+        auth_scope_systems = self._query_group_auth_scope(group, self.tenant_id)
 
         # 扩张授权范围
         self.role_biz.incr_update_auth_scope(subset_manager, auth_scope_systems)
@@ -1065,7 +1065,7 @@ class GradeManagerGroupTransferView(BizMixin, GroupQueryMixin, GenericViewSet):
         auth_scope_systems: List[AuthScopeSystem] = []
 
         # 查询自定义权限
-        system_counts = self.group_biz.list_system_counter(group.id)
+        system_counts = self.group_biz.list_system_counter(group.id, self.tenant_id)
         for system_count in system_counts:
             system_id = system_count.id
             policies = self.policy_query_biz.list_by_subject(system_id, subject)

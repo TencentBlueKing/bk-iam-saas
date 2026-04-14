@@ -174,7 +174,9 @@ class ApprovalBotUserCallbackView(BizMixin, views.APIView):
         def renew_expired_at(x):
             return expired_at if x < now else x + month * 30 * DAY_SECONDS
 
-        groups, policies = get_user_expired_groups_policies(user, data["expired_at_before"], data["expired_at_after"])
+        groups, policies = get_user_expired_groups_policies(
+            user, data["expired_at_before"], data["expired_at_after"], self.tenant_id
+        )
         # 生成自定义权限申请单
         if policies:
             policies_data = {
@@ -207,6 +209,7 @@ class ApprovalBotUserCallbackView(BizMixin, views.APIView):
                     groups=parse_obj_as(List[ApplicationGroupInfoBean], policies_data),
                     applicants=[Applicant(type=SubjectType.USER.value, id=username, display_name=user.display_name)],
                 ),
+                self.tenant_id,
                 source_system_id="",
             )
 

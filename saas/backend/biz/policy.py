@@ -55,7 +55,6 @@ from backend.util.model import ExcludeModel
 from backend.util.uuid import gen_uuid
 
 from .resource import ResourceBiz, ResourceNodeBean
-from ..util.tenant import get_current_tenant_id
 
 logger = logging.getLogger("app")
 
@@ -1435,15 +1434,18 @@ class PolicyQueryBiz:
         )
         return pl.policies
 
-    def list_system_counter_by_subject(self, subject: Subject, hidden: bool = True) -> List[SystemCounterBean]:
+    def list_system_counter_by_subject(
+        self, subject: Subject, request_tenant_id: str, hidden: bool = True
+    ) -> List[SystemCounterBean]:
         """
         查询 subject 有权限的系统-policy 数量信息
         """
         system_counts = self.svc.list_system_counter_by_subject(subject, hidden)
-        return self._system_counter_to_system_counter_bean(system_counts)
+        return self._system_counter_to_system_counter_bean(system_counts, request_tenant_id)
 
-    def _system_counter_to_system_counter_bean(self, system_counts: List[SystemCounter]) -> List[SystemCounterBean]:
-        request_tenant_id = get_current_tenant_id()
+    def _system_counter_to_system_counter_bean(
+        self, system_counts: List[SystemCounter], request_tenant_id: str
+    ) -> List[SystemCounterBean]:
         system_list = self.system_svc.new_system_list(request_tenant_id)
         system_count_beans = parse_obj_as(List[SystemCounterBean], system_counts)
 
@@ -1455,12 +1457,14 @@ class PolicyQueryBiz:
 
         return system_count_beans
 
-    def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
+    def list_temporary_system_counter_by_subject(
+        self, subject: Subject, request_tenant_id: str
+    ) -> List[SystemCounterBean]:
         """
         查询 subject 有权限的系统 - 临时 policy 数量信息
         """
         system_counts = self.svc.list_temporary_system_counter_by_subject(subject)
-        return self._system_counter_to_system_counter_bean(system_counts)
+        return self._system_counter_to_system_counter_bean(system_counts, request_tenant_id)
 
     def get_policy_resource_type_conditions(
         self, subject: Subject, policy_id: int, resource_group_id: str, resource_system: str, resource_type: str
@@ -1474,7 +1478,7 @@ class PolicyQueryBiz:
             return []
         return related_resource_type.condition
 
-    def list_expired(self, subject: Subject, expired_at: int) -> List[ExpiredPolicy]:
+    def list_expired(self, subject: Subject, expired_at: int, request_tenant_id: str = "") -> List[ExpiredPolicy]:
         """
         查询以过期的权限列表
         """
@@ -1483,7 +1487,6 @@ class PolicyQueryBiz:
         # 查询 system, action 的信息
         system_id_set = {one.system for one in backend_policies}
         action_list_dict = {system_id: self.action_svc.new_action_list(system_id) for system_id in system_id_set}
-        request_tenant_id = get_current_tenant_id()
         system_list = self.system_svc.new_system_list(request_tenant_id)
 
         # 查询 saas policy id

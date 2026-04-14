@@ -95,6 +95,7 @@ class ManagementGroupApplicationViewSet(BizMixin, GenericViewSet):
                 ],
                 applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
+            request_tenant_id=self.tenant_id,
             source_system_id=source_system_id,
             content_template=data["content_template"],
             group_content=data["group_content"],
@@ -310,6 +311,7 @@ class ManagementGroupRenewApplicationViewSet(BizMixin, GenericViewSet):
                 ),
                 applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
+            request_tenant_id=self.tenant_id,
             source_system_id=source_system_id,
         )
 
@@ -368,6 +370,7 @@ class ManagementGroupBatchExpiredAtRenewApplicationViewSet(BizMixin, GenericView
                 ),
                 applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
+            request_tenant_id=self.tenant_id,
             source_system_id=source_system_id,
         )
 

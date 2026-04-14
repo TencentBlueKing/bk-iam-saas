@@ -233,6 +233,7 @@ class ApplicationByGroupView(BizMixin, views.APIView):
                 groups=[ApplicationGroupInfoBean(id=g["id"], expired_at=data["expired_at"]) for g in data["groups"]],
                 applicants=[Applicant(type=one.type, id=one.id, display_name=one.name) for one in applicant_infos],
             ),
+            request_tenant_id=self.tenant_id,
             source_system_id=data["source_system_id"],
         )
 
@@ -351,6 +352,7 @@ class ApplicationByRenewGroupView(BizMixin, views.APIView):
                 groups=parse_obj_as(List[ApplicationGroupInfoBean], data["groups"]),
                 applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
+            request_tenant_id=self.tenant_id,
             source_system_id=data["source_system_id"],
         )
 

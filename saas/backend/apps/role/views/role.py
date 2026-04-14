@@ -190,7 +190,12 @@ class GradeManagerViewSet(BizMixin, TransMixin, mixins.ListModelMixin, GenericVi
     )
     def retrieve(self, request, *args, **kwargs):
         role = self.get_object()
-        serializer = GradeMangerDetailSLZ(instance=role)
+        serializer = GradeMangerDetailSLZ(
+            instance=role,
+            context={
+                "tenant_id": self.tenant_id,
+            },
+        )
         data = serializer.data
         return Response(data)
 
@@ -335,7 +340,7 @@ class RoleAuthorizationScopeView(BizMixin, views.APIView):
         system_id = slz.validated_data["system_id"]
         # ResourceNameAutoUpdate
         scope_system = self.role_biz.get_auth_scope_bean_by_system(
-            request.role.id, system_id, should_auto_update_resource_name=True
+            request.role.id, system_id, self.tenant_id, should_auto_update_resource_name=True
         )
         data = [one.dict() for one in scope_system.actions] if scope_system else []
         return Response(data)

@@ -52,7 +52,6 @@ from backend.util.uuid import gen_uuid
 
 from .action import ActionCheckBiz, ActionResourceGroupForCheck
 from .subject import SubjectInfoList
-from ..util.tenant import get_current_tenant_id
 
 
 class GroupSystemCounterBean(BaseModel):
@@ -325,7 +324,9 @@ class GroupBiz:
                 subject_id__in=department_ids,
             ).delete()
 
-    def list_system_counter(self, group_id: int, hidden: bool = True) -> List[GroupSystemCounterBean]:
+    def list_system_counter(
+        self, group_id: int, request_tenant_id: str, hidden: bool = True
+    ) -> List[GroupSystemCounterBean]:
         """
         查询用户组授权的系统信息，返回自定义权限/模板的数量
         """
@@ -337,7 +338,6 @@ class GroupBiz:
 
         if len(policy_systems_count) == 0 and len(template_system_count) == 0:
             return []
-        request_tenant_id = get_current_tenant_id()
         systems = self.system_svc.list(request_tenant_id)
         group_systems: List[GroupSystemCounterBean] = []
         for system in systems:

@@ -119,7 +119,6 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     "backend.common.middlewares.LanguageMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "backend.common.middlewares.TenantMiddleware",
 ]
 
 ROOT_URLCONF = "urls"

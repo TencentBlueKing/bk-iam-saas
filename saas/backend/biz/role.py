@@ -70,7 +70,6 @@ from .policy import (
     ThinSystem,
 )
 from .resource import ResourceNodeBean
-from ..util.tenant import get_current_tenant_id
 
 logger = logging.getLogger("app")
 
@@ -281,13 +280,12 @@ class RoleBiz:
         return auth_system_beans
 
     def list_auth_scope_bean(
-        self, role_id: int, should_auto_update_resource_name: bool = False
+        self, role_id: int, request_tenant_id: str, should_auto_update_resource_name: bool = False
     ) -> List[AuthScopeSystemBean]:
         """
         查询角色的 auth 授权范围 Bean
         """
         auth_systems = self.svc.list_auth_scope(role_id)
-        request_tenant_id = get_current_tenant_id()
         system_list = self.system_svc.new_system_list(request_tenant_id)
 
         auth_system_beans = []
@@ -328,13 +326,16 @@ class RoleBiz:
         return AuthScopeSystemBean(system=ThinSystem.parse_obj(system), actions=policies)
 
     def get_auth_scope_bean_by_system(
-        self, role_id: int, system_id: str, should_auto_update_resource_name: bool = False
+        self,
+        role_id: int,
+        system_id: str,
+        request_tenant_id: str,
+        should_auto_update_resource_name: bool = False,
     ) -> Optional[AuthScopeSystemBean]:
         """
         获取指定系统的 auth 授权范围 Bean
         """
         auth_systems = self.svc.list_auth_scope(role_id)
-        request_tenant_id = get_current_tenant_id()
         system_list = self.system_svc.new_system_list(request_tenant_id)
 
         auth_system_bean = None
@@ -583,11 +584,10 @@ class RoleListQuery:
         self.system_svc = SystemService()
         self.role_svc = RoleService(self.tenant_id)
 
-    def list_system(self) -> List[System]:
+    def list_system(self, request_tenant_id: str) -> List[System]:
         """
         查询系统列表
         """
-        request_tenant_id = get_current_tenant_id()
         systems = self.system_svc.list(request_tenant_id=request_tenant_id)
 
         if self.role.type == RoleType.STAFF.value:
@@ -597,6 +597,7 @@ class RoleListQuery:
         system_set = {s.system_id for s in scopes}
         if SYSTEM_ALL in system_set:
             return systems
+        print(system_set, SYSTEM_ALL)
         return [s for s in systems if s.id in system_set]
 
     def list_scope_action_id(self, system_id: str) -> List[str]:

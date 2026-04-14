@@ -326,7 +326,7 @@ class SubjectTemporaryPolicySystemViewSet(BizMixin, GenericViewSet):
     def list(self, request, *args, **kwargs):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
-        data = self.policy_query_biz.list_temporary_system_counter_by_subject(subject)
+        data = self.policy_query_biz.list_temporary_system_counter_by_subject(subject, self.tenant_id)
 
         return Response([one.dict() for one in data])
 

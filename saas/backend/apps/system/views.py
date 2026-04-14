@@ -40,8 +40,7 @@ class SystemViewSet(BizMixin, GenericViewSet):
         if all:
             systems = self.system_biz.list()
         else:
-            systems = RoleListQuery(request.role).list_system()
-
+            systems = RoleListQuery(request.role).list_system(request_tenant_id=self.tenant_id)
         hidden = slz.validated_data["hidden"]
         if hidden:
             data = [

@@ -657,14 +657,14 @@ class ApplicationBiz:
 
         return applications
 
-    def _gen_group_permission_data(self, group_id: int) -> List[ApplicationGroupPermTemplate]:
+    def _gen_group_permission_data(self, group_id: int, request_tenant_id: str) -> List[ApplicationGroupPermTemplate]:
         """生成用户组权限数据"""
         subject = Subject.from_group_id(group_id)
 
         application_templates = []
 
         # 查询自定义权限 涉及的系统
-        system_counter_list = self.policy_biz.list_system_counter_by_subject(subject, hidden=False)
+        system_counter_list = self.policy_biz.list_system_counter_by_subject(subject, request_tenant_id, hidden=False)
         # 查询自定义权限
         for system_counter in system_counter_list:
             policies = self.policy_biz.list_by_subject(system_counter.id, subject)
@@ -702,7 +702,10 @@ class ApplicationBiz:
         return application_templates
 
     def _gen_group_application_content(
-        self, group_infos: List[ApplicationGroupInfoBean], applicants: List[Applicant]
+        self,
+        group_infos: List[ApplicationGroupInfoBean],
+        applicants: List[Applicant],
+        request_tenant_id: str,
     ) -> GroupApplicationContent:
         """生成用户组单据所需内容"""
         # 1. 用户组基本信息
@@ -727,7 +730,7 @@ class ApplicationBiz:
                 description=group.description,
                 expired_at=group_expired_at_dict[group.id],
                 expired_display=expired_at_display(group_expired_at_dict[group.id]),
-                templates=self._gen_group_permission_data(group.id),
+                templates=self._gen_group_permission_data(group.id, request_tenant_id),
                 role_name=role_name.get(group_role.get(group.id, 0), ""),
             )
             for group in groups
@@ -739,6 +742,7 @@ class ApplicationBiz:
         self,
         application_type: ApplicationType,
         data: GroupApplicationDataBean,
+        request_tenant_id: str,
         source_system_id: str = "",
         content_template: Optional[Dict[str, Any]] = None,
         group_content: Optional[Dict[str, Any]] = None,
@@ -771,7 +775,7 @@ class ApplicationBiz:
                 applicant_info=applicant_info,
                 reason=data.reason,
                 content=self._gen_group_application_content(
-                    [g for g in data.groups if g.id in group_ids], data.applicants
+                    [g for g in data.groups if g.id in group_ids], data.applicants, request_tenant_id
                 ),
             )
 
