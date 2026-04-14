@@ -18,7 +18,7 @@ def validate_rtx(value):
     user = User.objects.filter(username=value).first()
     if not user:
         raise serializers.ValidationError("rtx not exists")
-    if len(set(settings.PCG_DEPARTMENT_IDS) & set(user.ancestor_department_ids())) == 0:
+    if len(set(settings.PCG_DEPARTMENT_IDS) & set(user.ancestor_department_ids)) == 0:
         raise serializers.ValidationError("rtx is not in the specified organization")
     return value
 
