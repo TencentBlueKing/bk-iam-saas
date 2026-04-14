@@ -296,10 +296,7 @@ def get_role_expired_group_members(role: Role, expired_at_before: int, expired_a
 
 
 def get_user_expired_groups_policies(
-    user: User,
-    expired_at_before: int,
-    expired_at_after: int,
-    request_tenant_id: str,
+    user: User, expired_at_before: int, expired_at_after: int, request_tenant_id: str = ""
 ) -> Tuple[List[SubjectGroupBean], List[ExpiredPolicy]]:
     """
     获取用户已过期或即将过期的用户组与权限策略
