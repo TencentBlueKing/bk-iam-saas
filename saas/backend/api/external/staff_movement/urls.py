@@ -14,7 +14,7 @@ from django.urls import path
 from backend.api.external.staff_movement import views
 
 urlpatterns = [
-    path("getAssets", views.GetAssetsViewSet.as_view({"post": "list"}), name="resign_list"),
-    path("handover", views.ResignHandoverViewSet.as_view({"post": "handover"}), name="handover"),
-    path("recycle", views.RecycleViewSet.as_view({"post": "recycle"}), name="recycle"),
+    path("api/resign/getAssets", views.GetAssetsViewSet.as_view({"post": "list"}), name="resign_list"),
+    path("api/resign/handover", views.ResignHandoverViewSet.as_view({"post": "handover"}), name="handover"),
+    path("api/resign/recycle", views.RecycleViewSet.as_view({"post": "recycle"}), name="recycle"),
 ]
