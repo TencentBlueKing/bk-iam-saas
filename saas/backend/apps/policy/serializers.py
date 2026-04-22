@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -17,7 +17,7 @@ from rest_framework import serializers
 
 from backend.apps.action.serializers import ActionSLZ
 from backend.common.serializers import BaseAction
-from backend.common.time import DEFAULT_EXPIRED_DURATION, PERMANENT_SECONDS
+from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PolicyEnvConditionType, PolicyEnvType
 from backend.util.uuid import gen_uuid
 
@@ -36,11 +36,11 @@ class ValueFiled(serializers.Field):
 
 
 class ResourceSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
+    system_id = serializers.CharField(label="系统 ID")
     type = serializers.CharField(label="资源类型")
     type_name = serializers.CharField(label="资源类型名称", allow_blank=True)
-    id = serializers.CharField(label="资源实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
-    name = serializers.CharField(label="资源实例ID名称", allow_blank=True, trim_whitespace=False)
+    id = serializers.CharField(label="资源实例 ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
+    name = serializers.CharField(label="资源实例 ID 名称", allow_blank=True, trim_whitespace=False)
 
 
 class InstanceSLZ(serializers.Serializer):
@@ -55,18 +55,18 @@ class InstanceSLZ(serializers.Serializer):
 
 
 class ValueSLZ(serializers.Serializer):
-    id = ValueFiled(label="属性VALUE")
-    name = serializers.CharField(label="属性VALUE名称", allow_blank=True)
+    id = ValueFiled(label="属性 VALUE")
+    name = serializers.CharField(label="属性 VALUE 名称", allow_blank=True)
 
 
 class AttributeSLZ(serializers.Serializer):
-    id = serializers.CharField(label="属性KEY")
-    name = serializers.CharField(label="属性KEY名称", allow_blank=True)
-    values = serializers.ListField(label="属性VALUE", child=ValueSLZ(label="值"), allow_empty=False)
+    id = serializers.CharField(label="属性 KEY")
+    name = serializers.CharField(label="属性 KEY 名称", allow_blank=True)
+    values = serializers.ListField(label="属性 VALUE", child=ValueSLZ(label="值"), allow_empty=False)
 
 
 class ConditionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="条件id", allow_blank=True)
+    id = serializers.CharField(label="条件 id", allow_blank=True)
     instances = serializers.ListField(label="拓扑选择", child=InstanceSLZ(label="拓扑实例"))
     attributes = serializers.ListField(label="属性选择", child=AttributeSLZ(label="属性"))
 
@@ -81,13 +81,13 @@ class ConditionSLZ(serializers.Serializer):
 
 
 class ResourceTypeSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="资源类型系统ID")
+    system_id = serializers.CharField(label="资源类型系统 ID")
     type = serializers.CharField(label="资源类型")
     condition = serializers.ListField(label="生效条件", child=ConditionSLZ(label="条件"))
 
     def validate(self, data):
         """
-        检查条件的实例数量不超过1万
+        检查条件的实例数量不超过 1 万
         """
         count = 0
         for c in data["condition"]:
@@ -154,7 +154,7 @@ class HMSEnvConditionSLZ(EnvConditionSLZ):
     )
 
     def validate(self, attrs):
-        # 比较第一个时间要小于第二个时间, 格式正确的情况下, 直接使用字符串比较是可以
+        # 比较第一个时间要小于第二个时间，格式正确的情况下，直接使用字符串比较是可以
         if attrs["values"][0]["value"] >= attrs["values"][1]["value"]:
             raise serializers.ValidationError({"values": ["first hms must be smaller than the second"]})
         return attrs
@@ -185,11 +185,11 @@ class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
 
     def validate(self, data):
         condition_type_set = {c["type"] for c in data["condition"]}
-        # type不能重复
+        # type 不能重复
         if len(data["condition"]) != len(condition_type_set):
             raise serializers.ValidationError({"condition": ["type must not repeat"]})
 
-        # TZ与HMS必填, WeekDay选填
+        # TZ 与 HMS 必填，WeekDay 选填
         if not (
             PolicyEnvConditionType.TZ.value in condition_type_set
             and PolicyEnvConditionType.HMS.value in condition_type_set
@@ -217,7 +217,7 @@ class ResourceGroupSLZ(serializers.Serializer):
 
     def validate(self, data):
         """
-        自动填充resource_group_id
+        自动填充 resource_group_id
         """
         if not isinstance(data["id"], str) or not data["id"]:
             data["id"] = gen_uuid()
@@ -234,9 +234,9 @@ class ResourceGroupSLZ(serializers.Serializer):
 
 class PolicySLZ(serializers.Serializer):
     type = serializers.CharField(label="操作类型")
-    id = serializers.CharField(label="操作ID")
+    id = serializers.CharField(label="操作 ID")
     tag = serializers.CharField(label="标签")
-    policy_id = serializers.IntegerField(label="策略ID")
+    policy_id = serializers.IntegerField(label="策略 ID")
     name = serializers.CharField(label="操作名称", allow_blank=True)
     description = serializers.CharField(label="操作描述")
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
@@ -244,7 +244,7 @@ class PolicySLZ(serializers.Serializer):
     resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"))
 
     def validate(self, data):
-        # 校验一个policy中不能存在多个不同的时区环境属性
+        # 校验一个 policy 中不能存在多个不同的时区环境属性
         tz_set = set()
         for rg in data["resource_groups"]:
             for env in rg["environments"]:
@@ -266,36 +266,36 @@ class PolicySLZ(serializers.Serializer):
 
 
 class PolicySystemSLZ(serializers.Serializer):
-    id = serializers.CharField(label="系统ID")
+    id = serializers.CharField(label="系统 ID")
     name = serializers.CharField(label="系统名称")
     count = serializers.IntegerField(label="权限数量")
 
 
 class PolicyDeleteSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
-    ids = serializers.CharField(label="策略ID，多个以英文逗号分隔")
+    system_id = serializers.CharField(label="系统 ID")
+    ids = serializers.CharField(label="策略 ID，多个以英文逗号分隔")
 
     def validate(self, data):
-        # 验证 ID的合法性，并转化为后续view需要数据格式
+        # 验证 ID 的合法性，并转化为后续 view 需要数据格式
         ids = data.get("ids") or ""
         if ids:
             try:
                 data["ids"] = list(map(int, ids.split(",")))
             except Exception:  # pylint: disable=broad-except
-                raise serializers.ValidationError({"ids": [f"策略IDS({ids})非法，策略ID只能是数字"]})
+                raise serializers.ValidationError({"ids": [f"策略 IDS({ids}) 非法，策略 ID 只能是数字"]})
         return data
 
 
 class ConditionDeleteSLZ(serializers.Serializer):
-    id = serializers.CharField(label="条件id")
+    id = serializers.CharField(label="条件 id")
     instances = serializers.ListField(label="拓扑选择", child=InstanceSLZ(label="拓扑实例"))
 
 
 class PolicyPartDeleteSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="资源类型系统ID")
-    resource_group_id = serializers.CharField(label="资源条件组ID")
+    system_id = serializers.CharField(label="资源类型系统 ID")
+    resource_group_id = serializers.CharField(label="资源条件组 ID")
     type = serializers.CharField(label="资源类型")
-    ids = serializers.ListField(label="整体删除的条件ID", child=serializers.CharField(label="ConditionID"), allow_empty=True)
+    ids = serializers.ListField(label="整体删除的条件 ID", child=serializers.CharField(label="ConditionID"), allow_empty=True)
     condition = serializers.ListField(label="部分删除条件", child=ConditionDeleteSLZ(label="条件"), allow_empty=True)
 
     def validate(self, data):
@@ -318,20 +318,21 @@ class PolicyExpireSoonSLZ(serializers.Serializer):
 
 
 class BasePolicyActionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="操作ID")
+    id = serializers.CharField(label="操作 ID")
     type = serializers.CharField(label="操作类型", allow_blank=True)
     resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"))
 
 
 class PolicyActionSLZ(BasePolicyActionSLZ):
-    policy_id = serializers.IntegerField(label="策略id", required=False)
+    policy_id = serializers.IntegerField(label="策略 id", required=False)
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
     # 验证自定义权限申请和临时权限申请的过期时间
     def validate_expired_at(self, value):
-        # 过期时间不能大于一年
-        if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
-            raise serializers.ValidationError("The expiration date must not exceed one year.")
+        if value == PERMANENT_SECONDS:
+            return value
+        if value < int(time.time()):
+            raise serializers.ValidationError("The expiration date must be greater than now")
         return value
 
 
@@ -340,7 +341,7 @@ class PolicyActionExpiredAtSLZ(BasePolicyActionSLZ):
 
 
 class RelatedPolicySLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID")
+    system_id = serializers.CharField(label="系统 ID")
     source_policy = PolicyActionExpiredAtSLZ(label="来源策略")
     target_policies = serializers.ListField(
         label="操作策略", child=PolicyActionExpiredAtSLZ(label="策略"), required=False, default=list
