@@ -510,6 +510,8 @@ export const m = {
         '知道了': 'Got it',
         '搜索关键字': 'Search Keywords',
         '无资源ID，无法预览': 'No resource ID, unable to preview',
+        '暂无可复制的资源实例': 'There are currently no replicable resource instances',
+        '暂无可批量复制的资源实例': 'There are currently no resource instances that can be batch copied',
         '暂无可批量复制包含有属性条件的资源实例': 'There are currently no resource instances that can be batch copied with attribute conditions',
         '(GMT-12:00) 国际换线时间': '(GMT-12:00) International Line Change Time',
         '(GMT-11:00) 中途岛时间': '(GMT-11:00) Midway Island Time',

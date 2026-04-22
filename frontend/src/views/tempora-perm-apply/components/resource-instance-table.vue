@@ -32,7 +32,7 @@
               </bk-button>
             </div>
             <div class="group-container">
-              <render-condition
+              <IamRenderCondition
                 :ref="`condition_${$index}_aggregateRef`"
                 :value="formatDisplayValue(row)"
                 :is-empty="row.empty"
@@ -60,7 +60,7 @@
                     </template>
                   </div>
                   <div class="content">
-                    <render-condition
+                    <IamRenderCondition
                       :ref="`condition_${$index}_${contentIndex}_ref`"
                       :value="content.value"
                       :is-empty="content.empty"
@@ -268,12 +268,12 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import Condition from '@/model/condition';
   import Policy from '@/model/policy';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import RenderResource from './render-resource';
-  import RenderCondition from './render-condition';
   import EffectTime from './effect-time';
   import SidesliderEffectTime from './sideslider-effect-time';
   import PreviewResourceDialog from './preview-resource-dialog';
@@ -294,7 +294,7 @@
     components: {
       RenderAggregateSideslider,
       RenderResource,
-      RenderCondition,
+      IamRenderCondition,
       PreviewResourceDialog,
       EffectTime,
       SidesliderEffectTime

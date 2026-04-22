@@ -35,7 +35,7 @@
                     :key="`${index}${contentIndex}`">
                     <div class="content-name">{{ content.name }}</div>
                     <div class="content">
-                      <render-condition
+                      <IamRenderCondition
                         :ref="`condition_${index}_${$index}_${contentIndex}_ref`"
                         :value="content.value"
                         :params="curCopyParams"
@@ -192,7 +192,7 @@
   import { leaveConfirm } from '@/common/leave-confirm';
   import { xssFilter } from '@/common/util';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
-  import RenderCondition from '../components/render-condition';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import RenderDetail from '../components/render-detail';
   import RenderResource from '../components/render-resource';
   export default {
@@ -203,8 +203,8 @@
       };
     },
     components: {
+      IamRenderCondition,
       RenderResourcePopover,
-      RenderCondition,
       RenderDetail,
       RenderResource
     },
