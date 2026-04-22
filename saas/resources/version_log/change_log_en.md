@@ -1,3 +1,15 @@
+<!-- 2026-04-22 -->
+# V1.10.58 Version Update Log
+
+### Fixes
+* Fixed validation failure for ANY_ID instances in multi-language scenarios caused by display name checks
+* Fixed issue where first-time setting of system admin to have all permissions of the system did not take effect
+* Fixed staff movement handler URL error and erroneous call on ancestor_department_ids property
+* Fixed rejection of permanent validity period during custom and temporary permission applications due to expiration time validation
+* Fixed sync_subset_manager_subject_scope task executing before transaction commit after grade manager approval
+
+---
+
 <!-- 2026-04-13 -->
 # V1.10.57 Version Update Log
 
