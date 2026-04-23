@@ -443,7 +443,7 @@ class RoleBiz:
         user_group_count = self.svc.count_role_related_groups(role_id)
         permission_policy_count = self.svc.count_role_authorization_scopes(role_id)
         subject_policy_count = self.svc.count_role_subject_scopes(role_id)
-        admin_user_count = self.svc.count_role_members(role_id)
+        grade_managers_count = self.svc.count_role_members(role_id)
 
         # 仅一级管理空间返回二级空间数量
         sub_space_count = 0
@@ -452,10 +452,10 @@ class RoleBiz:
 
         return {
             "id": role.id,
-            "name": role.name,
+            "name": role.name,  # 管理空间名称
             "type": role.type,
             "sub_space_count": sub_space_count,  # 二级管理空间数量
-            "admin_user_count": admin_user_count,  # 管理员数量
+            "grade_managers_count": grade_managers_count,  # 分级管理员数量
             "user_group_count": user_group_count,  # 用户组数量
             "policy_count": permission_policy_count,  # 权限策略数量
             "subject_count": subject_policy_count,  # 人员策略数量
