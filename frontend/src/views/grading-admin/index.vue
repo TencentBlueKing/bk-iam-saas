@@ -710,7 +710,7 @@
           if (code === 0) {
             this.deleteSpaceInfo = data;
           }
-        } catch (e)
+        } catch (e) {
           this.deleteSpaceInfo = {};
           this.messageAdvancedError(e);
         }
