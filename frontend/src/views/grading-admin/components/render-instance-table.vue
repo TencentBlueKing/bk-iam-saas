@@ -75,7 +75,7 @@
                   </span>
                 </bk-button>
               </div>
-              <render-condition
+              <IamRenderCondition
                 :ref="`condition_${$index}_aggregateRef`"
                 :value="formatDisplayValue(row) || $t(`m.verify['请选择']`)"
                 :is-empty="row.empty"
@@ -103,7 +103,7 @@
                       </template>
                     </div>
                     <div class="contents">
-                      <render-condition
+                      <IamRenderCondition
                         :ref="`condition_${$index}_${contentIndex}_ref`"
                         :value="content.value"
                         :is-empty="content.empty"
@@ -212,9 +212,9 @@
   import Condition from '@/model/condition';
   import GradePolicy from '@/model/grade-policy';
   import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import RenderResource from './render-resource';
   import RenderAggregateSideSlider from '@/components/choose-ip/sideslider';
-  import RenderCondition from '@/views/perm-apply/components/render-condition';
   import PreviewResourceDialog from '@/views/perm-apply/components/preview-resource-dialog';
 
   export default {
@@ -225,8 +225,8 @@
       };
     },
     components: {
+      IamRenderCondition,
       RenderResource,
-      RenderCondition,
       PreviewResourceDialog,
       RenderAggregateSideSlider
     },

@@ -120,19 +120,21 @@
                           :key="contentIndex">
                           <div class="content"
                           >
-                            <render-condition
+                            <IamRenderCondition
                               :ref="`condition_${index}_${contentIndex}_ref`"
-                              :value="curResourceData.type ?
-                                content.value : $t(`m.verify['请选择']`)"
-                              :hover-title="!curResourceData.type ?
-                                $t(`m.verify['请选择资源类型']`) : ''"
+                              :value="curResourceData.type ? content.value : $t(`m.verify['请选择']`)"
+                              :hover-title="!curResourceData.type ? $t(`m.verify['请选择资源类型']`) : ''"
+                              :can-operate="false"
                               :is-empty="content.empty"
                               :params="curCopyParams"
                               :disabled="!curResourceData.type"
                               :is-error="content.isLimitExceeded || content.isError"
                               @on-click="handleShowResourceInstance(
                                 resourceTypeData,
-                                content, contentIndex, index)"
+                                content,
+                                contentIndex,
+                                index
+                              )"
                             />
                             <p class="error-tips" v-if="resourceInstanceError">
                               {{$t(`m.resourcePermiss['请选择资源实例']`)}}
@@ -413,14 +415,14 @@
   import { leaveConfirm } from '@/common/leave-confirm';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import IamSearchSelect from '@/components/iam-search-select';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+  import IamRenderCondition from '@/components/iam-render-condition';
   // import IamGuide from '@/components/iam-guide/index.vue';
   import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
   // import RenderAction from '@/views/grading-admin/common/render-action';
   import RenderMember from '@/views/grading-admin/components/render-member';
   import AddMemberDialog from '@/views/group/components/iam-add-member';
   import ConfirmDialog from '@/components/iam-confirm-dialog/index';
-  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
-  import RenderCondition from '@/views/resource-permiss/components/render-condition';
   import RenderResource from '@/views/resource-permiss/components/render-resource';
   // import BkUserSelector from '@blueking/user-selector';
 
@@ -436,12 +438,12 @@
       IamDeadline,
       IamSearchSelect,
       IamEditMemberSelector,
+      IamRenderCondition,
       RenderPermSideSlider,
       // RenderAction,
       RenderMember,
       AddMemberDialog,
       ConfirmDialog,
-      RenderCondition,
       RenderResource
       // BkUserSelector
     },
