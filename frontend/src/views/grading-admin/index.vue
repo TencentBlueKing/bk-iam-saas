@@ -710,17 +710,8 @@
           if (code === 0) {
             this.deleteSpaceInfo = data;
           }
-        } catch (e) {
-          this.deleteSpaceInfo = {
-            'id': id,
-            'name': '0330一级管理空间',
-            'type': 'subset_manager',
-            'sub_space_count': 0,
-            'grade_managers_count': 3,
-            'user_group_count': 1,
-            'policy_count': 1,
-            'subject_count': 1
-          };
+        } catch (e)
+          this.deleteSpaceInfo = {};
           this.messageAdvancedError(e);
         }
       },
