@@ -258,19 +258,19 @@ class UserPermissionCleaner:
 
     def __init__(self, username: str) -> None:
         record = UserPermissionCleanupRecord.objects.get(username=username)
-        self.tenant_id = record.tenant_id
+        tenant_id = record.tenant_id
 
         self._record = record
         self._subject = Subject.from_username(username)
 
-        self.system_biz = SystemBiz(self.tenant_id)
-        self.policy_query_biz = PolicyQueryBiz(self.tenant_id)
-        self.policy_operation_biz = PolicyOperationBiz(self.tenant_id)
+        self.system_biz = SystemBiz(tenant_id)
+        self.policy_query_biz = PolicyQueryBiz(tenant_id)
+        self.policy_operation_biz = PolicyOperationBiz(tenant_id)
 
-        self.group_biz = GroupBiz(self.tenant_id)
-        self.role_biz = RoleBiz(self.tenant_id)
-        self.role_with_perm_group_biz = RoleWithPermGroupBiz(self.tenant_id)
-        self.subject_template_biz = SubjectTemplateBiz(self.tenant_id)
+        self.group_biz = GroupBiz(tenant_id)
+        self.role_biz = RoleBiz(tenant_id)
+        self.role_with_perm_group_biz = RoleWithPermGroupBiz(tenant_id)
+        self.subject_template_biz = SubjectTemplateBiz(tenant_id)
 
     def clean(self):
         # 有其他的任务在处理，忽略
@@ -302,7 +302,7 @@ class UserPermissionCleaner:
         """
 
         # 遍历所有系统，查询系统的策略，删除
-        systems = self.system_biz.list(self.tenant_id)
+        systems = self.system_biz.list()
         for system in systems:
             system_id = system.id
 
