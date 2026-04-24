@@ -87,8 +87,9 @@
               <div class="relation-content-item" v-for="(content, contentIndex) in
                 _.related_resource_types" :key="contentIndex">
                 <div class="content">
-                  <render-condition
+                  <IamRenderCondition
                     :ref="`condition_${_index}_${contentIndex}_ref`"
+                    :can-operate="false"
                     :value="content.value"
                     :is-empty="content.empty"
                     :params="curCopyParams"
@@ -205,7 +206,7 @@
     // import IamSearchSelect from '@/components/iam-search-select'
   import Policy from '@/model/policy';
   import _ from 'lodash';
-  import RenderCondition from './components/render-condition.vue';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import RenderResource from './components/render-resource.vue';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { fuzzyRtxSearch } from '@/common/rtx';
@@ -222,7 +223,7 @@
       };
     },
     components: {
-      RenderCondition,
+      IamRenderCondition,
       RenderResource
       // IamSearchSelect
       // iamCascade
