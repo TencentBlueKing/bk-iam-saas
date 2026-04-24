@@ -337,7 +337,7 @@ class GroupBiz:
         if len(policy_systems_count) == 0 and len(template_system_count) == 0:
             return []
 
-        systems = self.system_svc.list()
+        systems = self.system_svc.list(self.tenant_id)
         group_systems: List[GroupSystemCounterBean] = []
         for system in systems:
             if system.id not in policy_system_count_dict and system.id not in template_system_count_dict:
