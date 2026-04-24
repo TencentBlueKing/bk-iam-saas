@@ -16,7 +16,9 @@ from backend.service.system import SystemService
 
 
 class SystemBiz:
-    svc = SystemService()
+    def __init__(self, tenant_id: str = "") -> None:
+        self.tenant_id = tenant_id
+        self.svc = SystemService(self.tenant_id)
 
     get = SystemService.__dict__["get"]
     list = SystemService.__dict__["list"]

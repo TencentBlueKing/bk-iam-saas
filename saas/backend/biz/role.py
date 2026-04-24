@@ -140,7 +140,7 @@ class RoleBiz:
     def __init__(self, tenant_id: str):
         self.tenant_id = tenant_id
         self.svc = RoleService(self.tenant_id)
-        self.system_svc = SystemService()
+        self.system_svc = SystemService(self.tenant_id)
 
         self.list_auth_scope = self.svc.list_auth_scope
 
@@ -577,14 +577,14 @@ class RoleListQuery:
         self.role = role
         self.user = User.objects.filter(username=user.username).first() if user else None
         self.tenant_id = role.tenant_id if role.tenant_id else self.user.tenant_id if self.user else ""
-        self.system_svc = SystemService()
+        self.system_svc = SystemService(self.tenant_id)
         self.role_svc = RoleService(self.tenant_id)
 
     def list_system(self) -> List[System]:
         """
         查询系统列表
         """
-        systems = self.system_svc.list(self.tenant_id)
+        systems = self.system_svc.list()
 
         if self.role.type == RoleType.STAFF.value:
             return systems

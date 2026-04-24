@@ -209,7 +209,7 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             # 授权范围处理
             auth_scopes = data["authorization_scopes"]
             # 填充 system name
-            system_dict = {s.id: s for s in SystemBiz().list()}
+            system_dict = {s.id: s for s in SystemBiz(self.context["tenant_id"]).list()}
             for scope in auth_scopes:
                 if "system_id" in scope:
                     system_id = scope.pop("system_id")

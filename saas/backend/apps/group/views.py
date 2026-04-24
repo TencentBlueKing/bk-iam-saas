@@ -635,9 +635,6 @@ class GroupTemplateViewSet(BizMixin, GroupPermissionMixin, GenericViewSet):
     filter_backends = [NoCheckModelFilterBackend]
     lookup_field = "id"
 
-    def get_queryset(self):
-        return Group.objects.filter(tenant_id=self.tenant_id)
-
     @swagger_auto_schema(
         operation_description="用户组拥有的权限模板列表",
         responses={status.HTTP_200_OK: GroupTemplateSchemaSLZ(label="权限模板", many=True)},
@@ -959,6 +956,9 @@ class GroupRoleTemplatesViewSet(BizMixin, GroupQueryMixin, GenericViewSet):
     serializer_class = TemplateListSLZ
     filterset_class = TemplateFilter
     filter_backends = [NoCheckModelFilterBackend]
+
+    def get_serializer_context(self):
+        return {"tenant_id": self.tenant_id}
 
     @swagger_auto_schema(
         operation_description="用户组对应的角色的模板列表",

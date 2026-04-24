@@ -38,7 +38,7 @@ class SystemViewSet(BizMixin, GenericViewSet):
 
         all = slz.validated_data["all"]
         if all:
-            systems = self.system_biz.list(self.tenant_id)
+            systems = self.system_biz.list()
         else:
             systems = RoleListQuery(request.role).list_system()
 

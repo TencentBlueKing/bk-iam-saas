@@ -263,7 +263,7 @@ class UserPermissionCleaner:
         self._record = record
         self._subject = Subject.from_username(username)
 
-        self.system_biz = SystemBiz()
+        self.system_biz = SystemBiz(self.tenant_id)
         self.policy_query_biz = PolicyQueryBiz(self.tenant_id)
         self.policy_operation_biz = PolicyOperationBiz(self.tenant_id)
 

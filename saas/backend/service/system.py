@@ -27,12 +27,15 @@ class SystemList:
 
 
 class SystemService:
-    def list(self, tenant_id: str) -> List[System]:
+    def __init__(self, tenant_id: str = None):
+        self.tenant_id = tenant_id
+
+    def list(self) -> List[System]:
         """获取所有系统"""
         # FIXME(tenant): 仅返回当前租户或全租户的系统列表
         systems = iam.list_system()
         # 过滤掉非指定租户的系统
-        systems = [system for system in systems if system["tenant_id"] == tenant_id or system["tenant_id"] == ""]
+        systems = [system for system in systems if system["tenant_id"] == self.tenant_id or system["tenant_id"] == ""]
         # 组装为返回结构
         return [System(**i) for i in systems]
 
@@ -48,8 +51,8 @@ class SystemService:
         system = iam.get_system(system_id, fields="clients")
         return system["clients"].split(",")
 
-    def new_system_list(self, tenant_id: str) -> SystemList:
-        return SystemList(self.list(tenant_id))
+    def new_system_list(self) -> SystemList:
+        return SystemList(self.list())
 
     def list_system_manger(self, system_id: str) -> List[str]:
         """

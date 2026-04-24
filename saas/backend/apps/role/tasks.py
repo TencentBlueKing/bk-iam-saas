@@ -62,7 +62,7 @@ def sync_system_manager():
     tenants = BkUserClient(settings.BK_APP_TENANT_ID).list_tenant()
     for tenant in tenants:
         # 查询后端所有的系统信息
-        biz = SystemBiz()
+        biz = SystemBiz(tenant.id)
         # FIXME(tenant): 待后台支持系统标识租户后，只过滤出当前租户和全租户的系统
         systems = {system.id: system for system in biz.list()}
 

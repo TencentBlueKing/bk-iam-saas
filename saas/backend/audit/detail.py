@@ -56,7 +56,7 @@ class GroupTemplateProvider(BaseProvider):
         perm_templates = PermTemplate.objects.filter(id__in=[t["template_id"] for t in templates])
         data = [{"type": AuditObjectType.TEMPLATE.value, "id": t.id, "name": t.name} for t in perm_templates]
 
-        system_list = SystemBiz().new_system_list()
+        system_list = SystemBiz(self.tenant_id).new_system_list()
         for t in templates:
             if t["template_id"] != 0:
                 continue
@@ -122,7 +122,9 @@ class GroupTransferProvider(BaseProvider):
 
 
 class SubjectPoliciesProvider(BaseProvider):
-    biz = SystemBiz()
+    def __init__(self, event: Event):
+        super().__init__(event)
+        self.biz = SystemBiz(self.tenant_id)
 
     @property
     def extra_info(self) -> Dict:
@@ -138,7 +140,9 @@ class SubjectPoliciesProvider(BaseProvider):
 
 
 class SubjectPoliciesUpdateProvider(BaseProvider):
-    biz = SystemBiz()
+    def __init__(self, event: Event):
+        super().__init__(event)
+        self.biz = SystemBiz(self.tenant_id)
 
     @property
     def extra_info(self) -> Dict:
@@ -285,7 +289,7 @@ class ApprovalGlobalProvider(ApprovalNameMixin, BaseProvider):
 class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
     def __init__(self, event: Event):
         super().__init__(event)
-        self.system_biz = SystemBiz()
+        self.system_biz = SystemBiz(self.tenant_id)
         self.action_svc = ActionService(event.tenant_id)
 
     @property
@@ -307,7 +311,7 @@ class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
 class ActionSensitivityLevelProvider(BaseProvider):
     def __init__(self, event: Event):
         super().__init__(event)
-        self.system_biz = SystemBiz()
+        self.system_biz = SystemBiz(self.tenant_id)
         self.action_svc = ActionService(event.tenant_id)
 
     @property

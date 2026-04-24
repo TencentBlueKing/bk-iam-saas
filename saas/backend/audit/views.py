@@ -32,6 +32,9 @@ class EventViewSet(TenantMixin, mixins.ListModelMixin, GenericViewSet):
     filterset_class = EventFilter
     filter_backends = [NoCheckModelFilterBackend]
 
+    def get_serializer_context(self):
+        return {"tenant_id": self.tenant_id}
+
     def get_queryset(self):
         month = self.request.query_params.get("month", "")
         Event = get_event_model(month)  # noqa: N806

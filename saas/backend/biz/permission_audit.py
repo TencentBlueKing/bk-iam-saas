@@ -169,7 +169,7 @@ class QueryAuthorizedSubjects(object):
         """
         生成导出数据
         """
-        system_name = SystemService().get(self.system_id).name
+        system_name = SystemService(self.tenant_id).get(self.system_id).name
         action_name = ActionService(self.tenant_id).get(self.system_id, self.action_id).name
         subjects = self.query_by_permission_type()
         export_data = [["系统名", "系统 ID", "操作名", "操作 ID", "资源实例", "有权限成员", "成员 ID", "成员类型"]]

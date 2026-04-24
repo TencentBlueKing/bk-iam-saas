@@ -134,7 +134,7 @@ class GroupBiz:
 
         self.policy_query_svc = PolicyQueryService()
         self.template_svc = TemplateService(tenant_id)
-        self.system_svc = SystemService()
+        self.system_svc = SystemService(tenant_id)
         self.group_svc = GroupService(tenant_id)
         self.group_attribute_svc = GroupAttributeService(tenant_id)
         self.engine_svc = EngineService()
@@ -337,7 +337,7 @@ class GroupBiz:
         if len(policy_systems_count) == 0 and len(template_system_count) == 0:
             return []
 
-        systems = self.system_svc.list(self.tenant_id)
+        systems = self.system_svc.list()
         group_systems: List[GroupSystemCounterBean] = []
         for system in systems:
             if system.id not in policy_system_count_dict and system.id not in template_system_count_dict:

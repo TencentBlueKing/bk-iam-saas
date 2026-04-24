@@ -108,6 +108,9 @@ class TemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
     serializer_class = TemplateListSLZ
     filterset_class = TemplateFilter
 
+    def get_serializer_context(self):
+        return {"tenant_id": self.tenant_id}
+
     @swagger_auto_schema(
         operation_description="模板列表",
         responses={status.HTTP_200_OK: TemplateListSchemaSLZ(label="模板", many=True)},
