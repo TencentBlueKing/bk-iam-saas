@@ -13,23 +13,29 @@
     @after-leave="handleAfterDeleteLeave">
     <div class="delete-content-wrapper">
       <div
+        v-if="tip.length > 0"
         class="delete-tips"
-        v-if="relatedActionList.length">
+      >
         <p class="delete-tips-title">
           {{ tip }}
         </p>
-        <div class="delete-tips-content">
+        <div
+          v-if="relatedActionList.length > 0"
+          class="delete-tips-content"
+        >
           <p
             v-for="item in relatedActionList"
-            :key="item.id">
+            :key="item.id"
+          >
             <Icon bk type="info-circle-shape" class="warn" />
             {{ item.name }}
           </p>
         </div>
+        <slot name="external" />
       </div>
       <div class="operate-buttons">
-        <bk-button theme="primary" :loading="loading" @click="handleSubmitDelete">
-          {{ $t(`m.common['确定']`) }}
+        <bk-button :theme="confirmTheme" :loading="loading" @click="handleSubmitDelete">
+          {{ confirmText }}
         </bk-button>
         <bk-button theme="default" style="margin-left: 10px;" @click="handleCancelDelete">
           {{ $t(`m.common['取消-dialog']`) }}
@@ -38,9 +44,11 @@
     </div>
   </bk-dialog>
 </template>
-  <script>
+
+<script>
+  import il8n from '@/language';
+
   export default {
-    name: '',
     props: {
       show: {
         type: Boolean,
@@ -61,6 +69,14 @@
       name: {
         type: String,
         default: ''
+      },
+      confirmText: {
+        type: String,
+        default: il8n('common', '确定')
+      },
+      confirmTheme: {
+        type: String,
+        default: 'primary'
       },
       loading: {
         type: Boolean,
@@ -98,45 +114,53 @@
   };
   </script>
 
-  <style lang='postcss' scoped>
-    /deep/ .iam-delete-related-action-dialog {
-        .delete-content-wrapper {
-              .delete-tips {
-                  padding-left: 44px;
-                  text-align: left;
-                  word-break: break-all;
-                  &-title {
-                    margin-bottom: 10px;
-                  }
-                  &-content {
-                    max-height: 500px;
-                    overflow-y: auto;
-                    &::-webkit-scrollbar     {
-                      width: 6px;
-                      height: 6px;
-                    }
-                    &::-webkit-scrollbar-thumb {
-                      background: #dcdee5;
-                      border-radius: 3px;
-                    }
-                    &::-webkit-scrollbar-track {
-                      background: transparent;
-                      border-radius: 3px;
-                    }
-                    .warn {
-                        color: #ffb848;
-                    }
-                  }
-              }
-              .operate-buttons {
-                  margin-top: 34px;
-                  text-align: center;
-              }
+<style lang='postcss' scoped>
+/deep/ .iam-delete-related-action-dialog {
+  .delete-content-wrapper {
+    .delete-tips {
+      padding-left: 44px;
+      text-align: left;
+      word-break: break-all;
+
+      &-title {
+        margin-bottom: 10px;
+      }
+      
+      &-content {
+        max-height: 500px;
+        overflow-y: auto;
+
+        &::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
         }
-        &.no-padding-dialog {
-            .bk-dialog-header {
-                padding: 0;
-            }
+
+        &::-webkit-scrollbar-thumb {
+          background: #dcdee5;
+          border-radius: 3px;
         }
+
+        &::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 3px;
+        }
+
+        .warn {
+          color: #ffb848;
+        }
+      }
     }
-  </style>
+
+    .operate-buttons {
+      margin-top: 32px;
+      text-align: center;
+    }
+  }
+  
+  &.no-padding-dialog {
+    .bk-dialog-header {
+      padding: 0;
+    }
+  }
+}
+</style>

@@ -348,6 +348,51 @@ export default {
     },
 
     /**
+         * 一二级管理空间删除前的二次确认（获取管理空间对应的用户组权限、自定义权限、人员模板等关联内容数量）
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+    getDeleteManageSpaceInfo ({ commit, state, dispatch }, { id }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/roles/management_spaces/${id}/deletion_preview/`, config);
+    },
+
+    /**
+         * 删除一级管理空间
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { id } 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+    deleteGradeManageSpace ({ commit, state, dispatch }, { id }, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/`, { data: {} }, config);
+    },
+
+    /**
+         * 删除二级管理空间
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { id } 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+    deleteSubsetManageSpace ({ commit, state, dispatch }, params, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/roles/subset_managers/`, { data: params }, config);
+    },
+
+    /**
          * 查询授权范围包含用户的角色
          *
          * @param {Function} commit store commit mutation handler

@@ -121,6 +121,29 @@
                   >
                     {{ $t(`m.nav['授权边界']`) }}
                   </bk-button>
+                  <bk-popover
+                    class="custom-table-dot-menu"
+                    ext-cls="custom-table-dot-menu-tipper"
+                    placement="bottom-start"
+                    theme="dot-menu light"
+                    trigger="click"
+                    :arrow="false"
+                    :offset="15"
+                    :distance="0"
+                  >
+                    <span class="custom-table-dot-menu-trigger" />
+                    <ul slot="content" class="custom-table-dot-menu-list">
+                      <li class="custom-table-dot-menu-item">
+                        <bk-button
+                          theme="primary"
+                          text
+                          @click.stop="handleDelete(child.row)"
+                        >
+                          {{ $t(`m.common['删除']`) }}
+                        </bk-button>
+                      </li>
+                    </ul>
+                  </bk-popover>
                 </div>
               </template>
             </bk-table-column>
@@ -263,6 +286,15 @@
                     {{ $t(`m.levelSpace['克隆']`) }}
                   </bk-button>
                 </li>
+                <li class="custom-table-dot-menu-item">
+                  <bk-button
+                    theme="primary"
+                    text
+                    @click.stop="handleDelete(row)"
+                  >
+                    {{ $t(`m.common['删除']`) }}
+                  </bk-button>
+                </li>
               </ul>
             </bk-popover>
           </div>
@@ -280,27 +312,27 @@
       </template>
     </bk-table>
 
-    <confirm-dialog
-      :show.sync="isShowConfirmDialog"
-      :loading="confirmLoading"
-      :title="confirmDialogTitle"
-      :sub-title="confirmDialogSubTitle"
-      @on-after-leave="handleAfterLeave"
-      @on-cancel="handleCancel"
-      @on-sumbit="handleSubmit" />
-
-    <apply-dialog
-      :show.sync="isShowApplyDialog"
-      :loading="applyLoading"
-      :name="curName"
-      @on-after-leave="handleAfterApplyLeave"
-      @on-cancel="handleApplyCancel"
-      @on-sumbit="handleApplySumbit" />
-
     <ManageInterviewDialog
       :show.sync="showImageDialog"
       :show-footer="false"
     />
+
+    <DeleteActionDialog
+      :show.sync="isShowDeleteDialog"
+      :loading="deleteLoading"
+      :title="delActionDialogTitle"
+      :tip="delActionDialogTip"
+      :confirm-theme="delActionDialogConfirmTheme"
+      :confirm-text="delActionDialogConfirmText"
+      :related-action-list="delActionList"
+      @on-after-leave="handleCancelDelete"
+      @on-submit="handleSubmitDelete"
+      @on-cancel="handleCancelDelete"
+    >
+      <template v-if="!deleteSpaceInfo.sub_space_count" #external>
+        <div class="external-info">{{ $t(`m.grading['删除后数据不可恢复，请谨慎操作。']`) }}</div>
+      </template>
+    </DeleteActionDialog>
   </div>
 </template>
 <script>
@@ -308,26 +340,23 @@
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import { getWindowHeight, formatCodeData, navDocCenterPath } from '@/common/util';
-  import ConfirmDialog from '@/components/iam-confirm-dialog/index';
-  import ApplyDialog from './components/apply-join-dialog';
   import IamEditInput from '@/views/my-manage-space/components/iam-edit/input';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   import IamEditTextarea from '@/views/my-manage-space/components/iam-edit/textarea';
   import IamManagerEditInput from '@/components/iam-edit/input';
   import IamSearchSelect from '@/components/iam-search-select';
   import ManageInterviewDialog from '@/components/manage-interview-dialog';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
 
   export default {
-    name: '',
     components: {
-      ConfirmDialog,
-      ApplyDialog,
       IamEditInput,
       IamManagerEditInput,
       IamEditMemberSelector,
       IamEditTextarea,
       IamSearchSelect,
-      ManageInterviewDialog
+      ManageInterviewDialog,
+      DeleteActionDialog
     },
     data () {
       return {
@@ -351,21 +380,19 @@
         },
         currentBackup: 1,
         tableLoading: false,
-        confirmLoading: false,
-        confirmDialogTitle: '',
-        confirmDialogSubTitle: '',
-        isShowConfirmDialog: false,
-        curOperateType: '',
-        curId: -1,
-        isShowApplyDialog: false,
-        applyLoading: false,
-        curName: '',
         showImageDialog: false,
         subLoading: false,
+        deleteLoading: false,
+        isShowDeleteDialog: false,
+        delActionDialogTitle: '',
+        delActionDialogTip: '',
+        delActionDialogConfirmText: this.$t('common', '确定'),
+        delActionDialogConfirmTheme: 'primary',
         gradingAdminId: 0,
-        iconColor: ['#FF9C01', '#9B80FE'],
+        iconColor: ['#ff9c01', '#9b80fe'],
         expandRowList: [], // 所有展开折叠项
         subTableList: [],
+        deleteSpaceInfo: {}, // 删除空间提示信息
         emptyData: {
           type: '',
           text: '',
@@ -386,6 +413,7 @@
         ],
         searchData: [],
         searchList: [],
+        delActionList: [],
         language: window.CUR_LANGUAGE,
         tableHeight: getWindowHeight() - 185
       };
@@ -466,7 +494,6 @@
         this.gradingAdminId = row.id;
         expandedRows = expandedRows.filter(e => e.id === this.gradingAdminId);
         if (!expandedRows.length) return;
-        console.log('expandedRows', row, expandedRows);
         row.children = [];
         this.resetSubPagination();
         this.tableList.forEach(e => {
@@ -570,9 +597,8 @@
           }
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.tableList = [];
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
@@ -593,11 +619,9 @@
           this.subTableList = [...row.children];
           this.emptyData = formatCodeData(code, this.emptyData, this.subTableList.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
           row.children = [];
           this.subTableList = [];
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.curData = row;
@@ -627,9 +651,7 @@
             this.tableList.length === 0
           );
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.tableList = [];
           this.messageAdvancedError(e);
         } finally {
@@ -653,7 +675,7 @@
               'rating_manager': async () => {
                 this.resetPagination();
                 this.isFilter ? await this.fetchSearchManageList()
-                : await this.fetchGradingAdmin(this.formData);
+                : await this.fetchGradingAdmin();
               },
               'subset_manager': async () => {
                 this.curData.children = [];
@@ -670,17 +692,20 @@
             members: [...params.members]
           });
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         }
       },
-            
-      handleUpdateMembers (payload, index) {
-        this.handleUpdateManageSpace(payload, index);
-      },
 
-      handleUpdateSubMembers (payload, index) {
-        this.handleUpdateSubManageSpace(payload, index);
+      async fetchDeleteManageSpaceInfo (id) {
+        try {
+          const { code, data } = await this.$store.dispatch('role/getDeleteManageSpaceInfo', { id });
+          if (code === 0) {
+            this.deleteSpaceInfo = data;
+          }
+        } catch (e) {
+          this.deleteSpaceInfo = {};
+          this.messageAdvancedError(e);
+        }
       },
      
       // 一二级存在平铺展示数据
@@ -716,136 +741,106 @@
           this.fetchSubManagerList(this.curData);
         }
       },
-
-      handleCreate () {
-        this.$router.push({
-          name: 'gradingAdminCreate'
-        });
-      },
-
-      resetPagination () {
-        this.pagination = Object.assign({}, {
-          current: 1,
-          count: 0,
-          limit: 10
-        });
-      },
-
-      resetSubPagination () {
-        this.subPagination = Object.assign({}, {
-          current: 1,
-          count: 0,
-          limit: 10
-        });
-      },
-
-      // handleSearch () {
-      //     if (!this.searchValue) {
-      //         return;
-      //     }
-      //     this.isFilter = true;
-      //     this.emptyData.tipType = 'search';
-      //     this.resetPagination();
-      //     this.resetSubPagination();
-      //     this.fetchGradingAdmin(true);
-      // },
-
-      async handleSelectSearch (payload, result) {
-        const {
-          name,
-          member
-        } = payload;
-        if (!Object.keys(payload).length) {
-          this.resetSearchData();
+      
+      async handleSubmitDelete () {
+        const { id, type, sub_space_count } = this.deleteSpaceInfo;
+        // eslint-disable-next-line camelcase
+        if (sub_space_count) {
+          this.handleCancelDelete();
           return;
         }
-        this.isFilter = true;
-        this.emptyData.tipType = 'search';
-        this.searchMember = member || '';
-        this.searchValue = name;
-        this.resetPagination();
-        this.resetSubPagination();
-        await this.fetchSearchManageList();
-      },
-            
-      handleEmptyRefresh () {
-        this.resetPagination();
-        this.resetSubPagination();
-        this.fetchGradingAdmin(true);
-      },
 
-      handleEmptyClear () {
-        this.resetSearchData();
-      },
+        this.deleteLoading = true;
 
-      resetSearchData () {
-        this.isFilter = false;
-        this.searchValue = '';
-        this.emptyData.tipType = '';
-        this.searchList = [];
-        this.searchData = _.cloneDeep(this.searchDefaultData);
-        this.resetPagination();
-        this.resetSubPagination();
-        this.fetchGradingAdmin(true);
-      },
-
-      handleAfterApplyLeave () {
-        this.curName = '';
-      },
-
-      handleApplyCancel () {
-        this.isShowApplyDialog = false;
-      },
-
-      handleApplySumbit () {},
-
-      handleDropOut (payload) {
-        this.curOperateType = 'drop';
-        this.curId = payload.id;
-        this.confirmDialogTitle = this.$t(`m.dialog['确认退出']`);
-        this.confirmDialogSubTitle = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}, ${this.$t(`m.grading['退出提示']`)}`;
-        this.isShowConfirmDialog = true;
+        const typeMap = {
+          'rating_manager': async () => {
+            try {
+              const { code } = await this.$store.dispatch('role/deleteGradeManageSpace', { id });
+              if (code === 0) {
+                this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+                this.resetPagination();
+                this.handleFilterData();
+              }
+            } catch (e) {
+              this.messageAdvancedError(e);
+            } finally {
+              this.handleCancelDelete();
+            }
+          },
+          'subset_manager': async () => {
+            try {
+              const { code } = await this.$store.dispatch('role/deleteSubsetManageSpace', { role_ids: [id] });
+              if (code === 0) {
+                this.curData.children = [];
+                this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+                this.resetSubPagination();
+                if (this.isFilter) {
+                  this.curData.children = [];
+                  await this.fetchSubManagerList(this.curData);
+                } else {
+                  await this.fetchSearchManageList();
+                }
+              }
+            } catch (e) {
+              this.messageAdvancedError(e);
+            } finally {
+              this.handleCancelDelete();
+            }
+          }
+        };
+        return typeMap[type] ? typeMap[type]() : typeMap['rating_manager']();
       },
 
-      handleDelete (payload) {
-        this.curOperateType = 'delete';
-        this.curId = payload.id;
-        this.confirmDialogTitle = this.$t(`m.dialog['确认删除']`);
-        this.confirmDialogSubTitle = `${this.$t(`m.common['删除']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}, ${this.$t(`m.grading['删除提示']`)}`;
-        this.isShowConfirmDialog = true;
-      },
-
-      handleApplyJoin (payload) {
-        this.curName = payload.name;
-        this.isShowApplyDialog = true;
-      },
-
-      async handleSubmit () {
-        this.confirmLoading = true;
-        try {
-          await this.$store.dispatch('role/deleteRatingManager', { id: this.curId });
-          await this.$store.dispatch('roleList');
-          this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
-          this.isShowConfirmDialog = false;
-          this.resetPagination();
-          this.fetchGradingAdmin(true);
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        } finally {
-          this.confirmLoading = false;
-        }
-      },
-
-      handleAfterLeave () {
-        this.confirmDialogTitle = '';
-        this.confirmDialogSubTitle = '';
-        this.curOperateType = '';
-        this.curId = -1;
-      },
-
-      handleCancel () {
-        this.isShowConfirmDialog = false;
+      async handleDelete (payload) {
+        this.isShowDeleteDialog = true;
+        const { id, name } = payload;
+        await this.fetchDeleteManageSpaceInfo(id)
+          .finally(() => {
+            const {
+              grade_managers_count,
+              subject_count,
+              sub_space_count,
+              user_group_count,
+              policy_count
+            } = this.deleteSpaceInfo;
+            // eslint-disable-next-line camelcase
+            if (sub_space_count > 0) {
+              this.delActionDialogConfirmTheme = 'primary';
+              this.delActionDialogConfirmText = this.$t(`m.info['知道了']`);
+              this.delActionDialogTitle = this.$t(`m.grading['无法删除管理空间']`);
+              this.delActionDialogTip = this.$t(
+                `m.grading['{name}下挂载了 {sub_space_count} 个二级管理空间，无法直接删除。请先进入各二级空间，将其移除后再删除此空间。']`,
+                {
+                  name,
+                  sub_space_count
+                }
+              );
+              this.delActionList = [];
+            } else {
+              this.delActionDialogConfirmTheme = 'danger';
+              this.delActionDialogConfirmText = this.$t(`m.common['确认删除']`);
+              this.delActionDialogTitle = this.$t(`m.dialog['确认删除管理空间？']`);
+              this.delActionDialogTip = this.$t(`m.grading['你即将删除管理空间{name}，该操作将同时删除空间内的所有数据，包括：']`, { name });
+              this.delActionList = [
+                {
+                  name: this.$t(`m.grading['{grade_managers_count} 个分级管理员']`, { grade_managers_count }),
+                  count: grade_managers_count
+                },
+                {
+                  name: this.$t(`m.grading['{user_group_count} 个用户组']`, { user_group_count }),
+                  count: user_group_count
+                },
+                {
+                  name: this.$t(`m.grading['{policy_count} 条权限策略']`, { policy_count }),
+                  count: policy_count
+                },
+                {
+                  name: this.$t(`m.grading['{subject_count} 条人员策略']`, { subject_count }),
+                  count: subject_count
+                }
+              ];
+            }
+          });
       },
 
       async handleView ({ id, name }, type) {
@@ -922,6 +917,86 @@
           }
         });
       },
+      
+      async handleSelectSearch (payload, result) {
+        const {
+          name,
+          member
+        } = payload;
+        if (!Object.keys(payload).length) {
+          this.resetSearchData();
+          return;
+        }
+        this.isFilter = true;
+        this.emptyData.tipType = 'search';
+        this.searchMember = member || '';
+        this.searchValue = name;
+        this.resetPagination();
+        this.resetSubPagination();
+        await this.fetchSearchManageList();
+      },
+
+      handleUpdateMembers (payload, index) {
+        this.handleUpdateManageSpace(payload, index);
+      },
+
+      handleUpdateSubMembers (payload, index) {
+        this.handleUpdateSubManageSpace(payload, index);
+      },
+
+      handleCreate () {
+        this.$router.push({
+          name: 'gradingAdminCreate'
+        });
+      },
+
+      handleCancelDelete () {
+        this.deleteLoading = false;
+        this.isShowDeleteDialog = false;
+        this.delActionDialogConfirmTheme = 'primary';
+        this.delActionDialogConfirmText = this.$t(`m.common['确定']`);
+        this.delActionDialogTitle = '';
+        this.delActionDialogTip = '';
+        this.deleteSpaceInfo = {};
+        this.delActionList = [];
+      },
+
+      resetPagination () {
+        this.pagination = Object.assign({}, {
+          current: 1,
+          count: 0,
+          limit: 10
+        });
+      },
+
+      resetSubPagination () {
+        this.subPagination = Object.assign({}, {
+          current: 1,
+          count: 0,
+          limit: 10
+        });
+      },
+            
+      handleEmptyRefresh () {
+        this.resetPagination();
+        this.resetSubPagination();
+        this.fetchGradingAdmin(true);
+      },
+
+      handleEmptyClear () {
+        this.resetSearchData();
+      },
+
+      resetSearchData () {
+        this.isFilter = false;
+        this.searchValue = '';
+        this.emptyData.tipType = '';
+        this.searchList = [];
+        this.searchData = _.cloneDeep(this.searchDefaultData);
+        this.resetPagination();
+        this.resetSubPagination();
+        this.fetchGradingAdmin(true);
+      },
 
       handlePageChange (page) {
         if (this.currentBackup === page) {
@@ -931,7 +1006,7 @@
         this.handleFilterData();
       },
 
-      handleLimitChange (currentLimit, prevLimit) {
+      handleLimitChange (currentLimit) {
         this.pagination.limit = currentLimit;
         this.pagination.current = 1;
         this.handleFilterData();
@@ -953,6 +1028,7 @@
 </style>
 
 <style lang="postcss" scoped>
+@import '@/css/mixins/custom-delete-action.css';
 .iam-grading-admin-wrapper {
   .detail-link {
     color: #3a84ff;
@@ -1011,6 +1087,10 @@
     display: flex;
     align-items: center;
   }
+}
+
+.external-info {
+  margin-top: 16px;
 }
 
 /deep/ .bk-table-expanded-cell {
