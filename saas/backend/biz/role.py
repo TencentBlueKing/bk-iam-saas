@@ -286,7 +286,7 @@ class RoleBiz:
         查询角色的 auth 授权范围 Bean
         """
         auth_systems = self.svc.list_auth_scope(role_id)
-        system_list = self.system_svc.new_system_list(self.tenant_id)
+        system_list = self.system_svc.new_system_list()
 
         auth_system_beans = []
         for auth_system in auth_systems:
@@ -332,7 +332,7 @@ class RoleBiz:
         获取指定系统的 auth 授权范围 Bean
         """
         auth_systems = self.svc.list_auth_scope(role_id)
-        system_list = self.system_svc.new_system_list(self.tenant_id)
+        system_list = self.system_svc.new_system_list()
 
         auth_system_bean = None
         for auth_system in auth_systems:
