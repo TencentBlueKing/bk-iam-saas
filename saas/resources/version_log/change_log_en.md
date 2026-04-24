@@ -1,3 +1,13 @@
+<!-- 2026-04-24 -->
+# V1.10.59 Version Update Log
+
+### Fixes
+* Fixed resource instance table action button group overflow not displaying completely
+* Fixed validation error when grade manager members no longer exist, now automatically skipped
+* Fixed error when syncing new users that are already pending deletion in backend
+
+---
+
 <!-- 2026-04-22 -->
 # V1.10.58 Version Update Log
 
