@@ -11,10 +11,13 @@ specific language governing permissions and limitations under the License.
 
 from typing import List, Optional
 
+from django.utils.translation import gettext as _
+
 from backend.common.cache import cachedmethod
 from backend.component import iam
 
 from .models import System
+from ..common.error_codes import error_codes
 
 
 class SystemList:
@@ -27,20 +30,25 @@ class SystemList:
 
 
 class SystemService:
-    def __init__(self, tenant_id: str = None):
+    def __init__(self, tenant_id: str = ""):
         self.tenant_id = tenant_id
 
-    def list(self) -> List[System]:
+    def list(self, skip_tenant_filter: bool = False) -> List[System]:
         """获取所有系统"""
         # FIXME(tenant): 仅返回当前租户或全租户的系统列表
         systems = iam.list_system()
         # 过滤掉非指定租户的系统
-        systems = [system for system in systems if system["tenant_id"] == self.tenant_id or system["tenant_id"] == ""]
+        if not skip_tenant_filter:
+            systems = [
+                system for system in systems if system["tenant_id"] == self.tenant_id or system["tenant_id"] == ""
+            ]
         # 组装为返回结构
         return [System(**i) for i in systems]
 
     def get(self, system_id: str) -> System:
         system = iam.get_system(system_id)
+        if system["tenant_id"] != self.tenant_id and system["tenant_id"] != "":
+            raise error_codes.FORBIDDEN.format(_("租户不匹配，无权访问该系统"), True)
         return System(**system)
 
     @cachedmethod(timeout=5 * 60)  # 5 分钟过期

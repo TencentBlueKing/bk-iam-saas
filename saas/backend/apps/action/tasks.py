@@ -26,7 +26,7 @@ from backend.service.models.instance_selection import ChainNode
 @shared_task(ignore_result=True)
 def generate_action_aggregate():
     # 生成操作聚合配置
-    systems = SystemBiz(settings.BK_APP_TENANT_ID).list()
+    systems = SystemBiz().list(skip_tenant_filter=True)
     action_svc = ActionService(settings.BK_APP_TENANT_ID)
 
     # 遍历每个系统

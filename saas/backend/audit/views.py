@@ -67,5 +67,5 @@ class EventViewSet(TenantMixin, mixins.ListModelMixin, GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = EventDetailSLZ(instance)
+        serializer = EventDetailSLZ(instance, context={"tenant_id": self.tenant_id})
         return Response(serializer.data)
