@@ -210,10 +210,12 @@ export const beforeEach = async (to, from, next) => {
         setStaffOrSubSet({ roleId: data.results[0].id, index: 1 });
         await getManagerInfo();
       } else {
-        isStaff = true;
         isManagerPage = false;
         setStaffOrSubSet({ roleId: 0, index: 0 });
-        next({ path: `${SITE_URL}${defaultRoute[0]}` });
+        if (!isStaff) {
+          isStaff = true;
+          next({ path: `${SITE_URL}${defaultRoute[0]}` });
+        }
       }
     }
   }

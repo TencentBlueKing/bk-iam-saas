@@ -920,7 +920,8 @@ export const m = {
         '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed',
         '自动生成同名人员模板': 'Automatically generate member template with the same name',
         '管理员组无法添加权限': 'Administrators group unable to add permissions',
-        '只读用户组无法添加权限': 'Read only user group cannot add permissions'
+        '只读用户组无法添加权限': 'Read only user group cannot add permissions',
+        '搜索操作名称': 'Search action name',
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',

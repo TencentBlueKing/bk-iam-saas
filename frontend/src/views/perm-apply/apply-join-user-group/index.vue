@@ -234,9 +234,10 @@
                     <bk-button
                       size="small"
                       theme="primary"
-                      :text="true"
+                      text
                       style="padding: 0"
-                      @click="handleBatchRenewal">
+                      @click="handleBatchRenewal(row)"
+                    >
                       {{ $t(`m.permApply['去续期']`) }}
                     </bk-button>
                     )
@@ -1619,11 +1620,12 @@
         return typeMap[payload]();
       },
 
-      handleBatchRenewal () {
+      handleBatchRenewal (row) {
         this.$router.push({
           name: 'permRenewal',
           query: {
-            tab: 'group'
+            tab: 'group',
+            group_name: row.name
           }
         });
       },

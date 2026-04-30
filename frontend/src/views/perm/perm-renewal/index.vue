@@ -23,13 +23,15 @@
           </template>
         </bk-tab-panel>
       </bk-tab>
-      <render-table
+      <RenderRenewalTable
+        ref="renewalTableRef"
         :renewal-time="expiredAt"
         :type="active"
         :data="getTableList"
         :count="formatCount"
         :loading="tableLoading"
         :empty-data="curEmptyData"
+        @on-search="handleSearch"
         @on-select="handleSelected"
         @on-change-count="handleChangeCount"
         @on-filter-system="handleFilterSystem"
@@ -76,14 +78,14 @@
   import { formatCodeData } from '@/common/util';
   import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
   import IamDeadline from '@/components/iam-deadline/horizontal';
-  import RenderTable from '../components/render-renewal-table';
+  import RenderRenewalTable from '../components/render-renewal-table';
   import PermPolicy from '@/model/my-perm-policy';
 
   export default {
     name: '',
     components: {
       IamDeadline,
-      RenderTable
+      RenderRenewalTable
     },
     data () {
       return {
@@ -185,19 +187,33 @@
       await this.fetchData();
     },
     methods: {
-      async fetchData () {
+      async fetchData (payload = {}) {
         this.tableLoading = true;
+        
         try {
+          const { group_name, action_name } = this.$route.query;
+          // eslint-disable-next-line camelcase
+          const actionName = action_name || payload.action_name;
+          // eslint-disable-next-line camelcase
+          const groupName = group_name || payload.name;
+
           const userGroupParams = {
             page_size: 10,
-            page: 1
+            page: 1,
+            ...(groupName && { name: groupName }),
+            ...(payload.description && { description: payload.description })
           };
+          const permParams = {
+            ...(actionName && { action_name: actionName })
+          };
+
           if (this.externalSystemId) {
             userGroupParams.system_id = this.externalSystemId;
           }
+
           const resultList = await Promise.all([
             this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
-            this.$store.dispatch('renewal/getExpireSoonPerm')
+            this.$store.dispatch('renewal/getExpireSoonPerm', permParams)
           ]).finally(() => {
             this.tableLoading = false;
           });
@@ -219,9 +235,7 @@
           this.tabKey = +new Date();
           this.fetchActiveTabData(this.panels);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.curEmptyData = formatCodeData(code, this.curEmptyData);
+          this.curEmptyData = formatCodeData(e.code, this.curEmptyData);
           this.messageAdvancedError(e);
         }
       },
@@ -239,11 +253,24 @@
         this.tabKey = +new Date();
       },
 
+      async handleSearch (payload) {
+        await this.fetchData(payload);
+        this.fetchActiveTabData(this.panels);
+      },
+
       handleTabChange (payload) {
         this.$nextTick(() => {
-          this.$refs.tabRef
-            && this.$refs.tabRef.$refs.tabLabel
-            && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+          const tabLabelRef = this.$refs.tabRef;
+          const tableRef = this.$refs.renewalTableRef;
+          tabLabelRef
+            && tabLabelRef.$refs.tabLabel
+            && tabLabelRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+          if (Object.keys(tableRef.searchParams).length > 0) {
+            tableRef.searchParams = {};
+            tableRef.searchValue = [];
+            tableRef.resetLocationHref(['group_name', 'action_name']);
+            this.handleSearch();
+          }
         });
         window.history.replaceState({}, '', `?${buildURLParams({
           tab: payload,
@@ -349,7 +376,6 @@
             name: 'apply'
           });
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;

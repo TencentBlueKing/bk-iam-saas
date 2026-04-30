@@ -1,23 +1,24 @@
 <template>
   <div class="iam-perm-renewal-table-wrapper" v-bkloading="{ isLoading: loading || isLoading, opacity: 1 }">
-    <template v-if="['group'].includes(type)">
-      <div class="iam-perm-renewal-btn">
+    <div class="flex-between iam-perm-renewal-form">
+      <template v-if="['group'].includes(type)">
         <bk-button
           :disabled="!currentSelectList.length"
           @click="handleBatchQuit">
           {{ $t(`m.common['批量退出']`) }}
         </bk-button>
-      </div>
-    </template>
-    <!-- <template v-if="['custom'].includes(type)">
-      <div class="iam-perm-renewal-btn">
-        <bk-button
-          :disabled="!currentSelectList.length"
-          @click="handleBatchDel">
-          {{ $t(`m.common['批量删除']`) }}
-        </bk-button>
-      </div>
-    </template> -->
+      </template>
+      <IamSearchSelect
+        :style="renderSearchSelectWidth"
+        ref="searchSelectRef"
+        :data="searchData"
+        :value="searchValue"
+        :placeholder="searchSelectPlaceholder"
+        :quick-search-method="handleQuickSearchMethod"
+        @on-change="handleSearch"
+        @on-click-menu="handleClickMenu"
+      />
+    </div>
     <bk-table
       v-show="!loading"
       :data="tableList"
@@ -269,25 +270,27 @@
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
-  import { formatCodeData, existValue, xssFilter } from '@/common/util';
+  import { formatCodeData, existValue, xssFilter, delLocationHref } from '@/common/util';
+  import { buildURLParams } from '@/common/url';
   import RenderExpireDisplay from '@/components/render-renewal-dialog/display';
   import RenderResourcePopover from '../components/prem-view-resource-popover';
   import RenderDetail from './render-detail';
   import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+  import IamSearchSelect from '@/components/iam-search-select';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
 
   // 过期时间的天数区间
   const EXPIRED_DISTRICT = 15;
 
   export default {
-    name: '',
     components: {
       RenderExpireDisplay,
       RenderDetail,
       RenderResourcePopover,
       RenderPermSideSlider,
       IamEditMemberSelector,
+      IamSearchSelect,
       DeleteActionDialog
     },
     props: {
@@ -358,6 +361,7 @@
         tableKey: 0,
         curGroupId: -1,
         singleData: {},
+        searchParams: {},
         curCustomData: {},
         previewData: [],
         delActionList: [],
@@ -365,6 +369,10 @@
         originalCustomTmplList: [],
         curDeleteIds: [],
         linearActionList: [],
+        searchData: [],
+        searchValue: [],
+        searchSelectPlaceholder: '',
+        curSelectMenu: '',
         curOperate: '',
         sliderWidth: 960,
         renewalGroupCount: 0
@@ -390,6 +398,11 @@
       },
       isMultiple () {
         return !(Object.keys(this.singleData).length > 0);
+      },
+      renderSearchSelectWidth () {
+        return {
+          width: ['custom'].includes(this.type) ? '100%' : 'calc(100% - 120px)'
+        };
       }
     },
     watch: {
@@ -398,6 +411,21 @@
       },
       type: {
         handler (newValue, oldValue) {
+          const { group_name: groupName } = this.$route.query;
+          if (groupName) {
+            this.searchParams.group_name = groupName;
+            this.searchValue.push({
+              id: 'name',
+              name: this.$t(`m.userGroup['用户组名']`),
+              values: [{
+                name: groupName,
+                id: groupName
+              }]
+            });
+          }
+          this.refreshCurrentQuery();
+          this.searchData = this.getSearchSelectData(newValue);
+          this.searchSelectPlaceholder = this.getSearchSelectPlaceholder(newValue);
           this.tableProps = this.getTableProps(newValue);
           if (oldValue && oldValue !== newValue) {
             this.curFilterSystem = '';
@@ -454,18 +482,6 @@
           this.allData = cloneDeep(value);
           this.allDataBack = cloneDeep(value);
           this.pagination = Object.assign(this.pagination, { count: this.count });
-          // this.currentSelectList = this.tableList.filter(item =>
-          //     this.getDays(item.expired_at) < EXPIRED_DISTRICT);
-          // if (this.type === 'custom') {
-          //     this.tableList.forEach(item => {
-          //         if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
-          //             this.systemFilter.push({
-          //                 text: item.system.name,
-          //                 value: item.system.id
-          //             });
-          //         }
-          //     });
-          // }
           this.$nextTick(() => {
             const tableItem = {
               group: () => {
@@ -528,6 +544,24 @@
       }
     },
     methods: {
+      refreshCurrentQuery () {
+        const queryParams = {
+          ...this.searchParams,
+          tab: this.type,
+          role_name: this.user.role.name
+        };
+
+        if (Object.keys(queryParams).length) {
+          window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+        }
+
+        this.emptyRenewalData = Object.assign(this.emptyRenewalData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
+
+        return {
+          ...queryParams
+        };
+      },
+      
       getDays (payload) {
         const dif = payload - this.user.timestamp;
         if (dif < 1) {
@@ -558,6 +592,38 @@
           { label: this.$t(`m.common['有效期']`), prop: 'expired_at' },
           { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
         ];
+      },
+
+      getSearchSelectData (payload) {
+        if (payload === 'group') {
+          return [
+            {
+              id: 'name',
+              name: this.$t(`m.userGroup['用户组名']`),
+              default: true
+            },
+            {
+              id: 'description',
+              name: this.$t(`m.common['描述']`),
+              default: true
+            }
+          ];
+        }
+        
+        return [
+          {
+            id: 'action_name',
+            name: this.$t(`m.sensitivityLevel['操作名称']`),
+            default: true
+          }
+        ];
+      },
+
+      getSearchSelectPlaceholder (payload) {
+        if (payload === 'group') {
+          return this.$t(`m.userOrOrg['搜索用户组名、描述']`);
+        }
+        return this.$t(`m.userGroup['搜索操作名称']`);
       },
 
       systemFilterMethod (value, row, column) {
@@ -610,25 +676,6 @@
       },
 
       handlerAllChange (selection) {
-        // const tabItem = {
-        //   group: () => {
-        //     this.currentSelectList = [...selection];
-        //   },
-        //   custom: () => {
-        //     // 直接点全选按钮切换数量为当前页条数，处理点击其他页面数据再点全选数量不对等问题
-        //     if (selection.length === this.tableList.length || selection.length === this.allData.length) {
-        //       this.currentSelectList = [...this.allData];
-        //       this.currentSelectList.forEach(item => {
-        //         this.$refs.permTableRef
-        //           && this.$refs.permTableRef.toggleRowSelection(item, true);
-        //       });
-        //     } else {
-        //       this.currentSelectList = [];
-        //       this.$refs.permTableRef.clearSelection();
-        //     }
-        //   }
-        // };
-        // return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
         const tableList = this.type === 'custom' ? cloneDeep(this.allData) : cloneDeep(this.tableList);
         const selectGroups = this.currentSelectList.filter(item =>
           !tableList.map(v => v.id.toString()).includes(item.id.toString()));
@@ -637,38 +684,6 @@
       },
 
       handlerChange (selection, row) {
-        // const tabItem = {
-        //   group: () => {
-        //     const isChecked = selection.length && selection.indexOf(row) !== -1;
-        //     if (isChecked) {
-        //       this.currentSelectGroupList.push(row);
-        //     } else {
-        //       this.currentSelectList = this.currentSelectList.filter(
-        //         (item) => item.id.toString() !== row.id.toString()
-        //       );
-        //     }
-        //     this.$nextTick(() => {
-        //       const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-        //       if (this.$refs.permTableRef && selectionCount) {
-        //         selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
-        //       }
-        //     });
-        //   },
-        //   custom: () => {
-        //     // 直接点全选按钮切换数量为当前页条数，处理点击其他页面数据再点全选数量不对等问题
-        //     if (selection.length === this.tableList.length || selection.length === this.allData.length) {
-        //       this.currentSelectList = [...this.allData];
-        //       this.currentSelectList.forEach(item => {
-        //         this.$refs.permTableRef
-        //           && this.$refs.permTableRef.toggleRowSelection(item, true);
-        //       });
-        //     } else {
-        //       this.currentSelectList = [];
-        //       this.$refs.permTableRef.clearSelection();
-        //     }
-        //   }
-        // };
-        // return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
         const isChecked = selection.length && selection.indexOf(row) !== -1;
         if (isChecked) {
           this.currentSelectList.push(row);
@@ -678,6 +693,39 @@
           );
         }
         this.fetchCustomSelection();
+      },
+
+      resetLocationHref (fields) {
+        delLocationHref(fields);
+      },
+
+      async handleSearch (payload, result) {
+        this.curSelectMenu = '';
+        this.searchParams = payload;
+        this.searchValue = [...result];
+        this.emptyRenewalData.tipType = 'search';
+        if (!payload.name) {
+          delLocationHref(['group_name']);
+        }
+        if (!payload.action_name) {
+          delLocationHref(['action_name']);
+        }
+        this.$emit('on-search', payload);
+      },
+
+      handleQuickSearchMethod (value) {
+        return {
+          name: this.$t(`m.common['关键字']`),
+          id: 'keyword',
+          values: [value]
+        };
+      },
+
+      handleClickMenu (payload) {
+        const { menu } = payload;
+        if (menu.id) {
+          this.curSelectMenu = menu.id;
+        }
       },
 
       handleViewDetail (payload) {
@@ -738,7 +786,8 @@
             group: async () => {
               const userGroupParams = {
                 page_size: limit,
-                page: current
+                page: current,
+                ...this.searchParams
               };
               if (this.externalSystemId) {
                 userGroupParams.system_id = this.externalSystemId;
@@ -820,7 +869,6 @@
               this.pagination = Object.assign(this.pagination, { current: 1 });
               await this.fetchTableData();
             } catch (e) {
-              console.error(e);
               this.messageAdvancedError(e);
             } finally {
               this.batchQuitLoading = false;
@@ -881,7 +929,6 @@
           this.originalCustomTmplList = cloneDeep(res.data);
           this.handleActionLinearData();
         } catch (e) {
-          console.error(e);
           this.actionLoading = false;
           this.messageAdvancedError(e);
         }
@@ -1026,6 +1073,8 @@
 
       async handleEmptyClear () {
         this.curFilterSystem = '';
+        this.searchParams = {};
+        this.searchValue = [];
         this.emptyRenewalData.tipType = '';
         this.pagination.current = 1;
         if (['custom'].includes(this.type)) {
@@ -1052,8 +1101,8 @@
 <style lang="postcss">
     .iam-perm-renewal-table-wrapper {
         min-height: 200px;
-        .iam-perm-renewal-btn {
-          margin-top: 20px;
+        .iam-perm-renewal-form {
+          margin-top: 16px;
         }
         .perm-renewal-table {
             margin-top: 16px;
