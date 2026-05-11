@@ -60,6 +60,9 @@ class AuthInstanceView(AuthViewMixin, APIView):
         action_id = data["action"]["id"]
         resources = data["resources"]
 
+        # 校验系统是否本租户或全租户
+        self.system_biz(self.tenant_id).get(system_id)
+
         # 转换为策略列表
         policy_list = self.authorization_trans.to_policy_list_for_instance(system_id, action_id, resources, expired_at)
 
@@ -102,6 +105,9 @@ class AuthPathView(AuthViewMixin, APIView):
         action_id = data["action"]["id"]
         resources = data["resources"]
 
+        # 校验系统是否本租户或全租户
+        self.system_biz(self.tenant_id).get(system_id)
+
         # 转换为策略列表
         policy_list = self.authorization_trans.to_policy_list_for_path(system_id, action_id, resources, expired_at)
 
@@ -143,6 +149,9 @@ class AuthBatchInstanceView(AuthViewMixin, APIView):
         expired_at = data["expired_at"]
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
+
+        # 校验系统是否本租户或全租户
+        self.system_biz(self.tenant_id).get(system_id)
 
         # 转换为策略列表
         policy_list = self.authorization_trans.to_policy_list_for_instances(
@@ -188,6 +197,9 @@ class AuthBatchPathView(AuthViewMixin, APIView):
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
 
+        # 校验系统是否本租户或全租户
+        self.system_biz(self.tenant_id).get(system_id)
+
         # 转换为策略列表
         policy_list = self.authorization_trans.to_policy_list_for_paths(system_id, action_ids, resources, expired_at)
 
@@ -229,6 +241,9 @@ class AuthAttributeView(AuthViewMixin, APIView):
         action_id = data["action_id"]
         resource_type_id = data["type"]
         attributes = data["attributes"]
+
+        # 校验系统是否本租户或全租户
+        self.system_biz(self.tenant_id).get(system_id)
 
         # 转换为策略列表
         policy_list = self.authorization_trans.to_policy_list_for_attributes_of_creator(

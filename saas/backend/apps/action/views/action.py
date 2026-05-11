@@ -39,6 +39,8 @@ class ActionViewSet(BizMixin, GenericViewSet):
         all = slz.validated_data["all"]
         hidden = slz.validated_data["hidden"]
 
+        self.system_biz.get(system_id)
+
         # 1. 获取用户的权限列表
         if user_id != "" and user_id == request.user.username:
             actions = self.action_biz.list_by_subject(

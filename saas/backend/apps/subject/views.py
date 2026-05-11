@@ -167,6 +167,9 @@ class SubjectPolicyViewSet(BizMixin, GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         # 为了记录审计日志，需要在删除前查询
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
@@ -281,6 +284,9 @@ class SubjectTemporaryPolicyViewSet(BizMixin, GenericViewSet):
 
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
         # FIXME(tenant): 需要校验 subject 是否是当前租户的用户或部门
+
+        # 校验系统租户
+        self.system_biz.get(system_id)
 
         policies = self.policy_query_biz.list_temporary_by_subject(system_id, subject)
 

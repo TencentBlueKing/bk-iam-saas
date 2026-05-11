@@ -100,6 +100,9 @@ class ManagementTemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
         data = serializer.validated_data
         role = get_object_or_404(Role, tenant_id=self.tenant_id, type=RoleType.GRADE_MANAGER.value, id=role_id)
 
+        # 校验系统是否本租户或全租户
+        self.system_biz(self.tenant_id).get(data["system_id"])
+
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(role)
         scope_checker.check_actions(data["system_id"], data["action_ids"])

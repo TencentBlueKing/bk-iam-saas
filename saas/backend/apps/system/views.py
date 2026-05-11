@@ -21,6 +21,7 @@ from backend.component import iam
 from backend.mixins import BizMixin
 
 from .serializers import QueryResourceTypeSLZ, SystemQuerySLZ, SystemResourceTypeSLZ, SystemSLZ
+from ...biz.system import SystemBiz
 
 
 class SystemViewSet(BizMixin, GenericViewSet):
@@ -75,6 +76,7 @@ class ResourceTypeViewSet(BizMixin, GenericViewSet):
     )
     def list_resource_types(self, request, *args, **kwargs):
         system_id = request.query_params["system_id"]
+        self.system_biz.get(system_id)
         data = self.resource_type_biz.list_resource_types_by_system_id(system_id=system_id)
         return Response(data)
 
@@ -91,6 +93,7 @@ class SystemCustomFrontendSettingsView(views.APIView):
     )
     def get(self, request, *args, **kwargs):
         system_id = kwargs["system_id"]
+        SystemBiz(request.tenant_id).get(system_id)
         settings = iam.get_custom_frontend_settings(system_id)
 
         return Response(settings)

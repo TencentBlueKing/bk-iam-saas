@@ -33,6 +33,7 @@ class ActionGroupView(BizMixin, views.APIView):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+        self.system_biz.get(system_id)
 
         action_list = self.action_biz.list(system_id)
         action_groups = self.action_group_biz.list_with_frontend_id_by_actions(system_id, action_list.actions)

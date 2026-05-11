@@ -84,6 +84,10 @@ class ManagementGradeManagerViewSet(BizMixin, TransMixin, ManagementAPIPermissio
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(source_system_id, auth_system_ids)
 
+        # 校验所有涉及的系统是否本租户或全租户
+        for sid in {source_system_id, *auth_system_ids}:
+            self.system_biz(self.tenant_id).get(sid)
+
         # 检查该系统可创建的分级管理员数量是否超限
         self.role_check_biz.check_grade_manager_of_system_limit(source_system_id)
 
@@ -138,6 +142,10 @@ class ManagementGradeManagerViewSet(BizMixin, TransMixin, ManagementAPIPermissio
             auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
             self.verify_system_scope(role_source.source_system_id, auth_system_ids)
 
+            # 校验新传入的 authorization_scopes 中所有 system 是否本租户或全租户
+            for sid in auth_system_ids:
+                self.system_biz(self.tenant_id).get(sid)
+
         # 转换为 RoleInfoBean
         role_info = self.grade_manager_trans.to_role_info_for_update(data)
 
@@ -171,6 +179,9 @@ class ManagementGradeManagerViewSet(BizMixin, TransMixin, ManagementAPIPermissio
         serializer = ManagementSourceSystemSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+
+        # 校验系统是否本租户或全租户
+        self.system_biz(self.tenant_id).get(data["system"])
 
         role_ids = list(
             RoleSource.objects.filter(

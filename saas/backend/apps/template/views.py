@@ -168,6 +168,9 @@ class TemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
         user_id = request.user.username
         data = serializer.validated_data
 
+        # 校验系统租户
+        self.system_biz.get(data["system_id"])
+
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(request.role)
         scope_checker.check_actions(data["system_id"], data["action_ids"])

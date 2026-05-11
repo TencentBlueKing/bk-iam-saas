@@ -47,6 +47,9 @@ class ResourceViewSet(BizMixin, ViewSet):
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         # TODO：通过这个接口这样就把所有接入系统的资源拉取到？
         #  那么相当于用户访问 iam saas 就可以访问到接入系统所有资源，是否合理？如何鉴权？
         # 是否有 keyword，如果有，则是搜索
@@ -85,6 +88,9 @@ class ResourceViewSet(BizMixin, ViewSet):
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         attrs = self.resource_biz.list_attr(system_id, resource_type_id)
 
         count, results = len(attrs), attrs[offset : offset + limit]
@@ -110,6 +116,9 @@ class ResourceViewSet(BizMixin, ViewSet):
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         count, results = self.resource_biz.list_attr_value(system_id, resource_type_id, attr, keyword, limit, offset)
 
         return Response({"count": count, "results": [i.dict() for i in results]})
@@ -132,6 +141,9 @@ class ResourceListFilterByDisplayNameViewSet(BizMixin, ViewSet):
         display_names = slz.validated_data["display_names"]
         action_system_id = slz.validated_data.get("action_system_id") or ""
         action_id = slz.validated_data.get("action_id") or ""
+
+        # 校验系统租户
+        self.system_biz.get(system_id)
 
         count, results = self.resource_biz.list_instance_by_display_names(
             system_id, resource_type_id, display_names, action_system_id, action_id

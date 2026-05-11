@@ -50,6 +50,7 @@ from .serializers import (
     UserNewbieUpdateSLZ,
     UserPolicySearchSLZ,
 )
+from ...biz.system import SystemBiz
 
 
 class UserGroupViewSet(BizMixin, GenericViewSet):
@@ -208,6 +209,8 @@ class UserCommonActionViewSet(BizMixin, GenericViewSet):
 
         system_id = request.query_params.get("system_id")
         if system_id:
+            # 校验系统租户
+            self.system_biz.get(system_id)
             data = self.role_biz.list_system_common_actions(system_id)
 
         return Response([one.dict() for one in data])
@@ -512,6 +515,10 @@ class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
     def create(self, request, *args, **kwargs):
         slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统 ID"))
         slz.is_valid(raise_exception=True)
+
+        # 批量校验系统租户
+        for system_id in slz.validated_data:
+            SystemBiz(self.tenant_id).get(system_id)
 
         UserProfile.objects.add_favorite_systems(self.tenant_id, request.user.username, slz.validated_data)
 

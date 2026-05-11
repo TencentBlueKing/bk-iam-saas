@@ -128,6 +128,8 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
         paginator = LimitOffsetPagination()
         offset, limit = paginator.get_offset(request), paginator.get_limit(request)
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
         # 校验角色管理范围
         checker = RoleAuthorizationScopeChecker(request.role)
         checker.check_systems([system_id])
@@ -184,6 +186,8 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
         # 校验角色管理范围
         checker = RoleAuthorizationScopeChecker(request.role)
         checker.check_systems([system_id])
@@ -211,6 +215,7 @@ class SystemActionSensitivityLevelCountViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+        self.system_biz.get(system_id)
 
         action_list = self.action_biz.list_without_cache_sensitivity_level(system_id)
         level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
@@ -241,6 +246,9 @@ class ActionSensitivityLevelViewSet(BizMixin, GenericViewSet):
         # 目前只支持同一系统的批量 Action 设置审批流程
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
+
+        # 校验系统租户
+        self.system_biz.get(system_id)
 
         # 校验系统管理员权限
         if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != system_id:

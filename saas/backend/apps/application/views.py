@@ -224,6 +224,10 @@ class ApplicationByGroupView(BizMixin, views.APIView):
 
         applicant_infos = SubjectInfoList([Subject.parse_obj(one) for one in applicants]).subjects
 
+        # 校验来源系统的租户
+        if data.get("source_system_id"):
+            self.system_biz.get(data["source_system_id"])
+
         # 创建申请
         self.application_biz.create_for_group(
             ApplicationType.JOIN_GROUP.value,
@@ -338,6 +342,10 @@ class ApplicationByRenewGroupView(BizMixin, views.APIView):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
+
+        # 校验来源系统的租户
+        if data.get("source_system_id"):
+            self.system_biz.get(data["source_system_id"])
 
         # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.get(username=request.user.username)

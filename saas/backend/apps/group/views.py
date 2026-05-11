@@ -799,6 +799,9 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
         system_id = data["system_id"]
         template_id = data["template_id"]
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         policies = [PolicyBean(expired_at=PERMANENT_SECONDS, **action) for action in data["actions"]]
         self.group_biz.update_policies(request.role, group.id, system_id, template_id, policies)
 

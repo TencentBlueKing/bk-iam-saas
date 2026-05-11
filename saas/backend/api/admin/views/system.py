@@ -19,6 +19,7 @@ from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import AdminSystemProviderConfigSLZ
 from backend.api.authentication import ESBAuthentication
 from backend.apps.system.views import SystemViewSet
+from backend.biz.system import SystemBiz
 from backend.service.resource import SystemProviderConfigService
 
 
@@ -52,6 +53,7 @@ class AdminSystemProviderConfigViewSet(GenericViewSet):
     def list(self, request, *args, **kwargs):
         system_id = kwargs["system_id"]
         # FIXME(tenant): 需要校验是否当前租户或全租户系统
+        SystemBiz(request.tenant_id).get(system_id)
         system_provider_config = SystemProviderConfigService().get_provider_config(system_id=system_id)
 
         return Response(AdminSystemProviderConfigSLZ(system_provider_config).data)

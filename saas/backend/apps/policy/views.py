@@ -225,6 +225,9 @@ class RelatedPolicyViewSet(BizMixin, GenericViewSet):
         system_id = data["system_id"]
         source_policy = PolicyBean.parse_obj(data["source_policy"])
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         # 移除用户已有的权限，只需要生成新增数据的依赖操作权限
         subject = SvcSubject.from_username(request.user.username)
         old_policy_list = self.policy_query_biz.new_policy_list(system_id, subject)
@@ -296,6 +299,11 @@ class BatchPolicyResourceCopyViewSet(BizMixin, ServiceMixin, GenericViewSet):
         data = slz.validated_data
         resource_type = RelatedResourceBean.parse_obj(data["resource_type"])
         actions = data["actions"]
+
+        # 批量校验所有系统租户
+        system_ids = {action["system_id"] for action in actions} | {resource_type.system_id}
+        for sid in system_ids:
+            self.system_biz.get(sid)
 
         action_resource = []
         actions = sorted(actions, key=lambda action: action["system_id"])
