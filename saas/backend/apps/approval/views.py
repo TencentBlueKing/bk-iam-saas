@@ -189,13 +189,12 @@ class ActionApprovalProcessViewSet(GenericViewSet):
         actions = slz.validated_data["actions"]
         process_id = int(slz.validated_data["process_id"])
 
-        # 目前只支持同一系统的批量Action设置审批流程
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
 
-        # 校验角色管理范围
+        # 校验角色对该系统下操作的管理范围
         checker = RoleAuthorizationScopeChecker(request.role)
-        checker.check_systems([system_id])
+        checker.check_actions(system_id, action_ids)
 
         self.biz.batch_create_or_update_action_process(system_id, action_ids, process_id, request.user.username)
 
@@ -249,7 +248,6 @@ class ActionSensitivityLevelViewSet(GenericViewSet):
         actions = slz.validated_data["actions"]
         sensitivity_level = slz.validated_data["sensitivity_level"]
 
-        # 目前只支持同一系统的批量Action设置审批流程
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
 
