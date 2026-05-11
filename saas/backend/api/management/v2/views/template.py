@@ -101,7 +101,7 @@ class ManagementTemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
         role = get_object_or_404(Role, tenant_id=self.tenant_id, type=RoleType.GRADE_MANAGER.value, id=role_id)
 
         # 校验系统是否本租户或全租户
-        self.system_biz(self.tenant_id).get(data["system_id"])
+        self.system_biz.get(data["system_id"])
 
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(role)

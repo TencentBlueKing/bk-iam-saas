@@ -52,7 +52,7 @@ class ManagementUserGradeManagerViewSet(BizMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         # 校验系统是否本租户或全租户
-        self.system_biz(self.tenant_id).get(data["system"])
+        self.system_biz.get(data["system"])
 
         roles = self.role_biz.list_user_role_for_system(data["user_id"], data["system"])
 

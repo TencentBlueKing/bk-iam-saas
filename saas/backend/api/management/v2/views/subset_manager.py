@@ -81,7 +81,7 @@ class ManagementSubsetManagerCreateListViewSet(BizMixin, TransMixin, GenericView
         # 校验所有涉及的系统是否本租户或全租户
         auth_system_ids = {i["system"] for i in data["authorization_scopes"]}
         for sid in {source_system_id, *auth_system_ids}:
-            self.system_biz(self.tenant_id).get(sid)
+            self.system_biz.get(sid)
 
         # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
@@ -210,7 +210,7 @@ class ManagementSubsetManagerViewSet(BizMixin, TransMixin, GenericViewSet):
         # 校验所有涉及的系统是否本租户或全租户
         auth_system_ids = {i["system"] for i in data["authorization_scopes"]}
         for sid in {kwargs["system_id"], *auth_system_ids}:
-            self.system_biz(self.tenant_id).get(sid)
+            self.system_biz.get(sid)
 
         # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]

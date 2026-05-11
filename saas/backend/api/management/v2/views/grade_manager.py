@@ -72,7 +72,7 @@ class ManagementGradeManagerViewSet(BizMixin, TransMixin, ManagementAPIPermissio
 
         # 校验所有涉及的系统是否本租户或全租户
         for sid in {source_system_id, *auth_system_ids}:
-            self.system_biz(self.tenant_id).get(sid)
+            self.system_biz.get(sid)
 
         # 检查该系统可创建的分级管理员数量是否超限
         self.role_check_biz.check_grade_manager_of_system_limit(source_system_id)
@@ -143,7 +143,7 @@ class ManagementGradeManagerViewSet(BizMixin, TransMixin, ManagementAPIPermissio
 
         # 校验新传入的 authorization_scopes 中所有 system 是否本租户或全租户
         for sid in auth_system_ids:
-            self.system_biz(self.tenant_id).get(sid)
+            self.system_biz.get(sid)
 
         # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]

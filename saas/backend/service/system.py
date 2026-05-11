@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 
 from typing import List, Optional
 
+from django.conf import settings
 from django.utils.translation import gettext as _
 
 from backend.common.cache import cachedmethod
@@ -30,7 +31,7 @@ class SystemList:
 
 
 class SystemService:
-    def __init__(self, tenant_id: str = ""):
+    def __init__(self, tenant_id: str):
         self.tenant_id = tenant_id
 
     def list(self, skip_tenant_filter: bool = False) -> List[System]:
@@ -47,7 +48,11 @@ class SystemService:
 
     def get(self, system_id: str) -> System:
         system = iam.get_system(system_id)
-        if system["tenant_id"] != self.tenant_id and system["tenant_id"] != "":
+        if (
+            system["tenant_id"] != self.tenant_id
+            and system["tenant_id"] != ""
+            and self.tenant_id != settings.BK_APP_TENANT_ID
+        ):
             raise error_codes.FORBIDDEN.format(_("租户不匹配，无权访问该系统"), True)
         return System(**system)
 

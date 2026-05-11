@@ -16,7 +16,7 @@ from backend.service.system import SystemService
 
 
 class SystemBiz:
-    def __init__(self, tenant_id: str = "") -> None:
+    def __init__(self, tenant_id: str) -> None:
         self.tenant_id = tenant_id
         self.svc = SystemService(self.tenant_id)
 

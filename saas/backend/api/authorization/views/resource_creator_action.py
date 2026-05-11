@@ -60,7 +60,7 @@ class ResourceCreatorActionView(AuthViewMixin, APIView):
         instances = [{"id": data["id"], "name": data["name"], "ancestors": data.get("ancestors")}]
 
         # 校验系统是否本租户或全租户
-        self.system_biz(self.tenant_id).get(system_id)
+        self.system_biz.get(system_id)
 
         # 查询出对应资源类型需要授予哪些 ActionID
         action_ids = self.resource_creator_action_biz.list_action_id(system_id, resource_type_id)
@@ -111,7 +111,7 @@ class BatchResourceCreatorActionView(AuthViewMixin, APIView):
         instances = data["instances"]
 
         # 校验系统是否本租户或全租户
-        self.system_biz(self.tenant_id).get(system_id)
+        self.system_biz.get(system_id)
 
         # 查询出对应资源类型需要授予哪些 ActionID
         action_ids = self.resource_creator_action_biz.list_action_id(system_id, resource_type_id)
@@ -162,7 +162,7 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
         attributes = data["attributes"]
 
         # 校验系统是否本租户或全租户
-        self.system_biz(self.tenant_id).get(system_id)
+        self.system_biz.get(system_id)
 
         # 查询出对应资源类型需要授予哪些 ActionID
         action_ids = self.resource_creator_action_biz.list_action_id(system_id, resource_type_id)

@@ -141,7 +141,7 @@ class ManagementGradeManagerApplicationViewSet(
 
         # 校验所有涉及的系统是否本租户或全租户
         for sid in {source_system_id, *auth_system_ids}:
-            self.system_biz(self.tenant_id).get(sid)
+            self.system_biz.get(sid)
 
         # 兼容 member 格式
         data["members"] = [{"username": username} for username in data["members"]]
@@ -207,7 +207,7 @@ class ManagementGradeManagerUpdatedApplicationViewSet(
 
         # 校验所有涉及的系统是否本租户或全租户
         for sid in {source_system_id, *auth_system_ids}:
-            self.system_biz(self.tenant_id).get(sid)
+            self.system_biz.get(sid)
 
         role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
 
