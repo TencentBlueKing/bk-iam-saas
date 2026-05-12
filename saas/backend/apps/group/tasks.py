@@ -47,14 +47,12 @@ def group_cleanup_expired_member():
 
     for i in paginator.page_range:
         for group in paginator.page(i):
-            # 查询指定过期时间之前的成员数量
-            count = biz.get_member_count_before_expired_at(group.id, expired_at)
-            if count == 0:
-                continue
+            # 循环删除过期的成员，每次从offset=0查询，避免删除后offset漂移导致遗漏或传入空成员列表
+            while True:
+                _, members = biz.list_paging_members_before_expired_at(group.id, expired_at, limit, 0)
+                if not members:
+                    break
 
-            # 分页删除过期的成员
-            for offset in range(0, count, limit):
-                _, members = biz.list_paging_members_before_expired_at(group.id, expired_at, limit, offset)
                 subjects = parse_obj_as(List[Subject], members)
                 biz.remove_members(str(group.id), subjects)
 
