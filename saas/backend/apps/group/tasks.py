@@ -54,6 +54,7 @@ def group_cleanup_expired_member():
 
             # 分页删除过期的成员
             for _ in range(0, count, limit):
+                # 每轮均从 offset=0 查询，避免删除后 offset 漂移导致遗漏
                 _, members = biz.list_paging_members_before_expired_at(group.id, expired_at, limit, 0)
                 if not members:
                     break
