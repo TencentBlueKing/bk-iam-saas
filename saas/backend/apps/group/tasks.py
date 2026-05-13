@@ -47,8 +47,16 @@ def group_cleanup_expired_member():
 
     for i in paginator.page_range:
         for group in paginator.page(i):
-            # 循环删除过期的成员，每次从offset=0查询，避免删除后offset漂移导致遗漏或传入空成员列表
-            while True:
+            # 先查询过期成员总数，计算需要执行的固定循环次数
+            count = biz.get_member_count_before_expired_at(group.id, expired_at)
+            if count == 0:
+                continue
+
+            # 向上取整计算循环次数：每轮删除一批 limit 条，最多需要 ceil(count / limit) 轮
+            iterations = (count + limit - 1) // limit
+
+            # 每轮均从 offset=0 查询，避免删除后 offset 漂移导致遗漏
+            for _ in range(iterations):
                 _, members = biz.list_paging_members_before_expired_at(group.id, expired_at, limit, 0)
                 if not members:
                     break
