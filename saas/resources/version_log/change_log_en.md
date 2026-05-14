@@ -1,3 +1,20 @@
+<!-- 2026-05-14 -->
+# V1.10.60 Version Update Log
+
+### Features
+* Added recycle audit logging for staff handover
+
+### Feature Enhancements
+* Refined concurrency control for staff handover and adapted PB protocol
+
+### Fixes
+* Fixed permission expiry cleanup task not functioning correctly
+* Fixed cross-system tampering vulnerability in action approval process update API
+* Locked axios version to prevent unintended dependency auto-upgrade
+* Fixed default page styling for group permission application
+
+---
+
 <!-- 2026-04-24 -->
 # V1.10.59 Version Update Log
 
