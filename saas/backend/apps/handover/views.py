@@ -61,41 +61,86 @@ class HandoverViewSet(GenericViewSet):
         reason = data["reason"]
         handover_info = data["handover_info"]
 
-        lock = gen_permission_handover_lock(handover_from)
-        if not lock.acquire():
-            # 拿不到锁，直接返回
-            raise error_codes.TASK_EXIST
+        handover_record = self._create_handover_record(handover_from, handover_to, reason, handover_info)
+        # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
+        execute_handover_task.delay(
+            handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
+        )
+
+        return Response({"id": handover_record.id})
+
+    def _create_handover_record(self, handover_from, handover_to, reason, handover_info):
+        """创建交接记录及子任务，包含对象粒度的分布式锁和重复任务校验"""
+        handover_task_details = self._gen_handover_tasks(handover_from, handover_info)
+        # 按对象粒度加锁，防止并发创建相同对象的交接任务
+        locks = self._acquire_handover_task_locks(handover_from, handover_task_details)
 
         try:
-            handover_record = HandoverRecord.objects.filter(
-                handover_from=handover_from, status=HandoverStatus.RUNNING.value
-            ).first()
-            if handover_record is not None:
-                # 已存在正在运行的任务，不能新建任务
+            if self._has_running_handover_tasks(handover_from, handover_task_details):
+                # 已存在相同交接对象正在运行的任务，不能新建重复任务
                 raise error_codes.TASK_EXIST
 
             with transaction.atomic():
-                # 创建任务
                 handover_record = HandoverRecord.objects.create(
                     handover_from=handover_from, handover_to=handover_to, reason=reason
                 )
 
-                handover_task_details = self._gen_handover_tasks(handover_from, handover_info, handover_record)
+                # 子任务在生成时未关联 record，此处回填关联关系
+                for task in handover_task_details:
+                    task.handover_record_id = handover_record.id
 
-                # 创建子任务信息
                 if handover_task_details:
                     HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
-            # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
-            execute_handover_task.delay(
-                handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
-            )
+
+            return handover_record
         finally:
-            # 释放锁
-            lock.release()
+            for lock in locks:
+                lock.release()
 
-        return Response({"id": handover_record.id})
+    def _acquire_handover_task_locks(self, handover_from, handover_task_details):
+        """逐个获取对象粒度的分布式锁，任一锁获取失败时回滚已持有的锁并抛出异常"""
+        locks = []
 
-    def _gen_handover_tasks(self, handover_from, handover_info, handover_record):
+        for key in self._gen_handover_task_lock_keys(handover_from, handover_task_details):
+            lock = gen_permission_handover_lock(key)
+            if not lock.acquire():
+                for acquired_lock in locks:
+                    acquired_lock.release()
+                raise error_codes.TASK_EXIST
+            locks.append(lock)
+
+        return locks
+
+    def _gen_handover_task_lock_keys(self, handover_from, handover_task_details):
+        """生成排序后的锁 key 集合，格式为 handover_from:object_type:object_id，排序以避免死锁"""
+        return sorted(
+            {"{}:{}:{}".format(handover_from, task.object_type, task.object_id) for task in handover_task_details}
+        )
+
+    def _has_running_handover_tasks(self, handover_from, handover_task_details):
+        """检查是否已存在相同交接对象的运行中任务，通过 (object_type, object_id) 集合交集判断"""
+        new_task_keys = {(task.object_type, str(task.object_id)) for task in handover_task_details}
+        if not new_task_keys:
+            return False
+
+        running_record_ids = list(
+            HandoverRecord.objects.filter(
+                handover_from=handover_from, status=HandoverStatus.RUNNING.value
+            ).values_list("id", flat=True)
+        )
+        if not running_record_ids:
+            return False
+
+        existing_task_keys = set(
+            HandoverTask.objects.filter(handover_record_id__in=running_record_ids).values_list(
+                "object_type", "object_id"
+            )
+        )
+
+        return bool(new_task_keys & existing_task_keys)
+
+    def _gen_handover_tasks(self, handover_from, handover_info):
+        """根据交接信息生成子任务列表（未关联 handover_record，由调用方回填）"""
         handover_task_details = []
         for key, value in handover_info.items():
             if not value:
@@ -107,9 +152,8 @@ class HandoverViewSet(GenericViewSet):
             for one in info:
                 handover_task_details.append(
                     HandoverTask(
-                        handover_record_id=handover_record.id,
                         object_type=key,
-                        object_id=one["id"],
+                        object_id=str(one["id"]),
                         object_detail=json_dumps(one),
                     )
                 )

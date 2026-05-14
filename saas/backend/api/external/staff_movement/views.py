@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -8,7 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.db import transaction
+import time
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.renderers import JSONRenderer
@@ -23,15 +24,13 @@ from backend.api.external.staff_movement.serializers import (
     ResignHandoverSLZ,
     RtxSLZ,
 )
-from backend.apps.handover.constants import HandoverStatus
-from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.apps.handover.tasks import execute_handover_task
 from backend.apps.handover.views import HandoverViewSet
+from backend.audit.audit import log_group_event, log_user_event
+from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.common.error_codes import error_codes
 from backend.common.exception_handler import exception_handler
-from backend.common.lock import gen_permission_handover_lock
 from backend.service.models.subject import Subject
 
 
@@ -51,13 +50,14 @@ class GetAssetsViewSet(GenericViewSet):
         if response is None:
             return None
         data = response.data
+        # 调用方只处理 HTTP 200 响应，统一返回 200，通过 code 区分成功与失败
         return Response(
-            {"code": data.get("code"), "message": data.get("message"), "assets": []},
-            status=response.status_code,
+            {"code": data.get("code"), "msg": data.get("message"), "assets": []},
+            status=status.HTTP_200_OK,
         )
 
     @swagger_auto_schema(
-        operation_description="PCG权限交接-获取资产列表",
+        operation_description="PCG 权限交接 - 获取资产列表",
         request_body=RtxSLZ(label="用户"),
         responses={status.HTTP_200_OK: AssetSLZ(label="资产列表", many=True)},
         tags=["resign"],
@@ -99,6 +99,7 @@ class ResignHandoverViewSet(HandoverViewSet):
     authentication_classes = [ResignApiAuthentication]
     renderer_classes = [JSONRenderer]
 
+    group_biz = GroupBiz()
     policy_query_biz = PolicyQueryBiz()
 
     def handle_exception(self, exc):
@@ -107,13 +108,14 @@ class ResignHandoverViewSet(HandoverViewSet):
         if response is None:
             return None
         data = response.data
+        # 调用方只处理 HTTP 200 响应，统一返回 200，通过 code 区分成功与失败
         return Response(
-            {"code": data.get("code"), "message": data.get("message"), "err_list": []},
-            status=response.status_code,
+            {"code": data.get("code"), "msg": data.get("message"), "err_list": []},
+            status=status.HTTP_200_OK,
         )
 
     @swagger_auto_schema(
-        operation_description="PCG权限交接-交接",
+        operation_description="PCG 权限交接 - 交接",
         request_body=ResignHandoverSLZ(label="用户"),
         responses={status.HTTP_200_OK: HandoverResultSLZ(label="错误信息")},
         tags=["resign"],
@@ -124,50 +126,46 @@ class ResignHandoverViewSet(HandoverViewSet):
         activity_rtx = serializer.validated_data["activity_rtx"]
         handover_rtx = serializer.validated_data["handover_rtx"]
         assets = serializer.validated_data["assets"]
-        handover_info = {"group_ids": [], "custom_policies": []}
-        err_list = []
-        for asset in assets:
-            if asset["id"] == 0:
-                policies = self.policy_query_biz.list_by_subject(asset["info"], Subject.from_username(activity_rtx))
-                policy_ids = [policy.policy_id for policy in policies]
-                handover_info["custom_policies"].append({"system_id": asset["info"], "policy_ids": policy_ids})
-            else:
-                handover_info["group_ids"].append(asset["id"])
 
-        lock = gen_permission_handover_lock(activity_rtx)
-        if not lock.acquire():
-            # 拿不到锁, 直接返回
-            raise error_codes.TASK_EXIST
-        try:
-            handover_record = HandoverRecord.objects.filter(
-                handover_from=activity_rtx, status=HandoverStatus.RUNNING.value
-            ).first()
-            if handover_record is not None:
-                # 已存在正在运行的任务, 不能新建任务
-                raise error_codes.TASK_EXIST
+        handover_info, err_list = self._filter_expired_assets(activity_rtx, assets)
 
-            with transaction.atomic():
-                # 创建任务
-                handover_record = HandoverRecord.objects.create(
-                    handover_from=activity_rtx, handover_to=handover_rtx, reason="离职交接"
-                )
-
-                handover_task_details = self._gen_handover_tasks(activity_rtx, handover_info, handover_record)
-
-                # 创建子任务信息
-                if handover_task_details:
-                    HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
-
+        # 还有未过期的资产需要交接
+        if handover_info["group_ids"] or handover_info["custom_policies"]:
+            # 非预期异常（锁冲突、DB 等）不再 try/except，交给 handle_exception 兜底
+            handover_record = self._create_handover_record(activity_rtx, handover_rtx, "[PCG] 离职交接", handover_info)
             execute_handover_task.delay(
                 handover_from=activity_rtx, handover_to=handover_rtx, handover_record_id=handover_record.id
             )
-        except Exception as e:  # pylint: disable=broad-except
-            err_list.append({"fail_reason": str(e), "info": []})
-        finally:
-            # 释放锁
-            lock.release()
 
-        return Response({"err_list": err_list, "code": 0, "msg": "OK"})
+        if err_list:
+            return Response({"err_list": err_list, "code": 500, "msg": "FAILED"})
+        # 异步处理中
+        return Response({"err_list": [], "code": 202, "msg": "OK"})
+
+    def _filter_expired_assets(self, activity_rtx, assets):
+        """前置过期检查：逐资产过滤，过期资产加入 err_list，未过期的构建 handover_info"""
+        handover_info = {"group_ids": [], "custom_policies": []}
+        err_list = []
+
+        now_ts = int(time.time())
+        subject = Subject.from_username(activity_rtx)
+        valid_group_ids = {g.id for g in self.group_biz.list_all_subject_group(subject) if g.expired_at > now_ts}
+
+        for asset in assets:
+            if asset["id"] == 0:
+                policies = self.policy_query_biz.list_by_subject(asset["info"], subject)
+                policy_ids = [p.policy_id for p in policies if not p.is_expired()]
+                if not policy_ids:
+                    err_list.append({"fail_reason": "自定义权限已过期，无法交接，只能回收", "info": asset})
+                    continue
+                handover_info["custom_policies"].append({"system_id": asset["info"], "policy_ids": policy_ids})
+            else:
+                if asset["id"] not in valid_group_ids:
+                    err_list.append({"fail_reason": "用户组权限已过期，无法交接，只能回收", "info": asset})
+                    continue
+                handover_info["group_ids"].append(asset["id"])
+
+        return handover_info, err_list
 
 
 class RecycleViewSet(ResignHandoverViewSet):
@@ -182,7 +180,7 @@ class RecycleViewSet(ResignHandoverViewSet):
     policy_operation_biz = PolicyOperationBiz()
 
     @swagger_auto_schema(
-        operation_description="PCG权限交接-回收",
+        operation_description="PCG 权限交接 - 回收",
         request_body=RecycleSLZ(label="用户"),
         responses={status.HTTP_200_OK: HandoverResultSLZ(label="错误信息")},
         tags=["resign"],
@@ -192,23 +190,32 @@ class RecycleViewSet(ResignHandoverViewSet):
         serializer.is_valid(raise_exception=True)
         activity_rtx = serializer.validated_data["activity_rtx"]
         assets = serializer.validated_data["assets"]
+        subject = Subject.from_username(activity_rtx)
         err_list = []
         for asset in assets:
             try:
                 if asset["id"] == 0:
                     # 自定义权限回收
-                    policies = self.policy_query_biz.list_by_subject(
-                        asset["info"], Subject.from_username(activity_rtx)
-                    )
+                    policies = self.policy_query_biz.list_by_subject(asset["info"], subject)
                     policy_ids = [policy.policy_id for policy in policies]
-                    self.policy_operation_biz.delete_by_ids(
-                        asset["info"], Subject.from_username(activity_rtx), policy_ids
+                    self.policy_operation_biz.delete_by_ids(asset["info"], subject, policy_ids)
+                    log_user_event(
+                        AuditType.USER_POLICY_DELETE.value,
+                        subject,
+                        asset["info"],
+                        [p.dict() for p in policies],
+                        source_type=AuditSourceType.OPENAPI.value,
                     )
                 else:
                     # 用户组权限回收
-                    self.group_biz.remove_members(str(asset["id"]), [Subject.from_username(activity_rtx)])
+                    self.group_biz.remove_members(str(asset["id"]), [subject])
+                    log_group_event(
+                        AuditType.GROUP_MEMBER_DELETE.value,
+                        subject,
+                        [int(asset["id"])],
+                        source_type=AuditSourceType.OPENAPI.value,
+                    )
             except Exception as e:  # pylint: disable=broad-except
                 err_list.append({"fail_reason": str(e), "info": asset})
-                continue
 
-        return Response({"err_list": err_list, "code": 0, "msg": "OK"})
+        return Response({"err_list": err_list, "code": 500 if err_list else 0, "msg": "FAILED" if err_list else "OK"})
