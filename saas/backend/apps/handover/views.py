@@ -10,17 +10,21 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict, Type
 
+from django.conf import settings
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
+from backend.apps.application.models import Application
 from backend.apps.application.views import admin_not_need_apply_check
 from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
+from backend.biz.application import ApplicationBiz, HandoverApplicationDataBean
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_permission_handover_lock
+from backend.service.constants import ApplicationStatus, ApplicationType
 from backend.util.json import json_dumps
 
 from .constants import HandoverObjectType
@@ -43,6 +47,8 @@ HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseHandoverDataProcessor]] = {
 
 
 class HandoverViewSet(GenericViewSet):
+    application_biz = ApplicationBiz()
+
     @swagger_auto_schema(
         operation_description="执行权限交接",
         request_body=HandoverSLZ(label="交接信息"),
@@ -67,33 +73,75 @@ class HandoverViewSet(GenericViewSet):
             raise error_codes.TASK_EXIST
 
         try:
+            # 互斥校验: 已存在正在执行的交接任务
             handover_record = HandoverRecord.objects.filter(
                 handover_from=handover_from, status=HandoverStatus.RUNNING.value
             ).first()
             if handover_record is not None:
-                # 已存在正在运行的任务，不能新建任务
                 raise error_codes.TASK_EXIST
 
-            with transaction.atomic():
-                # 创建任务
-                handover_record = HandoverRecord.objects.create(
-                    handover_from=handover_from, handover_to=handover_to, reason=reason
-                )
+            # 审批开关开启时, 走 Application + ITSM 审批流; 否则保持原有立即生效逻辑
+            if getattr(settings, "ENABLE_HANDOVER_APPROVAL", False):
+                return self._create_with_approval(handover_from, handover_to, reason, handover_info)
 
-                handover_task_details = self._gen_handover_tasks(handover_from, handover_info, handover_record)
-
-                # 创建子任务信息
-                if handover_task_details:
-                    HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
-            # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
-            execute_handover_task.delay(
-                handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
-            )
+            return self._create_immediately(handover_from, handover_to, reason, handover_info)
         finally:
             # 释放锁
             lock.release()
 
+    def _create_immediately(self, handover_from, handover_to, reason, handover_info):
+        """关闭审批开关:  立即创建 HandoverRecord 并触发异步执行"""
+        with transaction.atomic():
+            # 创建任务
+            handover_record = HandoverRecord.objects.create(
+                handover_from=handover_from, handover_to=handover_to, reason=reason
+            )
+
+            handover_task_details = self._gen_handover_tasks(handover_from, handover_info, handover_record)
+
+            # 创建子任务信息
+            if handover_task_details:
+                HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
+        # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
+        execute_handover_task.delay(
+            handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
+        )
+
         return Response({"id": handover_record.id})
+
+    def _create_with_approval(self, handover_from, handover_to, reason, handover_info):
+        """开启审批开关: 走 ITSM 审批"""
+        # 1. 互斥校验: 已存在审批中的交接申请单
+        if Application.objects.filter(
+            applicant=handover_from,
+            type=ApplicationType.HANDOVER.value,
+            status=ApplicationStatus.PENDING.value,
+        ).exists():
+            raise error_codes.TASK_EXIST
+
+        # 2. 提前校验交接内容合法性, 避免审批通过后才发现非法
+        for key, value in handover_info.items():
+            if not value:
+                continue
+            HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
+
+        # 3. 创建审批单 (审批人由 ITSM 流程模板自身决定)
+        application = self.application_biz.create_for_handover(
+            HandoverApplicationDataBean(
+                applicant=handover_from,
+                reason=reason,
+                handover_to=handover_to,
+                handover_info=handover_info,
+            ),
+        )
+
+        return Response(
+            {
+                "application_id": application.id,
+                "approval_sn": application.sn,
+                "status": ApplicationStatus.PENDING.value,
+            }
+        )
 
     def _gen_handover_tasks(self, handover_from, handover_info, handover_record):
         handover_task_details = []
@@ -130,7 +178,7 @@ class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
         tags=["handover"],
     )
     def list(self, request, *args, **kwargs):
-        return super().list(self, *args, **kwargs)
+        return super().list(request, *args, **kwargs)
 
 
 class HandoverTasksViewSet(mixins.ListModelMixin, GenericViewSet):

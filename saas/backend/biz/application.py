@@ -35,6 +35,7 @@ from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
+from backend.util.json import json_dumps
 from backend.service.constants import (
     ApplicationStatus,
     ApplicationType,
@@ -63,6 +64,8 @@ from backend.service.models import (
     GrantActionApplicationData,
     GroupApplicationContent,
     GroupApplicationData,
+    HandoverApplicationContent,
+    HandoverApplicationData,
     Subject,
 )
 from backend.service.role import RoleService
@@ -130,6 +133,15 @@ class GradeManagerApplicationDataBean(BaseApplicationDataBean):
     role_id: int = 0
     role_info: RoleInfo
     group_name: str = ""
+
+
+class HandoverApplicationDataBean(BaseApplicationDataBean):
+    """权限交接审批"""
+
+    # 被交接人
+    handover_to: str
+    # 交接的权限内容, 与提交接口 handover_info 保持一致, 整体透传以便审批通过后再走 V3 已有交接链路
+    handover_info: Dict[str, Any]
 
 
 class ApplicationIDStatusDict(BaseModel):
@@ -407,6 +419,73 @@ class ApprovedPassApplicationBiz:
         )
 
         log_user_event(AuditType.USER_TEMPORARY_POLICY_CREATE.value, subject, system_id, actions, sn=application.sn)
+
+    def _handover(self, subject: Subject, application: Application):
+        """权限交接审批通过处理
+
+        审批通过时才真正创建 HandoverRecord + HandoverTask 并触发异步执行, 保持与 V3 历史交接链路一致.
+        幂等保护: handle_application_result 已确保只有 PENDING→PASS 的状态迁移才会进入此处,
+        因此同一 Application 不会重复触发 _handover.
+        """
+        # 避免循环依赖, 局部导入
+        from backend.apps.handover.constants import HandoverStatus
+        from backend.apps.handover.models import HandoverRecord, HandoverTask
+        from backend.apps.handover.tasks import execute_handover_task
+        from backend.apps.handover.views import HANDOVER_VALIDATOR_MAP
+
+        # NOTE: HandoverApplicationData.raw_content 直接返回 content.dict(),
+        # 因此 application.data 顶层就是 HandoverApplicationContent 的字段, 没有外层 "content" 包装.
+        app_data = application.data or {}
+        handover_from = app_data.get("handover_from") or application.applicant
+        handover_to = app_data.get("handover_to")
+        handover_info = app_data.get("handover_info") or {}
+        reason = application.reason
+
+        if not handover_to:
+            logger.error("application [%d] handover content invalid: missing handover_to", application.id)
+            return
+
+        with transaction.atomic():
+            # 1. 构造 HandoverRecord (此时才入库, 状态直接进入 RUNNING)
+            handover_record = HandoverRecord.objects.create(
+                handover_from=handover_from,
+                handover_to=handover_to,
+                reason=reason,
+                status=HandoverStatus.RUNNING.value,
+            )
+
+            # 2. 基于 handover_info 重新解析明细 (与 V3 现有逻辑一致)
+            handover_task_details: List[HandoverTask] = []
+            for key, value in handover_info.items():
+                if not value:
+                    continue
+                validator_cls = HANDOVER_VALIDATOR_MAP.get(key)
+                if validator_cls is None:
+                    logger.warning(
+                        "application [%d] handover unknown object_type=%s, skip", application.id, key
+                    )
+                    continue
+                validator = validator_cls(handover_from, value)
+                validator.validate()
+                for one in validator.get_info():
+                    handover_task_details.append(
+                        HandoverTask(
+                            handover_record_id=handover_record.id,
+                            object_type=key,
+                            object_id=one["id"],
+                            object_detail=json_dumps(one),
+                        )
+                    )
+
+            if handover_task_details:
+                HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
+
+        # 3. 事务提交后再启动异步任务, 避免 delay 比事务提交更快导致查不到 HandoverTask
+        execute_handover_task.delay(
+            handover_from=handover_from,
+            handover_to=handover_to,
+            handover_record_id=handover_record.id,
+        )
 
     def handle(self, application: Application):
         """审批通过处理"""
@@ -861,6 +940,39 @@ class ApplicationBiz:
         )
 
         return [application]
+
+    def create_for_handover(
+        self,
+        data: HandoverApplicationDataBean,
+    ) -> Application:
+        """创建权限交接审批单据
+
+        审批通过后由 ApprovedPassApplicationBiz._handover 基于 application.data 重建 HandoverRecord 并触发执行;
+        审批拒绝/取消则只更新 Application.status, 不创建 HandoverRecord, 与现有申请类型一致.
+        """
+        # 1. 申请者信息 (申请者 = 交接发起人)
+        applicant_info = self._get_applicant_info(data.applicant)
+
+        # 2. 取默认审批流程, 若未配置会自动从 ITSM provider 拉一次默认值并落库
+        default_process = self.approval_process_svc.get_default_process(ApplicationType.HANDOVER.value)
+
+        # 3. 实例化流程节点处理人 (handover 没有 system_id/group_id, 不需要附加 kwargs)
+        process = self._get_approval_process_with_node_processor(default_process.process)
+
+        # 4. 组装数据并创建单据
+        application_data = HandoverApplicationData(
+            type=ApplicationType.HANDOVER,
+            applicant_info=applicant_info,
+            reason=data.reason,
+            content=HandoverApplicationContent(
+                handover_from=data.applicant,
+                handover_to=data.handover_to,
+                handover_info=data.handover_info,
+            ),
+        )
+        application = self.svc.create_for_handover(application_data, process)
+
+        return application
 
     def handle_application_result(self, application: Application, status: ApplicationStatus):
         """处理审批单据结果"""

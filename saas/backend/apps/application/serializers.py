@@ -149,6 +149,10 @@ class ApplicationListSLZ(serializers.ModelSerializer):
             extra_info["system_name_en"] = system.get("name_en")
         elif obj.type in [ApplicationType.JOIN_GROUP.value, ApplicationType.RENEW_GROUP.value]:
             extra_info["group_count"] = len(obj.data["groups"])
+        elif obj.type == ApplicationType.HANDOVER.value:
+            data = obj.data or {}
+            extra_info["handover_from"] = data.get("handover_from") or obj.applicant
+            extra_info["handover_to"] = data.get("handover_to", "")
         return extra_info
 
 

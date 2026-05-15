@@ -14,12 +14,14 @@ from rest_framework.request import Request
 
 from backend.component import itsm
 from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource
+
 from backend.service.models import (
     ApplicationTicket,
     ApprovalProcessWithNodeProcessor,
     GradeManagerApplicationData,
     GrantActionApplicationData,
     GroupApplicationData,
+    HandoverApplicationData,
     TypeUnionApplicationData,
 )
 
@@ -58,6 +60,15 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             for node in process.nodes
             if node.processor_source == ProcessorSource.IAM.value
         }
+
+        # [TEMP DEBUG] 排查 handover 节点 source 是否被识别为 OTHER
+        print(
+            "itsm create_ticket debug: type=%s, process_id=%s, nodes=%s, node_processors=%s",
+            data.type,
+            process.id,
+            [(n.id, n.name, n.processor_source, n.processor_type, n.processors) for n in process.nodes],
+            node_processors_dict,
+        )
 
         # 申请人的组织架构
         departments = data.applicant_info.organization
@@ -201,6 +212,49 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             params["content"] = {
                 "schemes": FORM_SCHEMES,
                 "form_data": GradeManagerForm.from_application(data.content).form_data,
+            }
+
+        params["tag"] = tag or DEFAULT_TAG
+        ticket = itsm.create_ticket(**params)
+        return ticket["sn"]
+
+    def create_for_handover(
+        self,
+        data: HandoverApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
+        tag: str = "",
+    ) -> str:
+        """创建 - 权限交接审批单据
+
+        审批人由 ITSM 流程模板自身决定 (推荐配置 processors_type=STARTER_LEADER, 即提单人上级),
+        IAM 不再注入处理人, 与其他申请类型工单内容保持一致.
+        """
+        params = self._generate_ticket_common_params(data, process, callback_url)
+
+        if approval_title:
+            params["title"] = approval_title
+        else:
+            params["title"] = f"申请将 {data.content.handover_from} 的权限交接给 {data.content.handover_to}"
+
+        if approval_content:
+            params["content"] = approval_content
+        else:
+            # 简单的展示性 content; 详细字段沿用 raw_content, 直接以表单形式展示
+            params["content"] = {
+                "schemes": FORM_SCHEMES,
+                "form_data": [
+                    {
+                        "scheme": "base_info_scheme",
+                        "value": [
+                            {"key": "交接人", "value": data.content.handover_from},
+                            {"key": "被交接人", "value": data.content.handover_to},
+                            {"key": "交接原因", "value": data.reason or "--"},
+                        ],
+                    }
+                ],
             }
 
         params["tag"] = tag or DEFAULT_TAG

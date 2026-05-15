@@ -347,5 +347,40 @@ class GradeManagerApplicationData(ApplicationDataBaseInfo):
 # 申请创建/更新分级管理员数据结构 End #
 
 
+# 权限交接申请数据结构 Start #
+class HandoverApplicationContent(BaseModel):
+    """权限交接申请内容
+
+    NOTE: 该 content 仅用于 ITSM 单据展示与审批回调时还原交接动作, 不与具体的 HandoverRecord/HandoverTask 行直接挂钩.
+    审批通过后, 由 ApprovedPassApplicationBiz._handover 基于 handover_info 重新走 V3 已有的 handover 落库 + 异步执行链路.
+    审批人由 ITSM 流程模板自身决定 (推荐配置 processors_type=STARTER_LEADER), IAM 不再注入处理人.
+    """
+
+    # 交接发起人 (=applicant)
+    handover_from: str
+    # 被交接人
+    handover_to: str
+    # 交接的权限信息
+    handover_info: Dict[str, Any]
+
+
+class HandoverApplicationData(ApplicationDataBaseInfo):
+    """权限交接申请单据所有数据"""
+
+    content: HandoverApplicationContent
+
+    def raw_content(self) -> Dict:
+        """返回原生申请内容, 保存到 DB 里的"""
+        return self.content.dict()
+
+
+# 权限交接申请数据结构 End #
+
+
 # 定义新类型，几种单据的联合, 这里不使用NewType，不然mypy检查过不了
-TypeUnionApplicationData = Union[GrantActionApplicationData, GroupApplicationData, GradeManagerApplicationData]
+TypeUnionApplicationData = Union[
+    GrantActionApplicationData,
+    GroupApplicationData,
+    GradeManagerApplicationData,
+    HandoverApplicationData,
+]

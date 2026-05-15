@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -24,6 +25,8 @@ from backend.biz.role import RoleBiz
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.constants import RoleType
 from backend.service.models import Subject
+
+logger = logging.getLogger(__name__)
 
 
 class BaseHandoverHandler(ABC):
