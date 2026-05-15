@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from django.core.management.base import BaseCommand
 from django.core.paginator import Paginator
+from django.db import connection
 
 from backend.apps.role.models import Role
 from backend.biz.role import RoleResourceRelationHelper
@@ -19,10 +20,19 @@ class Command(BaseCommand):
     help = "migrate role resource label"
 
     def handle(self, *args, **options):
-        queryset = Role.objects.filter(hidden=False).all()
+        # 使用原始SQL获取所有非隐藏角色的ID，绕过可能不存在的enabled字段
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id FROM role_role WHERE hidden = false")
+            role_ids = [row[0] for row in cursor.fetchall()]
 
-        paginator = Paginator(queryset, 100)
+        print(f"找到 {len(role_ids)} 个需要迁移的角色")
 
-        for i in paginator.page_range:
-            for role in paginator.page(i):
+        # 批量处理角色
+        batch_size = 100
+        for i in range(0, len(role_ids), batch_size):
+            batch_ids = role_ids[i : i + batch_size]
+
+            for role_id in batch_ids:
+                # 创建临时的Role对象,RoleResourceRelationHelper.handle()方法只使用role.id
+                role = Role(id=role_id)
                 RoleResourceRelationHelper(role).handle()
