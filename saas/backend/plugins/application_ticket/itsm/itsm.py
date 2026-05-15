@@ -14,7 +14,6 @@ from rest_framework.request import Request
 
 from backend.component import itsm
 from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource
-
 from backend.service.models import (
     ApplicationTicket,
     ApprovalProcessWithNodeProcessor,

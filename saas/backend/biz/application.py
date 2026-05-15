@@ -35,7 +35,6 @@ from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
-from backend.util.json import json_dumps
 from backend.service.constants import (
     ApplicationStatus,
     ApplicationType,
@@ -70,6 +69,7 @@ from backend.service.models import (
 )
 from backend.service.role import RoleService
 from backend.service.system import SystemService
+from backend.util.json import json_dumps
 
 from .application_process import (
     GradeManagerApproverHandler,
@@ -461,9 +461,7 @@ class ApprovedPassApplicationBiz:
                     continue
                 validator_cls = HANDOVER_VALIDATOR_MAP.get(key)
                 if validator_cls is None:
-                    logger.warning(
-                        "application [%d] handover unknown object_type=%s, skip", application.id, key
-                    )
+                    logger.warning("application [%d] handover unknown object_type=%s, skip", application.id, key)
                     continue
                 validator = validator_cls(handover_from, value)
                 validator.validate()
