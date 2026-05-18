@@ -20,17 +20,10 @@ class Command(BaseCommand):
     help = "migrate role resource label"
 
     def handle(self, *args, **options):
-        # 使用原始SQL获取所有非隐藏角色的ID，绕过可能不存在的enabled字段
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT id FROM role_role WHERE hidden = false")
-            role_ids = [row[0] for row in cursor.fetchall()]
+        queryset = Role.objects.filter(hidden=False).only("id")
 
-        # 批量处理角色
-        batch_size = 100
-        for i in range(0, len(role_ids), batch_size):
-            batch_ids = role_ids[i : i + batch_size]
+        paginator = Paginator(queryset, 100)
 
-            for role_id in batch_ids:
-                # 创建临时的Role对象,RoleResourceRelationHelper.handle()方法只使用role.id
-                role = Role(id=role_id)
+        for i in paginator.page_range:
+            for role in paginator.page(i):
                 RoleResourceRelationHelper(role).handle()
