@@ -25,12 +25,10 @@ def add_admin_to_super_manager_member(apps, schema_editor):
     if exists:
         return
 
-    # 添加成员 - 注意：RoleUser继承自BaseModel，需要creator和updater字段
+    # 添加成员
     RoleUser.objects.create(
         role_id=role.id,
         username=username,
-        creator="system",  # 新增：必填字段
-        updater="system"   # 新增：必填字段
     )
 
     # 拥有所有系统的权限
@@ -39,8 +37,6 @@ def add_admin_to_super_manager_member(apps, schema_editor):
         role_id=role.id,
         defaults={
             "content": '{"enabled_users": [], "global_enabled": false}',
-            "creator": "system",
-            "updater": "system"
         }
     )
 

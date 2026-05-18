@@ -25,8 +25,6 @@ class Command(BaseCommand):
             cursor.execute("SELECT id FROM role_role WHERE hidden = false")
             role_ids = [row[0] for row in cursor.fetchall()]
 
-        print(f"找到 {len(role_ids)} 个需要迁移的角色")
-
         # 批量处理角色
         batch_size = 100
         for i in range(0, len(role_ids), batch_size):
