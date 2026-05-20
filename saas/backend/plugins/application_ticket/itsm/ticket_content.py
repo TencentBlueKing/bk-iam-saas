@@ -8,10 +8,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List
+from typing import Any, Dict, List
 
 from pydantic import BaseModel
 
+from backend.common.time import expired_at_display
 from backend.service.constants import (
     ANY_ID,
     PolicyEnvConditionType,
@@ -35,6 +36,7 @@ from backend.service.models import (
     GradeManagerApplicationContent,
     GrantActionApplicationContent,
     GroupApplicationContent,
+    HandoverApplicationContent,
 )
 
 from .ticket_content_tpl import FormSchemeEnum
@@ -536,5 +538,183 @@ class GradeManagerForm(BaseModel):
             department_values = [BaseDictStrValue(value=d.full_name) for d in departments]
             department_values.insert(0, BaseDictStrValue(label="【可授权的组织范围】: "))
             form_data.append(BaseMultiLineText(value=department_values))
+
+        return cls(form_data=[d.dict() for d in form_data])
+
+
+# ---------------------------- 权限交接申请 ----------------------------
+class HandoverItemColumnValue(BaseModel):
+    """权限交接详情表格每一列的值"""
+
+    object_type: BaseDictStrValue
+    name: BaseDictStrValue
+    description: BaseDictStrValue
+    expired_display: BaseDictStrValue
+
+    @classmethod
+    def from_group_info(cls, group_info: Dict[str, Any]):
+        """从用户组信息创建"""
+        expired_display = expired_at_display(group_info["expired_at"]) if group_info.get("expired_at") else "--"
+        return cls(
+            object_type=BaseDictStrValue(value="用户组"),
+            name=BaseDictStrValue(value=group_info.get("name", "")),
+            description=BaseDictStrValue(value=group_info.get("description", "--")),
+            expired_display=BaseDictStrValue(value=expired_display),
+        )
+
+    @classmethod
+    def from_custom_policy_info(cls, policy_info: Dict[str, Any]):
+        """从自定义权限信息创建"""
+        # 自定义权限是按系统分组的，需要展开每个权限
+        values = []
+        for policy_detail in policy_info.get("policy_details", []):
+            expired_display = policy_detail.get("expired_display", "--")
+            values.append(
+                cls(
+                    object_type=BaseDictStrValue(value="自定义权限"),
+                    name=BaseDictStrValue(
+                        value=f"{policy_info.get('name', '')} - {policy_detail.get('action_name', '')}"
+                    ),
+                    description=BaseDictStrValue(value="--"),
+                    expired_display=BaseDictStrValue(value=expired_display),
+                )
+            )
+        return values
+
+    @classmethod
+    def from_role_info(cls, role_info: Dict[str, Any]):
+        """从角色信息创建"""
+        return cls(
+            object_type=BaseDictStrValue(value="角色"),
+            name=BaseDictStrValue(value=role_info.get("name", "")),
+            description=BaseDictStrValue(value=role_info.get("description", "--")),
+            expired_display=BaseDictStrValue(value="--"),
+        )
+
+    @classmethod
+    def from_template_info(cls, template_info: Dict[str, Any]):
+        """从人员模板信息创建"""
+        return cls(
+            object_type=BaseDictStrValue(value="人员模板"),
+            name=BaseDictStrValue(value=template_info.get("name", "")),
+            description=BaseDictStrValue(value=template_info.get("description", "--")),
+            expired_display=BaseDictStrValue(value="--"),
+        )
+
+
+class HandoverItemTable(BaseModel):
+    """权限交接详情表格"""
+
+    label: str = "交接详情"
+    scheme: str = FormSchemeEnum.HANDOVER_TABLE.value  # 使用ticket_content_tpl.py中定义的scheme
+    value: List[HandoverItemColumnValue]
+
+    @classmethod
+    def from_handover_info(cls, handover_info: Dict[str, Any]):
+        """从交接信息创建表格"""
+        values = []
+
+        # 处理用户组
+        groups = handover_info.get("group_ids")
+        if groups:
+            for group in groups:
+                if isinstance(group, dict):
+                    values.append(HandoverItemColumnValue.from_group_info(group))
+
+        # 处理自定义权限
+        custom_policies = handover_info.get("custom_policies")
+        if custom_policies:
+            for policy_info in custom_policies:
+                if isinstance(policy_info, dict):
+                    values.extend(HandoverItemColumnValue.from_custom_policy_info(policy_info))
+
+        # 处理角色
+        roles = handover_info.get("role_ids")
+        if roles:
+            for role in roles:
+                if isinstance(role, dict):
+                    values.append(HandoverItemColumnValue.from_role_info(role))
+
+        # 处理人员模板
+        templates = handover_info.get("subject_template_ids")
+        if templates:
+            for template in templates:
+                if isinstance(template, dict):
+                    values.append(HandoverItemColumnValue.from_template_info(template))
+
+        # 如果没有找到任何值，则添加一个空行表示暂无数据
+        if not values:
+            values.append(
+                HandoverItemColumnValue(
+                    object_type=BaseDictStrValue(value="暂无数据"),
+                    name=BaseDictStrValue(value="--"),
+                    description=BaseDictStrValue(value="--"),
+                    expired_display=BaseDictStrValue(value="--"),
+                )
+            )
+
+        return cls(value=values)
+
+
+class HandoverForm(BaseModel):
+    """权限交接表单"""
+
+    # Note: dont use `List[Union[BaseText, HandoverItemTable, BaseMultiLineText]]`
+    # reason: https://pydantic-docs.helpmanual.io/usage/types/#unions
+    form_data: List
+
+    @classmethod
+    def from_application(cls, application_data: HandoverApplicationContent):
+        """从权限交接申请内容创建表单"""
+        # 处理handover_info，将ID列表转换为详细信息
+        handover_info = application_data.handover_info
+        processed_handover_info = {}
+
+        if handover_info:
+            from backend.apps.handover.constants import HandoverObjectType
+            from backend.apps.handover.validation import (
+                GroupInfoProcessor,
+                GustomPolicyProcessor,
+                RoleInfoProcessor,
+                SubjectTemplateProcessor,
+            )
+
+            HANDOVER_VALIDATOR_MAP = {
+                HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
+                HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyProcessor,
+                HandoverObjectType.ROLE_IDS.value: RoleInfoProcessor,
+                HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateProcessor,
+            }
+
+            # 转换原始ID列表为详细信息
+            for key, value in handover_info.items():
+                if not value:
+                    continue
+                try:
+                    processor_class = HANDOVER_VALIDATOR_MAP.get(key)
+                    if processor_class:
+                        processor = processor_class(application_data.handover_from, value)
+                        info = processor.get_info()
+                        processed_handover_info[key] = info
+                    else:
+                        # 未知类型，保持原数据
+                        processed_handover_info[key] = value
+                except Exception:
+                    # 如果处理失败，保持原数据
+                    processed_handover_info[key] = value
+
+        form_data = [
+            # 基本信息
+            BaseText(label="【交接人】", value=application_data.handover_from),
+            BaseText(label="【被交接人】", value=application_data.handover_to),
+            BaseText(label="【交接详情】"),
+        ]
+
+        # 添加交接详情表格
+        if processed_handover_info:
+            form_data.append(HandoverItemTable.from_handover_info(processed_handover_info))
+        else:
+            # 如果handover_info不存在，添加一个空表格
+            form_data.append(HandoverItemTable(value=[]))
 
         return cls(form_data=[d.dict() for d in form_data])

@@ -30,6 +30,8 @@ class FormSchemeEnum(LowerStrEnum):
     RESOURCE_BOTH_TABLE = auto()  # 资源属性和实例表格
     # 环境属性
     ENVIRONMENT_TABLE = auto()
+    # 权限交接
+    HANDOVER_TABLE = auto()  # 权限交接表格
 
 
 FORM_SCHEMES = {
@@ -120,6 +122,17 @@ FORM_SCHEMES = {
             "column": [
                 {"name": "环境属性分类", "type": "text", "key": "type"},
                 {"name": "属性条件", "key": "condition", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
+            ]
+        },
+    },
+    FormSchemeEnum.HANDOVER_TABLE.value: {
+        "type": "table",
+        "attrs": {
+            "column": [
+                {"name": "类型", "type": "text", "key": "object_type"},
+                {"name": "名称", "type": "text", "key": "name"},
+                {"name": "描述", "type": "text", "key": "description"},
+                {"name": "过期时间", "type": "text", "key": "expired_display"},
             ]
         },
     },
