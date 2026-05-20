@@ -66,7 +66,15 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
     def get_info(self):
         groups = Group.objects.filter(id__in=self.group_ids)
         group_expired_at = {g.id: g.expired_at for g in self.subject_groups}
-        return [{"id": group.id, "name": group.name, "expired_at": group_expired_at[group.id]} for group in groups]
+        return [
+            {
+                "id": group.id,
+                "name": group.name,
+                "description": group.description,
+                "expired_at": group_expired_at[group.id],
+            }
+            for group in groups
+        ]
 
     @cached_property
     def subject_groups(self) -> List[SubjectGroupBean]:
@@ -100,15 +108,33 @@ class GustomPolicyProcessor(BaseHandoverDataProcessor):
 
     def get_info(self):
         system_list = self.system_biz.new_system_list()
+        subject = Subject.from_username(self.handover_from)
         infos = []
         for system_policy in self.custom_policies:
             sys = system_list.get(system_policy["system_id"])
+            # 获取策略详情
+            policy_details = []
+            if system_policy["policy_ids"]:
+                policies = self.biz.list_by_subject(system_policy["system_id"], subject)
+                policy_map = {p.policy_id: p for p in policies if not p.is_expired()}
+                for policy_id in system_policy["policy_ids"]:
+                    if policy_id in policy_map:
+                        policy = policy_map[policy_id]
+                        policy_details.append(
+                            {
+                                "id": policy_id,
+                                "action_name": policy.name,
+                                "expired_at": policy.expired_at,
+                                "expired_display": policy.expired_display,
+                            }
+                        )
             infos.append(
                 {
                     "id": system_policy["system_id"],
                     "policy_ids": system_policy["policy_ids"],
                     "name": sys.name if sys else "",
                     "name_en": sys.name_en if sys else "",
+                    "policy_details": policy_details,
                 }
             )
         return infos
@@ -126,7 +152,16 @@ class RoleInfoProcessor(BaseHandoverDataProcessor):
 
     def get_info(self):
         roles = Role.objects.filter(id__in=self.role_ids)
-        return [{"id": role.id, "type": role.type, "name": role.name, "name_en": role.name_en} for role in roles]
+        return [
+            {
+                "id": role.id,
+                "type": role.type,
+                "name": role.name,
+                "name_en": role.name_en,
+                "description": role.description,
+            }
+            for role in roles
+        ]
 
 
 class SubjectTemplateProcessor(BaseHandoverDataProcessor):
@@ -143,4 +178,4 @@ class SubjectTemplateProcessor(BaseHandoverDataProcessor):
 
     def get_info(self):
         templates = SubjectTemplate.objects.filter(id__in=self.subject_template_ids)
-        return [{"id": t.id, "name": t.name} for t in templates]
+        return [{"id": t.id, "name": t.name, "description": t.description} for t in templates]

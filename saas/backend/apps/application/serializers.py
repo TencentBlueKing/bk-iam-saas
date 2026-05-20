@@ -226,6 +226,49 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             subjects = SubjectInfoList(parse_obj_as(List[Subject], data["subject_scopes"])).subjects
             data["subject_scopes"] = [one.dict() for one in subjects]
 
+        # 对于权限交接申请
+        if obj.type == ApplicationType.HANDOVER.value:
+            # 获取交接发起人
+            handover_from = data.get("handover_from") or obj.applicant
+            handover_info = data.get("handover_info", {})
+
+            from backend.apps.handover.constants import HandoverObjectType
+            from backend.apps.handover.validation import (
+                GroupInfoProcessor,
+                GustomPolicyProcessor,
+                RoleInfoProcessor,
+                SubjectTemplateProcessor,
+            )
+
+            HANDOVER_VALIDATOR_MAP = {
+                HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
+                HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyProcessor,
+                HandoverObjectType.ROLE_IDS.value: RoleInfoProcessor,
+                HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateProcessor,
+            }
+
+            # 转换原始ID列表为详细信息
+            processed_handover_info = {}
+            for key, value in handover_info.items():
+                if not value:
+                    continue
+                try:
+                    processor_class = HANDOVER_VALIDATOR_MAP.get(key)
+                    if processor_class:
+                        processor = processor_class(handover_from, value)
+                        info = processor.get_info()
+                        processed_handover_info[key] = info
+                    else:
+                        # 未知类型，保持原数据
+                        processed_handover_info[key] = value
+                except Exception:
+                    # 如果处理失败，保持原数据
+                    processed_handover_info[key] = value
+
+            # 更新handover_info为处理后的详细信息
+            if processed_handover_info:
+                data["handover_info"] = processed_handover_info
+
         return data
 
     def get_ticket_url(self, obj):
