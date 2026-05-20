@@ -421,12 +421,7 @@ class ApprovedPassApplicationBiz:
         log_user_event(AuditType.USER_TEMPORARY_POLICY_CREATE.value, subject, system_id, actions, sn=application.sn)
 
     def _handover(self, subject: Subject, application: Application):
-        """权限交接审批通过处理
-
-        审批通过时才真正创建 HandoverRecord + HandoverTask 并触发异步执行, 保持与 V3 历史交接链路一致.
-        幂等保护: handle_application_result 已确保只有 PENDING→PASS 的状态迁移才会进入此处,
-        因此同一 Application 不会重复触发 _handover.
-        """
+        """权限交接审批通过处理"""
         # 避免循环依赖, 局部导入
         from backend.apps.handover.constants import HandoverStatus
         from backend.apps.handover.models import HandoverRecord, HandoverTask
@@ -943,19 +938,15 @@ class ApplicationBiz:
         self,
         data: HandoverApplicationDataBean,
     ) -> Application:
-        """创建权限交接审批单据
-
-        审批通过后由 ApprovedPassApplicationBiz._handover 基于 application.data 重建 HandoverRecord 并触发执行;
-        审批拒绝/取消则只更新 Application.status, 不创建 HandoverRecord, 与现有申请类型一致.
-        """
-        # 1. 申请者信息 (申请者 = 交接发起人)
+        """创建权限交接审批单据"""
+        # 1. 查询申请者信息
         applicant_info = self._get_applicant_info(data.applicant)
 
-        # 2. 取默认审批流程, 若未配置会自动从 ITSM provider 拉一次默认值并落库
-        default_process = self.approval_process_svc.get_default_process(ApplicationType.HANDOVER.value)
+        # 2. 查询对应的审批流程
+        handover_process = self.approval_process_svc.get_default_process(ApplicationType.HANDOVER.value)
 
-        # 3. 实例化流程节点处理人 (handover 没有 system_id/group_id, 不需要附加 kwargs)
-        process = self._get_approval_process_with_node_processor(default_process.process)
+        # 3. 实例化流程
+        process = self._get_approval_process_with_node_processor(handover_process.process)
 
         # 4. 组装数据并创建单据
         application_data = HandoverApplicationData(

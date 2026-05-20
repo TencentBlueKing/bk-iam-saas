@@ -226,11 +226,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         approval_content: Optional[Dict] = None,
         tag: str = "",
     ) -> str:
-        """创建 - 权限交接审批单据
-
-        审批人由 ITSM 流程模板自身决定 (推荐配置 processors_type=STARTER_LEADER, 即提单人上级),
-        IAM 不再注入处理人, 与其他申请类型工单内容保持一致.
-        """
+        """创建 - 权限交接审批单据"""
         params = self._generate_ticket_common_params(data, process, callback_url)
 
         if approval_title:

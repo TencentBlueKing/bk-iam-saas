@@ -27,6 +27,17 @@ from backend.service.models.subject import Subject
 
 
 class BaseHandoverDataProcessor(ABC):
+    def __init__(self, handover_from: str, *args, **kwargs):
+        """
+        交接数据处理器的基类初始化方法。
+
+        Args:
+            handover_from: 交接来源用户
+            *args: 其他参数，具体由子类定义
+            **kwargs: 其他关键字参数
+        """
+        self.handover_from = handover_from
+
     @abstractmethod
     def validate(self):
         pass

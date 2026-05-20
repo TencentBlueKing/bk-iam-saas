@@ -73,13 +73,6 @@ class HandoverViewSet(GenericViewSet):
             raise error_codes.TASK_EXIST
 
         try:
-            # 互斥校验: 已存在正在执行的交接任务
-            handover_record = HandoverRecord.objects.filter(
-                handover_from=handover_from, status=HandoverStatus.RUNNING.value
-            ).first()
-            if handover_record is not None:
-                raise error_codes.TASK_EXIST
-
             # 审批开关开启时, 走 Application + ITSM 审批流; 否则保持原有立即生效逻辑
             if getattr(settings, "ENABLE_HANDOVER_APPROVAL", False):
                 return self._create_with_approval(handover_from, handover_to, reason, handover_info)
@@ -92,6 +85,13 @@ class HandoverViewSet(GenericViewSet):
     def _create_immediately(self, handover_from, handover_to, reason, handover_info):
         """关闭审批开关:  立即创建 HandoverRecord 并触发异步执行"""
         with transaction.atomic():
+            # 互斥校验: 已存在正在执行的交接任务
+            handover_record = HandoverRecord.objects.filter(
+                handover_from=handover_from, status=HandoverStatus.RUNNING.value
+            ).first()
+            if handover_record is not None:
+                raise error_codes.TASK_EXIST
+
             # 创建任务
             handover_record = HandoverRecord.objects.create(
                 handover_from=handover_from, handover_to=handover_to, reason=reason
@@ -125,7 +125,7 @@ class HandoverViewSet(GenericViewSet):
                 continue
             HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
 
-        # 3. 创建审批单 (审批人由 ITSM 流程模板自身决定)
+        # 3. 创建审批单
         application = self.application_biz.create_for_handover(
             HandoverApplicationDataBean(
                 applicant=handover_from,
