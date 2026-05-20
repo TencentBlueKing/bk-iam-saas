@@ -606,7 +606,7 @@ class HandoverItemTable(BaseModel):
     """权限交接详情表格"""
 
     label: str = "交接详情"
-    scheme: str = FormSchemeEnum.HANDOVER_TABLE.value  # 使用ticket_content_tpl.py中定义的scheme
+    scheme: str = FormSchemeEnum.HANDOVER_TABLE.value
     value: List[HandoverItemColumnValue]
 
     @classmethod
@@ -666,42 +666,9 @@ class HandoverForm(BaseModel):
     @classmethod
     def from_application(cls, application_data: HandoverApplicationContent):
         """从权限交接申请内容创建表单"""
-        # 处理handover_info，将ID列表转换为详细信息
+        # NOTE: handover_info 在提交审批前已经在 apps/handover/views.py 中被扩展为详细信息
+        # (含 name/description/expired_at 等), 此处只负责渲染, 不再依赖 biz.handover
         handover_info = application_data.handover_info
-        processed_handover_info = {}
-
-        if handover_info:
-            from backend.apps.handover.constants import HandoverObjectType
-            from backend.apps.handover.validation import (
-                GroupInfoProcessor,
-                GustomPolicyProcessor,
-                RoleInfoProcessor,
-                SubjectTemplateProcessor,
-            )
-
-            HANDOVER_VALIDATOR_MAP = {
-                HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
-                HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyProcessor,
-                HandoverObjectType.ROLE_IDS.value: RoleInfoProcessor,
-                HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateProcessor,
-            }
-
-            # 转换原始ID列表为详细信息
-            for key, value in handover_info.items():
-                if not value:
-                    continue
-                try:
-                    processor_class = HANDOVER_VALIDATOR_MAP.get(key)
-                    if processor_class:
-                        processor = processor_class(application_data.handover_from, value)
-                        info = processor.get_info()
-                        processed_handover_info[key] = info
-                    else:
-                        # 未知类型，保持原数据
-                        processed_handover_info[key] = value
-                except Exception:
-                    # 如果处理失败，保持原数据
-                    processed_handover_info[key] = value
 
         form_data = [
             # 基本信息
@@ -711,10 +678,10 @@ class HandoverForm(BaseModel):
         ]
 
         # 添加交接详情表格
-        if processed_handover_info:
-            form_data.append(HandoverItemTable.from_handover_info(processed_handover_info))
+        if handover_info:
+            form_data.append(HandoverItemTable.from_handover_info(handover_info))
         else:
-            # 如果handover_info不存在，添加一个空表格
+            # 如果 handover_info 不存在，添加一个空表格
             form_data.append(HandoverItemTable(value=[]))
 
         return cls(form_data=[d.dict() for d in form_data])

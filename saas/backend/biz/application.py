@@ -426,10 +426,7 @@ class ApprovedPassApplicationBiz:
         from backend.apps.handover.constants import HandoverStatus
         from backend.apps.handover.models import HandoverRecord, HandoverTask
         from backend.apps.handover.tasks import execute_handover_task
-        from backend.apps.handover.views import HANDOVER_VALIDATOR_MAP
 
-        # NOTE: HandoverApplicationData.raw_content 直接返回 content.dict(),
-        # 因此 application.data 顶层就是 HandoverApplicationContent 的字段, 没有外层 "content" 包装.
         app_data = application.data or {}
         handover_from = app_data.get("handover_from") or application.applicant
         handover_to = app_data.get("handover_to")
@@ -441,7 +438,7 @@ class ApprovedPassApplicationBiz:
             return
 
         with transaction.atomic():
-            # 1. 构造 HandoverRecord (此时才入库, 状态直接进入 RUNNING)
+            # 1. 构造 HandoverRecord
             handover_record = HandoverRecord.objects.create(
                 handover_from=handover_from,
                 handover_to=handover_to,
@@ -449,18 +446,12 @@ class ApprovedPassApplicationBiz:
                 status=HandoverStatus.RUNNING.value,
             )
 
-            # 2. 基于 handover_info 重新解析明细 (与 V3 现有逻辑一致)
+            # 2. 基于 handover_info(详细信息) 直接构造 HandoverTask
             handover_task_details: List[HandoverTask] = []
-            for key, value in handover_info.items():
-                if not value:
+            for key, infos in handover_info.items():
+                if not infos:
                     continue
-                validator_cls = HANDOVER_VALIDATOR_MAP.get(key)
-                if validator_cls is None:
-                    logger.warning("application [%d] handover unknown object_type=%s, skip", application.id, key)
-                    continue
-                validator = validator_cls(handover_from, value)
-                validator.validate()
-                for one in validator.get_info():
+                for one in infos:
                     handover_task_details.append(
                         HandoverTask(
                             handover_record_id=handover_record.id,

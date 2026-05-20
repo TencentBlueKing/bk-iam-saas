@@ -22,6 +22,7 @@ from backend.apps.application.views import admin_not_need_apply_check
 from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.biz.application import ApplicationBiz, HandoverApplicationDataBean
+from backend.biz.handover import HANDOVER_INFO_PROVIDER_MAP
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_permission_handover_lock
 from backend.service.constants import ApplicationStatus, ApplicationType
@@ -84,6 +85,9 @@ class HandoverViewSet(GenericViewSet):
 
     def _create_immediately(self, handover_from, handover_to, reason, handover_info):
         """关闭审批开关:  立即创建 HandoverRecord 并触发异步执行"""
+        # 校验合法性 + 提取详细信息(用于落库与展示)
+        detailed_handover_info = self._validate_and_extract_handover_info(handover_from, handover_info)
+
         with transaction.atomic():
             # 互斥校验: 已存在正在执行的交接任务
             handover_record = HandoverRecord.objects.filter(
@@ -97,7 +101,7 @@ class HandoverViewSet(GenericViewSet):
                 handover_from=handover_from, handover_to=handover_to, reason=reason
             )
 
-            handover_task_details = self._gen_handover_tasks(handover_from, handover_info, handover_record)
+            handover_task_details = self._build_handover_tasks(detailed_handover_info, handover_record)
 
             # 创建子任务信息
             if handover_task_details:
@@ -119,11 +123,8 @@ class HandoverViewSet(GenericViewSet):
         ).exists():
             raise error_codes.TASK_EXIST
 
-        # 2. 提前校验交接内容合法性, 避免审批通过后才发现非法
-        for key, value in handover_info.items():
-            if not value:
-                continue
-            HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
+        # 2. 校验合法性 + 提取详细信息
+        detailed_handover_info = self._validate_and_extract_handover_info(handover_from, handover_info)
 
         # 3. 创建审批单
         application = self.application_biz.create_for_handover(
@@ -131,7 +132,7 @@ class HandoverViewSet(GenericViewSet):
                 applicant=handover_from,
                 reason=reason,
                 handover_to=handover_to,
-                handover_info=handover_info,
+                handover_info=detailed_handover_info,
             ),
         )
 
@@ -143,16 +144,29 @@ class HandoverViewSet(GenericViewSet):
             }
         )
 
-    def _gen_handover_tasks(self, handover_from, handover_info, handover_record):
-        handover_task_details = []
+    def _validate_and_extract_handover_info(self, handover_from, handover_info):
+        """校验交接内容合法性 + 将仅含 ID 的 handover_info 扩展为含详细信息的数据
+
+        返回结构与入参一致, 但每个 object_type 下的元素都被替换为含 name/description/expired_at 等的 dict.
+        """
+        detailed: Dict[str, list] = {}
         for key, value in handover_info.items():
             if not value:
                 continue
-            validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value)
-            # 校验任务数据是否合法
-            validator.validate()
-            info = validator.get_info()
-            for one in info:
+            # 1. 合法性校验
+            HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
+            # 2. 提取详细信息
+            provider_cls = HANDOVER_INFO_PROVIDER_MAP[key]
+            detailed[key] = provider_cls(handover_from, value).get_info()
+        return detailed
+
+    def _build_handover_tasks(self, detailed_handover_info, handover_record):
+        """基于已展开的详细信息构造 HandoverTask 列表"""
+        handover_task_details = []
+        for key, infos in detailed_handover_info.items():
+            if not infos:
+                continue
+            for one in infos:
                 handover_task_details.append(
                     HandoverTask(
                         handover_record_id=handover_record.id,

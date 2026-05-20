@@ -232,20 +232,7 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             handover_from = data.get("handover_from") or obj.applicant
             handover_info = data.get("handover_info", {})
 
-            from backend.apps.handover.constants import HandoverObjectType
-            from backend.apps.handover.validation import (
-                GroupInfoProcessor,
-                GustomPolicyProcessor,
-                RoleInfoProcessor,
-                SubjectTemplateProcessor,
-            )
-
-            HANDOVER_VALIDATOR_MAP = {
-                HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
-                HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyProcessor,
-                HandoverObjectType.ROLE_IDS.value: RoleInfoProcessor,
-                HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateProcessor,
-            }
+            from backend.biz.handover import HANDOVER_INFO_PROVIDER_MAP
 
             # 转换原始ID列表为详细信息
             processed_handover_info = {}
@@ -253,10 +240,9 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
                 if not value:
                     continue
                 try:
-                    processor_class = HANDOVER_VALIDATOR_MAP.get(key)
-                    if processor_class:
-                        processor = processor_class(handover_from, value)
-                        info = processor.get_info()
+                    provider_class = HANDOVER_INFO_PROVIDER_MAP.get(key)
+                    if provider_class:
+                        info = provider_class(handover_from, value).get_info()
                         processed_handover_info[key] = info
                     else:
                         # 未知类型，保持原数据
