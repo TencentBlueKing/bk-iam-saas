@@ -155,21 +155,21 @@ class ResourceBiz:
         resource_name_dict: Dict[ResourceNodeBean, str] = {}
 
         # 按system_id、resource_type_id 分组批量查询
-        resource_ids_dict = defaultdict(list)
+        resource_ids_dict = defaultdict(set)
         for r in resource_node_beans:
             # 任意实例不需要查询
             if r.id == "*":
                 resource_name_dict[ResourceNodeBean(system_id=r.system_id, type=r.type, id=r.id)] = _("无限制")
                 continue
             # 需要查询的实例，添加到对应资源类型分组里
-            resource_ids_dict[(r.system_id, r.type)].append(r.id)
+            resource_ids_dict[(r.system_id, r.type)].add(r.id)
 
         # 查询
         for k, ids in resource_ids_dict.items():
             system_id, resource_type_id = k
             # 接口查询
             rp = self.new_resource_provider(system_id, resource_type_id)
-            resource_instance_base_infos = rp.fetch_instance_name(ids)
+            resource_instance_base_infos = rp.fetch_instance_name(list(ids))
             # 遍历返回的数据
             for r in resource_instance_base_infos:
                 resource_node = ResourceNodeBean(system_id=system_id, type=resource_type_id, id=r.id)
