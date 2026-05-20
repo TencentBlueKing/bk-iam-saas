@@ -1,3 +1,12 @@
+<!-- 2026-05-20 -->
+# V1.10.61 Version Update Log
+
+### Fixes
+* Fixed migration file error when performing a fresh deployment on single-tenant branch
+* Fixed duplicate resource IDs in resource name validation before adding permissions to user groups
+
+---
+
 <!-- 2026-05-14 -->
 # V1.10.60 Version Update Log
 
