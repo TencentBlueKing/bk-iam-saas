@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 from django.core.management.base import BaseCommand
 from django.core.paginator import Paginator
-from django.db import connection
 
 from backend.apps.role.models import Role
 from backend.biz.role import RoleResourceRelationHelper
@@ -20,6 +19,7 @@ class Command(BaseCommand):
     help = "migrate role resource label"
 
     def handle(self, *args, **options):
+        # 使用only("id")只加载id字段，避免引用Role模型中可能存在但数据库表中不存在的字段
         queryset = Role.objects.filter(hidden=False).only("id")
 
         paginator = Paginator(queryset, 100)

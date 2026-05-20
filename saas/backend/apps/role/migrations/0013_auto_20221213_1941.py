@@ -26,18 +26,12 @@ def add_admin_to_super_manager_member(apps, schema_editor):
         return
 
     # 添加成员
-    RoleUser.objects.create(
-        role_id=role.id,
-        username=username,
-    )
+    RoleUser.objects.create(role_id=role.id, username=username)
 
     # 拥有所有系统的权限
     # 1. 尝试获取现有记录
     obj, created = RoleUserSystemPermission.objects.get_or_create(
         role_id=role.id,
-        defaults={
-            "content": '{"enabled_users": [], "global_enabled": false}',
-        }
     )
 
     # 2. 更新enabled_users
