@@ -76,6 +76,7 @@ class HandoverViewSet(GenericViewSet):
 
         try:
             # 3. 互斥校验：已存在运行中 record 或审批中 application 且对象重叠时拒绝
+            # 双重校验，避免配置切换造成风险
             self._check_running_handover_conflict(handover_from, detailed_handover_info)
             self._check_pending_application_conflict(handover_from, detailed_handover_info)
 
