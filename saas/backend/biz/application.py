@@ -22,6 +22,9 @@ from rest_framework.request import Request
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
+from backend.apps.handover.constants import HandoverStatus
+from backend.apps.handover.models import HandoverRecord, HandoverTask
+from backend.apps.handover.tasks import execute_handover_task
 from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
@@ -422,10 +425,6 @@ class ApprovedPassApplicationBiz:
 
     def _handover(self, subject: Subject, application: Application):
         """权限交接审批通过处理"""
-        # 避免循环依赖, 局部导入
-        from backend.apps.handover.constants import HandoverStatus
-        from backend.apps.handover.models import HandoverRecord, HandoverTask
-        from backend.apps.handover.tasks import execute_handover_task
 
         app_data = application.data or {}
         handover_from = app_data.get("handover_from") or application.applicant

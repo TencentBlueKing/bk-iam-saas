@@ -206,10 +206,7 @@ class HandoverViewSet(GenericViewSet):
                 raise error_codes.TASK_EXIST
 
     def _validate_and_extract_handover_info(self, handover_from, handover_info):
-        """校验交接内容合法性 + 将仅含 ID 的 handover_info 扩展为含详细信息的数据
-
-        返回结构与入参一致, 但每个 object_type 下的元素都被替换为含 name/description/expired_at 等的 dict.
-        """
+        """校验交接内容合法性 + 将仅含 ID 的 handover_info 扩展为含详细信息的数据"""
         detailed: Dict[str, list] = {}
         for key, value in handover_info.items():
             if not value:

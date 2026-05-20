@@ -60,15 +60,6 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             if node.processor_source == ProcessorSource.IAM.value
         }
 
-        # [TEMP DEBUG] 排查 handover 节点 source 是否被识别为 OTHER
-        print(
-            "itsm create_ticket debug: type=%s, process_id=%s, nodes=%s, node_processors=%s",
-            data.type,
-            process.id,
-            [(n.id, n.name, n.processor_source, n.processor_type, n.processors) for n in process.nodes],
-            node_processors_dict,
-        )
-
         # 申请人的组织架构
         departments = data.applicant_info.organization
         # 容错处理：组织可能未空
