@@ -18,7 +18,7 @@ from rest_framework import serializers
 
 from backend.apps.role.models import RoleUser
 from backend.apps.subject_template.models import SubjectTemplateRelation
-from backend.biz.group import GroupBiz
+from backend.biz.group import GroupBiz, SubjectGroupBean
 from backend.biz.policy import PolicyQueryBiz
 from backend.biz.system import SystemBiz
 from backend.service.constants import SubjectType
@@ -43,17 +43,17 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
     def validate(self):
         # 校验用户是否在属于用户组
         now_ts = int(time.time())
-        subject_group_id_set = {int(g.id) for g in self._subject_groups if g.expired_at > now_ts}
+        subject_group_id_set = {g.id for g in self.subject_groups if g.expired_at > now_ts}
 
         for _id in self.group_ids:
             if _id not in subject_group_id_set:
                 raise serializers.ValidationError("用户组: {} 不在当前用户的可交接范围内!".format(_id))
 
     @cached_property
-    def _subject_groups(self):
+    def subject_groups(self) -> List[SubjectGroupBean]:
         subject = Subject.from_username(self.handover_from)
         # NOTE: 可能会有性能问题, 这里需要查询用户的所有组列表
-        return self.biz.list_all_subject_group_before_expired_at(subject, expired_at=0)
+        return self.biz.list_all_subject_group(subject)
 
 
 class GustomPolicyProcessor(BaseHandoverDataProcessor):
