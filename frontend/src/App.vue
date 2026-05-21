@@ -481,11 +481,15 @@
         line-height: 20px !important;
     }
 
-    .flex-between {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    .flex-align-center {
+      display: flex;
+      align-items: center;
+    }
 
+    .flex-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .user-org-perm-container {

@@ -62,6 +62,9 @@ class AdminAPIEnum(BaseAPIEnum):
     # 不同管理空间下创建相同权限模板
     BATCH_GRADE_MANAGER_TEMPLATE_CREATE = auto()
 
+    # 组织架构同步
+    ORGANIZATION_SYNC = auto()
+
     _choices_labels = skip(
         (
             (SYSTEM_LIST, "获取系统列表"),
@@ -84,6 +87,7 @@ class AdminAPIEnum(BaseAPIEnum):
             (SUBJECT_PERMISSION_CLEANUP, "权限清理"),
             (SUBJECT_PERMISSION_EXISTS, "权限是否存在"),
             (BATCH_GRADE_MANAGER_TEMPLATE_CREATE, "不同管理空间下创建相同权限模板"),
+            (ORGANIZATION_SYNC, "触发组织架构同步"),
         )
     )
 

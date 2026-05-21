@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from backend.service.constants import ApplicationType
@@ -56,8 +57,14 @@ class BaseActionSLZ(serializers.Serializer):
 
 
 class ActionApprovalProcessModifySLZ(serializers.Serializer):
-    actions = serializers.ListField(label="操作列表", child=BaseActionSLZ(label="操作"))
+    actions = serializers.ListField(label="操作列表", child=BaseActionSLZ(label="操作"), allow_empty=False)
     process_id = serializers.IntegerField(label="流程ID")
+
+    def validate_actions(self, value):
+        system_ids = {a["system_id"] for a in value}
+        if len(system_ids) != 1:
+            raise serializers.ValidationError(_("只支持同一系统的批量操作，不允许跨系统提交"))
+        return value
 
 
 class GroupApprovalProcessQuerySLZ(serializers.Serializer):

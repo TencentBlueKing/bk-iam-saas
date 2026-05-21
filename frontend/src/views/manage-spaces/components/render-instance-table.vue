@@ -78,7 +78,7 @@
                   </span>
                 </bk-button>
               </div>
-              <render-condition
+              <IamRenderCondition
                 :ref="`condition_${$index}_aggregateRef`"
                 :value="formatDisplayValue(row)"
                 :is-empty="row.empty"
@@ -110,7 +110,7 @@
                     </div>
                     <div class="contents">
                       <!-- eslint-disable max-len -->
-                      <render-condition
+                      <IamRenderCondition
                         :ref="`condition_${$index}_${contentIndex}_ref`"
                         :value="content.value"
                         :is-empty="content.empty"
@@ -202,7 +202,7 @@
   import { leaveConfirm } from '@/common/leave-confirm';
   import Condition from '@/model/condition';
   import RenderAggregateSideSlider from '@/components/choose-ip/sideslider';
-  import RenderCondition from '@/views/perm-apply/components/render-condition';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import RenderResource from '@/views/manage-spaces/components/render-resource';
   import PreviewResourceDialog from '@/views/perm-apply/components/preview-resource-dialog';
   import GradePolicy from '@/model/grade-policy';
@@ -216,8 +216,8 @@
       };
     },
     components: {
+      IamRenderCondition,
       RenderResource,
-      RenderCondition,
       PreviewResourceDialog,
       RenderAggregateSideSlider
     },

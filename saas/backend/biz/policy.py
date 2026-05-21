@@ -1065,8 +1065,8 @@ class PolicyBeanListMixin:
         # 校验从接入系统查询的资源实例名称与提交的数据里的名称是否一致
         for node in path_nodes:
             real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
-            # 任意需要特殊判断：只要包含无限制即可
-            if node.id == ANY_ID and real_name.lower() in node.name.lower():
+            # 任意实例是语义占位，不校验展示名称，避免多语言文案导致校验失败
+            if node.id == ANY_ID:
                 continue
 
             # NOTE: 如果查不到, 跳过, 避免报错

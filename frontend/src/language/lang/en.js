@@ -309,8 +309,8 @@ export const m = {
         '了解更多': 'Learn more',
         '前往申请': 'Go apply',
         '切换新版': 'Switch to the new version',
-        '切换至新版权限中心': "Switch to the new version of the BKIAM",
-        "个人中心链接未配置": "Personal center link not configured"
+        '个人中心': 'Personal Center',
+        '切换至新版权限中心': "Switch to the new version of the BKIAM"
     },
     // 校验
     verify: {
@@ -510,6 +510,8 @@ export const m = {
         '知道了': 'Got it',
         '搜索关键字': 'Search Keywords',
         '无资源ID，无法预览': 'No resource ID, unable to preview',
+        '暂无可复制的资源实例': 'There are currently no replicable resource instances',
+        '暂无可批量复制的资源实例': 'There are currently no resource instances that can be batch copied',
         '暂无可批量复制包含有属性条件的资源实例': 'There are currently no resource instances that can be batch copied with attribute conditions',
         '(GMT-12:00) 国际换线时间': '(GMT-12:00) International Line Change Time',
         '(GMT-11:00) 中途岛时间': '(GMT-11:00) Midway Island Time',
@@ -1078,7 +1080,8 @@ export const m = {
         '设置成功': 'Set successfully',
         '取消设置成功': 'Undo successfully',
         '确定删除该超级管理员': 'Confirm to delete the super administrator?',
-        '超级管理员{name}不可删除': 'Super administrator {name} cannot be deleted'
+        '超级管理员{name}不可删除': 'Super administrator {name} cannot be deleted',
+        '请先编辑成员列表': 'Please edit the member list first'
     },
     approvalProcess: {
         '自定义权限': 'Custom Permission',

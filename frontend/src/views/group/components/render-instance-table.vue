@@ -76,7 +76,7 @@
                 </bk-button>
               </div>
               <div class="content">
-                <render-condition
+                <IamRenderCondition
                   :ref="`condition_${$index}_aggregateRef`"
                   :value="formatDisplayValue(row)"
                   :is-empty="row.empty"
@@ -107,7 +107,7 @@
                       </template>
                     </div>
                     <div class="content">
-                      <render-condition
+                      <IamRenderCondition
                         data-test-id="group_input_resourceInstanceCondition"
                         :ref="`condition_${$index}_${contentIndex}_ref`"
                         :value="content.value"
@@ -285,10 +285,10 @@
   import GroupPolicy from '@/model/group-policy';
   import GroupAggregationPolicy from '@/model/group-aggregation-policy';
   import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP } from '@/common/constants';
   import RenderResource from './render-resource';
-  import RenderCondition from './render-condition';
   import PreviewResourceDialog from './preview-resource-dialog';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderDetail from '../common/render-detail';
@@ -305,7 +305,7 @@
     components: {
       RenderAggregateSideslider,
       RenderResource,
-      RenderCondition,
+      IamRenderCondition,
       PreviewResourceDialog,
       RenderResourcePopover,
       RenderDetail,

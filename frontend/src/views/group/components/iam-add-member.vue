@@ -114,7 +114,7 @@
                       :is-rating-manager="curIsRatingManager"
                       :key="infiniteTreeKey"
                       :is-disabled="isAll"
-                      show-full-name
+                      :show-full-name="false"
                       :empty-data="emptyData"
                       :has-selected-users="formatAllSelectedUsers"
                       :has-selected-departments="formatAllSelectedDeparts"
@@ -2571,7 +2571,7 @@
     top: 0;
     left: 0;
     /* width: 277px !important; */
-    width: 586px !important;
+    width: 580px !important;
     .bk-form-input {
       height: 29px !important;
       border: none !important;

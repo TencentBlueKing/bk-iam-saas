@@ -8,22 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.core.management.base import BaseCommand
-from django.core.paginator import Paginator
-
-from backend.apps.role.models import Role
-from backend.biz.role import RoleResourceRelationHelper
+from django.apps import AppConfig
 
 
-class Command(BaseCommand):
-    help = "migrate role resource label"
-
-    def handle(self, *args, **options):
-        # 使用only("id")只加载id字段，避免引用Role模型中可能存在但数据库表中不存在的字段
-        queryset = Role.objects.filter(hidden=False).only("id")
-
-        paginator = Paginator(queryset, 100)
-
-        for i in paginator.page_range:
-            for role in paginator.page(i):
-                RoleResourceRelationHelper(role).handle()
+class StaffMovementAPIConfig(AppConfig):
+    name = "backend.api.external.staff_movement"
+    label = "staff_movement"

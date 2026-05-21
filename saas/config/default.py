@@ -16,6 +16,8 @@ import environ
 import pymysql
 from celery.schedules import crontab
 
+from backend.util.crontab import crontab_from_string
+
 # connect mysql
 pymysql.install_as_MySQLdb()
 
@@ -80,6 +82,7 @@ INSTALLED_APPS = [
     "backend.api.admin",
     "backend.api.management",
     "backend.api.bkci",
+    "backend.api.external.staff_movement",
 ]
 
 # 登录中间件
@@ -222,10 +225,13 @@ CELERY_IMPORTS = (
     "backend.api.bkci.tasks",
     "backend.apps.handover.tasks",
 )
+ORGANIZATION_SYNC_CRONTAB = env.str("BKAPP_ORGANIZATION_SYNC_CRONTAB", default="0 0 * * *")  # 默认每天 0 时
+_org_sync_schedule = crontab_from_string(ORGANIZATION_SYNC_CRONTAB)
+
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
-        "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
+        "schedule": _org_sync_schedule,  # 根据环境变量设置的同步周期动态调整
     },
     "periodic_clean_subject_to_delete": {
         "task": "backend.apps.organization.tasks.clean_subject_to_delete",
@@ -526,7 +532,7 @@ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED
 # 问题反馈地址
 BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
 
-# 接入用户管理的接口page_size默认值
+# 接入用户管理的接口 page_size 默认值
 USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1000)
 
 # 个人中心地址
@@ -536,6 +542,11 @@ BK_PERSONAL_CENTER_URL = env.str("BK_PERSONAL_CENTER_URL", default="")
 ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING = env.bool(
     "ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING", default=False
 )
+
+# PCG 离职交接相关配置
+PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
+PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")
+PCG_DEPARTMENT_IDS = env.list("PCG_DEPARTMENT_IDS", cast=int, default=[])
 
 # 是否开启权限交接 ITSM 审批流程
 ENABLE_HANDOVER_APPROVAL = env.bool("BKAPP_ENABLE_HANDOVER_APPROVAL", default=False)

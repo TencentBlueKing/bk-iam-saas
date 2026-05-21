@@ -20,17 +20,6 @@
         <bk-table-column :label="$t(`m.set['成员列表']`)" width="600">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit || row.members.length">
-              <!-- <bk-user-selector
-                                :value="formatMemberName(row.members)"
-                                :ref="`sysRef${$index}`"
-                                :api="userApi"
-                                :class="row.isError ? 'is-member-empty-cls' : ''"
-                                :placeholder="$t(`m.verify['请输入']`)"
-                                style="width: 100%;"
-                                data-test-id="set_userSelector_editSystemManager"
-                                @blur="handleSystemRtxBlur(row)"
-                                @change="handleSystemRtxChange(...arguments, row)"
-                                @keydown="handleSystemRtxEnter(...arguments, row)" /> -->
               <iam-edit-member-selector
                 :ref="`sysRef${$index}`"
                 field="members"
@@ -39,15 +28,13 @@
                 :value="row.members"
                 :index="$index"
                 :allow-empty="true"
+                @focus="handleOpenSysEdit(row, $index, ...arguments)"
+                @blur="handleHideSysEdit(row, ...arguments)"
                 @on-change="handleUpdateMembers"
-                @on-empty-change="handleEmptyChange" />
+                @on-empty-change="handleEmptyChange"
+              />
             </template>
             <template v-else>
-              <!-- <div
-                                :class="['user-wrapper', { 'is-hover': row.canEdit }]"
-                                @click.stop="handleOpenSysEdit(row, $index)">
-                                {{ formatMemberFilter(row.members) }}
-                            </div> -->
               <iam-edit-input
                 field="members"
                 style="width: 100%;"
@@ -61,10 +48,17 @@
         <bk-table-column :label="$t(`m.set['更多权限设置']`)">
           <template slot-scope="{ row }">
             <bk-checkbox
+              v-bk-tooltips="{
+                placement: 'left',
+                content: $t(`m.set['请先编辑成员列表']`),
+                disabled: !row.isEdit
+              }"
               :true-value="true"
               :false-value="false"
+              :disabled="row.isEdit"
               :value="row.system_permission_global_enabled"
-              @change="handleSystemEnabledChange(...arguments, row)">
+              @change="handleSystemEnabledChange(...arguments, row)"
+            >
               {{ $t(`m.set['拥有该系统的所有操作权限']`) }}
             </bk-checkbox>
           </template>
@@ -174,9 +168,8 @@
         });
       },
 
-      handleSystemRtxChange (payload, row) {
-        row.isError = false;
-        row.members = [...payload];
+      handleHideSysEdit (payload) {
+        this.$set(payload, 'isEdit', false);
       },
 
       handleSystemRtxEnter (event, payload) {

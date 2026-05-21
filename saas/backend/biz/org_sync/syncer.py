@@ -111,13 +111,27 @@ class Syncer:
             return
         # 对于新增用户，执行对应变更
         User.objects.bulk_create(created_users, batch_size=1000)
-        # 后台新建
-        iam.create_subjects([{"type": "user", "id": user["username"], "name": user["display_name"]} for user in users])
 
-        # 移除待删除的用户
-        SubjectToDelete.objects.filter(
-            subject_type=SubjectType.USER.value, subject_id__in=[u.username for u in created_users]
-        ).delete()
+        # 找出待删除列表中与本次新建冲突的用户（这些用户在后台已存在，无需再创建）
+        new_usernames = [u.username for u in created_users]
+        conflict_usernames = set(
+            SubjectToDelete.objects.filter(
+                subject_type=SubjectType.USER.value, subject_id__in=new_usernames
+            ).values_list("subject_id", flat=True)
+        )
+        if conflict_usernames:
+            SubjectToDelete.objects.filter(
+                subject_type=SubjectType.USER.value, subject_id__in=conflict_usernames
+            ).delete()
+
+        # 后台只创建不冲突的用户（冲突用户在后台已存在，跳过）
+        users_to_create = [
+            {"type": "user", "id": user["username"], "name": user["display_name"]}
+            for user in users
+            if user["username"] not in conflict_usernames
+        ]
+        if users_to_create:
+            iam.create_subjects(users_to_create)
 
         # 如果用户大于一定量，则直接全量同步
         if len(created_users) > NEW_USER_AUTO_SYNC_COUNT_LIMIT:

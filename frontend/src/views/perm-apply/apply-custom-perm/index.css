@@ -198,15 +198,15 @@
     }
 }
 .applyForPermission,
-.noPermissionPage  {
+.noPermissionPage {
     .horizontal-item {
-        margin-bottom:0px
+        margin-bottom: 0px;
     }
     .horizontal-item .label {
-        display:none
+        display: none;
     }
     .horizontal-item .content {
-        max-width: calc(100%)
+        max-width: calc(100%);
     }
     .bk-form-radio .bk-radio-text {
         font-size: 14px;

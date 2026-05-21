@@ -291,7 +291,7 @@ class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
         tags=["handover"],
     )
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        return super().list(self, *args, **kwargs)
 
 
 class HandoverTasksViewSet(mixins.ListModelMixin, GenericViewSet):

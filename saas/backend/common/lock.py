@@ -70,7 +70,8 @@ class RedisLock:
 
 
 def gen_permission_handover_lock(key: str) -> RedisLock:
-    return RedisLock(LockTypeEnum.PERMISSION_HANDOVER.value, suffix=key, blocking=False)
+    # timeout=60: 锁 60 秒后自动过期，防止持有者异常退出导致死锁
+    return RedisLock(LockTypeEnum.PERMISSION_HANDOVER.value, suffix=key, timeout=60, blocking=False)
 
 
 def gen_organization_sync_lock() -> RedisLock:

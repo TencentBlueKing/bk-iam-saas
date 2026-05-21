@@ -53,8 +53,12 @@ def group_cleanup_expired_member():
                 continue
 
             # 分页删除过期的成员
-            for offset in range(0, count, limit):
-                _, members = biz.list_paging_members_before_expired_at(group.id, expired_at, limit, offset)
+            for _ in range(0, count, limit):
+                # 每轮均从 offset=0 查询，避免删除后 offset 漂移导致遗漏
+                _, members = biz.list_paging_members_before_expired_at(group.id, expired_at, limit, 0)
+                if not members:
+                    break
+
                 subjects = parse_obj_as(List[Subject], members)
                 biz.remove_members(str(group.id), subjects)
 
