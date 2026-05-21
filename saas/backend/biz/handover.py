@@ -9,14 +9,11 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Type
+from typing import List
 
-from backend.apps.group.models import Group
 from backend.apps.handover.models import HandoverTask
 from backend.apps.role.models import Role
-from backend.apps.subject_template.models import SubjectTemplate
 from backend.audit.audit import log_group_event, log_role_event, log_subject_template_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.constants import HandoverTaskStatus
@@ -25,11 +22,8 @@ from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.subject_template import SubjectTemplateBiz
-from backend.biz.system import SystemBiz
 from backend.service.constants import RoleType
 from backend.service.models import Subject
-
-logger = logging.getLogger(__name__)
 
 
 class BaseHandoverHandler(ABC):
@@ -97,7 +91,7 @@ class CustomHandoverHandler(BaseHandoverHandler):
         self.grant_subject = Subject.from_username(handover_to)
         self.remove_subject = Subject.from_username(handover_from)
 
-        self.system_id = object_detail["id"]
+        self.system_id = object_detail["system_id"]
         self.policy_ids = object_detail["policy_ids"]
 
     def _get_subject_policies(self):

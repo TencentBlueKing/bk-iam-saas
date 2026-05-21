@@ -8,7 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, Type
+import json
+from typing import Dict, Iterable, Tuple, Type
 
 from django.conf import settings
 from django.db import transaction
@@ -67,7 +68,7 @@ class HandoverViewSet(GenericViewSet):
         reason = data["reason"]
         handover_info = data["handover_info"]
 
-        # 1. 校验合法性 + 提取详细信息（同时作为后续锁 key / 互斥校验的输入）
+        # 1. 校验合法性 + 提取详细信息
         detailed_handover_info = self._validate_and_extract_handover_info(handover_from, handover_info)
 
         # 2. 按对象粒度加分布式锁，避免同一用户对同一对象并发发起交接
@@ -142,18 +143,35 @@ class HandoverViewSet(GenericViewSet):
 
         return locks
 
+    def _iter_fine_grained_keys(self, object_type: str, one: Dict) -> Iterable[Tuple[str, str]]:
+        """生成key
+        - custom_policies: {object_type}:{system_id}:{policy_id}
+        - 其他类型: {object_type}: {group_ids / role_ids / subject_template_ids}
+        """
+        if object_type == HandoverObjectType.CUSTOM_POLICIES.value:
+            system_id = one.get("system_id")
+            for policy_id in one.get("policy_ids") or []:
+                yield object_type, "{}:{}".format(system_id, policy_id)
+            return
+
+        yield object_type, str(one["id"])
+
     def _gen_handover_task_lock_keys(self, handover_from, detailed_handover_info):
-        """生成排序后的锁 key 集合，格式为 handover_from:object_type:object_id，排序以避免死锁"""
+        """生成排序后的锁 key 集合, 格式为 handover_from:object_type:fine_grained_id, 排序以避免死锁"""
         keys = set()
         for object_type, infos in detailed_handover_info.items():
             for one in infos:
-                keys.add("{}:{}:{}".format(handover_from, object_type, one["id"]))
+                for _, fine_id in self._iter_fine_grained_keys(object_type, one):
+                    keys.add("{}:{}:{}".format(handover_from, object_type, fine_id))
         return sorted(keys)
 
     def _check_running_handover_conflict(self, handover_from, detailed_handover_info):
-        """检查是否已存在相同交接对象的运行中 HandoverRecord，通过 (object_type, object_id) 集合交集判断"""
+        """检查是否已存在相同交接对象的运行中 HandoverRecord, 通过最细粒度 (object_type, object_id) 集合交集判断"""
         new_task_keys = {
-            (object_type, str(one["id"])) for object_type, infos in detailed_handover_info.items() for one in infos
+            key
+            for object_type, infos in detailed_handover_info.items()
+            for one in infos
+            for key in self._iter_fine_grained_keys(object_type, one)
         }
         if not new_task_keys:
             return
@@ -166,27 +184,39 @@ class HandoverViewSet(GenericViewSet):
         if not running_record_ids:
             return
 
-        existing_task_keys = set(
-            HandoverTask.objects.filter(handover_record_id__in=running_record_ids).values_list(
-                "object_type", "object_id"
-            )
-        )
+        existing_task_keys = set()
+        for object_type, object_id, object_detail in HandoverTask.objects.filter(
+            handover_record_id__in=running_record_ids
+        ).values_list("object_type", "object_id", "object_detail"):
+            if object_type == HandoverObjectType.CUSTOM_POLICIES.value:
+                # 自定义权限需展开到 policy 粒度 (object_id 是 system_id, policy_ids 来自 object_detail)
+                try:
+                    detail = json.loads(object_detail) if object_detail else {}
+                except (TypeError, ValueError):
+                    detail = {}
+                for policy_id in detail.get("policy_ids") or []:
+                    existing_task_keys.add((object_type, "{}:{}".format(object_id, policy_id)))
+            else:
+                existing_task_keys.add((object_type, str(object_id)))
 
         if new_task_keys & existing_task_keys:
             # 找出具体的冲突对象
             conflict_keys = new_task_keys & existing_task_keys
-            conflict_object_pairs = [f"{object_type}:{object_id}" for object_type, object_id in conflict_keys]
+            conflict_object_pairs = [f"{object_type}:{fine_id}" for object_type, fine_id in conflict_keys]
             raise error_codes.TASK_EXIST.format(
                 message=f"存在正在执行的交接任务，冲突对象: {', '.join(conflict_object_pairs)}", replace=True
             )
 
     def _check_pending_application_conflict(self, handover_from, detailed_handover_info):
-        """检查是否已存在审批中且交接对象有重叠的交接申请单（按 (object_type, object_id) 集合交集判断）"""
+        """检查是否已存在审批中且交接对象有重叠的交接申请单 (按最细粒度 (object_type, object_id) 集合交集判断)"""
         if not getattr(settings, "ENABLE_HANDOVER_APPROVAL", False):
             return
 
         new_task_keys = {
-            (object_type, str(one["id"])) for object_type, infos in detailed_handover_info.items() for one in infos
+            key
+            for object_type, infos in detailed_handover_info.items()
+            for one in infos
+            for key in self._iter_fine_grained_keys(object_type, one)
         }
         if not new_task_keys:
             return
@@ -200,16 +230,17 @@ class HandoverViewSet(GenericViewSet):
         for application in pending_applications:
             existing_handover_info = (application.data or {}).get("handover_info") or {}
             existing_task_keys = {
-                (object_type, str(one["id"]))
+                key
                 for object_type, infos in existing_handover_info.items()
                 if infos
                 for one in infos
-                if isinstance(one, dict) and "id" in one
+                if isinstance(one, dict)
+                for key in self._iter_fine_grained_keys(object_type, one)
             }
             if new_task_keys & existing_task_keys:
                 # 找出具体的冲突对象
                 conflict_keys = new_task_keys & existing_task_keys
-                conflict_object_pairs = [f"{object_type}:{object_id}" for object_type, object_id in conflict_keys]
+                conflict_object_pairs = [f"{object_type}:{fine_id}" for object_type, fine_id in conflict_keys]
                 raise error_codes.TASK_EXIST.format(
                     message=f"存在审批中的交接申请，冲突对象: {', '.join(conflict_object_pairs)}", replace=True
                 )
@@ -221,9 +252,9 @@ class HandoverViewSet(GenericViewSet):
             if not value:
                 continue
             # 1. 合法性校验
-            validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
+            HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
             # 2. 提取详细信息
-            detailed[key] = validator.get_info()
+            detailed[key] = HANDOVER_VALIDATOR_MAP[key](handover_from, value).get_info()
         return detailed
 
     def _gen_handover_tasks(self, detailed_handover_info, handover_record):
@@ -233,11 +264,13 @@ class HandoverViewSet(GenericViewSet):
             if not infos:
                 continue
             for one in infos:
+                # 自定义权限以 system_id 作为 object_id, 其他类型沿用 id
+                object_id = one["system_id"] if key == HandoverObjectType.CUSTOM_POLICIES.value else one["id"]
                 handover_task_details.append(
                     HandoverTask(
                         handover_record_id=handover_record.id,
                         object_type=key,
-                        object_id=one["id"],
+                        object_id=object_id,
                         object_detail=json_dumps(one),
                     )
                 )

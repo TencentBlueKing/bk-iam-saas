@@ -261,8 +261,8 @@ APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
     ),
     ApplicationType.CREATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
     ApplicationType.UPDATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
-    # 权限交接的审批人 (提单人上级) 由 ITSM 流程模板的 STARTER_LEADER 节点自行解析,
-    # 属于 OTHER 来源, 不需要 IAM 白名单约束, 故置为空元组.
+    # 权限交接的审批人 (提单人上级) 由 ITSM 流程模板的 STARTER_LEADER 节点自行解析, 属于 OTHER 来源, 不需要 IAM 白名单约束, 故置为空元组
+    # 若要扩展管理员配置审批流程，需要再次追加对应 ProcessorNodeType
     ApplicationType.HANDOVER.value: (),
 }
 

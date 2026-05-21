@@ -22,7 +22,7 @@ from rest_framework.request import Request
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
-from backend.apps.handover.constants import HandoverStatus
+from backend.apps.handover.constants import HandoverObjectType, HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.apps.handover.tasks import execute_handover_task
 from backend.apps.organization.models import User as UserModel
@@ -141,9 +141,7 @@ class GradeManagerApplicationDataBean(BaseApplicationDataBean):
 class HandoverApplicationDataBean(BaseApplicationDataBean):
     """权限交接审批"""
 
-    # 被交接人
     handover_to: str
-    # 交接的权限内容, 与提交接口 handover_info 保持一致, 整体透传以便审批通过后再走 V3 已有交接链路
     handover_info: Dict[str, Any]
 
 
@@ -451,11 +449,13 @@ class ApprovedPassApplicationBiz:
                 if not infos:
                     continue
                 for one in infos:
+                    # 自定义权限以 system_id 作为 object_id, 其他类型沿用 id
+                    object_id = one["system_id"] if key == HandoverObjectType.CUSTOM_POLICIES.value else one["id"]
                     handover_task_details.append(
                         HandoverTask(
                             handover_record_id=handover_record.id,
                             object_type=key,
-                            object_id=one["id"],
+                            object_id=object_id,
                             object_detail=json_dumps(one),
                         )
                     )

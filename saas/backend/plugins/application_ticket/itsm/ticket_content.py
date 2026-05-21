@@ -666,8 +666,6 @@ class HandoverForm(BaseModel):
     @classmethod
     def from_application(cls, application_data: HandoverApplicationContent):
         """从权限交接申请内容创建表单"""
-        # NOTE: handover_info 在提交审批前已经在 apps/handover/views.py 中被扩展为详细信息
-        # (含 name/description/expired_at 等), 此处只负责渲染, 不再依赖 biz.handover
         handover_info = application_data.handover_info
 
         form_data = [

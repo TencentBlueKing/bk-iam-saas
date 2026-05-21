@@ -119,7 +119,7 @@ class GustomPolicyProcessor(BaseHandoverDataProcessor):
                         )
             infos.append(
                 {
-                    "id": system_policy["system_id"],
+                    "system_id": system_policy["system_id"],
                     "policy_ids": system_policy["policy_ids"],
                     "name": sys.name if sys else "",
                     "name_en": sys.name_en if sys else "",
