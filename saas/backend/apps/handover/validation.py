@@ -18,24 +18,15 @@ from rest_framework import serializers
 
 from backend.apps.role.models import RoleUser
 from backend.apps.subject_template.models import SubjectTemplateRelation
+from backend.biz.group import GroupBiz
+from backend.biz.policy import PolicyQueryBiz
+from backend.biz.system import SystemBiz
 from backend.service.constants import SubjectType
-from backend.service.group import GroupService
-from backend.service.models.policy import Policy
 from backend.service.models.subject import Subject
-from backend.service.policy.query import PolicyQueryService
 
 
 class BaseHandoverDataProcessor(ABC):
     """交接数据合法性校验器基类: 仅做对前端提交 ID 的合法性校验, 不涉及业务详情查询"""
-
-    def __init__(self, handover_from: str, *args, **kwargs):
-        """
-        Args:
-            handover_from: 交接来源用户
-            *args: 其他参数, 由子类定义
-            **kwargs: 其他关键字参数
-        """
-        self.handover_from = handover_from
 
     @abstractmethod
     def validate(self):
@@ -43,10 +34,10 @@ class BaseHandoverDataProcessor(ABC):
 
 
 class GroupInfoProcessor(BaseHandoverDataProcessor):
-    group_svc = GroupService()
+    biz = GroupBiz()
 
     def __init__(self, handover_from: str, group_ids: List[int]) -> None:
-        super().__init__(handover_from)
+        self.handover_from = handover_from
         self.group_ids = group_ids
 
     def validate(self):
@@ -62,26 +53,26 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
     def _subject_groups(self):
         subject = Subject.from_username(self.handover_from)
         # NOTE: 可能会有性能问题, 这里需要查询用户的所有组列表
-        return self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at=0)
+        return self.biz.list_all_subject_group_before_expired_at(subject, expired_at=0)
 
 
 class GustomPolicyProcessor(BaseHandoverDataProcessor):
-    policy_query_svc = PolicyQueryService()
+    biz = PolicyQueryBiz()
+    system_biz = SystemBiz()
 
     def __init__(self, handover_from: str, custom_policies: List[Dict[str, Any]]) -> None:
-        super().__init__(handover_from)
+        self.handover_from = handover_from
         self.custom_policies = custom_policies
 
     def validate(self):
         """
         1. 查询用户的每个系统的自定义权限
-        2. 校验 id 是否在自定义权限中
+        2. 校验id是否在自定义权限中
         """
-        now_ts = int(time.time())
         subject = Subject.from_username(self.handover_from)
         for system_policy in self.custom_policies:
-            policies: List[Policy] = self.policy_query_svc.list_by_subject(system_policy["system_id"], subject)
-            subject_policy_id_set = {p.policy_id for p in policies if p.expired_at > now_ts}
+            policies = self.biz.list_by_subject(system_policy["system_id"], subject)
+            subject_policy_id_set = {p.policy_id for p in policies if not p.is_expired()}
             for _id in system_policy["policy_ids"]:
                 if _id not in subject_policy_id_set:
                     raise serializers.ValidationError(
@@ -91,7 +82,7 @@ class GustomPolicyProcessor(BaseHandoverDataProcessor):
 
 class RoleInfoProcessor(BaseHandoverDataProcessor):
     def __init__(self, handover_from: str, role_ids: List[int]) -> None:
-        super().__init__(handover_from)
+        self.handover_from = handover_from
         self.role_ids = role_ids
 
     def validate(self):
@@ -102,7 +93,7 @@ class RoleInfoProcessor(BaseHandoverDataProcessor):
 
 class SubjectTemplateProcessor(BaseHandoverDataProcessor):
     def __init__(self, handover_from: str, subject_template_ids: List[int]) -> None:
-        super().__init__(handover_from)
+        self.handover_from = handover_from
         self.subject_template_ids = subject_template_ids
 
     def validate(self):

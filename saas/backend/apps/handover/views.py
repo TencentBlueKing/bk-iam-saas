@@ -22,7 +22,7 @@ from backend.apps.application.views import admin_not_need_apply_check
 from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.biz.application import ApplicationBiz, HandoverApplicationDataBean
-from backend.biz.handover import HANDOVER_INFO_PROVIDER_MAP
+from backend.biz.handover import HANDOVER_INFO_ENRICHER_MAP
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_permission_handover_lock
 from backend.service.constants import ApplicationStatus, ApplicationType
@@ -138,7 +138,7 @@ class HandoverViewSet(GenericViewSet):
             if not lock.acquire():
                 for acquired_lock in locks:
                     acquired_lock.release()
-                raise error_codes.TASK_EXIST
+                raise error_codes.TASK_EXIST.format(message="请勿重复提交")
             locks.append(lock)
 
         return locks
@@ -174,7 +174,12 @@ class HandoverViewSet(GenericViewSet):
         )
 
         if new_task_keys & existing_task_keys:
-            raise error_codes.TASK_EXIST
+            # 找出具体的冲突对象
+            conflict_keys = new_task_keys & existing_task_keys
+            conflict_object_pairs = [f"{object_type}:{object_id}" for object_type, object_id in conflict_keys]
+            raise error_codes.TASK_EXIST.format(
+                message=f"存在正在执行的交接任务，冲突对象: {', '.join(conflict_object_pairs)}", replace=True
+            )
 
     def _check_pending_application_conflict(self, handover_from, detailed_handover_info):
         """检查是否已存在审批中且交接对象有重叠的交接申请单（按 (object_type, object_id) 集合交集判断）"""
@@ -203,7 +208,12 @@ class HandoverViewSet(GenericViewSet):
                 if isinstance(one, dict) and "id" in one
             }
             if new_task_keys & existing_task_keys:
-                raise error_codes.TASK_EXIST
+                # 找出具体的冲突对象
+                conflict_keys = new_task_keys & existing_task_keys
+                conflict_object_pairs = [f"{object_type}:{object_id}" for object_type, object_id in conflict_keys]
+                raise error_codes.TASK_EXIST.format(
+                    message=f"存在审批中的交接申请，冲突对象: {', '.join(conflict_object_pairs)}", replace=True
+                )
 
     def _validate_and_extract_handover_info(self, handover_from, handover_info):
         """校验交接内容合法性 + 将仅含 ID 的 handover_info 扩展为含详细信息的数据"""
@@ -214,7 +224,7 @@ class HandoverViewSet(GenericViewSet):
             # 1. 合法性校验
             HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
             # 2. 提取详细信息
-            provider_cls = HANDOVER_INFO_PROVIDER_MAP[key]
+            provider_cls = HANDOVER_INFO_ENRICHER_MAP[key]
             detailed[key] = provider_cls(handover_from, value).get_info()
         return detailed
 

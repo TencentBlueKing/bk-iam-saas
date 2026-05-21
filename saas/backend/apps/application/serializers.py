@@ -19,6 +19,7 @@ from backend.apps.organization.models import User
 from backend.apps.policy.serializers import PolicyActionSLZ, ResourceSLZ, ResourceTypeSLZ, ValueFiled
 from backend.apps.role.serializers import GradeMangerCreateSLZ
 from backend.biz.application import ApplicationBiz
+from backend.biz.handover import HANDOVER_INFO_ENRICHER_MAP
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
@@ -232,17 +233,15 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             handover_from = data.get("handover_from") or obj.applicant
             handover_info = data.get("handover_info", {})
 
-            from backend.biz.handover import HANDOVER_INFO_PROVIDER_MAP
-
             # 转换原始ID列表为详细信息
             processed_handover_info = {}
             for key, value in handover_info.items():
                 if not value:
                     continue
                 try:
-                    provider_class = HANDOVER_INFO_PROVIDER_MAP.get(key)
-                    if provider_class:
-                        info = provider_class(handover_from, value).get_info()
+                    enricher_class = HANDOVER_INFO_ENRICHER_MAP.get(key)
+                    if enricher_class:
+                        info = enricher_class(handover_from, value).get_info()
                         processed_handover_info[key] = info
                     else:
                         # 未知类型，保持原数据

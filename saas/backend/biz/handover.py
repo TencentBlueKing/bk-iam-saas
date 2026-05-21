@@ -203,8 +203,8 @@ class SubjectTemplateHandoverHandler(BaseHandoverHandler):
         self.biz.delete_members(self.template_id, members=[self.remove_subject])
 
 
-class BaseHandoverInfoProvider(ABC):
-    """交接对象信息提取器基类: 将仅含 ID 的交接数据扩展为带名称、描述等详细信息"""
+class BaseHandoverInfoEnricher(ABC):
+    """交接对象信息富化器基类: 将仅含 ID 的交接数据扩展为带名称、描述等详细信息"""
 
     def __init__(self, handover_from: str, *args, **kwargs):
         """
@@ -220,8 +220,8 @@ class BaseHandoverInfoProvider(ABC):
         """返回该交接对象的详细信息列表"""
 
 
-class GroupInfoProvider(BaseHandoverInfoProvider):
-    """用户组交接信息提取"""
+class GroupInfoEnricher(BaseHandoverInfoEnricher):
+    """用户组交接信息富化"""
 
     biz = GroupBiz()
 
@@ -247,8 +247,8 @@ class GroupInfoProvider(BaseHandoverInfoProvider):
         ]
 
 
-class CustomPolicyInfoProvider(BaseHandoverInfoProvider):
-    """自定义权限交接信息提取"""
+class CustomPolicyInfoEnricher(BaseHandoverInfoEnricher):
+    """自定义权限交接信息富化"""
 
     biz = PolicyQueryBiz()
     system_biz = SystemBiz()
@@ -291,8 +291,8 @@ class CustomPolicyInfoProvider(BaseHandoverInfoProvider):
         return infos
 
 
-class RoleInfoProvider(BaseHandoverInfoProvider):
-    """管理员角色交接信息提取"""
+class RoleInfoEnricher(BaseHandoverInfoEnricher):
+    """管理员角色交接信息富化"""
 
     def __init__(self, handover_from: str, role_ids: List[int]) -> None:
         super().__init__(handover_from)
@@ -312,8 +312,8 @@ class RoleInfoProvider(BaseHandoverInfoProvider):
         ]
 
 
-class SubjectTemplateInfoProvider(BaseHandoverInfoProvider):
-    """人员模板交接信息提取"""
+class SubjectTemplateInfoEnricher(BaseHandoverInfoEnricher):
+    """人员模板交接信息富化"""
 
     biz = SubjectTemplateBiz()
 
@@ -322,15 +322,14 @@ class SubjectTemplateInfoProvider(BaseHandoverInfoProvider):
         self.subject_template_ids = subject_template_ids
 
     def get_info(self) -> List[Dict[str, Any]]:
-        # apps.*.models 在 .importlinter 中已加入 ignore_imports, biz 层可直接查询
         templates = SubjectTemplate.objects.filter(id__in=self.subject_template_ids)
         return [{"id": t.id, "name": t.name, "description": t.description} for t in templates]
 
 
-# 交接对象类型 -> 信息提取器
-HANDOVER_INFO_PROVIDER_MAP: Dict[str, Type[BaseHandoverInfoProvider]] = {
-    "group_ids": GroupInfoProvider,
-    "custom_policies": CustomPolicyInfoProvider,
-    "role_ids": RoleInfoProvider,
-    "subject_template_ids": SubjectTemplateInfoProvider,
+# 交接对象类型 -> 信息富化器
+HANDOVER_INFO_ENRICHER_MAP: Dict[str, Type[BaseHandoverInfoEnricher]] = {
+    "group_ids": GroupInfoEnricher,
+    "custom_policies": CustomPolicyInfoEnricher,
+    "role_ids": RoleInfoEnricher,
+    "subject_template_ids": SubjectTemplateInfoEnricher,
 }
