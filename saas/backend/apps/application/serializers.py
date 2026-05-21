@@ -19,7 +19,6 @@ from backend.apps.organization.models import User
 from backend.apps.policy.serializers import PolicyActionSLZ, ResourceSLZ, ResourceTypeSLZ, ValueFiled
 from backend.apps.role.serializers import GradeMangerCreateSLZ
 from backend.biz.application import ApplicationBiz
-from backend.biz.handover import HANDOVER_INFO_ENRICHER_MAP
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
@@ -190,6 +189,8 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
         """
         详细申请单信息, 补充过期时间显示
         """
+        from ..handover.views import HANDOVER_VALIDATOR_MAP
+
         data = obj.data
         # 对于自定义权限申请
         if obj.type in [ApplicationType.GRANT_ACTION.value, ApplicationType.RENEW_ACTION.value]:
@@ -239,7 +240,7 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
                 if not value:
                     continue
                 try:
-                    enricher_class = HANDOVER_INFO_ENRICHER_MAP.get(key)
+                    enricher_class = HANDOVER_VALIDATOR_MAP[key]
                     if enricher_class:
                         info = enricher_class(handover_from, value).get_info()
                         processed_handover_info[key] = info

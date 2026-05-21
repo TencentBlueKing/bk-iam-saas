@@ -22,7 +22,6 @@ from backend.apps.application.views import admin_not_need_apply_check
 from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.biz.application import ApplicationBiz, HandoverApplicationDataBean
-from backend.biz.handover import HANDOVER_INFO_ENRICHER_MAP
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_permission_handover_lock
 from backend.service.constants import ApplicationStatus, ApplicationType
@@ -222,10 +221,9 @@ class HandoverViewSet(GenericViewSet):
             if not value:
                 continue
             # 1. 合法性校验
-            HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
+            validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value).validate()
             # 2. 提取详细信息
-            provider_cls = HANDOVER_INFO_ENRICHER_MAP[key]
-            detailed[key] = provider_cls(handover_from, value).get_info()
+            detailed[key] = validator.get_info()
         return detailed
 
     def _gen_handover_tasks(self, detailed_handover_info, handover_record):
