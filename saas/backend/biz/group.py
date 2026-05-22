@@ -499,6 +499,15 @@ class GroupBiz:
         relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at)
         return self._convert_to_subject_group_beans(relations)
 
+    def list_all_system_subject_group_before_expired_at(
+        self, system_id: str, subject: Subject, expired_at: int
+    ) -> List[SubjectGroupBean]:
+        """
+        查询指定系统下，指定过期时间之前的所有用户组
+        """
+        relations = self.group_svc.list_all_system_subject_group_before_expired_at(system_id, subject, expired_at)
+        return self._convert_to_subject_group_beans(relations)
+
     def list_all_user_department_group(self, subject: Subject) -> List[SubjectGroupBean]:
         """
         查询指定用户继承的所有用户组列表(即, 继承来自于部门的用户组列表)

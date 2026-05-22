@@ -39,10 +39,8 @@ from backend.common.error_codes import error_codes
 from backend.common.serializers import ActionQuerySLZ, ExpiringPolicySearchSLZ
 from backend.common.time import get_soon_expire_ts
 from backend.service.action import ActionService
-from backend.service.models import Subject
 from backend.service.models import Subject as SvcSubject
 
-from ...common.pagination import CustomPageNumberPagination
 from .serializers import (
     PolicyDeleteSLZ,
     PolicyExpireSoonSLZ,
@@ -235,8 +233,7 @@ class PolicyExpireSoonViewSet(GenericViewSet):
         if action_name:
             data = [p for p in data if p.action and p.action.name and action_name.lower() in p.action.name.lower()]
 
-        serializer = PolicyExpireSoonSLZ(data, many=True)
-        return Response(serializer.data)
+        return Response([one.dict() for one in data])
 
 
 class RelatedPolicyViewSet(GenericViewSet):

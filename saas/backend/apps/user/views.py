@@ -37,6 +37,7 @@ from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.component.iam import list_all_subject_groups
 from backend.service.constants import SubjectRelationType
+from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
 from .serializers import (
@@ -64,7 +65,7 @@ class UserGroupViewSet(GenericViewSet):
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
-        slz = QueryGroupSLZ(data=request.data)
+        slz = QueryGroupSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         system_id = slz.validated_data["system_id"]
 
@@ -149,23 +150,23 @@ class UserGroupRenewViewSet(GenericViewSet):
         slz = QueryGroupSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         system_id = slz.validated_data["system_id"]
-        name = slz.validated_data.get("name", "")  # 组名搜索参数
-        description = slz.validated_data.get("description", "")  # 描述搜索参数
+        name = slz.validated_data.get("name", "")  # 用户组名
+        description = slz.validated_data.get("description", "")  # 用户组描述
 
         subject = Subject.from_username(request.user.username)
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         expired_at = get_soon_expire_ts()
 
         if system_id:
-            count, relations = self.group_biz.list_paging_system_subject_group_before_expired_at(
-                system_id, subject, expired_at=expired_at, limit=10000, offset=0
+            # 获取指定系统的所有即将过期的用户组
+            relations = self.group_biz.list_all_system_subject_group_before_expired_at(
+                system_id, subject, expired_at=expired_at
             )
         else:
-            count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
-                subject, expired_at=expired_at, limit=10000, offset=0
-            )
+            # 获取所有即将过期的用户组
+            relations = self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at=expired_at)
 
-        # 内存搜索过滤
+        # 根据用户组名/描述进行过滤
         if name or description:
             relations = [
                 r
@@ -173,7 +174,8 @@ class UserGroupRenewViewSet(GenericViewSet):
                 if (not name or (r.name and name.lower() in r.name.lower()))
                 and (not description or (r.description and description.lower() in r.description.lower()))
             ]
-        count = len(relations)
+        count = len(relations)  # 更新为过滤后的数量
+
         # 手动处理分页
         paginated_relations = relations[offset : offset + limit] if limit else relations
 
@@ -319,8 +321,8 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
         return {int(one["id"]): one for one in groups}
 
     def get_page_result(self, group_dict, page):
-        # 直接从字典中获取SubjectGroupBean对象
-        return [group_dict[one.id] for one in page]
+        relations = [SubjectGroup(**group_dict[one.id]) for one in page]
+        return self.biz._convert_to_subject_group_beans(relations)
 
 
 class UserGroupSearchViewSet(SubjectGroupSearchMixin):

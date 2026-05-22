@@ -295,6 +295,18 @@ class GroupService:
         relations = parse_obj_as(List[SubjectGroup], all_subject_groups)
         return relations
 
+    def list_all_system_subject_group_before_expired_at(
+        self, system_id: str, subject: Subject, expired_at: int
+    ) -> List[SubjectGroup]:
+        """
+        查询指定系统下所有subject在指定过期时间之前的相关Group
+        """
+        all_subject_groups = iam.list_all_system_subject_groups(
+            system_id, subject.type, subject.id, expired_at=expired_at
+        )
+        relations = parse_obj_as(List[SubjectGroup], all_subject_groups)
+        return relations
+
     def get_member_count_before_expired_at(self, group_id: int, expired_at: int) -> int:
         """
         获取过期的成员数量
