@@ -436,15 +436,11 @@ class ApprovedPassApplicationBiz:
             logger.error("application [%d] handover content invalid: missing handover_to", application.id)
             return
 
-        # 加锁 + 运行中/审批中冲突校验, 与 view 路径共用 biz 层公共函数
-        # 兜底审批通过期间(ITSM 流转)用户在审批开关 OFF 时直发同一对象造成的并发风险
-        # 注意: 冲突类异常(TASK_EXIST)不向上抛, 否则会被 handle_application_result 的 except 捕获并将单据状态
-        #      回滚为 PENDING, ITSM 已结单导致回调死循环。冲突时只记日志并放弃创建交接记录, 单据保持 PASS。
-        # 其他未知异常仍向上抛, 由 handle_application_result 回滚单据状态以触发告警/重试, 避免静默丢失权限交接。
         try:
+            # 加锁，避免并发重复创建任务（如：ITSM 回调 + 定时任务）
             with self.handover_task_check_biz.acquire_locks(handover_from, handover_info):
+                # 运行中冲突校验，确认前面持锁的线程没有抢先创建 RUNNING记录
                 self.handover_task_check_biz.check_running_conflict(handover_from, handover_info)
-                self.handover_task_check_biz.check_pending_application_conflict(handover_from, handover_info)
 
                 with transaction.atomic():
                     # 1. 构造 HandoverRecord
@@ -455,7 +451,7 @@ class ApprovedPassApplicationBiz:
                         status=HandoverStatus.RUNNING.value,
                     )
 
-                    # 2. 基于 handover_info(详细信息) 直接构造 HandoverTask
+                    # 2. 基于 handover_info 构造 HandoverTask
                     handover_task_details = self.handover_task_check_biz.build_tasks(handover_info, handover_record.id)
 
                     if handover_task_details:

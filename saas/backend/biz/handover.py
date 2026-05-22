@@ -98,7 +98,8 @@ class CustomHandoverHandler(BaseHandoverHandler):
         self.grant_subject = Subject.from_username(handover_to)
         self.remove_subject = Subject.from_username(handover_from)
 
-        self.system_id = object_detail["system_id"]
+        # 兼容历史 HandoverTask.object_detail: 旧版本 key 为 "system_id", 新版本统一为 "id"
+        self.system_id = object_detail.get("id") or object_detail["system_id"]
         self.policy_ids = object_detail["policy_ids"]
 
     def _get_subject_policies(self):
@@ -211,11 +212,11 @@ class HandoverTaskCheckBiz:
     def iter_fine_grained_keys(object_type: str, one: Dict) -> Iterable[Tuple[str, str]]:
         """生成最细粒度的 (object_type, fine_grained_id) 元组
 
-        - custom_policies: fine_grained_id = "{system_id}:{policy_id}"
+        - custom_policies: fine_grained_id = "{system_id}:{policy_id}", 一个 system 可能展开多个
         - 其他类型:        fine_grained_id = str(one["id"])
         """
         if object_type == HandoverObjectType.CUSTOM_POLICIES.value:
-            system_id = one.get("system_id")
+            system_id = one.get("id")
             for policy_id in one.get("policy_ids") or []:
                 yield object_type, "{}:{}".format(system_id, policy_id)
             return
@@ -267,10 +268,7 @@ class HandoverTaskCheckBiz:
         }
 
     def check_running_conflict(self, handover_from: str, detailed_handover_info: Dict) -> None:
-        """检查是否已存在运行中且交接对象有重叠的 HandoverRecord
-
-        通过最细粒度 (object_type, fine_grained_id) 集合交集判断, 冲突时抛 TASK_EXIST。
-        """
+        """检查是否已存在运行中且交接对象有重叠的 HandoverRecord, 冲突时抛 TASK_EXIST"""
         new_task_keys = self._collect_new_task_keys(detailed_handover_info)
         if not new_task_keys:
             return
@@ -288,7 +286,7 @@ class HandoverTaskCheckBiz:
             handover_record_id__in=running_record_ids
         ).values_list("object_type", "object_id", "object_detail"):
             if object_type == HandoverObjectType.CUSTOM_POLICIES.value:
-                # 自定义权限的 object_id 是 system_id, 需结合 object_detail.policy_ids 展开到 policy 粒度
+                # 自定义权限的fine_grained_id是<system_id>:<policy_id>
                 try:
                     detail = json.loads(object_detail) if object_detail else {}
                 except (TypeError, ValueError):
@@ -335,21 +333,21 @@ class HandoverTaskCheckBiz:
                 )
 
     def build_tasks(self, detailed_handover_info: Dict, handover_record_id: int) -> List[HandoverTask]:
-        """基于已展开的详细信息构造 HandoverTask 列表
+        """构造 HandoverTask 列表
 
-        自定义权限以 system_id 作为 object_id (一个系统聚合为一条 task), 其他类型沿用对象自身 id。
+        用户组/管理员：每个id生成一个task
+        自定义权限：每个system_id生成一个task
         """
         tasks: List[HandoverTask] = []
         for key, infos in detailed_handover_info.items():
             if not infos:
                 continue
             for one in infos:
-                raw_object_id = one["system_id"] if key == HandoverObjectType.CUSTOM_POLICIES.value else one["id"]
                 tasks.append(
                     HandoverTask(
                         handover_record_id=handover_record_id,
                         object_type=key,
-                        object_id=str(raw_object_id),
+                        object_id=str(one["id"]),
                         object_detail=json_dumps(one),
                     )
                 )
