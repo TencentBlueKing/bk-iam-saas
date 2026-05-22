@@ -14,6 +14,7 @@ from copy import deepcopy
 from itertools import groupby
 from typing import Any, Dict, List, Optional, Tuple, Type
 
+from blue_krill.web.std_error import APIError
 from django.db import transaction
 from django.utils.translation import gettext as _
 from pydantic import BaseModel
@@ -22,7 +23,7 @@ from rest_framework.request import Request
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
-from backend.apps.handover.constants import HandoverObjectType, HandoverStatus
+from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.apps.handover.tasks import execute_handover_task
 from backend.apps.organization.models import User as UserModel
@@ -72,7 +73,6 @@ from backend.service.models import (
 )
 from backend.service.role import RoleService
 from backend.service.system import SystemService
-from backend.util.json import json_dumps
 
 from .application_process import (
     GradeManagerApproverHandler,
@@ -82,6 +82,7 @@ from .application_process import (
     PolicyProcessHandler,
 )
 from .group import GroupBiz, GroupMemberExpiredAtBean
+from .handover import HandoverTaskCheckBiz
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from .role import RoleBiz, RoleInfo, RoleInfoBean
 from .subject import SubjectInfoList
@@ -189,6 +190,7 @@ class ApprovedPassApplicationBiz:
     policy_operation_biz = PolicyOperationBiz()
     group_biz = GroupBiz()
     role_biz = RoleBiz()
+    handover_task_check_biz = HandoverTaskCheckBiz()
 
     def _check_subject_exists(self, subject: Subject) -> Tuple[bool, str]:
         """
@@ -434,34 +436,41 @@ class ApprovedPassApplicationBiz:
             logger.error("application [%d] handover content invalid: missing handover_to", application.id)
             return
 
-        with transaction.atomic():
-            # 1. 构造 HandoverRecord
-            handover_record = HandoverRecord.objects.create(
-                handover_from=handover_from,
-                handover_to=handover_to,
-                reason=reason,
-                status=HandoverStatus.RUNNING.value,
-            )
+        # 加锁 + 运行中/审批中冲突校验, 与 view 路径共用 biz 层公共函数
+        # 兜底审批通过期间(ITSM 流转)用户在审批开关 OFF 时直发同一对象造成的并发风险
+        # 注意: 冲突类异常(TASK_EXIST)不向上抛, 否则会被 handle_application_result 的 except 捕获并将单据状态
+        #      回滚为 PENDING, ITSM 已结单导致回调死循环。冲突时只记日志并放弃创建交接记录, 单据保持 PASS。
+        # 其他未知异常仍向上抛, 由 handle_application_result 回滚单据状态以触发告警/重试, 避免静默丢失权限交接。
+        try:
+            with self.handover_task_check_biz.acquire_locks(handover_from, handover_info):
+                self.handover_task_check_biz.check_running_conflict(handover_from, handover_info)
+                self.handover_task_check_biz.check_pending_application_conflict(handover_from, handover_info)
 
-            # 2. 基于 handover_info(详细信息) 直接构造 HandoverTask
-            handover_task_details: List[HandoverTask] = []
-            for key, infos in handover_info.items():
-                if not infos:
-                    continue
-                for one in infos:
-                    # 自定义权限以 system_id 作为 object_id, 其他类型沿用 id
-                    object_id = one["system_id"] if key == HandoverObjectType.CUSTOM_POLICIES.value else one["id"]
-                    handover_task_details.append(
-                        HandoverTask(
-                            handover_record_id=handover_record.id,
-                            object_type=key,
-                            object_id=object_id,
-                            object_detail=json_dumps(one),
-                        )
+                with transaction.atomic():
+                    # 1. 构造 HandoverRecord
+                    handover_record = HandoverRecord.objects.create(
+                        handover_from=handover_from,
+                        handover_to=handover_to,
+                        reason=reason,
+                        status=HandoverStatus.RUNNING.value,
                     )
 
-            if handover_task_details:
-                HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
+                    # 2. 基于 handover_info(详细信息) 直接构造 HandoverTask
+                    handover_task_details = self.handover_task_check_biz.build_tasks(handover_info, handover_record.id)
+
+                    if handover_task_details:
+                        HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
+        except APIError as e:
+            if e.code != error_codes.TASK_EXIST.code:
+                raise
+            logger.warning(
+                "application [%d] handover skipped due to conflict, sn=%s, handover_from=%s, msg=%s",
+                application.id,
+                application.sn,
+                handover_from,
+                e.message,
+            )
+            return
 
         # 3. 事务提交后再启动异步任务, 避免 delay 比事务提交更快导致查不到 HandoverTask
         execute_handover_task.delay(

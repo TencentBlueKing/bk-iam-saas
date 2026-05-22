@@ -151,8 +151,12 @@ class ApplicationListSLZ(serializers.ModelSerializer):
             extra_info["group_count"] = len(obj.data["groups"])
         elif obj.type == ApplicationType.HANDOVER.value:
             data = obj.data or {}
-            extra_info["handover_from"] = data.get("handover_from") or obj.applicant
+            handover_info = data.get("handover_info") or {}
             extra_info["handover_to"] = data.get("handover_to", "")
+            # 交接对象数量: 用户组 + 角色 + 模板 + 自定义权限
+            extra_info["handover_object_count"] = sum(
+                len(infos) for infos in handover_info.values() if isinstance(infos, list)
+            )
         return extra_info
 
 
@@ -189,8 +193,6 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
         """
         详细申请单信息, 补充过期时间显示
         """
-        from ..handover.views import HANDOVER_VALIDATOR_MAP
-
         data = obj.data
         # 对于自定义权限申请
         if obj.type in [ApplicationType.GRANT_ACTION.value, ApplicationType.RENEW_ACTION.value]:
@@ -227,33 +229,6 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             # 授权人员范围处理
             subjects = SubjectInfoList(parse_obj_as(List[Subject], data["subject_scopes"])).subjects
             data["subject_scopes"] = [one.dict() for one in subjects]
-
-        # 对于权限交接申请
-        if obj.type == ApplicationType.HANDOVER.value:
-            # 获取交接发起人
-            handover_from = data.get("handover_from") or obj.applicant
-            handover_info = data.get("handover_info", {})
-
-            # 转换原始ID列表为详细信息
-            processed_handover_info = {}
-            for key, value in handover_info.items():
-                if not value:
-                    continue
-                try:
-                    enricher_class = HANDOVER_VALIDATOR_MAP[key]
-                    if enricher_class:
-                        info = enricher_class(handover_from, value).get_info()
-                        processed_handover_info[key] = info
-                    else:
-                        # 未知类型，保持原数据
-                        processed_handover_info[key] = value
-                except Exception:
-                    # 如果处理失败，保持原数据
-                    processed_handover_info[key] = value
-
-            # 更新handover_info为处理后的详细信息
-            if processed_handover_info:
-                data["handover_info"] = processed_handover_info
 
         return data
 
