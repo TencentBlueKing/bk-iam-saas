@@ -39,6 +39,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='role',
+            name='enabled',
+            field=models.BooleanField(default=True, verbose_name='是否启用'),
+        ),
         migrations.AlterField(
             model_name='role',
             name='type',
