@@ -20,7 +20,7 @@ class Command(BaseCommand):
     help = "migrate role resource label"
 
     def handle(self, *args, **options):
-        queryset = Role.objects.filter(hidden=False).all()
+        queryset = Role.objects.filter(hidden=False).only("id")
 
         paginator = Paginator(queryset, 100)
 
