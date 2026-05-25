@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
-from django.db import connection, transaction
+from django.db import connection
 from django.db.models import Case, Q, Value, When
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -445,7 +445,7 @@ class RoleBiz:
         subject_policy_count = self.svc.count_role_subject_scopes(role_id)
         grade_managers_count = self.svc.count_role_members(role_id)
 
-        # 仅一级管理空间返回二级空间数量
+        # 返回二级空间数量
         sub_space_count = 0
         if role.type == RoleType.GRADE_MANAGER.value:
             sub_space_count = self.svc.count_subset_managers(role_id)
@@ -454,8 +454,8 @@ class RoleBiz:
             "id": role.id,
             "name": role.name,  # 管理空间名称
             "type": role.type,
-            "sub_space_count": sub_space_count,  # 二级管理空间数量
-            "grade_managers_count": grade_managers_count,  # 分级管理员数量
+            "sub_space_count": sub_space_count,  # 二级管理空间数量，对二级管理空间sub_space_count=0
+            "grade_managers_count": grade_managers_count,  # 管理员数量
             "user_group_count": user_group_count,  # 用户组数量
             "policy_count": permission_policy_count,  # 权限策略数量
             "subject_count": subject_policy_count,  # 人员策略数量

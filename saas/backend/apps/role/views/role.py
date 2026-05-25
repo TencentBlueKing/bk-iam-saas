@@ -18,7 +18,6 @@ from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status
-from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins, views
@@ -84,9 +83,9 @@ from backend.apps.role.serializers import (
 )
 from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.apps.subject_template.models import SubjectTemplateGroup
-from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
-from backend.biz.helper import GradeManagerDeleteHelper, RoleDeleteHelper, RoleWithPermGroupBiz
+from backend.biz.helper import RoleDeleteHelper, RoleWithPermGroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import (
     RoleBiz,
@@ -310,7 +309,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             raise error_codes.FORBIDDEN.format(message=_("存在{}个二级管理空间，请先删除所有二级空间").format(subset_count), replace=True)
 
         # 执行删除
-        GradeManagerDeleteHelper(role.id).delete()
+        RoleDeleteHelper(role.id).delete()
 
         audit_context_setter(role=role)
         return Response({})
@@ -328,12 +327,11 @@ class GradeManagerPreviewViewSet(GenericViewSet):
         operation_description="管理空间删除预览",
         tags=["role"],
     )
-    @action(detail=True, methods=["get"], url_path="deletion_preview")
     def deletion_preview(self, request, *args, **kwargs):
         """管理空间删除预览接口（一级和二级管理空间通用）"""
         role_id = kwargs.get("id")
 
-        # 使用biz层获取删除预览数据
+        # 获取删除预览数据
         preview_data = self.biz.get_deletion_preview_data(role_id)
 
         return Response(preview_data)
@@ -1034,7 +1032,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             raise error_codes.FORBIDDEN.format(message=_("非该管理空间({})的管理员，无权限删除").format(role.name), replace=True)
 
         # 执行删除
-        GradeManagerDeleteHelper(role.id).delete()
+        RoleDeleteHelper(role.id).delete()
 
         audit_context_setter(role=role)
         return Response({})
@@ -1045,7 +1043,6 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
-    @action(detail=False, methods=["delete"])
     def batch_delete(self, request, *args, **kwargs):
         """批量删除二级管理空间"""
         # 获取要删除的二级管理空间ID列表
@@ -1065,6 +1062,12 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 批量删除每个二级管理空间
         for role_id in role_ids:
             try:
+                # 检查角色类型，仅允许删除二级管理空间
+                role = Role.objects.filter(id=role_id, type=RoleType.SUBSET_MANAGER.value).first()
+                if not role:
+                    failed_details.append({"role_id": role_id, "error": _("该角色不存在或不是二级管理空间,无法删除")})
+                    failed_count += 1
+                    continue
                 # 检查权限
                 if not can_user_manage_role(user_id, role_id):
                     failed_details.append({"role_id": role_id, "error": _("非该管理空间的管理员，无权限删除")})
@@ -1072,8 +1075,11 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
                     continue
 
                 # 执行删除
-                GradeManagerDeleteHelper(role_id).delete()
+                RoleDeleteHelper(role_id).delete()
                 success_count += 1
+
+                # 记录审计日志
+                add_audit(RoleDeleteAuditProvider, request, role=role)
 
             except Exception as e:
                 failed_details.append({"role_id": role_id, "error": str(e)})
