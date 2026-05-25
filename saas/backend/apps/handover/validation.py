@@ -11,13 +11,16 @@ specific language governing permissions and limitations under the License.
 
 import time
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from typing import Any, Dict, List
 
 from django.utils.functional import cached_property
 from pydantic import parse_obj_as
 from rest_framework import serializers
 
+from backend.apps.approval.models import ActionProcessRelation
 from backend.apps.group.models import Group
+from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateRelation
 from backend.biz.group import GroupBiz, SubjectGroupBean
@@ -73,7 +76,7 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
             }
 
         # 查询每个用户组的最高敏感等级（基于其所有权限模板/自定义权限的策略敏感等级）
-        highest_sensitivity_level_map = {gid: self._get_group_highest_sensitivity_level(gid) for gid in self.group_ids}
+        highest_sensitivity_level_map = self._get_groups_highest_sensitivity_level(self.group_ids)
 
         return [
             {
@@ -88,20 +91,42 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
         ]
 
     @staticmethod
-    def _get_group_highest_sensitivity_level(group_id: int) -> str:
-        """计算用户组的最高敏感等级: 取该组下所有自定义权限策略的最高敏感等级"""
-        group_subject = Subject.from_group_id(group_id)
-        policy_query_biz = PolicyQueryBiz()
+    def _get_groups_highest_sensitivity_level(group_ids: List[int]) -> Dict[int, str]:
+        """计算用户组的最高敏感等级
 
-        # 获取用户组涉及的系统
-        system_counter_list = policy_query_biz.list_system_counter_by_subject(group_subject, hidden=False)
+        取每个用户组下所有自定义权限策略的最高敏感等级。
+        """
+        if not group_ids:
+            return {}
 
-        sensitivity_levels: List[str] = []
-        for system_counter in system_counter_list:
-            policies = policy_query_biz.list_by_subject(system_counter.id, group_subject)
-            sensitivity_levels.extend([p.sensitivity_level for p in policies if p.sensitivity_level])
+        # 1. 查询所有用户组的 (system_id, action_id) 关系
+        group_actions = list(
+            Policy.objects.filter(
+                subject_type=SubjectType.GROUP.value,
+                subject_id__in=[str(gid) for gid in group_ids],
+            ).values("subject_id", "system_id", "action_id")
+        )
+        if not group_actions:
+            return {gid: SensitivityLevel.L1.value for gid in group_ids}
 
-        return max(sensitivity_levels) if sensitivity_levels else SensitivityLevel.L1.value
+        # 2. 查询所涉及系统的 (system_id, action_id) -> sensitivity_level 映射
+        involved_systems = {ga["system_id"] for ga in group_actions}
+        sensitivity_map = {
+            (rel["system_id"], rel["action_id"]): rel["sensitivity_level"]
+            for rel in ActionProcessRelation.objects.filter(system_id__in=involved_systems).values(
+                "system_id", "action_id", "sensitivity_level"
+            )
+        }
+
+        # 3. 聚合每个用户组的最高敏感等级
+        group_levels: Dict[int, List[str]] = defaultdict(list)
+        for ga in group_actions:
+            level = sensitivity_map.get((ga["system_id"], ga["action_id"]), SensitivityLevel.L1.value)
+            group_levels[int(ga["subject_id"])].append(level)
+
+        return {
+            gid: (max(group_levels[gid]) if group_levels.get(gid) else SensitivityLevel.L1.value) for gid in group_ids
+        }
 
     @cached_property
     def subject_groups(self) -> List[SubjectGroupBean]:
@@ -195,7 +220,7 @@ class SubjectTemplateProcessor(BaseHandoverDataProcessor):
             if not SubjectTemplateRelation.objects.filter(
                 template_id=_id, subject_id=self.handover_from, subject_type=SubjectType.USER.value
             ).exists():
-                raise serializers.ValidationError("角色: {} 不在当前用户的可交接范围内!".format(_id))
+                raise serializers.ValidationError("人员模板: {} 不在当前用户的可交接范围内!".format(_id))
 
     def get_info(self):
         templates = SubjectTemplate.objects.filter(id__in=self.subject_template_ids)
