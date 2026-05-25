@@ -427,13 +427,15 @@ class ApprovedPassApplicationBiz:
         """权限交接审批通过处理"""
 
         app_data = application.data or {}
-        handover_from = app_data.get("handover_from") or application.applicant
-        handover_to = app_data.get("handover_to")
+        handover_from: str = app_data.get("handover_from") or ""
+        handover_to: str = app_data.get("handover_to") or ""
         handover_info = app_data.get("handover_info") or {}
         reason = application.reason
 
-        if not handover_to:
-            logger.error("application [%d] handover content invalid: missing handover_to", application.id)
+        if not handover_from or not handover_to:
+            logger.error(
+                "application [%d] handover content invalid: missing handover_from or handover_to", application.id
+            )
             return
 
         try:

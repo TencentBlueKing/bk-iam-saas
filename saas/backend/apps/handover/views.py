@@ -69,7 +69,7 @@ class HandoverViewSet(GenericViewSet):
 
         # 2. 按对象粒度加分布式锁 + 互斥校验
         with self.handover_task_check_biz.acquire_handover_task_locks(handover_from, detailed_handover_info):
-            # 双重校验, 避免配置切换造成风险
+            # 互斥校验
             self.handover_task_check_biz.has_running_handover_tasks(handover_from, detailed_handover_info)
             self.handover_task_check_biz.has_pending_handover_tasks(handover_from, detailed_handover_info)
 

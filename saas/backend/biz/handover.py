@@ -247,9 +247,7 @@ class HandoverTaskCheckBiz:
             for key in self._gen_handover_task_lock_keys(handover_from, detailed_handover_info):
                 lock = gen_permission_handover_lock(key)
                 if not lock.acquire():
-                    for acquired_lock in locks:
-                        acquired_lock.release()
-                    locks = []
+                    # 已持有的锁由 finally 统一释放
                     raise error_codes.TASK_EXIST.format(message="请勿重复提交")
                 locks.append(lock)
             yield
@@ -280,20 +278,15 @@ class HandoverTaskCheckBiz:
         if not running_record_ids:
             return
 
-        existing_task_keys = set()
+        existing_task_keys: set = set()
         for object_type, object_id, object_detail in HandoverTask.objects.filter(
             handover_record_id__in=running_record_ids
         ).values_list("object_type", "object_id", "object_detail"):
-            if object_type == HandoverObjectType.CUSTOM_POLICIES.value:
-                # 自定义权限的fine_grained_id是<system_id>:<policy_id>
-                try:
-                    detail = json.loads(object_detail) if object_detail else {}
-                except (TypeError, ValueError):
-                    detail = {}
-                for policy_id in detail.get("policy_ids") or []:
-                    existing_task_keys.add((object_type, "{}:{}".format(object_id, policy_id)))
-            else:
-                existing_task_keys.add((object_type, str(object_id)))
+            try:
+                detail = json.loads(object_detail) if object_detail else {"id": object_id}
+            except (TypeError, ValueError):
+                detail = {"id": object_id}
+            existing_task_keys.update(self.iter_fine_grained_keys(object_type, detail))
 
         conflict_keys = new_task_keys & existing_task_keys
         if conflict_keys:
