@@ -98,7 +98,7 @@ class CustomHandoverHandler(BaseHandoverHandler):
         self.grant_subject = Subject.from_username(handover_to)
         self.remove_subject = Subject.from_username(handover_from)
 
-        self.system_id = object_detail.get("id")
+        self.system_id = object_detail["id"]
         self.policy_ids = object_detail["policy_ids"]
 
     def _get_subject_policies(self):
