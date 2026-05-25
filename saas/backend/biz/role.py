@@ -439,7 +439,7 @@ class RoleBiz:
         if not role:
             raise error_codes.NOT_FOUND_ERROR.format(_("id为{}的管理空间不存在").format(role_id), True)
 
-        # 使用service层进行数据统计
+        # 数据统计
         user_group_count = self.svc.count_role_related_groups(role_id)
         permission_policy_count = self.svc.count_role_authorization_scopes(role_id)
         subject_policy_count = self.svc.count_role_subject_scopes(role_id)
