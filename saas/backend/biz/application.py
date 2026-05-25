@@ -438,9 +438,9 @@ class ApprovedPassApplicationBiz:
 
         try:
             # 加锁，避免并发重复创建任务（如：ITSM 回调 + 定时任务）
-            with self.handover_task_check_biz.acquire_locks(handover_from, handover_info):
+            with self.handover_task_check_biz.acquire_handover_task_locks(handover_from, handover_info):
                 # 运行中冲突校验，确认前面持锁的线程没有抢先创建 RUNNING记录
-                self.handover_task_check_biz.check_running_conflict(handover_from, handover_info)
+                self.handover_task_check_biz.has_running_handover_tasks(handover_from, handover_info)
 
                 with transaction.atomic():
                     # 1. 构造 HandoverRecord
@@ -452,7 +452,9 @@ class ApprovedPassApplicationBiz:
                     )
 
                     # 2. 基于 handover_info 构造 HandoverTask
-                    handover_task_details = self.handover_task_check_biz.build_tasks(handover_info, handover_record.id)
+                    handover_task_details = self.handover_task_check_biz.gen_handover_tasks(
+                        handover_info, handover_record.id
+                    )
 
                     if handover_task_details:
                         HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)

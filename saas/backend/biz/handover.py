@@ -98,8 +98,7 @@ class CustomHandoverHandler(BaseHandoverHandler):
         self.grant_subject = Subject.from_username(handover_to)
         self.remove_subject = Subject.from_username(handover_from)
 
-        # 兼容历史 HandoverTask.object_detail: 旧版本 key 为 "system_id", 新版本统一为 "id"
-        self.system_id = object_detail.get("id") or object_detail["system_id"]
+        self.system_id = object_detail.get("id")
         self.policy_ids = object_detail["policy_ids"]
 
     def _get_subject_policies(self):
@@ -212,7 +211,7 @@ class HandoverTaskCheckBiz:
     def iter_fine_grained_keys(object_type: str, one: Dict) -> Iterable[Tuple[str, str]]:
         """生成最细粒度的 (object_type, fine_grained_id) 元组
 
-        - custom_policies: fine_grained_id = "{system_id}:{policy_id}", 一个 system 可能展开多个
+        - custom_policies: fine_grained_id = "{system_id}:{policy_id}", 一个 system 会展开多个
         - 其他类型:        fine_grained_id = str(one["id"])
         """
         if object_type == HandoverObjectType.CUSTOM_POLICIES.value:
@@ -223,7 +222,7 @@ class HandoverTaskCheckBiz:
 
         yield object_type, str(one["id"])
 
-    def _gen_lock_keys(self, handover_from: str, detailed_handover_info: Dict) -> List[str]:
+    def _gen_handover_task_lock_keys(self, handover_from: str, detailed_handover_info: Dict) -> List[str]:
         """生成排序后的锁 key 列表
 
         格式为 "{handover_from}:{object_type}:{fine_grained_id}", 排序以避免不同请求按不同顺序加锁导致死锁。
@@ -238,14 +237,14 @@ class HandoverTaskCheckBiz:
         return sorted(keys)
 
     @contextmanager
-    def acquire_locks(self, handover_from: str, detailed_handover_info: Dict):
+    def acquire_handover_task_locks(self, handover_from: str, detailed_handover_info: Dict):
         """按对象粒度逐个获取分布式锁的上下文管理器
 
-        任一锁获取失败时回滚已持有的锁并抛出 TASK_EXIST; with 块退出时自动释放全部锁。
+        任一锁获取失败时回滚已持有的锁并抛出 TASK_EXIST
         """
         locks: List[RedisLock] = []
         try:
-            for key in self._gen_lock_keys(handover_from, detailed_handover_info):
+            for key in self._gen_handover_task_lock_keys(handover_from, detailed_handover_info):
                 lock = gen_permission_handover_lock(key)
                 if not lock.acquire():
                     for acquired_lock in locks:
@@ -267,7 +266,7 @@ class HandoverTaskCheckBiz:
             for key in self.iter_fine_grained_keys(object_type, one)
         }
 
-    def check_running_conflict(self, handover_from: str, detailed_handover_info: Dict) -> None:
+    def has_running_handover_tasks(self, handover_from: str, detailed_handover_info: Dict) -> None:
         """检查是否已存在运行中且交接对象有重叠的 HandoverRecord, 冲突时抛 TASK_EXIST"""
         new_task_keys = self._collect_new_task_keys(detailed_handover_info)
         if not new_task_keys:
@@ -303,7 +302,7 @@ class HandoverTaskCheckBiz:
                 message=f"存在正在执行的交接任务，冲突对象: {', '.join(conflict_object_pairs)}", replace=True
             )
 
-    def check_pending_application_conflict(self, handover_from: str, detailed_handover_info: Dict) -> None:
+    def has_pending_handover_tasks(self, handover_from: str, detailed_handover_info: Dict) -> None:
         """检查是否已存在审批中且交接对象有重叠的交接申请单, 冲突时抛 TASK_EXIST"""
         new_task_keys = self._collect_new_task_keys(detailed_handover_info)
         if not new_task_keys:
@@ -332,7 +331,7 @@ class HandoverTaskCheckBiz:
                     message=f"存在审批中的交接申请，冲突对象: {', '.join(conflict_object_pairs)}", replace=True
                 )
 
-    def build_tasks(self, detailed_handover_info: Dict, handover_record_id: int) -> List[HandoverTask]:
+    def gen_handover_tasks(self, detailed_handover_info: Dict, handover_record_id: int) -> List[HandoverTask]:
         """构造 HandoverTask 列表
 
         用户组/管理员：每个id生成一个task

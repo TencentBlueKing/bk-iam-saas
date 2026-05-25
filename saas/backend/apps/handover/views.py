@@ -68,10 +68,10 @@ class HandoverViewSet(GenericViewSet):
         detailed_handover_info = self._validate_and_extract_handover_info(handover_from, handover_info)
 
         # 2. 按对象粒度加分布式锁 + 互斥校验
-        with self.handover_task_check_biz.acquire_locks(handover_from, detailed_handover_info):
+        with self.handover_task_check_biz.acquire_handover_task_locks(handover_from, detailed_handover_info):
             # 双重校验, 避免配置切换造成风险
-            self.handover_task_check_biz.check_running_conflict(handover_from, detailed_handover_info)
-            self.handover_task_check_biz.check_pending_application_conflict(handover_from, detailed_handover_info)
+            self.handover_task_check_biz.has_running_handover_tasks(handover_from, detailed_handover_info)
+            self.handover_task_check_biz.has_pending_handover_tasks(handover_from, detailed_handover_info)
 
             # 3. 审批开关开启时, 走 Application + ITSM 审批流; 否则保持原有立即生效逻辑
             if getattr(settings, "ENABLE_HANDOVER_APPROVAL", False):
@@ -87,7 +87,7 @@ class HandoverViewSet(GenericViewSet):
                 handover_from=handover_from, handover_to=handover_to, reason=reason
             )
 
-            handover_task_details = self.handover_task_check_biz.build_tasks(
+            handover_task_details = self.handover_task_check_biz.gen_handover_tasks(
                 detailed_handover_info, handover_record.id
             )
 

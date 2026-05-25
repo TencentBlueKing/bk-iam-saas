@@ -139,7 +139,6 @@ class GustomPolicyProcessor(BaseHandoverDataProcessor):
         infos = []
         for system_policy in self.custom_policies:
             sys = system_list.get(system_policy["system_id"])
-            # 获取完整的策略结构（含 sensitivity_level / resource_groups 等), 用于前端展示与 ITSM 渲染
             application_policies: List[Dict[str, Any]] = []
             if system_policy["policy_ids"]:
                 policies = self.biz.list_by_subject(system_policy["system_id"], subject)

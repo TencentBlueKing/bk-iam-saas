@@ -31,7 +31,6 @@ class FormSchemeEnum(LowerStrEnum):
     # 环境属性
     ENVIRONMENT_TABLE = auto()
     # 权限交接
-    HANDOVER_TABLE = auto()  # 权限交接表格(已废弃, 保留以兼容历史单据数据)
     HANDOVER_GROUP_TABLE = auto()  # 权限交接-用户组表格
     HANDOVER_ROLE_TABLE = auto()  # 权限交接-管理员身份表格
     HANDOVER_SUBJECT_TEMPLATE_TABLE = auto()  # 权限交接-人员模板表格
@@ -125,17 +124,6 @@ FORM_SCHEMES = {
             "column": [
                 {"name": "环境属性分类", "type": "text", "key": "type"},
                 {"name": "属性条件", "key": "condition", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
-            ]
-        },
-    },
-    FormSchemeEnum.HANDOVER_TABLE.value: {
-        "type": "table",
-        "attrs": {
-            "column": [
-                {"name": "类型", "type": "text", "key": "object_type"},
-                {"name": "名称", "type": "text", "key": "name"},
-                {"name": "描述", "type": "text", "key": "description"},
-                {"name": "过期时间", "type": "text", "key": "expired_display"},
             ]
         },
     },
