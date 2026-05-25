@@ -31,7 +31,10 @@ class FormSchemeEnum(LowerStrEnum):
     # 环境属性
     ENVIRONMENT_TABLE = auto()
     # 权限交接
-    HANDOVER_TABLE = auto()  # 权限交接表格
+    HANDOVER_TABLE = auto()  # 权限交接表格(已废弃, 保留以兼容历史单据数据)
+    HANDOVER_GROUP_TABLE = auto()  # 权限交接-用户组表格
+    HANDOVER_ROLE_TABLE = auto()  # 权限交接-管理员身份表格
+    HANDOVER_SUBJECT_TEMPLATE_TABLE = auto()  # 权限交接-人员模板表格
 
 
 FORM_SCHEMES = {
@@ -133,6 +136,38 @@ FORM_SCHEMES = {
                 {"name": "名称", "type": "text", "key": "name"},
                 {"name": "描述", "type": "text", "key": "description"},
                 {"name": "过期时间", "type": "text", "key": "expired_display"},
+            ]
+        },
+    },
+    FormSchemeEnum.HANDOVER_GROUP_TABLE.value: {
+        "type": "table",
+        "attrs": {
+            "column": [
+                {"name": "ID", "type": "text", "key": "id"},
+                {"name": "管理空间", "type": "text", "key": "role_name"},
+                {"name": "用户组", "type": "text", "key": "name"},
+                {"name": "最高敏感等级", "type": "text", "key": "highest_sensitivity_level"},
+                {"name": "描述", "type": "text", "key": "desc"},
+                {"name": "申请期限", "type": "text", "key": "expired_display"},
+            ]
+        },
+    },
+    FormSchemeEnum.HANDOVER_ROLE_TABLE.value: {
+        "type": "table",
+        "attrs": {
+            "column": [
+                {"name": "管理员名称", "type": "text", "key": "name"},
+                {"name": "类型", "type": "text", "key": "role_type"},
+                {"name": "描述", "type": "text", "key": "description"},
+            ]
+        },
+    },
+    FormSchemeEnum.HANDOVER_SUBJECT_TEMPLATE_TABLE.value: {
+        "type": "table",
+        "attrs": {
+            "column": [
+                {"name": "人员模板", "type": "text", "key": "name"},
+                {"name": "描述", "type": "text", "key": "description"},
             ]
         },
     },
