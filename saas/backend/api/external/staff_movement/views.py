@@ -138,7 +138,8 @@ class ResignHandoverViewSet(HandoverViewSet):
             )
 
         if err_list:
-            return Response({"err_list": err_list, "code": 500, "msg": "FAILED"})
+            msg = "；".join(list({item["fail_reason"] for item in err_list}))
+            return Response({"err_list": err_list, "code": 500, "msg": msg})
         # 异步处理中
         return Response({"err_list": [], "code": 202, "msg": "OK"})
 
@@ -218,4 +219,7 @@ class RecycleViewSet(ResignHandoverViewSet):
             except Exception as e:  # pylint: disable=broad-except
                 err_list.append({"fail_reason": str(e), "info": asset})
 
-        return Response({"err_list": err_list, "code": 500 if err_list else 0, "msg": "FAILED" if err_list else "OK"})
+        if err_list:
+            msg = "；".join(list({item["fail_reason"] for item in err_list}))
+            return Response({"err_list": err_list, "code": 500, "msg": msg})
+        return Response({"err_list": [], "code": 0, "msg": "OK"})
