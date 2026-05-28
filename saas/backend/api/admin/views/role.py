@@ -19,6 +19,7 @@ from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import SuperManagerMemberSLZ, SystemManagerWithMembersSLZ
 from backend.api.authentication import ESBAuthentication
 from backend.apps.role.models import Role
+from backend.biz.system import SystemBiz
 from backend.mixins import TenantMixin
 from backend.service.constants import RoleType
 
@@ -56,6 +57,9 @@ class AdminSystemManagerMemberViewSet(TenantMixin, GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         system_id = kwargs["system_id"]
+
+        # TODO: check system_id exists
+        SystemBiz(request.tenant_id).get(system_id)
 
         role = Role.objects.filter(
             tenant_id=self.tenant_id, type=RoleType.SYSTEM_MANAGER.value, code=system_id
