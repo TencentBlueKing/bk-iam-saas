@@ -1,3 +1,11 @@
+<!-- 2026-05-28 -->
+# V1.10.62 Version Update Log
+
+### Fixes
+* Fixed staff movement handover and recycle APIs to return actual failure reasons instead of generic FAILED
+
+---
+
 <!-- 2026-05-20 -->
 # V1.10.61 Version Update Log
 
