@@ -58,7 +58,6 @@ class AdminSystemManagerMemberViewSet(TenantMixin, GenericViewSet):
     def retrieve(self, request, *args, **kwargs):
         system_id = kwargs["system_id"]
 
-        # TODO: check system_id exists
         SystemBiz(request.tenant_id).get(system_id)
 
         role = Role.objects.filter(
