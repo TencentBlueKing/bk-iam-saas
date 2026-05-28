@@ -126,14 +126,14 @@ class TemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
         if page is not None:
             # 查询模板中对 group_id 中有授权的
             exists_template_set = self._query_group_exists_template_set(group_id, page)
-            serializer = TemplateListSLZ(
+            serializer = self.get_serializer(
                 page, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
             )
             return self.get_paginated_response(serializer.data)
 
         # 查询模板中对 group_id 中有授权的
         exists_template_set = self._query_group_exists_template_set(group_id, queryset)
-        serializer = TemplateListSLZ(
+        serializer = self.get_serializer(
             queryset, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
         )
         return Response(serializer.data)
@@ -199,7 +199,7 @@ class TemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
         # 查询 role 的 system-actions set
         role_system_actions = RoleListQuery(request.role).get_scope_system_actions()
         template = self.get_object()
-        serializer = TemplateListSLZ(instance=template, role_system_actions=role_system_actions)
+        serializer = self.get_serializer(instance=template, role_system_actions=role_system_actions)
         data = serializer.data
         template_action_set = set(template.action_ids)
 

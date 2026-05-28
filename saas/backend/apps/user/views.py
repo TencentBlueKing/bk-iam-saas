@@ -31,6 +31,7 @@ from backend.biz.constants import PermissionTypeEnum
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList
 from backend.biz.role import ActionScopeDiffer
+from backend.biz.system import SystemBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
@@ -50,7 +51,6 @@ from .serializers import (
     UserNewbieUpdateSLZ,
     UserPolicySearchSLZ,
 )
-from ...biz.system import SystemBiz
 
 
 class UserGroupViewSet(BizMixin, GenericViewSet):

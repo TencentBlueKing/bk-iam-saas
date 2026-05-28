@@ -17,11 +17,11 @@ from rest_framework.viewsets import GenericViewSet, views
 
 from backend.apps.user.models import UserProfile
 from backend.biz.role import RoleListQuery
+from backend.biz.system import SystemBiz
 from backend.component import iam
 from backend.mixins import BizMixin
 
 from .serializers import QueryResourceTypeSLZ, SystemQuerySLZ, SystemResourceTypeSLZ, SystemSLZ
-from ...biz.system import SystemBiz
 
 
 class SystemViewSet(BizMixin, GenericViewSet):
@@ -41,7 +41,7 @@ class SystemViewSet(BizMixin, GenericViewSet):
         if all:
             systems = self.system_biz.list()
         else:
-            systems = RoleListQuery(request.role, tenant_id=self.tenant_id).list_system()
+            systems = RoleListQuery(request.role, request.user).list_system()
 
         hidden = slz.validated_data["hidden"]
         if hidden:

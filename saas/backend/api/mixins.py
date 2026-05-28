@@ -9,18 +9,19 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from django.conf import settings
 from rest_framework import exceptions
 
 from backend.biz.system import SystemBiz
+from backend.mixins import TenantMixin
 
 
-class SystemClientCheckMixin:
+class SystemClientCheckMixin(TenantMixin):
     def verify_system_client(self, system_id: str, app_code: str):
         """
         验证 app_code 是否能访问系统
         """
-        clients = SystemBiz(settings.BK_APP_TENANT_ID).list_client(system_id)
+
+        clients = SystemBiz(self.tenant_id).list_client(system_id)
 
         if app_code not in clients:
             raise exceptions.PermissionDenied(

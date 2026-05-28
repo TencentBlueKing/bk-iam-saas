@@ -743,6 +743,9 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        self.system_biz.get(system_id)
+
         group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
 
         subject = Subject.from_group_id(group.id)
@@ -768,6 +771,7 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
 
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
+        self.system_biz.get(system_id)
         group = self.get_object()
         subject = Subject.from_group_id(group.id)
 

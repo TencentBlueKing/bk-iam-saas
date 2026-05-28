@@ -70,8 +70,7 @@ class ApplicationView(BizMixin, TransMixin, views.APIView):
 
         data = serializer.validated_data
         system_id = data["system"]
-        # FIXME(tenant): 校验系统是否本租户或全租户
-        # 校验系统是否本租户或全租户
+
         self.system_biz.get(system_id)
 
         # 将申请的数据转换为 PolicyBeanList 数据结构，同时需要进行数据检查

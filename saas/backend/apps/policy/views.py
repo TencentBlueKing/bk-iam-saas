@@ -65,6 +65,9 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         system_id = slz.validated_data["system_id"]
         cache_id = slz.validated_data["cache_id"]
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         if cache_id != "":
             cached_policy_list = self.application_policy_list_cache.get(cache_id)
             if cached_policy_list.system_id != system_id:
@@ -100,6 +103,9 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         ids = slz.validated_data["ids"]
         subject = SvcSubject.from_username(request.user.username)
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
         # 删除权限
@@ -129,6 +135,9 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         resource_type = data["type"]
         condition_ids = data["ids"]
         condition = data["condition"]
+
+        # 校验系统租户
+        self.system_biz.get(resource_system_id)
 
         subject = SvcSubject.from_username(request.user.username)
 
@@ -349,6 +358,9 @@ class RecommendPolicyViewSet(BizMixin, GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
         cache_id = slz.validated_data["cache_id"]
+
+        # 校验系统租户
+        self.system_biz.get(system_id)
 
         cached_policy_list = self.application_policy_list_cache.get(cache_id)
         if cached_policy_list.system_id != system_id:

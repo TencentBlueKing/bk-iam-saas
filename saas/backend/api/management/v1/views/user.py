@@ -51,8 +51,6 @@ class ManagementUserGradeManagerViewSet(BizMixin, GenericViewSet):
         serializer = ManagementUserGradeManagerQuerySLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        # 校验系统是否本租户或全租户
-        self.system_biz.get(data["system"])
 
         roles = self.role_biz.list_user_role_for_system(data["user_id"], data["system"])
 

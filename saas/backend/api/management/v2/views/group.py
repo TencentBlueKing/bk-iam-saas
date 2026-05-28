@@ -614,9 +614,6 @@ class ManagementGroupPolicyViewSet(BizMixin, TransMixin, GenericViewSet):
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
 
-        # 校验系统是否本租户或全租户
-        self.system_biz.get(system_id)
-
         # 将授权的权限数据转为 PolicyBeanList
         policy_list = self.management_common_trans.to_policy_list_for_batch_action_and_resources(
             system_id, action_ids, resources
@@ -662,9 +659,6 @@ class ManagementGroupPolicyViewSet(BizMixin, TransMixin, GenericViewSet):
         system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
-
-        # 校验系统是否本租户或全租户
-        self.system_biz.get(system_id)
 
         # 将授权的权限数据转为 PolicyBeanList
         policy_list = self.trans.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
@@ -729,9 +723,6 @@ class ManagementGroupActionPolicyViewSet(BizMixin, GenericViewSet):
 
         system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
-
-        # 校验系统是否本租户或全租户
-        self.system_biz.get(system_id)
 
         # 查询将要被删除 PolicyID 列表
         policies = self.policy_query_biz.list_by_subject(system_id, Subject.from_group_id(group.id), action_ids)
@@ -808,10 +799,6 @@ class ManagementGroupPolicyTemplateViewSet(BizMixin, TransMixin, GenericViewSet)
 
         group = self.get_object()
         data = serializer.validated_data
-
-        # 校验所有 templates 中的 system_id 是否本租户或全租户
-        for sid in {t["system_id"] for t in data["templates"]}:
-            self.system_biz.get(sid)
 
         role = self.role_biz.get_role_by_group_id(group.id)
         templates = self.group_trans.from_group_grant_data(data["templates"])

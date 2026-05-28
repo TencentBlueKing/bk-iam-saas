@@ -143,6 +143,9 @@ class SubjectPolicyViewSet(BizMixin, GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
 
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         # ResourceNameAutoUpdate
@@ -202,6 +205,9 @@ class SubjectPolicyViewSet(BizMixin, GenericViewSet):
         resource_type = data["type"]
         condition_ids = data["ids"]
         condition = data["condition"]
+
+        # 校验系统租户
+        self.system_biz.get(resource_system_id)
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
@@ -306,6 +312,10 @@ class SubjectTemporaryPolicyViewSet(BizMixin, GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+
+        # 校验系统租户
+        self.system_biz.get(system_id)
+
         # FIXME(tenant): 需要校验 subject 是否是当前租户的用户或部门
 
         policies = self.policy_query_biz.list_temporary_by_policy_ids(system_id, subject, ids)

@@ -333,6 +333,7 @@ class RoleAuthorizationScopeView(BizMixin, views.APIView):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+        self.system_biz.get(system_id)
         # ResourceNameAutoUpdate
         scope_system = self.role_biz.get_auth_scope_bean_by_system(
             request.role.id, system_id, should_auto_update_resource_name=True
@@ -564,6 +565,8 @@ class RoleCommonActionViewSet(BizMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         system_id = serializer.validated_data["system_id"]
+
+        self.system_biz.get(system_id)
 
         max_common_action = 20  # 常用操作最大值
         if RoleCommonAction.objects.filter(system_id=system_id, tenant_id=self.tenant_id).count() >= max_common_action:
