@@ -15,9 +15,9 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
+from backend.account.permissions import system_access_perm_class
 from backend.apps.user.models import UserProfile
 from backend.biz.role import RoleListQuery
-from backend.biz.system import SystemBiz
 from backend.component import iam
 from backend.mixins import BizMixin
 
@@ -66,6 +66,8 @@ class SystemViewSet(BizMixin, GenericViewSet):
 
 
 class ResourceTypeViewSet(BizMixin, GenericViewSet):
+    permission_classes = [system_access_perm_class("query", "system_id")]
+
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -76,7 +78,6 @@ class ResourceTypeViewSet(BizMixin, GenericViewSet):
     )
     def list_resource_types(self, request, *args, **kwargs):
         system_id = request.query_params["system_id"]
-        self.system_biz.get(system_id)
         data = self.resource_type_biz.list_resource_types_by_system_id(system_id=system_id)
         return Response(data)
 
@@ -86,6 +87,8 @@ class SystemCustomFrontendSettingsView(views.APIView):
     查询系统定制前端配置
     """
 
+    permission_classes = [system_access_perm_class("url", "system_id")]
+
     @swagger_auto_schema(
         operation_description="查询系统定制前端配置",
         responses={status.HTTP_200_OK: serializers.Serializer()},
@@ -93,7 +96,6 @@ class SystemCustomFrontendSettingsView(views.APIView):
     )
     def get(self, request, *args, **kwargs):
         system_id = kwargs["system_id"]
-        SystemBiz(request.tenant_id).get(system_id)
         settings = iam.get_custom_frontend_settings(system_id)
 
         return Response(settings)

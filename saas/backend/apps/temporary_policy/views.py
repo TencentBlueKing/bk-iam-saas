@@ -14,6 +14,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.account.permissions import system_access_perm_class
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
 from backend.apps.subject.audit import SubjectTemporaryPolicyDeleteAuditProvider
 from backend.audit.audit import audit_context_setter, view_audit_decorator
@@ -23,6 +24,8 @@ from backend.service.models import Subject
 
 
 class TemporaryPolicyViewSet(BizMixin, GenericViewSet):
+    permission_classes = [system_access_perm_class("query", "system_id")]
+
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -36,8 +39,6 @@ class TemporaryPolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        self.system_biz.get(system_id)
 
         subject = Subject.from_username(request.user.username)
         policies = self.policy_query_biz.list_temporary_by_subject(system_id, subject)
@@ -58,9 +59,6 @@ class TemporaryPolicyViewSet(BizMixin, GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
         subject = Subject.from_username(request.user.username)
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         policies = self.policy_query_biz.list_temporary_by_policy_ids(system_id, subject, ids)
 

@@ -23,7 +23,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins, views
 
-from backend.account.permissions import RolePermission, role_perm_class
+from backend.account.permissions import RolePermission, role_perm_class, system_access_perm_class
 from backend.account.serializers import AccountRoleSLZ
 from backend.apps.group.filters import GroupFilter
 from backend.apps.group.models import Group
@@ -322,6 +322,8 @@ class RoleAuthorizationScopeView(BizMixin, views.APIView):
     角色的授权范围查询
     """
 
+    permission_classes = [system_access_perm_class("query", "system_id")]
+
     @swagger_auto_schema(
         operation_description="角色的授权范围",
         query_serializer=SystemQuerySLZ(),
@@ -333,7 +335,6 @@ class RoleAuthorizationScopeView(BizMixin, views.APIView):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-        self.system_biz.get(system_id)
         # ResourceNameAutoUpdate
         scope_system = self.role_biz.get_auth_scope_bean_by_system(
             request.role.id, system_id, should_auto_update_resource_name=True
@@ -531,6 +532,14 @@ class RoleCommonActionViewSet(BizMixin, GenericViewSet):
     filterset_class = RoleCommonActionFilter
     lookup_field = "id"
 
+    def get_permissions(self):
+        # 校验 system_id 对应的系统是否可访问
+        if self.action == "list":
+            return super().get_permissions() + [system_access_perm_class("query", "system_id")()]
+        if self.action == "create":
+            return super().get_permissions() + [system_access_perm_class("body", "system_id")()]
+        return super().get_permissions()
+
     def get_queryset(self):
         role_id = self.request.role.id
         return RoleCommonAction.objects.filter(role_id=role_id, tenant_id=self.tenant_id)
@@ -565,8 +574,6 @@ class RoleCommonActionViewSet(BizMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         system_id = serializer.validated_data["system_id"]
-
-        self.system_biz.get(system_id)
 
         max_common_action = 20  # 常用操作最大值
         if RoleCommonAction.objects.filter(system_id=system_id, tenant_id=self.tenant_id).count() >= max_common_action:

@@ -71,8 +71,6 @@ class ApplicationView(BizMixin, TransMixin, views.APIView):
         data = serializer.validated_data
         system_id = data["system"]
 
-        self.system_biz.get(system_id)
-
         # 将申请的数据转换为 PolicyBeanList 数据结构，同时需要进行数据检查
         policy_list = self.access_system_application_trans.to_policy_list(data)
 
@@ -132,9 +130,6 @@ class ApplicationCustomPolicyView(BizMixin, TransMixin, views.APIView):
 
         data = serializer.validated_data
         username = data["applicant"]
-
-        # 校验系统是否本租户或全租户
-        self.system_biz.get(data["system"])
 
         # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.access_system_application_trans.from_grant_policy_application(username, data)
@@ -303,9 +298,6 @@ class ApplicationCustomPolicyWithCustomTicketView(BizMixin, TransMixin, views.AP
 
         data = serializer.validated_data
         username = data["applicant"]
-
-        # 校验系统是否本租户或全租户
-        self.system_biz.get(data["system"])
 
         # 将 Dict 数据转换为创建单据所需的数据结构
         (

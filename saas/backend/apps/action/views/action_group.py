@@ -13,6 +13,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, views
 from rest_framework.response import Response
 
+from backend.account.permissions import system_access_perm_class
 from backend.apps.action.serializers import ActionGroupQuerySLZ, SubActionGroupSLZ
 from backend.mixins import BizMixin
 
@@ -21,6 +22,8 @@ class ActionGroupView(BizMixin, views.APIView):
     """
     操作分组
     """
+
+    permission_classes = [system_access_perm_class("query", "system_id")]
 
     @swagger_auto_schema(
         operation_description="获取操作分组",
@@ -33,7 +36,6 @@ class ActionGroupView(BizMixin, views.APIView):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-        self.system_biz.get(system_id)
 
         action_list = self.action_biz.list(system_id)
         action_groups = self.action_group_biz.list_with_frontend_id_by_actions(system_id, action_list.actions)

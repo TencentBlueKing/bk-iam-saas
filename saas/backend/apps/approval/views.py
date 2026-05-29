@@ -19,7 +19,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
-from backend.account.permissions import role_perm_class
+from backend.account.permissions import role_perm_class, system_access_perm_class
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.action import ActionSearchCondition
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleObjectRelationChecker
@@ -107,7 +107,10 @@ class ApprovalProcessGlobalConfigViewSet(BizMixin, mixins.ListModelMixin, Generi
 
 
 class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
-    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value)]
+    permission_classes = [
+        role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value),
+        system_access_perm_class("query", "system_id"),
+    ]
 
     @swagger_auto_schema(
         operation_description="操作 - 审批流程列表",
@@ -128,8 +131,6 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
         paginator = LimitOffsetPagination()
         offset, limit = paginator.get_offset(request), paginator.get_limit(request)
 
-        # 校验系统租户
-        self.system_biz.get(system_id)
         # 校验角色管理范围
         checker = RoleAuthorizationScopeChecker(request.role)
         checker.check_systems([system_id])
@@ -186,8 +187,6 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
 
-        # 校验系统租户
-        self.system_biz.get(system_id)
         # 校验角色管理范围
         checker = RoleAuthorizationScopeChecker(request.role)
         checker.check_systems([system_id])
@@ -202,7 +201,10 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
 
 
 class SystemActionSensitivityLevelCountViewSet(BizMixin, GenericViewSet):
-    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value)]
+    permission_classes = [
+        role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value),
+        system_access_perm_class("query", "system_id"),
+    ]
 
     @swagger_auto_schema(
         operation_description="获取系统的操作与敏感等级数量",
@@ -215,7 +217,6 @@ class SystemActionSensitivityLevelCountViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-        self.system_biz.get(system_id)
 
         action_list = self.action_biz.list_without_cache_sensitivity_level(system_id)
         level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
@@ -227,7 +228,10 @@ class SystemActionSensitivityLevelCountViewSet(BizMixin, GenericViewSet):
 
 
 class ActionSensitivityLevelViewSet(BizMixin, GenericViewSet):
-    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SENSITIVITY_LEVEL.value)]
+    permission_classes = [
+        role_perm_class(PermissionCodeEnum.MANAGE_SENSITIVITY_LEVEL.value),
+        system_access_perm_class("body", "actions.0.system_id"),
+    ]
 
     @swagger_auto_schema(
         operation_description="批量设置操作的敏感等级",
@@ -246,9 +250,6 @@ class ActionSensitivityLevelViewSet(BizMixin, GenericViewSet):
         # 目前只支持同一系统的批量 Action 设置审批流程
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         # 校验系统管理员权限
         if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != system_id:

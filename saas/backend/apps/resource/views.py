@@ -14,6 +14,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
+from backend.account.permissions import system_access_perm_class
 from backend.mixins import BizMixin
 
 from .serializers import (
@@ -26,6 +27,14 @@ from .serializers import (
 
 
 class ResourceViewSet(BizMixin, ViewSet):
+    def get_permissions(self):
+        # 不同 action 中 system_id 的来源不同
+        if self.action == "list":
+            return [system_access_perm_class("body", "system_id")()]
+        if self.action in ("list_resource_attribute", "list_resource_attribute_value"):
+            return [system_access_perm_class("query", "system_id")()]
+        return super().get_permissions()
+
     @swagger_auto_schema(
         operation_description="资源实例列表",
         request_body=ResourceQuerySLZ(label="资源查询参数"),
@@ -46,9 +55,6 @@ class ResourceViewSet(BizMixin, ViewSet):
         # 分页
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         # TODO：通过这个接口这样就把所有接入系统的资源拉取到？
         #  那么相当于用户访问 iam saas 就可以访问到接入系统所有资源，是否合理？如何鉴权？
@@ -88,9 +94,6 @@ class ResourceViewSet(BizMixin, ViewSet):
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
-        # 校验系统租户
-        self.system_biz.get(system_id)
-
         attrs = self.resource_biz.list_attr(system_id, resource_type_id)
 
         count, results = len(attrs), attrs[offset : offset + limit]
@@ -116,15 +119,14 @@ class ResourceViewSet(BizMixin, ViewSet):
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
-        # 校验系统租户
-        self.system_biz.get(system_id)
-
         count, results = self.resource_biz.list_attr_value(system_id, resource_type_id, attr, keyword, limit, offset)
 
         return Response({"count": count, "results": [i.dict() for i in results]})
 
 
 class ResourceListFilterByDisplayNameViewSet(BizMixin, ViewSet):
+    permission_classes = [system_access_perm_class("body", "system_id")]
+
     @swagger_auto_schema(
         operation_description="资源实例名称筛选列表",
         request_body=ResourceQueryByDisplayNameSLZ(label="资源查询参数"),
@@ -141,9 +143,6 @@ class ResourceListFilterByDisplayNameViewSet(BizMixin, ViewSet):
         display_names = slz.validated_data["display_names"]
         action_system_id = slz.validated_data.get("action_system_id") or ""
         action_id = slz.validated_data.get("action_id") or ""
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         count, results = self.resource_biz.list_instance_by_display_names(
             system_id, resource_type_id, display_names, action_system_id, action_id

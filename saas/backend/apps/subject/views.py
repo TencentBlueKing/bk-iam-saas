@@ -14,7 +14,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.account.permissions import role_perm_class
+from backend.account.permissions import role_perm_class, system_access_perm_class
 from backend.account.serializers import AccountRoleSLZ
 from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.models import Group
@@ -128,6 +128,13 @@ class SubjectPolicyViewSet(BizMixin, GenericViewSet):
 
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
+    def get_permissions(self):
+        if self.action in ("list", "destroy"):
+            return super().get_permissions() + [system_access_perm_class("query", "system_id")()]
+        if self.action == "update":
+            return super().get_permissions() + [system_access_perm_class("body", "system_id")()]
+        return super().get_permissions()
+
     @swagger_auto_schema(
         operation_description="Subject 权限列表",
         query_serializer=SystemQuerySLZ(),
@@ -142,9 +149,6 @@ class SubjectPolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
@@ -169,9 +173,6 @@ class SubjectPolicyViewSet(BizMixin, GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         # 为了记录审计日志，需要在删除前查询
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
@@ -205,9 +206,6 @@ class SubjectPolicyViewSet(BizMixin, GenericViewSet):
         resource_type = data["type"]
         condition_ids = data["ids"]
         condition = data["condition"]
-
-        # 校验系统租户
-        self.system_biz.get(resource_system_id)
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
@@ -272,7 +270,10 @@ class SubjectRoleViewSet(BizMixin, GenericViewSet):
 
 
 class SubjectTemporaryPolicyViewSet(BizMixin, GenericViewSet):
-    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
+    permission_classes = [
+        role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value),
+        system_access_perm_class("query", "system_id"),
+    ]
 
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
@@ -290,9 +291,6 @@ class SubjectTemporaryPolicyViewSet(BizMixin, GenericViewSet):
 
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
         # FIXME(tenant): 需要校验 subject 是否是当前租户的用户或部门
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         policies = self.policy_query_biz.list_temporary_by_subject(system_id, subject)
 
@@ -312,9 +310,6 @@ class SubjectTemporaryPolicyViewSet(BizMixin, GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         # FIXME(tenant): 需要校验 subject 是否是当前租户的用户或部门
 

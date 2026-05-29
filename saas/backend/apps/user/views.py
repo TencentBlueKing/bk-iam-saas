@@ -17,6 +17,7 @@ from rest_framework import mixins, serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.account.permissions import system_access_perm_class
 from backend.account.serializers import AccountRoleSLZ
 from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.filters import GroupFilter
@@ -31,7 +32,6 @@ from backend.biz.constants import PermissionTypeEnum
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList
 from backend.biz.role import ActionScopeDiffer
-from backend.biz.system import SystemBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
@@ -196,6 +196,8 @@ class UserCommonActionViewSet(BizMixin, GenericViewSet):
     常用操作
     """
 
+    permission_classes = [system_access_perm_class("query", "system_id")]
+
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -209,8 +211,6 @@ class UserCommonActionViewSet(BizMixin, GenericViewSet):
 
         system_id = request.query_params.get("system_id")
         if system_id:
-            # 校验系统租户
-            self.system_biz.get(system_id)
             data = self.role_biz.list_system_common_actions(system_id)
 
         return Response([one.dict() for one in data])
@@ -506,6 +506,12 @@ class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
     用户添加或删除收藏的系统
     """
 
+    def get_permissions(self):
+        # 添加收藏时 body 是 system_id 字符串列表，需批量校验系统租户
+        if self.action == "create":
+            return super().get_permissions() + [system_access_perm_class("body_list")()]
+        return super().get_permissions()
+
     @swagger_auto_schema(
         operation_description="添加收藏系统",
         request_body=serializers.ListSerializer(child=serializers.CharField(label="系统 ID")),
@@ -515,10 +521,6 @@ class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
     def create(self, request, *args, **kwargs):
         slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统 ID"))
         slz.is_valid(raise_exception=True)
-
-        # 批量校验系统租户
-        for system_id in slz.validated_data:
-            SystemBiz(self.tenant_id).get(system_id)
 
         UserProfile.objects.add_favorite_systems(self.tenant_id, request.user.username, slz.validated_data)
 

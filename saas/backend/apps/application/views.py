@@ -19,6 +19,7 @@ from rest_framework import exceptions, serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
+from backend.account.permissions import system_access_perm_class
 from backend.apps.application.models import Application
 from backend.apps.organization.models import User as UserModel
 from backend.apps.role.models import Role
@@ -201,6 +202,8 @@ class ApplicationByGroupView(BizMixin, views.APIView):
     申请加入用户组
     """
 
+    permission_classes = [system_access_perm_class("body", "source_system_id")]
+
     @swagger_auto_schema(
         operation_description="加入用户组申请",
         request_body=GroupApplicationSLZ(label="加入用户组"),
@@ -223,10 +226,6 @@ class ApplicationByGroupView(BizMixin, views.APIView):
             applicants = [{"type": SubjectType.USER.value, "id": user_id}]
 
         applicant_infos = SubjectInfoList([Subject.parse_obj(one) for one in applicants]).subjects
-
-        # 校验来源系统的租户
-        if data.get("source_system_id"):
-            self.system_biz.get(data["source_system_id"])
 
         # 创建申请
         self.application_biz.create_for_group(
@@ -331,6 +330,8 @@ class ApplicationByRenewGroupView(BizMixin, views.APIView):
     申请续期用户组
     """
 
+    permission_classes = [system_access_perm_class("body", "source_system_id")]
+
     @swagger_auto_schema(
         operation_description="续期用户组申请",
         request_body=RenewGroupApplicationSLZ(label="续期用户组"),
@@ -342,10 +343,6 @@ class ApplicationByRenewGroupView(BizMixin, views.APIView):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
-
-        # 校验来源系统的租户
-        if data.get("source_system_id"):
-            self.system_biz.get(data["source_system_id"])
 
         # 转换为 ApplicationBiz 创建申请单所需数据结构
         user = UserModel.objects.get(username=request.user.username)

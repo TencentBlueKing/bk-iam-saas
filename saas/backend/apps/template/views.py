@@ -19,7 +19,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.account.permissions import RolePermission
+from backend.account.permissions import RolePermission, system_access_perm_class
 from backend.apps.group.models import Group
 from backend.apps.template import tasks  # noqa
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
@@ -108,6 +108,12 @@ class TemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
     serializer_class = TemplateListSLZ
     filterset_class = TemplateFilter
 
+    def get_permissions(self):
+        # 校验 body 中的 system_id 对应的系统是否可访问
+        if self.action == "create":
+            return super().get_permissions() + [system_access_perm_class("body", "system_id")()]
+        return super().get_permissions()
+
     def get_serializer_context(self):
         return {"tenant_id": self.tenant_id}
 
@@ -167,9 +173,6 @@ class TemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
 
         user_id = request.user.username
         data = serializer.validated_data
-
-        # 校验系统租户
-        self.system_biz.get(data["system_id"])
 
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(request.role)

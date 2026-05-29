@@ -63,7 +63,7 @@ def sync_system_manager():
     for tenant in tenants:
         # 查询后端所有的系统信息
         biz = SystemBiz(tenant["id"])
-        # FIXME(tenant): 待后台支持系统标识租户后，只过滤出当前租户和全租户的系统
+        # 只过滤出当前租户和全租户的系统
         systems = {system.id: system for system in biz.list()}
 
         # 查询已创建的系统管理员的系统 id

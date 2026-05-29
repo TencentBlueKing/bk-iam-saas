@@ -14,10 +14,9 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.account.permissions import RolePermission
+from backend.account.permissions import RolePermission, system_access_perm_class
 from backend.apps.role.serializers import AuthorizedSubjectsSLZ, QueryAuthorizedSubjectsSLZ
 from backend.biz.permission_audit import QueryAuthorizedSubjects
-from backend.biz.system import SystemBiz
 from backend.common import error_codes
 from backend.mixins import TenantMixin
 from backend.service.constants import PermissionCodeEnum, RoleType
@@ -25,7 +24,7 @@ from backend.util.time import format_localtime
 
 
 class QueryAuthorizedSubjectsViewSet(TenantMixin, GenericViewSet):
-    permission_classes = [RolePermission]
+    permission_classes = [RolePermission, system_access_perm_class("body", "system_id")]
     method_permission = {
         "post": PermissionCodeEnum.VIEW_AUTHORIZED_SUBJECTS.value,
         "export": PermissionCodeEnum.VIEW_AUTHORIZED_SUBJECTS.value,
@@ -46,9 +45,6 @@ class QueryAuthorizedSubjectsViewSet(TenantMixin, GenericViewSet):
         if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != data["system_id"]:
             raise error_codes.FORBIDDEN
 
-        # 校验系统是否本租户或全租户
-        SystemBiz(self.tenant_id).get(data["system_id"])
-
         subjects = QueryAuthorizedSubjects(self.tenant_id, data).query_by_permission_type()
         return Response(subjects)
 
@@ -66,9 +62,6 @@ class QueryAuthorizedSubjectsViewSet(TenantMixin, GenericViewSet):
         # 校验系统管理员权限
         if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != data["system_id"]:
             raise error_codes.FORBIDDEN
-
-        # 校验系统是否本租户或全租户
-        SystemBiz(self.tenant_id).get(data["system_id"])
 
         exported_file_name = f"{data['system_id']}_{format_localtime()}"
         return QueryAuthorizedSubjects(self.tenant_id, data).export(exported_file_name)

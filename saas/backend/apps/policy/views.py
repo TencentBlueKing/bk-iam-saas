@@ -19,6 +19,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.account.permissions import system_access_perm_class
 from backend.apps.subject.audit import SubjectPolicyDeleteAuditProvider
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.action import ActionBean, ActionBeanList
@@ -52,6 +53,13 @@ from .serializers import (
 class PolicyViewSet(BizMixin, GenericViewSet):
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
+    def get_permissions(self):
+        if self.action in ("list", "destroy"):
+            return super().get_permissions() + [system_access_perm_class("query", "system_id")()]
+        if self.action == "update":
+            return super().get_permissions() + [system_access_perm_class("body", "system_id")()]
+        return super().get_permissions()
+
     @swagger_auto_schema(
         operation_description="用户的所有权限列表",
         query_serializer=ActionQuerySLZ(),
@@ -64,9 +72,6 @@ class PolicyViewSet(BizMixin, GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
         cache_id = slz.validated_data["cache_id"]
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         if cache_id != "":
             cached_policy_list = self.application_policy_list_cache.get(cache_id)
@@ -103,9 +108,6 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         ids = slz.validated_data["ids"]
         subject = SvcSubject.from_username(request.user.username)
 
-        # 校验系统租户
-        self.system_biz.get(system_id)
-
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
         # 删除权限
@@ -135,9 +137,6 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         resource_type = data["type"]
         condition_ids = data["ids"]
         condition = data["condition"]
-
-        # 校验系统租户
-        self.system_biz.get(resource_system_id)
 
         subject = SvcSubject.from_username(request.user.username)
 
@@ -220,6 +219,8 @@ class RelatedPolicyViewSet(BizMixin, GenericViewSet):
     生成依赖操作
     """
 
+    permission_classes = [system_access_perm_class("body", "system_id")]
+
     @swagger_auto_schema(
         operation_description="生成依赖操作",
         request_body=RelatedPolicySLZ(label="策略"),
@@ -233,9 +234,6 @@ class RelatedPolicyViewSet(BizMixin, GenericViewSet):
         data = slz.validated_data
         system_id = data["system_id"]
         source_policy = PolicyBean.parse_obj(data["source_policy"])
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         # 移除用户已有的权限，只需要生成新增数据的依赖操作权限
         subject = SvcSubject.from_username(request.user.username)
@@ -287,6 +285,8 @@ class BatchPolicyResourceCopyViewSet(BizMixin, ServiceMixin, GenericViewSet):
     """
     批量复制策略资源
     """
+
+    permission_classes = [system_access_perm_class("body", "resource_type.system_id")]
 
     @swagger_auto_schema(
         operation_description="批量复制策略资源",
@@ -344,6 +344,8 @@ class RecommendPolicyViewSet(BizMixin, GenericViewSet):
     生成推荐操作
     """
 
+    permission_classes = [system_access_perm_class("query", "system_id")]
+
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -358,9 +360,6 @@ class RecommendPolicyViewSet(BizMixin, GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
         cache_id = slz.validated_data["cache_id"]
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         cached_policy_list = self.application_policy_list_cache.get(cache_id)
         if cached_policy_list.system_id != system_id:

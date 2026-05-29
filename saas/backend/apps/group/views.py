@@ -22,7 +22,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
-from backend.account.permissions import RolePermission, role_perm_class
+from backend.account.permissions import RolePermission, role_perm_class, system_access_perm_class
 from backend.apps.application.serializers import ConditionCompareSLZ, ConditionTagSLZ
 from backend.apps.group import tasks  # noqa
 from backend.apps.group.models import Group
@@ -696,6 +696,14 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
     lookup_field = "id"
 
+    def get_permissions(self):
+        # 按 action 额外校验 system_id 对应的系统是否可访问
+        if self.action == "list":
+            return super().get_permissions() + [system_access_perm_class("query", "system_id")()]
+        if self.action in ("destroy", "update"):
+            return super().get_permissions() + [system_access_perm_class("body", "system_id")()]
+        return super().get_permissions()
+
     def get_queryset(self):
         return Group.objects.filter(tenant_id=self.tenant_id)
 
@@ -744,8 +752,6 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
 
         system_id = slz.validated_data["system_id"]
 
-        self.system_biz.get(system_id)
-
         group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
 
         subject = Subject.from_group_id(group.id)
@@ -771,7 +777,6 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
 
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
-        self.system_biz.get(system_id)
         group = self.get_object()
         subject = Subject.from_group_id(group.id)
 
@@ -802,9 +807,6 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
         data = slz.validated_data
         system_id = data["system_id"]
         template_id = data["template_id"]
-
-        # 校验系统租户
-        self.system_biz.get(system_id)
 
         policies = [PolicyBean(expired_at=PERMANENT_SECONDS, **action) for action in data["actions"]]
         self.group_biz.update_policies(request.role, group.id, system_id, template_id, policies)
