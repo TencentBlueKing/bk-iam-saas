@@ -51,9 +51,6 @@ class AdminSystemProviderConfigViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         system_id = kwargs["system_id"]
-
-        # TODO: check system_id exists
-
         system_provider_config = SystemProviderConfigService().get_provider_config(system_id=system_id)
 
         return Response(AdminSystemProviderConfigSLZ(system_provider_config).data)

@@ -36,15 +36,12 @@ from backend.service.constants import RoleType
 
 
 class AdminTemplateViewSet(BizMixin, TemplateQueryMixin, GenericViewSet):
-    """模板"""
+    """权限模板"""
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
 
-    admin_api_permission = {
-        "list": AdminAPIEnum.TEMPLATE_LIST.value,
-        "create": AdminAPIEnum.TEMPLATE_CREATE.value,
-    }
+    admin_api_permission = {"create": AdminAPIEnum.TEMPLATE_CREATE.value}
 
     @swagger_auto_schema(
         operation_description="模板列表",

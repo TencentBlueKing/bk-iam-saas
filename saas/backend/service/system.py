@@ -36,7 +36,7 @@ class SystemService:
     def list(self, skip_tenant_filter: bool = False) -> List[System]:
         """获取所有系统"""
         systems = iam.list_system()
-        # 过滤掉非指定租户的系统
+        # 仅返回当前租户或全租户的系统列表
         if not skip_tenant_filter:
             systems = [
                 system for system in systems if system["tenant_id"] == self.tenant_id or system["tenant_id"] == ""

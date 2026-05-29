@@ -21,6 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
+from backend.account.permissions import system_access_perm_class
 from backend.api.authentication import ESBAuthentication
 from backend.api.permissions import ApprovalBotPermission
 from backend.apps.application.models import Application
@@ -55,7 +56,7 @@ class ApplicationView(BizMixin, TransMixin, views.APIView):
     """
 
     authentication_classes = [ESBAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, system_access_perm_class("body", "system")]
 
     @swagger_auto_schema(
         operation_description="接入系统权限申请",
@@ -115,7 +116,7 @@ class ApplicationCustomPolicyView(BizMixin, TransMixin, views.APIView):
     """
 
     authentication_classes = [ESBAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, system_access_perm_class("body", "system")]
 
     @swagger_auto_schema(
         operation_description="创建自定义权限申请单",
@@ -284,7 +285,7 @@ class ApplicationCustomPolicyWithCustomTicketView(BizMixin, TransMixin, views.AP
     """
 
     authentication_classes = [ESBAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, system_access_perm_class("body", "system")]
 
     @swagger_auto_schema(
         operation_description="创建自定义权限申请单 - 允许单据自定义审批内容",

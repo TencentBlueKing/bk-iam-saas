@@ -309,7 +309,7 @@ class BatchPolicyResourceCopyViewSet(BizMixin, ServiceMixin, GenericViewSet):
         resource_type = RelatedResourceBean.parse_obj(data["resource_type"])
         actions = data["actions"]
 
-        # 批量校验所有系统租户
+        # 批量校验所有操作所属系统租户
         system_ids = {action["system_id"] for action in actions} | {resource_type.system_id}
         for sid in system_ids:
             self.system_biz.get(sid)

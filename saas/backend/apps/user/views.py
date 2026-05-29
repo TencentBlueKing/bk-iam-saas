@@ -506,11 +506,7 @@ class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
     用户添加或删除收藏的系统
     """
 
-    def get_permissions(self):
-        # 添加收藏时 body 是 system_id 字符串列表，需批量校验系统租户
-        if self.action == "create":
-            return super().get_permissions() + [system_access_perm_class("body_list")()]
-        return super().get_permissions()
+    permission_classes = [system_access_perm_class("body_list")]
 
     @swagger_auto_schema(
         operation_description="添加收藏系统",
