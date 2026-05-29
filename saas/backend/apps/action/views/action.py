@@ -14,15 +14,12 @@ from rest_framework import exceptions, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.account.permissions import system_access_perm_class
 from backend.apps.action.serializers import ActionSLZ, GroupActionQuerySLZ
 from backend.mixins import BizMixin
 from backend.service.models import Subject
 
 
 class ActionViewSet(BizMixin, GenericViewSet):
-    permission_classes = [system_access_perm_class("query", "system_id")]
-
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -36,6 +33,10 @@ class ActionViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
+
         cache_id = slz.validated_data["cache_id"]
         group_id = slz.validated_data["group_id"]
         user_id = slz.validated_data["user_id"]

@@ -21,7 +21,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
-from backend.account.permissions import system_access_perm_class
 from backend.api.authentication import ESBAuthentication
 from backend.api.permissions import ApprovalBotPermission
 from backend.apps.application.models import Application
@@ -56,7 +55,7 @@ class ApplicationView(BizMixin, TransMixin, views.APIView):
     """
 
     authentication_classes = [ESBAuthentication]
-    permission_classes = [IsAuthenticated, system_access_perm_class("body", "system")]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="接入系统权限申请",
@@ -71,6 +70,9 @@ class ApplicationView(BizMixin, TransMixin, views.APIView):
 
         data = serializer.validated_data
         system_id = data["system"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
 
         # 将申请的数据转换为 PolicyBeanList 数据结构，同时需要进行数据检查
         policy_list = self.access_system_application_trans.to_policy_list(data)
@@ -116,7 +118,7 @@ class ApplicationCustomPolicyView(BizMixin, TransMixin, views.APIView):
     """
 
     authentication_classes = [ESBAuthentication]
-    permission_classes = [IsAuthenticated, system_access_perm_class("body", "system")]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="创建自定义权限申请单",
@@ -131,6 +133,10 @@ class ApplicationCustomPolicyView(BizMixin, TransMixin, views.APIView):
 
         data = serializer.validated_data
         username = data["applicant"]
+
+        # 校验系统访问权限
+        system_id = data["system"]
+        self.system_biz.validate_system_access(system_id)
 
         # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.access_system_application_trans.from_grant_policy_application(username, data)
@@ -285,7 +291,7 @@ class ApplicationCustomPolicyWithCustomTicketView(BizMixin, TransMixin, views.AP
     """
 
     authentication_classes = [ESBAuthentication]
-    permission_classes = [IsAuthenticated, system_access_perm_class("body", "system")]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="创建自定义权限申请单 - 允许单据自定义审批内容",
@@ -299,6 +305,10 @@ class ApplicationCustomPolicyWithCustomTicketView(BizMixin, TransMixin, views.AP
 
         data = serializer.validated_data
         username = data["applicant"]
+
+        # 校验系统访问权限
+        system_id = data["system"]
+        self.system_biz.validate_system_access(system_id)
 
         # 将 Dict 数据转换为创建单据所需的数据结构
         (

@@ -11,10 +11,7 @@ specific language governing permissions and limitations under the License.
 
 from typing import List, Optional
 
-from django.utils.translation import gettext as _
-
 from backend.common.cache import cachedmethod
-from backend.common.error_codes import error_codes
 from backend.component import iam
 
 from .models import System
@@ -46,8 +43,6 @@ class SystemService:
 
     def get(self, system_id: str) -> System:
         system = iam.get_system(system_id)
-        if system["tenant_id"] != self.tenant_id and system["tenant_id"] != "":
-            raise error_codes.FORBIDDEN.format(_("租户不匹配，无权访问该系统"), True)
         return System(**system)
 
     @cachedmethod(timeout=5 * 60)  # 5 分钟过期

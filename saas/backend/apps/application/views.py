@@ -19,7 +19,6 @@ from rest_framework import exceptions, serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
-from backend.account.permissions import system_access_perm_class
 from backend.apps.application.models import Application
 from backend.apps.organization.models import User as UserModel
 from backend.apps.role.models import Role
@@ -90,6 +89,9 @@ class ApplicationViewSet(BizMixin, TransMixin, GenericViewSet):
 
         data = serializer.validated_data
         user_id = request.user.username
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(data["system"]["id"])
 
         # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.application_data_trans.from_grant_policy_application(user_id, data)
@@ -201,8 +203,6 @@ class ApplicationByGroupView(BizMixin, views.APIView):
     """
     申请加入用户组
     """
-
-    permission_classes = [system_access_perm_class("body", "source_system_id")]
 
     @swagger_auto_schema(
         operation_description="加入用户组申请",
@@ -330,8 +330,6 @@ class ApplicationByRenewGroupView(BizMixin, views.APIView):
     申请续期用户组
     """
 
-    permission_classes = [system_access_perm_class("body", "source_system_id")]
-
     @swagger_auto_schema(
         operation_description="续期用户组申请",
         request_body=RenewGroupApplicationSLZ(label="续期用户组"),
@@ -403,6 +401,9 @@ class ApplicationByTemporaryPolicyView(BizMixin, TransMixin, views.APIView):
 
         data = serializer.validated_data
         user_id = request.user.username
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(data["system"]["id"])
 
         # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.application_data_trans.from_grant_temporary_policy_application(user_id, data)

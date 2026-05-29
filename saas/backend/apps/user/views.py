@@ -17,7 +17,6 @@ from rest_framework import mixins, serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.account.permissions import system_access_perm_class
 from backend.account.serializers import AccountRoleSLZ
 from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.filters import GroupFilter
@@ -196,8 +195,6 @@ class UserCommonActionViewSet(BizMixin, GenericViewSet):
     常用操作
     """
 
-    permission_classes = [system_access_perm_class("query", "system_id")]
-
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -211,6 +208,9 @@ class UserCommonActionViewSet(BizMixin, GenericViewSet):
 
         system_id = request.query_params.get("system_id")
         if system_id:
+            # 校验系统访问权限
+            self.system_biz.validate_system_access(system_id)
+
             data = self.role_biz.list_system_common_actions(system_id)
 
         return Response([one.dict() for one in data])
@@ -501,12 +501,10 @@ class UserDepartmentSubjectTemplateGroupViewSet(BizMixin, GenericViewSet):
         return Subject.from_username(request.user.username)
 
 
-class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
+class UserFavoriteSystemViewSet(BizMixin, GenericViewSet):
     """
     用户添加或删除收藏的系统
     """
-
-    permission_classes = [system_access_perm_class("body_list")]
 
     @swagger_auto_schema(
         operation_description="添加收藏系统",
@@ -517,6 +515,10 @@ class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
     def create(self, request, *args, **kwargs):
         slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统 ID"))
         slz.is_valid(raise_exception=True)
+
+        # 校验系统访问权限
+        system_ids = slz.validated_data
+        self.system_biz.validate_systems_access(system_ids)
 
         UserProfile.objects.add_favorite_systems(self.tenant_id, request.user.username, slz.validated_data)
 
@@ -531,6 +533,10 @@ class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统 ID"))
         slz.is_valid(raise_exception=True)
+
+        # 校验系统访问权限
+        system_ids = slz.validated_data
+        self.system_biz.validate_systems_access(system_ids)
 
         UserProfile.objects.remove_favorite_systems(request.user.username, slz.validated_data)
 

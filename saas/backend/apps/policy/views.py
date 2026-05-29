@@ -19,7 +19,6 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.account.permissions import system_access_perm_class
 from backend.apps.subject.audit import SubjectPolicyDeleteAuditProvider
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.action import ActionBean, ActionBeanList
@@ -53,13 +52,6 @@ from .serializers import (
 class PolicyViewSet(BizMixin, GenericViewSet):
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
-    def get_permissions(self):
-        if self.action in ("list", "destroy"):
-            return super().get_permissions() + [system_access_perm_class("query", "system_id")()]
-        if self.action == "update":
-            return super().get_permissions() + [system_access_perm_class("body", "system_id")()]
-        return super().get_permissions()
-
     @swagger_auto_schema(
         operation_description="用户的所有权限列表",
         query_serializer=ActionQuerySLZ(),
@@ -71,6 +63,10 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
+
         cache_id = slz.validated_data["cache_id"]
 
         if cache_id != "":
@@ -105,6 +101,9 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
         ids = slz.validated_data["ids"]
         subject = SvcSubject.from_username(request.user.username)
 
@@ -141,6 +140,10 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         subject = SvcSubject.from_username(request.user.username)
 
         system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
+
         update_policy = self.policy_operation_biz.delete_partial(
             system_id,
             subject,
@@ -219,8 +222,6 @@ class RelatedPolicyViewSet(BizMixin, GenericViewSet):
     生成依赖操作
     """
 
-    permission_classes = [system_access_perm_class("body", "system_id")]
-
     @swagger_auto_schema(
         operation_description="生成依赖操作",
         request_body=RelatedPolicySLZ(label="策略"),
@@ -233,6 +234,9 @@ class RelatedPolicyViewSet(BizMixin, GenericViewSet):
 
         data = slz.validated_data
         system_id = data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
         source_policy = PolicyBean.parse_obj(data["source_policy"])
 
         # 移除用户已有的权限，只需要生成新增数据的依赖操作权限
@@ -286,8 +290,6 @@ class BatchPolicyResourceCopyViewSet(BizMixin, ServiceMixin, GenericViewSet):
     批量复制策略资源
     """
 
-    permission_classes = [system_access_perm_class("body", "resource_type.system_id")]
-
     @swagger_auto_schema(
         operation_description="批量复制策略资源",
         request_body=PolicyResourceCopySLZ(label="策略"),
@@ -311,8 +313,7 @@ class BatchPolicyResourceCopyViewSet(BizMixin, ServiceMixin, GenericViewSet):
 
         # 批量校验所有操作所属系统租户
         system_ids = {action["system_id"] for action in actions} | {resource_type.system_id}
-        for sid in system_ids:
-            self.system_biz.get(sid)
+        self.system_biz.validate_systems_access(system_ids)
 
         action_resource = []
         actions = sorted(actions, key=lambda action: action["system_id"])
@@ -344,8 +345,6 @@ class RecommendPolicyViewSet(BizMixin, GenericViewSet):
     生成推荐操作
     """
 
-    permission_classes = [system_access_perm_class("query", "system_id")]
-
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
 
     @swagger_auto_schema(
@@ -359,6 +358,9 @@ class RecommendPolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
         cache_id = slz.validated_data["cache_id"]
 
         cached_policy_list = self.application_policy_list_cache.get(cache_id)

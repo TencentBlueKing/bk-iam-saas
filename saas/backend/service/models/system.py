@@ -18,3 +18,4 @@ class System(BaseModel):
     name_en: str
     description: str
     description_en: str
+    tenant_id: str

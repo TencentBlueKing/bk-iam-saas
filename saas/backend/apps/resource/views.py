@@ -14,7 +14,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from backend.account.permissions import system_access_perm_class
 from backend.mixins import BizMixin
 
 from .serializers import (
@@ -27,14 +26,6 @@ from .serializers import (
 
 
 class ResourceViewSet(BizMixin, ViewSet):
-    def get_permissions(self):
-        # 不同 action 中 system_id 的来源不同
-        if self.action == "list":
-            return [system_access_perm_class("body", "system_id")()]
-        if self.action in ("list_resource_attribute", "list_resource_attribute_value"):
-            return [system_access_perm_class("query", "system_id")()]
-        return super().get_permissions()
-
     @swagger_auto_schema(
         operation_description="资源实例列表",
         request_body=ResourceQuerySLZ(label="资源查询参数"),
@@ -47,6 +38,9 @@ class ResourceViewSet(BizMixin, ViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
         resource_type_id = slz.validated_data["type"]
         ancestors = slz.validated_data["ancestors"]
         keyword = slz.validated_data.get("keyword") or ""
@@ -89,6 +83,9 @@ class ResourceViewSet(BizMixin, ViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
         resource_type_id = slz.validated_data["type"]
         # 分页
         limit = slz.validated_data["limit"]
@@ -112,6 +109,9 @@ class ResourceViewSet(BizMixin, ViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
         resource_type_id = slz.validated_data["type"]
         attr = slz.validated_data["attribute"]
         keyword = slz.validated_data.get("keyword", "")
@@ -125,8 +125,6 @@ class ResourceViewSet(BizMixin, ViewSet):
 
 
 class ResourceListFilterByDisplayNameViewSet(BizMixin, ViewSet):
-    permission_classes = [system_access_perm_class("body", "system_id")]
-
     @swagger_auto_schema(
         operation_description="资源实例名称筛选列表",
         request_body=ResourceQueryByDisplayNameSLZ(label="资源查询参数"),
@@ -139,6 +137,9 @@ class ResourceListFilterByDisplayNameViewSet(BizMixin, ViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
+
+        # 校验系统访问权限
+        self.system_biz.validate_system_access(system_id)
         resource_type_id = slz.validated_data["type"]
         display_names = slz.validated_data["display_names"]
         action_system_id = slz.validated_data.get("action_system_id") or ""
