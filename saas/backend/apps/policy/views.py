@@ -312,7 +312,7 @@ class BatchPolicyResourceCopyViewSet(BizMixin, ServiceMixin, GenericViewSet):
         actions = data["actions"]
 
         # 批量校验所有操作所属系统租户
-        system_ids = {action["system_id"] for action in actions} | {resource_type.system_id}
+        system_ids = list({action["system_id"] for action in actions} | {resource_type.system_id})
         self.system_biz.validate_systems_access(system_ids)
 
         action_resource = []

@@ -107,9 +107,7 @@ class ApprovalProcessGlobalConfigViewSet(BizMixin, mixins.ListModelMixin, Generi
 
 
 class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
-    permission_classes = [
-        role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value),
-    ]
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value)]
 
     @swagger_auto_schema(
         operation_description="操作 - 审批流程列表",
@@ -207,9 +205,7 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
 
 
 class SystemActionSensitivityLevelCountViewSet(BizMixin, GenericViewSet):
-    permission_classes = [
-        role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value),
-    ]
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value)]
 
     @swagger_auto_schema(
         operation_description="获取系统的操作与敏感等级数量",
