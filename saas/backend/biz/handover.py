@@ -12,7 +12,7 @@ specific language governing permissions and limitations under the License.
 import json
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Set, Tuple
 
 from backend.apps.application.models import Application
 from backend.apps.handover.constants import HandoverObjectType, HandoverStatus
@@ -227,7 +227,7 @@ class HandoverTaskCheckBiz:
 
         格式为 "{handover_from}:{object_type}:{fine_grained_id}", 排序以避免不同请求按不同顺序加锁导致死锁。
         """
-        keys = set()
+        keys: Set[str] = set()
         for object_type, infos in detailed_handover_info.items():
             if not infos:
                 continue
