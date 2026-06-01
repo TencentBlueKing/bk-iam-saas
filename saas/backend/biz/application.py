@@ -429,7 +429,7 @@ class ApprovedPassApplicationBiz:
         app_data = application.data or {}
         handover_from: str = app_data.get("handover_from") or ""
         handover_to: str = app_data.get("handover_to") or ""
-        handover_info = app_data.get("handover_info") or {}
+        handover_info: Dict[str, Any] = app_data.get("handover_info") or {}
         reason = application.reason
 
         if not handover_from or not handover_to:

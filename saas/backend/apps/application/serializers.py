@@ -154,9 +154,7 @@ class ApplicationListSLZ(serializers.ModelSerializer):
             handover_info = data.get("handover_info") or {}
             extra_info["handover_to"] = data.get("handover_to", "")
             # 交接对象数量: 用户组 + 角色 + 模板 + 自定义权限
-            extra_info["handover_object_count"] = sum(
-                len(infos) for infos in handover_info.values() if isinstance(infos, list)
-            )
+            extra_info["handover_object_count"] = sum(len(infos) for infos in handover_info.values())
         return extra_info
 
 

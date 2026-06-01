@@ -74,7 +74,7 @@ class HandoverViewSet(GenericViewSet):
             self.handover_task_check_biz.has_pending_handover_tasks(handover_from, detailed_handover_info)
 
             # 3. 审批开关开启时, 走 Application + ITSM 审批流; 否则保持原有立即生效逻辑
-            if getattr(settings, "ENABLE_HANDOVER_APPROVAL", False):
+            if settings.ENABLE_HANDOVER_APPROVAL:
                 return self._create_with_approval(handover_from, handover_to, reason, detailed_handover_info)
 
             return self._create_immediately(handover_from, handover_to, reason, detailed_handover_info)
