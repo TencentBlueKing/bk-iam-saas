@@ -22,21 +22,26 @@ from pydantic.tools import parse_obj_as
 from rest_framework.request import Request
 
 from backend.apps.application.models import Application
+from backend.apps.approval.models import ActionProcessRelation
 from backend.apps.group.models import Group
-from backend.apps.handover.constants import HandoverStatus
-from backend.apps.handover.models import HandoverRecord, HandoverTask
+from backend.apps.handover.constants import HandoverObjectType, HandoverStatus
+from backend.apps.handover.models import HandoverRecord
 from backend.apps.handover.tasks import execute_handover_task
 from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
 from backend.apps.role.tasks import sync_subset_manager_subject_scope
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.constants import StaffStatus
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_permission_handover_lock
 from backend.common.time import expired_at_display
+from backend.plugins.application_ticket.itsm.ticket_content import HandoverForm
+from backend.plugins.application_ticket.itsm.ticket_content_tpl import FORM_SCHEMES
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
 from backend.service.constants import (
@@ -46,6 +51,7 @@ from backend.service.constants import (
     RoleRelatedObjectType,
     RoleSourceType,
     RoleType,
+    SensitivityLevel,
     SubjectType,
 )
 from backend.service.models import (
@@ -82,10 +88,11 @@ from .application_process import (
     PolicyProcessHandler,
 )
 from .group import GroupBiz, GroupMemberExpiredAtBean
-from .handover import HandoverTaskCheckBiz
+from .handover import HandoverBiz
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from .role import RoleBiz, RoleInfo, RoleInfoBean
 from .subject import SubjectInfoList
+from .system import SystemBiz
 from .template import TemplateBiz
 
 logger = logging.getLogger("app")
@@ -144,6 +151,8 @@ class HandoverApplicationDataBean(BaseApplicationDataBean):
 
     handover_to: str
     handover_info: Dict[str, Any]
+    # 存储交接详情快照，用于详情页和 ITSM 审批单展示
+    handover_detail: Optional[Dict[str, Any]] = None
 
 
 class ApplicationIDStatusDict(BaseModel):
@@ -190,7 +199,7 @@ class ApprovedPassApplicationBiz:
     policy_operation_biz = PolicyOperationBiz()
     group_biz = GroupBiz()
     role_biz = RoleBiz()
-    handover_task_check_biz = HandoverTaskCheckBiz()
+    handover_biz = HandoverBiz()
 
     def _check_subject_exists(self, subject: Subject) -> Tuple[bool, str]:
         """
@@ -439,27 +448,9 @@ class ApprovedPassApplicationBiz:
             return
 
         try:
-            # 加锁，避免并发重复创建任务（如：ITSM 回调 + 定时任务）
-            with self.handover_task_check_biz.acquire_handover_task_locks(handover_from, handover_info):
-                # 运行中冲突校验，确认前面持锁的线程没有抢先创建 RUNNING记录
-                self.handover_task_check_biz.has_running_handover_tasks(handover_from, handover_info)
-
-                with transaction.atomic():
-                    # 1. 构造 HandoverRecord
-                    handover_record = HandoverRecord.objects.create(
-                        handover_from=handover_from,
-                        handover_to=handover_to,
-                        reason=reason,
-                        status=HandoverStatus.RUNNING.value,
-                    )
-
-                    # 2. 基于 handover_info 构造 HandoverTask
-                    handover_task_details = self.handover_task_check_biz.gen_handover_tasks(
-                        handover_info, handover_record.id
-                    )
-
-                    if handover_task_details:
-                        HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
+            handover_record = self.handover_biz.create_handover_record(
+                handover_from, handover_to, reason, handover_info
+            )
         except APIError as e:
             if e.code != error_codes.TASK_EXIST.code:
                 raise
@@ -471,8 +462,7 @@ class ApprovedPassApplicationBiz:
                 e.message,
             )
             return
-
-        # 3. 事务提交后再启动异步任务, 避免 delay 比事务提交更快导致查不到 HandoverTask
+        # 事务提交后再启动异步任务, 避免 delay 比事务提交更快导致查不到 HandoverTask
         execute_handover_task.delay(
             handover_from=handover_from,
             handover_to=handover_to,
@@ -933,6 +923,208 @@ class ApplicationBiz:
 
         return [application]
 
+    def get_handover_detailed_info(self, handover_from: str, handover_info: Dict[str, Any]) -> Dict[str, Any]:
+        """获取权限交接审批单的详细展示数据
+
+        供 ITSM 表单渲染、详情页展示等场景共用
+        """
+        detailed_info = {}
+
+        for key, value in handover_info.items():
+            if not value:
+                continue
+
+            if key == HandoverObjectType.GROUP_IDS.value:
+                # value 是 group_ids 列表
+                groups = Group.objects.filter(id__in=value)
+
+                # 获取用户的用户组及过期时间
+                subject = Subject.from_username(handover_from)
+                subject_groups = GroupBiz().list_all_subject_group(subject)
+                group_expired_at = {g.id: g.expired_at for g in subject_groups}
+
+                # 查询用户组所属的管理空间名称
+                group_role_map = {
+                    one["object_id"]: one["role_id"]
+                    for one in RoleRelatedObject.objects.filter(
+                        object_type=RoleRelatedObjectType.GROUP.value, object_id__in=value
+                    ).values("role_id", "object_id")
+                }
+                role_name_map: Dict[int, str] = {}
+                if group_role_map:
+                    role_name_map = {
+                        one["id"]: one["name"]
+                        for one in Role.objects.filter(id__in=set(group_role_map.values())).values("id", "name")
+                    }
+
+                # 查询每个用户组的最高敏感等级
+                highest_sensitivity_level_map = self._get_groups_highest_sensitivity_level(value)
+
+                detailed_info[key] = [
+                    {
+                        "id": group.id,
+                        "name": group.name,
+                        "description": group.description,
+                        "expired_at": group_expired_at.get(group.id),
+                        "role_name": role_name_map.get(group_role_map.get(group.id, 0), ""),
+                        "highest_sensitivity_level": highest_sensitivity_level_map.get(
+                            group.id, SensitivityLevel.L1.value
+                        ),
+                    }
+                    for group in groups
+                ]
+
+            elif key == HandoverObjectType.CUSTOM_POLICIES.value:
+                system_biz = SystemBiz()
+                system_list = system_biz.new_system_list()
+                query_biz = PolicyQueryBiz()
+                subject = Subject.from_username(handover_from)
+
+                detailed_info[key] = []
+                for system_policy in value:
+                    sys = system_list.get(system_policy["system_id"])
+
+                    # 获取策略详情
+                    # Note: 不过滤过期策略，因为展示详情时需要显示申请时的数据
+                    application_policies: List[Dict[str, Any]] = []
+                    if system_policy["policy_ids"]:
+                        policies = query_biz.list_by_subject(system_policy["system_id"], subject)
+                        policy_map = {p.policy_id: p for p in policies}
+                        hit_policies = [policy_map[pid] for pid in system_policy["policy_ids"] if pid in policy_map]
+                        if hit_policies:
+                            application_policies = [
+                                p.dict(by_alias=True) for p in parse_obj_as(List[ApplicationPolicyInfo], hit_policies)
+                            ]
+
+                    # 如果重新查询失败（策略已删除或过期），回退使用原始存储的 policies
+                    if not application_policies and system_policy.get("policies"):
+                        application_policies = system_policy["policies"]
+
+                    detailed_info[key].append(
+                        {
+                            "id": system_policy["system_id"],
+                            "policy_ids": system_policy["policy_ids"],
+                            "name": sys.name if sys else "",
+                            "name_en": sys.name_en if sys else "",
+                            "policies": application_policies,
+                        }
+                    )
+
+            elif key == HandoverObjectType.ROLE_IDS.value:
+                # value 是 role_ids 列表
+                roles = Role.objects.filter(id__in=value)
+                detailed_info[key] = [
+                    {
+                        "id": role.id,
+                        "type": role.type,
+                        "name": role.name,
+                        "name_en": role.name_en,
+                        "description": role.description,
+                    }
+                    for role in roles
+                ]
+
+            elif key == HandoverObjectType.SUBJECT_TEMPLATE_IDS.value:
+                # value 是 subject_template_ids 列表
+                templates = SubjectTemplate.objects.filter(id__in=value)
+                detailed_info[key] = [{"id": t.id, "name": t.name, "description": t.description} for t in templates]
+
+        return detailed_info
+
+    @staticmethod
+    def _get_groups_highest_sensitivity_level(group_ids: List[int]) -> Dict[int, str]:
+        """计算用户组的最高敏感等级
+
+        取每个用户组下所有自定义权限策略的最高敏感等级
+        """
+        if not group_ids:
+            return {}
+
+        # 1. 查询所有用户组的 (system_id, action_id) 关系
+        group_actions = list(
+            Policy.objects.filter(
+                subject_type=SubjectType.GROUP.value,
+                subject_id__in=[str(gid) for gid in group_ids],
+            ).values("subject_id", "system_id", "action_id")
+        )
+        if not group_actions:
+            return {gid: SensitivityLevel.L1.value for gid in group_ids}
+
+        # 2. 查询所涉及系统的 (system_id, action_id) -> sensitivity_level 映射
+        involved_systems = {ga["system_id"] for ga in group_actions}
+        sensitivity_map = {
+            (rel["system_id"], rel["action_id"]): rel["sensitivity_level"]
+            for rel in ActionProcessRelation.objects.filter(system_id__in=involved_systems).values(
+                "system_id", "action_id", "sensitivity_level"
+            )
+        }
+
+        # 3. 聚合每个用户组的最高敏感等级
+        group_levels: Dict[int, List[str]] = defaultdict(list)
+        for ga in group_actions:
+            level = sensitivity_map.get((ga["system_id"], ga["action_id"]), SensitivityLevel.L1.value)
+            group_levels[int(ga["subject_id"])].append(level)
+
+        return {
+            gid: (max(group_levels[gid]) if group_levels.get(gid) else SensitivityLevel.L1.value) for gid in group_ids
+        }
+
+    def create_handover_with_approval(self, data: HandoverApplicationDataBean) -> Dict:
+        """开启审批开关：走 ITSM 审批
+
+        将创建审批单的逻辑从 HandoverBiz 迁移到 ApplicationBiz，
+        使审批逻辑与交接执行逻辑解耦
+        """
+        handover_from = data.applicant
+
+        # 1. 用户级分布式锁
+        user_lock_key = handover_from
+        user_lock = gen_permission_handover_lock(user_lock_key)
+        if not user_lock.acquire():
+            raise error_codes.TASK_EXIST.format(message="存在正在处理的交接申请，请勿重复提交")
+
+        try:
+            # 2. 检查有无 PENDING 的审批单
+            if Application.objects.filter(
+                applicant=handover_from,
+                type=ApplicationType.HANDOVER.value,
+                status=ApplicationStatus.PENDING.value,
+            ).exists():
+                raise error_codes.TASK_EXIST.format(message="存在审批中的交接申请，请勿重复提交")
+
+            # 3. 检查有无 RUNNING 的交接任务
+            if HandoverRecord.objects.filter(
+                handover_from=handover_from, status=HandoverStatus.RUNNING.value
+            ).exists():
+                raise error_codes.TASK_EXIST.format(message="存在正在执行的交接任务，请勿重复提交")
+
+            # 4. 查询详细数据用于表单渲染和快照存储
+            data.handover_detail = self.get_handover_detailed_info(handover_from, data.handover_info)
+
+            # 5. 创建审批单
+            application = self.create_for_handover(data)
+        finally:
+            # 释放用户级分布式锁
+            user_lock.release()
+
+        return {
+            "application_id": application.id,
+            "approval_sn": application.sn,
+            "status": ApplicationStatus.PENDING.value,
+        }
+
+    def _gen_handover_approval_content(self, content: HandoverApplicationContent) -> Dict[str, Any]:
+        """生成权限交接审批单的展示数据
+
+        Args:
+            content: HandoverApplicationContent 实例，包含 handover_detail 用于展示
+        """
+        # 返回 ITSM 期望的格式
+        return {
+            "schemes": FORM_SCHEMES,
+            "form_data": HandoverForm.from_application(content).form_data,
+        }
+
     def create_for_handover(
         self,
         data: HandoverApplicationDataBean,
@@ -955,10 +1147,15 @@ class ApplicationBiz:
             content=HandoverApplicationContent(
                 handover_from=data.applicant,
                 handover_to=data.handover_to,
-                handover_info=data.handover_info,
+                handover_info=data.handover_info,  # 存储交接数据(纯ID)
+                handover_detail=data.handover_detail or {},  # 存储详情快照
             ),
         )
-        application = self.svc.create_for_handover(application_data, process)
+
+        # 5. 生成 ITSM 表单数据
+        approval_content = self._gen_handover_approval_content(application_data.content)
+
+        application = self.svc.create_for_handover(application_data, process, approval_content=approval_content)
 
         return application
 

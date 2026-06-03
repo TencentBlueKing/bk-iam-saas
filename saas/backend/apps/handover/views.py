@@ -11,40 +11,38 @@ specific language governing permissions and limitations under the License.
 from typing import Dict, Type
 
 from django.conf import settings
-from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.apps.application.views import admin_not_need_apply_check
+from backend.apps.handover.constants import HandoverObjectType
 from backend.apps.handover.models import HandoverRecord, HandoverTask
-from backend.biz.application import ApplicationBiz, HandoverApplicationDataBean
-from backend.biz.handover import HandoverTaskCheckBiz
-from backend.service.constants import ApplicationStatus
-
-from .constants import HandoverObjectType
-from .serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
-from .tasks import execute_handover_task
-from .validation import (
-    BaseHandoverDataProcessor,
-    GroupInfoProcessor,
-    GustomPolicyProcessor,
-    RoleInfoProcessor,
-    SubjectTemplateProcessor,
+from backend.apps.handover.serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
+from backend.apps.handover.validation import (
+    BaseHandoverValidator,
+    CustomPolicyValidator,
+    GroupInfoValidator,
+    RoleInfoValidator,
+    SubjectTemplateValidator,
 )
+from backend.biz.application import ApplicationBiz, HandoverApplicationDataBean
+from backend.biz.handover import HandoverBiz
 
-HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseHandoverDataProcessor]] = {
-    HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
-    HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyProcessor,
-    HandoverObjectType.ROLE_IDS.value: RoleInfoProcessor,
-    HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateProcessor,
+from .tasks import execute_handover_task
+
+HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseHandoverValidator]] = {
+    HandoverObjectType.GROUP_IDS.value: GroupInfoValidator,
+    HandoverObjectType.CUSTOM_POLICIES.value: CustomPolicyValidator,
+    HandoverObjectType.ROLE_IDS.value: RoleInfoValidator,
+    HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateValidator,
 }
 
 
 class HandoverViewSet(GenericViewSet):
+    handover_biz = HandoverBiz()
     application_biz = ApplicationBiz()
-    handover_task_check_biz = HandoverTaskCheckBiz()
 
     @swagger_auto_schema(
         operation_description="执行权限交接",
@@ -64,75 +62,31 @@ class HandoverViewSet(GenericViewSet):
         reason = data["reason"]
         handover_info = data["handover_info"]
 
-        # 1. 校验合法性 + 提取详细信息
-        detailed_handover_info = self._validate_and_extract_handover_info(handover_from, handover_info)
+        # 校验 handover_info 合法性
+        for key, value in handover_info.items():
+            if not value:
+                continue
+            validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value)
+            validator.validate()
 
-        # 2. 按对象粒度加分布式锁 + 互斥校验
-        with self.handover_task_check_biz.acquire_handover_task_locks(handover_from, detailed_handover_info):
-            # 互斥校验
-            self.handover_task_check_biz.has_running_handover_tasks(handover_from, detailed_handover_info)
-            self.handover_task_check_biz.has_pending_handover_tasks(handover_from, detailed_handover_info)
-
-            # 3. 审批开关开启时, 走 Application + ITSM 审批流; 否则保持原有立即生效逻辑
-            if settings.ENABLE_HANDOVER_APPROVAL:
-                return self._create_with_approval(handover_from, handover_to, reason, detailed_handover_info)
-
-            return self._create_immediately(handover_from, handover_to, reason, detailed_handover_info)
-
-    def _create_immediately(self, handover_from, handover_to, reason, detailed_handover_info):
-        """关闭审批开关:  立即创建 HandoverRecord 并触发异步执行"""
-        with transaction.atomic():
-            # 创建任务
-            handover_record = HandoverRecord.objects.create(
-                handover_from=handover_from, handover_to=handover_to, reason=reason
+        # 审批开关开启时, 走 Application + ITSM 审批流; 否则保持原有立即生效逻辑
+        if settings.ENABLE_HANDOVER_APPROVAL:
+            data_bean = HandoverApplicationDataBean(
+                applicant=handover_from,
+                reason=reason,
+                handover_to=handover_to,
+                handover_info=handover_info,
             )
+            result = self.application_biz.create_handover_with_approval(data_bean)
+            return Response(result)
 
-            handover_task_details = self.handover_task_check_biz.gen_handover_tasks(
-                detailed_handover_info, handover_record.id
-            )
-
-            # 创建子任务信息
-            if handover_task_details:
-                HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
+        handover_record = self.handover_biz.create_handover_record(handover_from, handover_to, reason, handover_info)
         # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
         execute_handover_task.delay(
             handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
         )
 
         return Response({"id": handover_record.id})
-
-    def _create_with_approval(self, handover_from, handover_to, reason, detailed_handover_info):
-        """开启审批开关: 走 ITSM 审批"""
-        # 创建审批单
-        application = self.application_biz.create_for_handover(
-            HandoverApplicationDataBean(
-                applicant=handover_from,
-                reason=reason,
-                handover_to=handover_to,
-                handover_info=detailed_handover_info,
-            ),
-        )
-
-        return Response(
-            {
-                "application_id": application.id,
-                "approval_sn": application.sn,
-                "status": ApplicationStatus.PENDING.value,
-            }
-        )
-
-    def _validate_and_extract_handover_info(self, handover_from, handover_info):
-        """校验交接内容合法性 + 将仅含 ID 的 handover_info 扩展为含详细信息的数据"""
-        detailed: Dict[str, list] = {}
-        for key, value in handover_info.items():
-            if not value:
-                continue
-            processor = HANDOVER_VALIDATOR_MAP[key](handover_from, value)
-            # 1. 合法性校验
-            processor.validate()
-            # 2. 提取详细信息
-            detailed[key] = processor.get_info()
-        return detailed
 
 
 class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):

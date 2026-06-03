@@ -27,7 +27,7 @@ from backend.service.models import (
 from ..base import ApplicationTicketProvider
 from .constants import TicketStatus
 from .serializers import ApprovalSLZ
-from .ticket_content import ActionTable, GradeManagerForm, GroupTable, HandoverForm
+from .ticket_content import ActionTable, GradeManagerForm, GroupTable
 from .ticket_content_tpl import FORM_SCHEMES
 
 DEFAULT_TAG = "bk_iam"
@@ -225,14 +225,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         else:
             params["title"] = f"申请将 {data.content.handover_from} 的权限交接给 {data.content.handover_to}"
 
-        if approval_content:
-            params["content"] = approval_content
-        else:
-            # 使用HandoverForm生成权限交接的表格展示
-            params["content"] = {
-                "schemes": FORM_SCHEMES,
-                "form_data": HandoverForm.from_application(data.content).form_data,
-            }
+        params["content"] = approval_content
 
         params["tag"] = tag or DEFAULT_TAG
         ticket = itsm.create_ticket(**params)

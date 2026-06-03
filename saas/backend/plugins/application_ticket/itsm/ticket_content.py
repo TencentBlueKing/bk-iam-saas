@@ -666,7 +666,7 @@ class HandoverForm(BaseModel):
     @classmethod
     def from_application(cls, application_data: HandoverApplicationContent):
         """从权限交接申请内容创建表单, 按类别分表格渲染"""
-        handover_info = application_data.handover_info or {}
+        handover_detail = application_data.handover_detail or {}
 
         form_data: List = [
             BaseText(label="【交出人】", value=application_data.handover_from),
@@ -674,13 +674,13 @@ class HandoverForm(BaseModel):
         ]
 
         # 用户组权限
-        groups = [g for g in (handover_info.get("group_ids") or []) if isinstance(g, dict)]
+        groups = [g for g in (handover_detail.get("group_ids") or []) if isinstance(g, dict)]
         if groups:
             form_data.append(BaseText(label="【用户组权限】"))
             form_data.append(HandoverGroupTable.from_groups(groups))
 
         # 自定义权限: 按系统分组, 每个系统一张表
-        custom_policies = [p for p in (handover_info.get("custom_policies") or []) if isinstance(p, dict)]
+        custom_policies = [p for p in (handover_detail.get("custom_policies") or []) if isinstance(p, dict)]
         if custom_policies:
             form_data.append(BaseText(label="【自定义权限】"))
             for system_policy in custom_policies:
@@ -689,13 +689,13 @@ class HandoverForm(BaseModel):
                 form_data.append(HandoverActionTable.from_system_policy(system_policy))
 
         # 管理员身份
-        roles = [r for r in (handover_info.get("role_ids") or []) if isinstance(r, dict)]
+        roles = [r for r in (handover_detail.get("role_ids") or []) if isinstance(r, dict)]
         if roles:
             form_data.append(BaseText(label="【管理员身份】"))
             form_data.append(HandoverRoleTable.from_roles(roles))
 
         # 人员模板
-        templates = [t for t in (handover_info.get("subject_template_ids") or []) if isinstance(t, dict)]
+        templates = [t for t in (handover_detail.get("subject_template_ids") or []) if isinstance(t, dict)]
         if templates:
             form_data.append(BaseText(label="【人员模板】"))
             form_data.append(HandoverSubjectTemplateTable.from_templates(templates))

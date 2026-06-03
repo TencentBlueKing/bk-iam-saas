@@ -228,6 +228,13 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             subjects = SubjectInfoList(parse_obj_as(List[Subject], data["subject_scopes"])).subjects
             data["subject_scopes"] = [one.dict() for one in subjects]
 
+        # 对于权限交接申请，从 data 中读取 handover_detail 快照
+        if obj.type == ApplicationType.HANDOVER.value:
+            raw_data = obj.data or {}
+            data = raw_data.get("handover_detail") or {}
+            data["handover_from"] = raw_data.get("handover_from", "")
+            data["handover_to"] = raw_data.get("handover_to", "")
+
         return data
 
     def get_ticket_url(self, obj):
