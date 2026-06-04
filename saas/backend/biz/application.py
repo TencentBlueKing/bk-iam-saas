@@ -32,7 +32,7 @@ from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role, RoleRelatedObject, RoleSource, RoleUser
 from backend.apps.role.tasks import sync_subset_manager_subject_scope
-from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateRelation
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
@@ -444,7 +444,7 @@ class ApprovedPassApplicationBiz:
         warnings: List[str] = []
         now_ts = int(time.time())
 
-        # 1. 过滤 group_ids：检查用户是否仍在组中（且未过期）
+        # 过滤 group_ids：检查用户是否仍在组中（且未过期）
         group_ids = handover_info.get("group_ids", [])
         if group_ids:
             subject = Subject.from_username(handover_from)
@@ -457,7 +457,7 @@ class ApprovedPassApplicationBiz:
                 warnings.append(f"用户已不在用户组 {list(removed)} 中或已过期，已跳过")
             filtered_info["group_ids"] = valid_group_ids
 
-        # 2. 过滤 custom_policies：检查策略是否仍然存在（且未过期）
+        # 过滤 custom_policies：检查策略是否仍然存在（且未过期）
         custom_policies = handover_info.get("custom_policies", [])
         if custom_policies:
             filtered_policies = []
@@ -476,7 +476,7 @@ class ApprovedPassApplicationBiz:
                     filtered_policies.append({"system_id": system_id, "policy_ids": valid_policy_ids})
             filtered_info["custom_policies"] = filtered_policies
 
-        # 3. 过滤 role_ids：检查用户是否拥有该角色
+        # 过滤 role_ids：检查用户是否拥有该角色
         role_ids = handover_info.get("role_ids", [])
         if role_ids:
             valid_role_ids = []
@@ -486,19 +486,6 @@ class ApprovedPassApplicationBiz:
                 else:
                     warnings.append(f"角色 {rid} 不在当前用户的可交接范围内，已跳过")
             filtered_info["role_ids"] = valid_role_ids
-
-        # 4. 过滤 subject_template_ids：检查用户是否仍在人员模板中
-        subject_template_ids = handover_info.get("subject_template_ids", [])
-        if subject_template_ids:
-            valid_template_ids = []
-            for tid in subject_template_ids:
-                if SubjectTemplateRelation.objects.filter(
-                    template_id=tid, subject_id=handover_from, subject_type=SubjectType.USER.value
-                ).exists():
-                    valid_template_ids.append(tid)
-                else:
-                    warnings.append(f"人员模板 {tid} 不在当前用户的可交接范围内，已跳过")
-            filtered_info["subject_template_ids"] = valid_template_ids
 
         return filtered_info, warnings
 
