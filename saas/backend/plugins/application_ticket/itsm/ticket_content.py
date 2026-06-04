@@ -39,6 +39,7 @@ from backend.service.models import (
     GroupApplicationContent,
     HandoverApplicationContent,
 )
+from backend.util.compress import decompress_json
 
 from .ticket_content_tpl import FormSchemeEnum
 
@@ -666,7 +667,8 @@ class HandoverForm(BaseModel):
     @classmethod
     def from_application(cls, application_data: HandoverApplicationContent):
         """从权限交接申请内容创建表单, 按类别分表格渲染"""
-        handover_detail = application_data.handover_detail or {}
+        # 解压 handover_detail（存储时为压缩的十六进制字符串）
+        handover_detail = decompress_json(application_data.handover_detail) or {}
 
         form_data: List = [
             BaseText(label="【交出人】", value=application_data.handover_from),

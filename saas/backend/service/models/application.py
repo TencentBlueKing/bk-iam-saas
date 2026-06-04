@@ -353,8 +353,8 @@ class HandoverApplicationContent(BaseModel):
     handover_from: str
     handover_to: str
     handover_info: Dict[str, Any]
-    # 存储交接详情快照，用于详情页和 ITSM 审批单展示
-    handover_detail: Dict[str, Any] = Field(default_factory=dict)
+    # 存储交接详情快照（压缩后的十六进制字符串），用于详情页和 ITSM 审批单展示
+    handover_detail: str
 
 
 class HandoverApplicationData(ApplicationDataBaseInfo):
@@ -364,6 +364,7 @@ class HandoverApplicationData(ApplicationDataBaseInfo):
 
     def raw_content(self) -> Dict:
         """返回原生申请内容, 保存到 DB 里的"""
+        # 压缩的十六进制字符串
         return self.content.dict()
 
 

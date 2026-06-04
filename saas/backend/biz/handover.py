@@ -37,10 +37,6 @@ from backend.service.models.subject import Subject
 class BaseHandoverDataProvider(ABC):
     """权限交接数据提供器基类"""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """接受任意参数，允许子类使用不同的初始化参数"""
-        pass
-
     @abstractmethod
     def get_info(self) -> List[Dict[str, Any]]:
         """获取交接对象的详细信息"""
@@ -384,11 +380,7 @@ class HandoverBiz:
         return bool(new_task_keys & existing_task_keys)
 
     def _gen_handover_tasks(self, handover_from: str, handover_info: Dict) -> List[HandoverTask]:
-        """根据交接信息生成子任务列表（未关联 handover_record，由调用方回填）
-
-        直接使用 Provider 的 get_info() 返回结果，消除重复逻辑
-        注意：validate() 已在 views.create() 中统一调用，此处不再重复校验
-        """
+        """根据交接信息生成子任务列表（未关联 handover_record，由调用方回填）"""
         handover_task_details = []
 
         for key, value in handover_info.items():
