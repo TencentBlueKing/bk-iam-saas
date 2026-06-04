@@ -150,11 +150,10 @@ class UserGroupRenewViewSet(GenericViewSet):
         slz = QueryGroupSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         system_id = slz.validated_data["system_id"]
-        name = slz.validated_data.get("name", "")  # 用户组名
-        description = slz.validated_data.get("description", "")  # 用户组描述
+        name = slz.validated_data.get("name", "")
+        description = slz.validated_data.get("description", "")
 
         subject = Subject.from_username(request.user.username)
-        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         expired_at = get_soon_expire_ts()
 
         if system_id:
@@ -166,21 +165,24 @@ class UserGroupRenewViewSet(GenericViewSet):
             # 获取所有即将过期的用户组
             relations = self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at=expired_at)
 
-        # 根据用户组名/描述进行过滤
-        if name or description:
-            relations = [
-                r
-                for r in relations
-                if (not name or (r.name and name.lower() in r.name.lower()))
-                and (not description or (r.description and description.lower() in r.description.lower()))
-            ]
-        count = len(relations)  # 更新为过滤后的数量
+        # 根据用户组名进行过滤
+        if name:
+            name_lower = name.lower()
+            relations = [r for r in relations if r.name and name_lower in r.name.lower()]
 
-        # 手动处理分页
-        paginated_relations = relations[offset : offset + limit] if limit else relations
+        # 根据用户组描述进行过滤
+        if description:
+            description_lower = description.lower()
+            relations = [r for r in relations if r.description and description_lower in r.description.lower()]
 
-        slz = GroupSLZ(instance=paginated_relations, many=True)
-        return Response({"count": count, "results": slz.data})
+        # 分页
+        page = self.paginate_queryset(relations)
+        if page is not None:
+            slz = GroupSLZ(instance=page, many=True)
+            return self.get_paginated_response(slz.data)
+
+        slz = GroupSLZ(instance=relations, many=True)
+        return Response(slz.data)
 
 
 class UserProfileNewbieViewSet(GenericViewSet):

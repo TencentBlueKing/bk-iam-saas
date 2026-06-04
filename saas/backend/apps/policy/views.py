@@ -222,7 +222,7 @@ class PolicyExpireSoonViewSet(GenericViewSet):
     def list(self, request, *args, **kwargs):
         slz = ExpiringPolicySearchSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
-        action_name = slz.validated_data.get("action_name", "")
+        action_name = slz.validated_data["action_name"]
 
         subject = SvcSubject.from_username(request.user.username)
 
@@ -231,7 +231,8 @@ class PolicyExpireSoonViewSet(GenericViewSet):
 
         # 使用操作名进行模糊搜索
         if action_name:
-            data = [p for p in data if p.action and p.action.name and action_name.lower() in p.action.name.lower()]
+            action_name_lower = action_name.lower()
+            data = [p for p in data if p.action.name and action_name_lower in p.action.name.lower()]
 
         return Response([one.dict() for one in data])
 
