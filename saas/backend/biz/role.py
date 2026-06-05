@@ -33,10 +33,8 @@ from backend.apps.role.models import (
     RoleRelatedObject,
     RoleRelation,
     RoleResourceRelation,
-    RoleScope,
     RoleSource,
     RoleUser,
-    ScopeSubject,
 )
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplate

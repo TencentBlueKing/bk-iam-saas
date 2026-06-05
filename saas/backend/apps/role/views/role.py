@@ -306,7 +306,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 校验是否存在二级空间
         subset_count = RoleRelation.objects.filter(parent_id=role.id).count()
         if subset_count > 0:
-            raise error_codes.FORBIDDEN.format(message=_("存在{}个二级管理空间，请先删除所有二级空间").format(subset_count), replace=True)
+            raise error_codes.COMMON_ERROR.format(
+                message=_("存在{}个二级管理空间，请先删除所有二级空间").format(subset_count), replace=True
+            )
 
         # 执行删除
         RoleDeleteHelper(role.id).delete()
@@ -1056,7 +1058,6 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         user_id = request.user.username
         success_count = 0
-        failed_count = 0
         failed_details = []
 
         # 批量删除每个二级管理空间
@@ -1066,12 +1067,10 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
                 role = Role.objects.filter(id=role_id, type=RoleType.SUBSET_MANAGER.value).first()
                 if not role:
                     failed_details.append({"role_id": role_id, "error": _("该角色不存在或不是二级管理空间,无法删除")})
-                    failed_count += 1
                     continue
                 # 检查权限
                 if not can_user_manage_role(user_id, role_id):
                     failed_details.append({"role_id": role_id, "error": _("非该管理空间的管理员，无权限删除")})
-                    failed_count += 1
                     continue
 
                 # 执行删除
@@ -1083,10 +1082,13 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
             except Exception as e:
                 failed_details.append({"role_id": role_id, "error": str(e)})
-                failed_count += 1
 
         # 返回批量删除结果
-        result = {"success_count": success_count, "failed_count": failed_count, "failed_details": failed_details}
+        result = {
+            "success_count": success_count,
+            "failed_count": len(failed_details),
+            "failed_details": failed_details,
+        }
 
         return Response(result)
 

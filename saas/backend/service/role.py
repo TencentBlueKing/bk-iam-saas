@@ -22,7 +22,6 @@ from backend.apps.role.models import (
     RoleCommonAction,
     RoleRelatedObject,
     RoleRelation,
-    RoleResourceRelation,
     RoleScope,
     RoleSource,
     RoleUser,
