@@ -74,6 +74,7 @@ from backend.apps.role.serializers import (
     RoleScopeSubjectSLZ,
     RoleSearchSLZ,
     RoleSubjectCheckSLZ,
+    SubsetManagerBatchDeleteSLZ,
     SubsetMangerCreateSLZ,
     SubsetMangerDetailSLZ,
     SuperManagerMemberDeleteSLZ,
@@ -1041,20 +1042,16 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="批量删除二级管理空间",
-        request_body=serializers.Serializer(),
+        request_body=SubsetManagerBatchDeleteSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     def batch_delete(self, request, *args, **kwargs):
         """批量删除二级管理空间"""
+        serializer = SubsetManagerBatchDeleteSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
         # 获取要删除的二级管理空间ID列表
-        role_ids = request.data.get("role_ids", [])
-
-        if not role_ids:
-            raise error_codes.INVALID_ARGS.format(message=_("请提供要删除的二级管理空间ID列表"))
-
-        if not isinstance(role_ids, list):
-            raise error_codes.INVALID_ARGS.format(message=_("role_ids参数必须是列表格式"))
+        role_ids = serializer.validated_data["role_ids"]
 
         user_id = request.user.username
         success_count = 0

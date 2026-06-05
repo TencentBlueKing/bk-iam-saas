@@ -519,3 +519,11 @@ class NotificationConfigSerializer(serializers.Serializer):
         ),
         allow_empty=True,
     )
+
+
+class SubsetManagerBatchDeleteSLZ(serializers.Serializer):
+    role_ids = serializers.ListField(
+        label="二级管理空间ID列表",
+        child=serializers.IntegerField(label="角色ID"),
+        allow_empty=False,
+    )
