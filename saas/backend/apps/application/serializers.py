@@ -24,7 +24,6 @@ from backend.biz.system import SystemBiz
 from backend.common.time import DEFAULT_EXPIRED_DURATION, PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import ApplicationType, SubjectType
 from backend.service.models import Subject
-from backend.util.compress import decompress_json
 
 from .base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 
@@ -232,8 +231,8 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
         # 对于权限交接申请
         if obj.type == ApplicationType.HANDOVER.value:
             raw_data = obj.data or {}
-            # 解压 handover_detail（存储时为压缩的十六进制字符串）
-            data = decompress_json(raw_data.get("handover_detail")) or {}
+            # 直接读取 handover_detail 字典
+            data = raw_data.get("handover_detail") or {}
             data["handover_from"] = raw_data.get("handover_from", "")
             data["handover_to"] = raw_data.get("handover_to", "")
             data["warnings"] = raw_data.get("handover_warnings", [])

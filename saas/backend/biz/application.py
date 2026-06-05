@@ -80,7 +80,6 @@ from backend.service.models import (
 )
 from backend.service.role import RoleService
 from backend.service.system import SystemService
-from backend.util.compress import compress_json
 
 from .application_process import (
     GradeManagerApproverHandler,
@@ -153,8 +152,8 @@ class HandoverApplicationDataBean(BaseApplicationDataBean):
 
     handover_to: str
     handover_info: Dict[str, Any]
-    # 存储交接详情快照（压缩后的十六进制字符串），用于详情页和 ITSM 审批单展示
-    handover_detail: Optional[str]
+    # 存储交接详情快照，用于详情页和 ITSM 审批单展示
+    handover_detail: Optional[Dict[str, Any]]
 
 
 class ApplicationIDStatusDict(BaseModel):
@@ -450,11 +449,13 @@ class ApprovedPassApplicationBiz:
             subject = Subject.from_username(handover_from)
             subject_groups = GroupBiz().list_all_subject_group(subject)
             # 只保留未过期的组
-            subject_group_id_set = {g.id for g in subject_groups if g.expired_at > now_ts}
+            subject_group_id_set = {g.id: g.name for g in subject_groups if g.expired_at > now_ts}
             valid_group_ids = [gid for gid in group_ids if gid in subject_group_id_set]
             removed = set(group_ids) - set(valid_group_ids)
             if removed:
-                warnings.append(f"用户已不在用户组 {list(removed)} 中或已过期，已跳过")
+                all_group_map = {g.id: g.name for g in subject_groups}
+                group_names = ", ".join([all_group_map.get(gid, f"ID:{gid}") for gid in removed])
+                warnings.append(f"用户已不在用户组 {group_names} 中或已过期，已跳过")
             filtered_info["group_ids"] = valid_group_ids
 
         # 过滤 custom_policies：检查策略是否仍然存在（且未过期）
@@ -467,11 +468,13 @@ class ApprovedPassApplicationBiz:
                 subject = Subject.from_username(handover_from)
                 policies = PolicyQueryBiz().list_by_subject(system_id, subject)
                 # 只保留未过期的策略
-                subject_policy_id_set = {p.policy_id for p in policies if not p.is_expired()}
+                subject_policy_id_set = {p.policy_id: p.action_id for p in policies if not p.is_expired()}
                 valid_policy_ids = [pid for pid in policy_ids if pid in subject_policy_id_set]
                 removed = set(policy_ids) - set(valid_policy_ids)
                 if removed:
-                    warnings.append(f"系统 {system_id} 的策略 {list(removed)} 已不存在或已过期，已跳过")
+                    all_policy_map = {p.policy_id: p.action_id for p in policies}
+                    policy_names = ", ".join([all_policy_map.get(pid, f"policy_id:{pid}") for pid in removed])
+                    warnings.append(f"系统 {system_id} 的策略 {policy_names} 已不存在或已过期，已跳过")
                 if valid_policy_ids:
                     filtered_policies.append({"system_id": system_id, "policy_ids": valid_policy_ids})
             filtered_info["custom_policies"] = filtered_policies
@@ -480,11 +483,15 @@ class ApprovedPassApplicationBiz:
         role_ids = handover_info.get("role_ids", [])
         if role_ids:
             valid_role_ids = []
+            # 一次性查询所有相关角色名称
+            roles = Role.objects.filter(id__in=role_ids).values("id", "name")
+            role_map = {r["id"]: r["name"] for r in roles}
             for rid in role_ids:
                 if RoleUser.objects.user_role_exists(handover_from, rid):
                     valid_role_ids.append(rid)
                 else:
-                    warnings.append(f"角色 {rid} 不在当前用户的可交接范围内，已跳过")
+                    role_name = role_map.get(rid, f"ID:{rid}")
+                    warnings.append(f"角色 {role_name} 不在当前用户的可交接范围内，已跳过")
             filtered_info["role_ids"] = valid_role_ids
 
         return filtered_info, warnings
@@ -1163,9 +1170,9 @@ class ApplicationBiz:
             ).exists():
                 raise error_codes.TASK_EXIST.format(message="存在正在执行的交接任务，请勿重复提交")
 
-            # 4. 查询详细数据用于表单渲染和快照存储，并进行压缩
+            # 4. 查询详细数据用于表单渲染和快照存储
             handover_detail = self.get_handover_detailed_info(handover_from, data.handover_info)
-            data.handover_detail = compress_json(handover_detail)
+            data.handover_detail = handover_detail
 
             # 5. 创建审批单
             application = self.create_for_handover(data)
@@ -1214,7 +1221,7 @@ class ApplicationBiz:
                 handover_from=data.applicant,
                 handover_to=data.handover_to,
                 handover_info=data.handover_info,  # 存储交接数据(纯ID)
-                handover_detail=data.handover_detail,  # 存储详情快照（压缩后的字符串）
+                handover_detail=data.handover_detail,  # 存储详情快照
             ),
         )
 

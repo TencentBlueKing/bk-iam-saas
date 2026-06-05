@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import Counter
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -353,8 +353,8 @@ class HandoverApplicationContent(BaseModel):
     handover_from: str
     handover_to: str
     handover_info: Dict[str, Any]
-    # 存储交接详情快照（压缩后的十六进制字符串），用于详情页和 ITSM 审批单展示
-    handover_detail: str
+    # 存储交接详情快照，用于详情页和 ITSM 审批单展示
+    handover_detail: Optional[Dict[str, Any]]
 
 
 class HandoverApplicationData(ApplicationDataBaseInfo):
@@ -364,7 +364,6 @@ class HandoverApplicationData(ApplicationDataBaseInfo):
 
     def raw_content(self) -> Dict:
         """返回原生申请内容, 保存到 DB 里的"""
-        # 压缩的十六进制字符串
         return self.content.dict()
 
 
