@@ -18,6 +18,7 @@ from pydantic import parse_obj_as
 
 from backend.apps.action.models import AggregateAction
 from backend.biz.system import SystemBiz
+from backend.component.client.bk_user import BkUserClient
 from backend.service.action import ActionService
 from backend.service.models.action import Action
 from backend.service.models.instance_selection import ChainNode
@@ -26,58 +27,67 @@ from backend.service.models.instance_selection import ChainNode
 @shared_task(ignore_result=True)
 def generate_action_aggregate():
     # 生成操作聚合配置
-    systems = SystemBiz(settings.BK_APP_TENANT_ID).list()
-    action_svc = ActionService(settings.BK_APP_TENANT_ID)
 
-    # 遍历每个系统
-    for system in systems:
-        system_id = system.id
-        actions = action_svc.list(system_id)
-        # 使用操作的实例视图生成聚合操作的结构
-        resource_type_actions = aggregate_actions_group_by_selection_node(actions)
+    # 查询所有租户
+    tenants = BkUserClient(settings.BK_APP_TENANT_ID).list_tenant()
 
-        # 查询系统已存在的聚合操作
-        exists_agg_actions = query_exists_aggregate_actions(system_id)
+    for tenant in tenants:
+        tenant_id = tenant["id"]
+        # 只过滤出当前租户和全租户的系统
+        systems = SystemBiz(tenant_id).list()
+        action_svc = ActionService(tenant_id)
 
-        # 分离处理需要删除的聚合操作
-        delete_agg_actions = [
-            agg_action
-            for resource_type, agg_action in exists_agg_actions.items()
-            if resource_type not in resource_type_actions
-        ]
+        for system in systems:
+            # 全租户系统只由 system 租户处理
+            if system.tenant_id == "" and tenant_id != settings.BK_APP_TENANT_ID:
+                continue
+            system_id = system.id
+            actions = action_svc.list(system_id)
+            # 使用操作的实例视图生成聚合操作的结构
+            resource_type_actions = aggregate_actions_group_by_selection_node(actions)
 
-        # 分离出需要创建与需要更新的聚合操作
-        create_agg_actions, update_agg_actions = [], []
-        for resource_type, action_ids in resource_type_actions.items():
-            if resource_type in exists_agg_actions:
-                agg_action = exists_agg_actions[resource_type]
-                if len(action_ids) == 1:
-                    delete_agg_actions.append(agg_action)
+            # 查询系统已存在的聚合操作
+            exists_agg_actions = query_exists_aggregate_actions(system_id)
+
+            # 分离处理需要删除的聚合操作
+            delete_agg_actions = [
+                agg_action
+                for resource_type, agg_action in exists_agg_actions.items()
+                if resource_type not in resource_type_actions
+            ]
+
+            # 分离出需要创建与需要更新的聚合操作
+            create_agg_actions, update_agg_actions = [], []
+            for resource_type, action_ids in resource_type_actions.items():
+                if resource_type in exists_agg_actions:
+                    agg_action = exists_agg_actions[resource_type]
+                    if len(action_ids) == 1:
+                        delete_agg_actions.append(agg_action)
+                        continue
+
+                    if set(agg_action.action_ids) != set(action_ids):
+                        agg_action.action_ids = action_ids
+                        update_agg_actions.append(agg_action)
+
                     continue
 
-                if set(agg_action.action_ids) != set(action_ids):
-                    agg_action.action_ids = action_ids
-                    update_agg_actions.append(agg_action)
+                if len(action_ids) == 1:
+                    continue
 
-                continue
+                agg_action = AggregateAction(system_id=system_id)
+                agg_action.action_ids = action_ids
+                agg_action.aggregate_resource_type = resource_type.to_resource_type_list()
+                create_agg_actions.append(agg_action)
 
-            if len(action_ids) == 1:
-                continue
+            # 执行 CURD
+            if create_agg_actions:
+                AggregateAction.objects.bulk_create(create_agg_actions)
 
-            agg_action = AggregateAction(system_id=system_id)
-            agg_action.action_ids = action_ids
-            agg_action.aggregate_resource_type = resource_type.to_resource_type_list()
-            create_agg_actions.append(agg_action)
+            if update_agg_actions:
+                AggregateAction.objects.bulk_update(update_agg_actions, ["_action_ids"])
 
-        # 执行 CURD
-        if create_agg_actions:
-            AggregateAction.objects.bulk_create(create_agg_actions)
-
-        if update_agg_actions:
-            AggregateAction.objects.bulk_update(update_agg_actions, ["_action_ids"])
-
-        if delete_agg_actions:
-            AggregateAction.objects.filter(id__in=[agg_action.id for agg_action in delete_agg_actions]).delete()
+            if delete_agg_actions:
+                AggregateAction.objects.filter(id__in=[agg_action.id for agg_action in delete_agg_actions]).delete()
 
 
 class FirstNodeList:
