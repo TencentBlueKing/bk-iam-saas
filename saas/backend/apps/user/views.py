@@ -177,12 +177,8 @@ class UserGroupRenewViewSet(GenericViewSet):
 
         # 分页
         page = self.paginate_queryset(relations)
-        if page is not None:
-            slz = GroupSLZ(instance=page, many=True)
-            return self.get_paginated_response(slz.data)
-
-        slz = GroupSLZ(instance=relations, many=True)
-        return Response(slz.data)
+        slz = GroupSLZ(instance=page, many=True)
+        return self.get_paginated_response(slz.data)
 
 
 class UserProfileNewbieViewSet(GenericViewSet):
