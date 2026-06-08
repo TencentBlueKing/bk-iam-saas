@@ -290,7 +290,7 @@ class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
     def __init__(self, event: Event):
         super().__init__(event)
         self.system_biz = SystemBiz(self.tenant_id)
-        self.action_svc = ActionService(event.tenant_id)
+        self.action_svc = ActionService(self.tenant_id)
 
     @property
     def description(self) -> str:

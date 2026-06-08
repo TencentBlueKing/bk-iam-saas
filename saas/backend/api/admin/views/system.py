@@ -51,6 +51,7 @@ class AdminSystemProviderConfigViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         system_id = kwargs["system_id"]
+        # FIXME(tenant): 需要校验是否当前租户或全租户系统
         system_provider_config = SystemProviderConfigService().get_provider_config(system_id=system_id)
 
         return Response(AdminSystemProviderConfigSLZ(system_provider_config).data)

@@ -333,9 +333,6 @@ class RoleAuthorizationScopeView(BizMixin, views.APIView):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
         # ResourceNameAutoUpdate
         scope_system = self.role_biz.get_auth_scope_bean_by_system(
             request.role.id, system_id, should_auto_update_resource_name=True
@@ -550,8 +547,6 @@ class RoleCommonActionViewSet(BizMixin, GenericViewSet):
 
         system_id = request.query_params.get("system_id")
         if system_id:
-            # 校验系统所属租户
-            self.system_biz.validate_system_access(system_id)
             system_common_actions = self.role_biz.list_system_common_actions(system_id)
             data = [one.dict() for one in system_common_actions] + data
 
@@ -569,9 +564,6 @@ class RoleCommonActionViewSet(BizMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         system_id = serializer.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
 
         max_common_action = 20  # 常用操作最大值
         if RoleCommonAction.objects.filter(system_id=system_id, tenant_id=self.tenant_id).count() >= max_common_action:

@@ -90,9 +90,6 @@ class ApplicationViewSet(BizMixin, TransMixin, GenericViewSet):
         data = serializer.validated_data
         user_id = request.user.username
 
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(data["system"]["id"])
-
         # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.application_data_trans.from_grant_policy_application(user_id, data)
         # 创建单据
@@ -401,9 +398,6 @@ class ApplicationByTemporaryPolicyView(BizMixin, TransMixin, views.APIView):
 
         data = serializer.validated_data
         user_id = request.user.username
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(data["system"]["id"])
 
         # 将 Dict 数据转换为创建单据所需的数据结构
         application_data = self.application_data_trans.from_grant_temporary_policy_application(user_id, data)

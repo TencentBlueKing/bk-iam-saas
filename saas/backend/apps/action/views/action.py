@@ -33,10 +33,6 @@ class ActionViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         cache_id = slz.validated_data["cache_id"]
         group_id = slz.validated_data["group_id"]
         user_id = slz.validated_data["user_id"]

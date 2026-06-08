@@ -34,9 +34,6 @@ class ActionGroupView(BizMixin, views.APIView):
 
         system_id = slz.validated_data["system_id"]
 
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         action_list = self.action_biz.list(system_id)
         action_groups = self.action_group_biz.list_with_frontend_id_by_actions(system_id, action_list.actions)
 

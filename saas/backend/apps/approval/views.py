@@ -120,9 +120,6 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
         action_group_id = slz.validated_data.get("action_group_id")
         keyword = slz.validated_data.get("keyword")
         sensitivity_level = slz.validated_data.get("sensitivity_level")
@@ -185,10 +182,6 @@ class ActionApprovalProcessViewSet(BizMixin, GenericViewSet):
 
         # 目前只支持同一系统的批量 Action 设置审批流程
         system_id = actions[0]["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         action_ids = [a["id"] for a in actions]
 
         # 校验角色管理范围
@@ -219,9 +212,6 @@ class SystemActionSensitivityLevelCountViewSet(BizMixin, GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
 
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         action_list = self.action_biz.list_without_cache_sensitivity_level(system_id)
         level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
 
@@ -232,9 +222,7 @@ class SystemActionSensitivityLevelCountViewSet(BizMixin, GenericViewSet):
 
 
 class ActionSensitivityLevelViewSet(BizMixin, GenericViewSet):
-    permission_classes = [
-        role_perm_class(PermissionCodeEnum.MANAGE_SENSITIVITY_LEVEL.value),
-    ]
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SENSITIVITY_LEVEL.value)]
 
     @swagger_auto_schema(
         operation_description="批量设置操作的敏感等级",
@@ -252,9 +240,6 @@ class ActionSensitivityLevelViewSet(BizMixin, GenericViewSet):
 
         # 目前只支持同一系统的批量 Action 设置审批流程
         system_id = actions[0]["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
 
         action_ids = [a["id"] for a in actions]
 

@@ -53,7 +53,6 @@ def list_system(fields: str = DEFAULT_SYSTEM_FIELDS) -> List[Dict]:
     return _call_iam_api(http_get, url_path, data={"fields": fields})
 
 
-@cached(timeout=60)
 def get_system(system_id: str, fields: str = DEFAULT_SYSTEM_FIELDS) -> Dict:
     """
     获取单个系统信息

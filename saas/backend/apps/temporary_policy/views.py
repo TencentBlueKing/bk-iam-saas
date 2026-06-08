@@ -37,9 +37,6 @@ class TemporaryPolicyViewSet(BizMixin, GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
 
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         subject = Subject.from_username(request.user.username)
         policies = self.policy_query_biz.list_temporary_by_subject(system_id, subject)
 
@@ -57,10 +54,6 @@ class TemporaryPolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         ids = slz.validated_data["ids"]
         subject = Subject.from_username(request.user.username)
 

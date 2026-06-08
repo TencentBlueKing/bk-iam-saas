@@ -743,10 +743,6 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         group = get_object_or_404(self.get_queryset(), pk=kwargs["id"])
 
         subject = Subject.from_group_id(group.id)
@@ -771,10 +767,6 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         ids = slz.validated_data["ids"]
         group = self.get_object()
         subject = Subject.from_group_id(group.id)
@@ -806,9 +798,6 @@ class GroupPolicyViewSet(BizMixin, TransMixin, GroupPermissionMixin, GenericView
         data = slz.validated_data
         system_id = data["system_id"]
         template_id = data["template_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
 
         policies = [PolicyBean(expired_at=PERMANENT_SECONDS, **action) for action in data["actions"]]
         self.group_biz.update_policies(request.role, group.id, system_id, template_id, policies)

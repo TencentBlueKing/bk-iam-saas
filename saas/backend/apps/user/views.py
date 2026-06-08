@@ -208,9 +208,6 @@ class UserCommonActionViewSet(BizMixin, GenericViewSet):
 
         system_id = request.query_params.get("system_id")
         if system_id:
-            # 校验系统访问权限
-            self.system_biz.validate_system_access(system_id)
-
             data = self.role_biz.list_system_common_actions(system_id)
 
         return Response([one.dict() for one in data])
@@ -501,7 +498,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(BizMixin, GenericViewSet):
         return Subject.from_username(request.user.username)
 
 
-class UserFavoriteSystemViewSet(BizMixin, GenericViewSet):
+class UserFavoriteSystemViewSet(TenantMixin, GenericViewSet):
     """
     用户添加或删除收藏的系统
     """
@@ -516,10 +513,6 @@ class UserFavoriteSystemViewSet(BizMixin, GenericViewSet):
         slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统 ID"))
         slz.is_valid(raise_exception=True)
 
-        # 校验系统访问权限
-        system_ids = slz.validated_data
-        self.system_biz.validate_systems_access(system_ids)
-
         UserProfile.objects.add_favorite_systems(self.tenant_id, request.user.username, slz.validated_data)
 
         return Response({})
@@ -533,10 +526,6 @@ class UserFavoriteSystemViewSet(BizMixin, GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统 ID"))
         slz.is_valid(raise_exception=True)
-
-        # 校验系统访问权限
-        system_ids = slz.validated_data
-        self.system_biz.validate_systems_access(system_ids)
 
         UserProfile.objects.remove_favorite_systems(request.user.username, slz.validated_data)
 

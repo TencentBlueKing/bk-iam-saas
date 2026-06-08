@@ -75,14 +75,11 @@ class ResourceTypeViewSet(BizMixin, GenericViewSet):
     )
     def list_resource_types(self, request, *args, **kwargs):
         system_id = request.query_params["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
         data = self.resource_type_biz.list_resource_types_by_system_id(system_id=system_id)
         return Response(data)
 
 
-class SystemCustomFrontendSettingsView(views.APIView, BizMixin):
+class SystemCustomFrontendSettingsView(views.APIView):
     """
     查询系统定制前端配置
     """
@@ -94,8 +91,6 @@ class SystemCustomFrontendSettingsView(views.APIView, BizMixin):
     )
     def get(self, request, *args, **kwargs):
         system_id = kwargs["system_id"]
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
         settings = iam.get_custom_frontend_settings(system_id)
 
         return Response(settings)

@@ -63,10 +63,6 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         cache_id = slz.validated_data["cache_id"]
 
         if cache_id != "":
@@ -101,9 +97,6 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
         ids = slz.validated_data["ids"]
         subject = SvcSubject.from_username(request.user.username)
 
@@ -140,10 +133,6 @@ class PolicyViewSet(BizMixin, GenericViewSet):
         subject = SvcSubject.from_username(request.user.username)
 
         system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
-
         update_policy = self.policy_operation_biz.delete_partial(
             system_id,
             subject,
@@ -234,9 +223,6 @@ class RelatedPolicyViewSet(BizMixin, GenericViewSet):
 
         data = slz.validated_data
         system_id = data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
         source_policy = PolicyBean.parse_obj(data["source_policy"])
 
         # 移除用户已有的权限，只需要生成新增数据的依赖操作权限
@@ -311,10 +297,6 @@ class BatchPolicyResourceCopyViewSet(BizMixin, ServiceMixin, GenericViewSet):
         resource_type = RelatedResourceBean.parse_obj(data["resource_type"])
         actions = data["actions"]
 
-        # 批量校验所有操作所属系统租户
-        system_ids = list({action["system_id"] for action in actions} | {resource_type.system_id})
-        self.system_biz.validate_systems_access(system_ids)
-
         action_resource = []
         actions = sorted(actions, key=lambda action: action["system_id"])
         for system_id, grouping_actions in groupby(actions, key=lambda action: action["system_id"]):
@@ -358,9 +340,6 @@ class RecommendPolicyViewSet(BizMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        # 校验系统访问权限
-        self.system_biz.validate_system_access(system_id)
         cache_id = slz.validated_data["cache_id"]
 
         cached_policy_list = self.application_policy_list_cache.get(cache_id)
