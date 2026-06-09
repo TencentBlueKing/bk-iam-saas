@@ -42,12 +42,14 @@ logger = logging.getLogger("celery")
 
 
 @shared_task(ignore_result=True)
-def sync_organization(tenant_id: str = "", executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
+def sync_organization(tenant_id: str = "", executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
+    record_id = 0
     if not tenant_id:
         for tenant in BkUserClient(settings.BK_APP_TENANT_ID).list_tenant():
-            _sync_organization(tenant["id"])
+            record_id = _sync_organization(tenant["id"])
     else:
-        _sync_organization(tenant_id, executor)
+        record_id = _sync_organization(tenant_id, executor)
+    return record_id
 
 
 @shared_task(ignore_result=True)
