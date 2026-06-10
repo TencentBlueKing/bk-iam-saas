@@ -19,6 +19,9 @@ ignore_imports =
     backend.service.*.* -> backend.apps.*.models
     backend.biz.org_sync.syncer -> backend.apps.organization.tasks
     backend.biz.application -> backend.apps.role.tasks
+    backend.biz.application -> backend.apps.handover.tasks
+    backend.biz.application -> backend.apps.handover.constants
+    backend.biz.handover -> backend.apps.handover.constants
     backend.biz.application -> backend.audit.audit
     backend.audit.audit -> backend.apps.*.models
     backend.audit.signals -> backend.audit.tasks

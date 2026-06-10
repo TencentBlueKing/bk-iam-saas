@@ -216,6 +216,7 @@ class ApplicationType(ChoicesEnum, LowerStrEnum):
     CREATE_GRADE_MANAGER: enum = "create_rating_manager"
     UPDATE_GRADE_MANAGER: enum = "update_rating_manager"
     GRANT_TEMPORARY_ACTION = auto()
+    HANDOVER = auto()
 
     _choices_labels = skip(
         (
@@ -227,6 +228,7 @@ class ApplicationType(ChoicesEnum, LowerStrEnum):
             (CREATE_GRADE_MANAGER, "创建管理空间"),
             (UPDATE_GRADE_MANAGER, "修改管理空间"),
             (GRANT_TEMPORARY_ACTION, "临时权限申请"),
+            (HANDOVER, "权限交接"),
         )
     )
 
@@ -259,6 +261,9 @@ APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
     ),
     ApplicationType.CREATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
     ApplicationType.UPDATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
+    # 权限交接的审批人 (提单人上级) 由 ITSM 流程模板的 STARTER_LEADER 节点自行解析, 属于 OTHER 来源, 不需要 IAM 白名单约束, 故置为空元组
+    # 若要扩展管理员配置审批流程，需要再次追加对应 ProcessorNodeType
+    ApplicationType.HANDOVER.value: (),
 }
 
 
@@ -284,6 +289,7 @@ DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
     ApplicationType.GRANT_ACTION.value,
     ApplicationType.JOIN_GROUP.value,
     ApplicationType.CREATE_GRADE_MANAGER.value,
+    ApplicationType.HANDOVER.value,
 ]
 
 

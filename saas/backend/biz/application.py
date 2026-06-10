@@ -8,7 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import json
 import logging
+import time
 from collections import defaultdict
 from copy import deepcopy
 from itertools import groupby
@@ -21,18 +23,26 @@ from pydantic.tools import parse_obj_as
 from rest_framework.request import Request
 
 from backend.apps.application.models import Application
+from backend.apps.approval.models import ActionProcessRelation
 from backend.apps.group.models import Group
+from backend.apps.handover.constants import HandoverObjectType, HandoverStatus
+from backend.apps.handover.models import HandoverRecord
+from backend.apps.handover.tasks import execute_handover_task
 from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
-from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
+from backend.apps.role.models import Role, RoleRelatedObject, RoleSource, RoleUser
 from backend.apps.role.tasks import sync_subset_manager_subject_scope
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.constants import StaffStatus
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_permission_handover_lock
 from backend.common.time import expired_at_display
+from backend.plugins.application_ticket.itsm.ticket_content import HandoverForm
+from backend.plugins.application_ticket.itsm.ticket_content_tpl import FORM_SCHEMES
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
 from backend.service.constants import (
@@ -42,6 +52,7 @@ from backend.service.constants import (
     RoleRelatedObjectType,
     RoleSourceType,
     RoleType,
+    SensitivityLevel,
     SubjectType,
 )
 from backend.service.models import (
@@ -63,6 +74,8 @@ from backend.service.models import (
     GrantActionApplicationData,
     GroupApplicationContent,
     GroupApplicationData,
+    HandoverApplicationContent,
+    HandoverApplicationData,
     Subject,
 )
 from backend.service.role import RoleService
@@ -76,9 +89,11 @@ from .application_process import (
     PolicyProcessHandler,
 )
 from .group import GroupBiz, GroupMemberExpiredAtBean
+from .handover import HandoverBiz
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from .role import RoleBiz, RoleInfo, RoleInfoBean
 from .subject import SubjectInfoList
+from .system import SystemBiz
 from .template import TemplateBiz
 
 logger = logging.getLogger("app")
@@ -132,6 +147,15 @@ class GradeManagerApplicationDataBean(BaseApplicationDataBean):
     group_name: str = ""
 
 
+class HandoverApplicationDataBean(BaseApplicationDataBean):
+    """权限交接审批"""
+
+    handover_to: str
+    handover_info: Dict[str, Any]
+    # 存储交接详情快照，用于详情页和 ITSM 审批单展示
+    handover_detail: Optional[Dict[str, Any]]
+
+
 class ApplicationIDStatusDict(BaseModel):
     data: Dict[int, ApplicationStatus]
 
@@ -176,6 +200,7 @@ class ApprovedPassApplicationBiz:
     policy_operation_biz = PolicyOperationBiz()
     group_biz = GroupBiz()
     role_biz = RoleBiz()
+    handover_biz = HandoverBiz()
 
     def _check_subject_exists(self, subject: Subject) -> Tuple[bool, str]:
         """
@@ -407,6 +432,108 @@ class ApprovedPassApplicationBiz:
         )
 
         log_user_event(AuditType.USER_TEMPORARY_POLICY_CREATE.value, subject, system_id, actions, sn=application.sn)
+
+    def _filter_handover_info(
+        self, handover_from: str, handover_info: Dict[str, Any]
+    ) -> Tuple[Dict[str, Any], List[str]]:
+        """
+        审批回调时检查每种类型的交接数据是否仍然有效，移除无效数据并收集警告信息
+        """
+        filtered_info: Dict[str, Any] = {}
+        warnings: List[str] = []
+        now_ts = int(time.time())
+
+        # 过滤 group_ids：检查用户是否仍在组中（且未过期）
+        group_ids = handover_info.get("group_ids", [])
+        if group_ids:
+            subject = Subject.from_username(handover_from)
+            subject_groups = GroupBiz().list_all_subject_group(subject)
+            # 只保留未过期的组
+            subject_group_id_set = {g.id: g.name for g in subject_groups if g.expired_at > now_ts}
+            valid_group_ids = [gid for gid in group_ids if gid in subject_group_id_set]
+            removed = set(group_ids) - set(valid_group_ids)
+            if removed:
+                all_group_map = {g.id: g.name for g in subject_groups}
+                group_names = ", ".join([all_group_map.get(gid, f"ID:{gid}") for gid in removed])
+                warnings.append(f"用户已不在用户组 {group_names} 中或已过期，已跳过")
+            filtered_info["group_ids"] = valid_group_ids
+
+        # 过滤 custom_policies：检查策略是否仍然存在（且未过期）
+        custom_policies = handover_info.get("custom_policies", [])
+        if custom_policies:
+            filtered_policies = []
+            for cp in custom_policies:
+                system_id = cp["system_id"]
+                policy_ids = cp["policy_ids"]
+                subject = Subject.from_username(handover_from)
+                policies = PolicyQueryBiz().list_by_subject(system_id, subject)
+                # 只保留未过期的策略
+                subject_policy_id_set = {p.policy_id: p.action_id for p in policies if not p.is_expired()}
+                valid_policy_ids = [pid for pid in policy_ids if pid in subject_policy_id_set]
+                removed = set(policy_ids) - set(valid_policy_ids)
+                if removed:
+                    all_policy_map = {p.policy_id: p.action_id for p in policies}
+                    policy_names = ", ".join([all_policy_map.get(pid, f"policy_id:{pid}") for pid in removed])
+                    warnings.append(f"系统 {system_id} 的策略 {policy_names} 已不存在或已过期，已跳过")
+                if valid_policy_ids:
+                    filtered_policies.append({"system_id": system_id, "policy_ids": valid_policy_ids})
+            filtered_info["custom_policies"] = filtered_policies
+
+        # 过滤 role_ids：检查用户是否拥有该角色
+        role_ids = handover_info.get("role_ids", [])
+        if role_ids:
+            valid_role_ids = []
+            # 一次性查询所有相关角色名称
+            roles = Role.objects.filter(id__in=role_ids).values("id", "name")
+            role_map = {r["id"]: r["name"] for r in roles}
+            for rid in role_ids:
+                if RoleUser.objects.user_role_exists(handover_from, rid):
+                    valid_role_ids.append(rid)
+                else:
+                    role_name = role_map.get(rid, f"ID:{rid}")
+                    warnings.append(f"角色 {role_name} 不在当前用户的可交接范围内，已跳过")
+            filtered_info["role_ids"] = valid_role_ids
+
+        return filtered_info, warnings
+
+    def _handover(self, subject: Subject, application: Application):
+        """权限交接审批通过处理"""
+
+        app_data = application.data or {}
+        handover_from: str = app_data.get("handover_from") or ""
+        handover_to: str = app_data.get("handover_to") or ""
+        handover_info: Dict[str, Any] = app_data.get("handover_info") or {}
+        reason = application.reason
+
+        if not handover_from or not handover_to:
+            logger.error(
+                "application [%d] handover content invalid: missing handover_from or handover_to", application.id
+            )
+            return
+
+        # 检查接收人是否在职
+        handover_to_subject = Subject.from_username(handover_to)
+        ok, msg = self._check_subject_exists(handover_to_subject)
+        if not ok:
+            logger.warn("application [%d] handover approve fail: %s", application.id, msg)
+            return
+
+        # 过滤无效的交接数据，收集 warnings
+        filtered_handover_info, warnings = self._filter_handover_info(handover_from, handover_info)
+        if warnings:
+            app_data["handover_warnings"] = warnings
+            Application.objects.filter(id=application.id).update(_data=json.dumps(app_data))
+
+        # 创建交接记录
+        handover_record = self.handover_biz.create_handover_record(
+            handover_from, handover_to, reason, filtered_handover_info
+        )
+        # 事务提交后再启动异步任务, 避免 delay 比事务提交更快导致查不到 HandoverTask
+        execute_handover_task.delay(
+            handover_from=handover_from,
+            handover_to=handover_to,
+            handover_record_id=handover_record.id,
+        )
 
     def handle(self, application: Application):
         """审批通过处理"""
@@ -861,6 +988,249 @@ class ApplicationBiz:
         )
 
         return [application]
+
+    def get_handover_detailed_info(self, handover_from: str, handover_info: Dict[str, Any]) -> Dict[str, Any]:
+        """获取权限交接审批单的详细展示数据
+
+        供 ITSM 表单渲染、详情页展示等场景共用
+        """
+        detailed_info = {}
+
+        for key, value in handover_info.items():
+            if not value:
+                continue
+
+            if key == HandoverObjectType.GROUP_IDS.value:
+                detailed_info[key] = self._get_group_detailed_info(handover_from, value)
+            elif key == HandoverObjectType.CUSTOM_POLICIES.value:
+                detailed_info[key] = self._get_custom_policies_detailed_info(handover_from, value)
+            elif key == HandoverObjectType.ROLE_IDS.value:
+                # value 是 role_ids 列表
+                roles = Role.objects.filter(id__in=value)
+                detailed_info[key] = [
+                    {
+                        "id": role.id,
+                        "type": role.type,
+                        "name": role.name,
+                        "name_en": role.name_en,
+                        "description": role.description,
+                    }
+                    for role in roles
+                ]
+            elif key == HandoverObjectType.SUBJECT_TEMPLATE_IDS.value:
+                # value 是 subject_template_ids 列表
+                templates = SubjectTemplate.objects.filter(id__in=value)
+                detailed_info[key] = [{"id": t.id, "name": t.name, "description": t.description} for t in templates]
+
+        return detailed_info
+
+    def _get_group_detailed_info(self, handover_from: str, group_ids: List[int]) -> List[Dict[str, Any]]:
+        """获取用户组的详细展示数据（含过期时间、所属管理空间、最高敏感等级）"""
+        groups = Group.objects.filter(id__in=group_ids)
+
+        # 获取用户的用户组及过期时间
+        subject = Subject.from_username(handover_from)
+        subject_groups = GroupBiz().list_all_subject_group(subject)
+        group_expired_at = {g.id: g.expired_at for g in subject_groups}
+
+        # 查询用户组所属的管理空间名称
+        group_role_map = {
+            one["object_id"]: one["role_id"]
+            for one in RoleRelatedObject.objects.filter(
+                object_type=RoleRelatedObjectType.GROUP.value, object_id__in=group_ids
+            ).values("role_id", "object_id")
+        }
+        role_name_map: Dict[int, str] = {}
+        if group_role_map:
+            role_name_map = {
+                one["id"]: one["name"]
+                for one in Role.objects.filter(id__in=set(group_role_map.values())).values("id", "name")
+            }
+
+        # 查询每个用户组的最高敏感等级
+        highest_sensitivity_level_map = self._get_groups_highest_sensitivity_level(group_ids)
+
+        return [
+            {
+                "id": group.id,
+                "name": group.name,
+                "description": group.description,
+                "expired_at": group_expired_at.get(group.id),
+                "role_name": role_name_map.get(group_role_map.get(group.id, 0), ""),
+                "highest_sensitivity_level": highest_sensitivity_level_map.get(group.id, SensitivityLevel.L1.value),
+            }
+            for group in groups
+        ]
+
+    def _get_custom_policies_detailed_info(
+        self, handover_from: str, system_policies_list: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """获取自定义权限的详细展示数据（含系统信息、策略详情，支持回退到原始数据）"""
+        system_biz = SystemBiz()
+        system_list = system_biz.new_system_list()
+        query_biz = PolicyQueryBiz()
+        subject = Subject.from_username(handover_from)
+
+        result = []
+        for system_policy in system_policies_list:
+            sys = system_list.get(system_policy["system_id"])
+
+            # 获取策略详情
+            # Note: 不过滤过期策略，因为展示详情时需要显示申请时的数据
+            application_policies: List[Dict[str, Any]] = []
+            if system_policy["policy_ids"]:
+                policies = query_biz.list_by_subject(system_policy["system_id"], subject)
+                policy_map = {p.policy_id: p for p in policies}
+                hit_policies = [policy_map[pid] for pid in system_policy["policy_ids"] if pid in policy_map]
+                if hit_policies:
+                    application_policies = [
+                        p.dict(by_alias=True) for p in parse_obj_as(List[ApplicationPolicyInfo], hit_policies)
+                    ]
+
+            # 如果重新查询失败（策略已删除或过期），回退使用原始存储的 policies
+            if not application_policies and system_policy.get("policies"):
+                application_policies = system_policy["policies"]
+
+            result.append(
+                {
+                    "id": system_policy["system_id"],
+                    "policy_ids": system_policy["policy_ids"],
+                    "name": sys.name if sys else "",
+                    "name_en": sys.name_en if sys else "",
+                    "policies": application_policies,
+                }
+            )
+
+        return result
+
+    @staticmethod
+    def _get_groups_highest_sensitivity_level(group_ids: List[int]) -> Dict[int, str]:
+        """计算用户组的最高敏感等级
+
+        取每个用户组下所有自定义权限策略的最高敏感等级
+        """
+        if not group_ids:
+            return {}
+
+        # 1. 查询所有用户组的 (system_id, action_id) 关系
+        group_actions = list(
+            Policy.objects.filter(
+                subject_type=SubjectType.GROUP.value,
+                subject_id__in=[str(gid) for gid in group_ids],
+            ).values("subject_id", "system_id", "action_id")
+        )
+        if not group_actions:
+            return {gid: SensitivityLevel.L1.value for gid in group_ids}
+
+        # 2. 查询所涉及系统的 (system_id, action_id) -> sensitivity_level 映射
+        involved_systems = {ga["system_id"] for ga in group_actions}
+        sensitivity_map = {
+            (rel["system_id"], rel["action_id"]): rel["sensitivity_level"]
+            for rel in ActionProcessRelation.objects.filter(system_id__in=involved_systems).values(
+                "system_id", "action_id", "sensitivity_level"
+            )
+        }
+
+        # 3. 聚合每个用户组的最高敏感等级
+        group_levels: Dict[int, List[str]] = defaultdict(list)
+        for ga in group_actions:
+            level = sensitivity_map.get((ga["system_id"], ga["action_id"]), SensitivityLevel.L1.value)
+            group_levels[int(ga["subject_id"])].append(level)
+
+        return {
+            gid: (max(group_levels[gid]) if group_levels.get(gid) else SensitivityLevel.L1.value) for gid in group_ids
+        }
+
+    def create_handover_with_approval(self, data: HandoverApplicationDataBean) -> Dict:
+        """开启审批开关：走 ITSM 审批
+
+        将创建审批单的逻辑从 HandoverBiz 迁移到 ApplicationBiz，
+        使审批逻辑与交接执行逻辑解耦
+        """
+        handover_from = data.applicant
+
+        # 1. 用户级分布式锁
+        user_lock_key = handover_from
+        user_lock = gen_permission_handover_lock(user_lock_key)
+        if not user_lock.acquire():
+            raise error_codes.TASK_EXIST.format(message="存在正在处理的交接申请，请勿重复提交")
+
+        try:
+            # 2. 检查有无 PENDING 的审批单
+            if Application.objects.filter(
+                applicant=handover_from,
+                type=ApplicationType.HANDOVER.value,
+                status=ApplicationStatus.PENDING.value,
+            ).exists():
+                raise error_codes.TASK_EXIST.format(message="存在审批中的交接申请，请勿重复提交")
+
+            # 3. 检查有无 RUNNING 的交接任务
+            if HandoverRecord.objects.filter(
+                handover_from=handover_from, status=HandoverStatus.RUNNING.value
+            ).exists():
+                raise error_codes.TASK_EXIST.format(message="存在正在执行的交接任务，请勿重复提交")
+
+            # 4. 查询详细数据用于表单渲染和快照存储
+            handover_detail = self.get_handover_detailed_info(handover_from, data.handover_info)
+            data.handover_detail = handover_detail
+
+            # 5. 创建审批单
+            application = self.create_for_handover(data)
+        finally:
+            # 释放用户级分布式锁
+            user_lock.release()
+
+        return {
+            "application_id": application.id,
+            "approval_sn": application.sn,
+            "status": ApplicationStatus.PENDING.value,
+        }
+
+    def _gen_handover_approval_content(self, content: HandoverApplicationContent) -> Dict[str, Any]:
+        """生成权限交接审批单的展示数据
+
+        Args:
+            content: HandoverApplicationContent 实例，包含 handover_detail 用于展示
+        """
+        # 返回 ITSM 期望的格式
+        return {
+            "schemes": FORM_SCHEMES,
+            "form_data": HandoverForm.from_application(content).form_data,
+        }
+
+    def create_for_handover(
+        self,
+        data: HandoverApplicationDataBean,
+    ) -> Application:
+        """创建权限交接审批单据"""
+        # 1. 查询申请者信息
+        applicant_info = self._get_applicant_info(data.applicant)
+
+        # 2. 查询对应的审批流程
+        handover_process = self.approval_process_svc.get_default_process(ApplicationType.HANDOVER.value)
+
+        # 3. 实例化流程
+        process = self._get_approval_process_with_node_processor(handover_process.process)
+
+        # 4. 组装数据并创建单据
+        application_data = HandoverApplicationData(
+            type=ApplicationType.HANDOVER,
+            applicant_info=applicant_info,
+            reason=data.reason,
+            content=HandoverApplicationContent(
+                handover_from=data.applicant,
+                handover_to=data.handover_to,
+                handover_info=data.handover_info,  # 存储交接数据(纯ID)
+                handover_detail=data.handover_detail,  # 存储详情快照
+            ),
+        )
+
+        # 5. 生成 ITSM 表单数据
+        approval_content = self._gen_handover_approval_content(application_data.content)
+
+        application = self.svc.create_for_handover(application_data, process, approval_content=approval_content)
+
+        return application
 
     def handle_application_result(self, application: Application, status: ApplicationStatus):
         """处理审批单据结果"""

@@ -9,14 +9,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import Counter
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
+from backend.service.constants import ApplicationStatus, ApplicationType, SensitivityLevel, SubjectType
 from backend.service.models.subject import Applicant
 from backend.util.model import ListModel
-
-from ..constants import ApplicationStatus, ApplicationType, SensitivityLevel, SubjectType
 
 
 class ApplicationTicket(BaseModel):
@@ -347,5 +346,34 @@ class GradeManagerApplicationData(ApplicationDataBaseInfo):
 # 申请创建/更新分级管理员数据结构 End #
 
 
+# 权限交接申请数据结构 Start #
+class HandoverApplicationContent(BaseModel):
+    """权限交接申请内容"""
+
+    handover_from: str
+    handover_to: str
+    handover_info: Dict[str, Any]
+    # 存储交接详情快照，用于详情页和 ITSM 审批单展示
+    handover_detail: Optional[Dict[str, Any]]
+
+
+class HandoverApplicationData(ApplicationDataBaseInfo):
+    """权限交接申请单据所有数据"""
+
+    content: HandoverApplicationContent
+
+    def raw_content(self) -> Dict:
+        """返回原生申请内容, 保存到 DB 里的"""
+        return self.content.dict()
+
+
+# 权限交接申请数据结构 End #
+
+
 # 定义新类型，几种单据的联合, 这里不使用NewType，不然mypy检查过不了
-TypeUnionApplicationData = Union[GrantActionApplicationData, GroupApplicationData, GradeManagerApplicationData]
+TypeUnionApplicationData = Union[
+    GrantActionApplicationData,
+    GroupApplicationData,
+    GradeManagerApplicationData,
+    HandoverApplicationData,
+]

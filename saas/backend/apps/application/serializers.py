@@ -149,6 +149,12 @@ class ApplicationListSLZ(serializers.ModelSerializer):
             extra_info["system_name_en"] = system.get("name_en")
         elif obj.type in [ApplicationType.JOIN_GROUP.value, ApplicationType.RENEW_GROUP.value]:
             extra_info["group_count"] = len(obj.data["groups"])
+        elif obj.type == ApplicationType.HANDOVER.value:
+            data = obj.data or {}
+            handover_info = data.get("handover_info") or {}
+            extra_info["handover_to"] = data.get("handover_to", "")
+            # 交接对象数量: 用户组 + 角色 + 模板 + 自定义权限
+            extra_info["handover_object_count"] = sum(len(infos) for infos in handover_info.values())
         return extra_info
 
 
@@ -221,6 +227,15 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             # 授权人员范围处理
             subjects = SubjectInfoList(parse_obj_as(List[Subject], data["subject_scopes"])).subjects
             data["subject_scopes"] = [one.dict() for one in subjects]
+
+        # 对于权限交接申请
+        if obj.type == ApplicationType.HANDOVER.value:
+            raw_data = obj.data or {}
+            # 直接读取 handover_detail 字典
+            data = raw_data.get("handover_detail") or {}
+            data["handover_from"] = raw_data.get("handover_from", "")
+            data["handover_to"] = raw_data.get("handover_to", "")
+            data["warnings"] = raw_data.get("handover_warnings", [])
 
         return data
 
