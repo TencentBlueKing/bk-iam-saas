@@ -21,9 +21,13 @@ def mock_system_service():
     with mock.patch(
         "backend.service.system.SystemService.list",
         return_value=[
-            System(id="bk_test", name="bk_test", name_en="bk_test", description="", description_en=""),
-            System(id="bk_test1", name="bk_test1", name_en="bk_test1", description="", description_en=""),
-            System(id="bk_test2", name="bk_test2", name_en="bk_test2", description="", description_en=""),
+            System(id="bk_test", name="bk_test", name_en="bk_test", description="", description_en="", tenant_id=""),
+            System(
+                id="bk_test1", name="bk_test1", name_en="bk_test1", description="", description_en="", tenant_id=""
+            ),
+            System(
+                id="bk_test2", name="bk_test2", name_en="bk_test2", description="", description_en="", tenant_id=""
+            ),
         ],
     ):
         yield

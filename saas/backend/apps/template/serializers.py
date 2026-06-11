@@ -62,7 +62,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
         self.role_system_actions = kwargs.pop("role_system_actions")
         assert self.role_system_actions
         super().__init__(*args, **kwargs)
-        self._system_list = SystemBiz().new_system_list()
+        self._system_list = SystemBiz(self.context["tenant_id"]).new_system_list()
 
         self._lock_ids = set()
         if isinstance(self.instance, (QuerySet, list)) and self.instance:

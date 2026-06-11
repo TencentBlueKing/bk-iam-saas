@@ -12,14 +12,16 @@ specific language governing permissions and limitations under the License.
 from rest_framework import exceptions
 
 from backend.biz.system import SystemBiz
+from backend.mixins import TenantMixin
 
 
-class SystemClientCheckMixin:
+class SystemClientCheckMixin(TenantMixin):
     def verify_system_client(self, system_id: str, app_code: str):
         """
         验证 app_code 是否能访问系统
         """
-        clients = SystemBiz().list_client(system_id)
+
+        clients = SystemBiz(self.tenant_id).list_client(system_id)
 
         if app_code not in clients:
             raise exceptions.PermissionDenied(

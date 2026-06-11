@@ -27,10 +27,14 @@ class SystemList:
 
 
 class SystemService:
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+
     def list(self) -> List[System]:
         """获取所有系统"""
-        # FIXME(tenant): 仅返回当前租户或全租户的系统列表
         systems = iam.list_system()
+        # 仅返回当前租户或全租户的系统列表
+        systems = [system for system in systems if system["tenant_id"] == self.tenant_id or system["tenant_id"] == ""]
         # 组装为返回结构
         return [System(**i) for i in systems]
 

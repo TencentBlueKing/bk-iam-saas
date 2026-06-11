@@ -203,7 +203,7 @@ class GroupTemplateSLZ(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         template_ids = [tmp.template_id for tmp in args[0]]
         self._template_name_dict = TemplateBiz(self.context["tenant_id"]).get_template_name_dict_by_ids(template_ids)
-        self._system_list = SystemBiz().new_system_list()
+        self._system_list = SystemBiz(self.context["tenant_id"]).new_system_list()
 
     def get_system(self, obj):
         system_id = obj.system_id
@@ -227,7 +227,7 @@ class GroupTemplateDetailSLZ(GroupTemplateSLZ):
         self._template_name_dict = TemplateBiz(self.context["tenant_id"]).get_template_name_dict_by_ids(
             [self.instance.id]
         )
-        self._system_list = SystemBiz().new_system_list()
+        self._system_list = SystemBiz(self.context["tenant_id"]).new_system_list()
 
     class Meta:
         model = PermTemplatePolicyAuthorized

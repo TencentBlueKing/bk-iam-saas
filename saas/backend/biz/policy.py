@@ -1381,7 +1381,7 @@ class ExpiredPolicy(BackendThinPolicy, ExcludeModel):
 class PolicyQueryBiz:
     def __init__(self, tenant_id: str):
         self.tenant_id = tenant_id
-        self.system_svc = SystemService()
+        self.system_svc = SystemService(self.tenant_id)
         self.action_svc = ActionService(self.tenant_id)
         self.resource_type_svc = ResourceTypeService()
         self.svc = PolicyQueryService()
