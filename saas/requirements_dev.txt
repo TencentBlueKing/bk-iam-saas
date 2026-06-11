@@ -42,7 +42,7 @@ django-mptt==0.15.0 ; python_full_version >= "3.11.10" and python_version < "3.1
 django-prometheus==2.2.0 ; python_full_version >= "3.11.10" and python_version < "3.12"
 django-redis==5.2.0 ; python_full_version >= "3.11.10" and python_version < "3.12"
 django-timezone-field==7.1 ; python_full_version >= "3.11.10" and python_version < "3.12"
-django==4.2.20 ; python_full_version >= "3.11.10" and python_version < "3.12"
+django==4.2.30 ; python_full_version >= "3.11.10" and python_version < "3.12"
 djangorestframework==3.15.2 ; python_full_version >= "3.11.10" and python_version < "3.12"
 dogpile-cache==0.9.2 ; python_full_version >= "3.11.10" and python_version < "3.12"
 drf-yasg==1.21.4 ; python_full_version >= "3.11.10" and python_version < "3.12"
