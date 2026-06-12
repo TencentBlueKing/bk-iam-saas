@@ -69,7 +69,7 @@ class AuthorizationAPIPermission(
         system_slz = AuthSystemSLZ(data=request.data)
         system_slz.is_valid(raise_exception=True)
         system_id = system_slz.validated_data["system"]
-        self.verify_system_client(system_id, app_code)
+        self.verify_system_client(request.tenant_id, system_id, app_code)
 
         # 如果仅仅是校验System，则上面已校验，可以直接忽略了
         if param_source == VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value:
