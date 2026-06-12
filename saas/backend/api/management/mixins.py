@@ -69,11 +69,11 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
                     )
                 )
 
-    def verify_api(self, app_code: str, system_id: str, api: ManagementAPIEnum):
+    def verify_api(self, tenant_id: str, app_code: str, system_id: str, api: ManagementAPIEnum):
         """
         该方法为最常用的API认证和鉴权方法，包括：校验app_code与system和校验管理类API权限
         """
         # API认证
-        self.verify_system_client(system_id, app_code)
+        self.verify_system_client(tenant_id, system_id, app_code)
         # API鉴权
         self.verify_api_allow_list(system_id, api)

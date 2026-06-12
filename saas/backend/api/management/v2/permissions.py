@@ -78,7 +78,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
 
         # 对于所有 V2 API 都需要校验（1）app_code 与 system client (2) 校验 systems 是否有 API 白名单权限
         system_id = request.parser_context["kwargs"]["system_id"]
-        self.verify_api(app_code, system_id, api)
+        self.verify_api(request.tenant_id, app_code, system_id, api)
 
         # 对于仅需校验路径里的 System，则上面 verify_api 已经校验
         if param_source == VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value:
@@ -159,7 +159,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
             source_system_id = role_source.source_system_id
 
         # API 认证和 API 鉴权
-        self.verify_api(app_code, source_system_id, api)
+        self.verify_api(tenant_id, app_code, source_system_id, api)
 
     def _verify_api_by_group(
         self, tenant_id: str, app_code: str, group_id: int, api: ManagementAPIEnum, system_id: str
