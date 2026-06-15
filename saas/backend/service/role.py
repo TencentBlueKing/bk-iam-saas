@@ -19,7 +19,6 @@ from pydantic import BaseModel, Field, parse_obj_as
 from backend.apps.group.models import Group
 from backend.apps.role.models import (
     Role,
-    RoleCommonAction,
     RoleRelatedObject,
     RoleRelation,
     RoleScope,
@@ -668,12 +667,6 @@ class RoleService:
     def count_role_authorization_scopes(self, role_id: int) -> int:
         """统计管理空间权限策略数量"""
         policy_count = 0
-
-        # 角色成员在系统中的全局权限配置
-        policy_count += RoleUserSystemPermission.objects.filter(role_id=role_id).count()
-
-        # 角色的通用操作快捷方式配置
-        policy_count += RoleCommonAction.objects.filter(role_id=role_id).count()
 
         # RoleScope中的实际权限策略
         auth_scope = RoleScope.objects.filter(role_id=role_id, type=RoleScopeType.AUTHORIZATION.value).first()
