@@ -27,11 +27,13 @@ class DefaultProcessNameEnum(ChoicesEnum):
 
     DEFAULT = "默认审批流程"
     GROUP = "用户组审批流程"
+    HANDOVER = "权限交接默认审批流程"
 
 
 APPLICATION_TYPE_DEFAULT_PROCESS_DICT = {
     ApplicationType.GRANT_ACTION.value: DefaultProcessNameEnum.DEFAULT.value,  # type: ignore[attr-defined]
     ApplicationType.JOIN_GROUP.value: DefaultProcessNameEnum.GROUP.value,  # type: ignore[attr-defined]
+    ApplicationType.HANDOVER.value: DefaultProcessNameEnum.HANDOVER.value,  # type: ignore[attr-defined]
 }
 
 

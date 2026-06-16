@@ -20,6 +20,7 @@ from backend.service.models import (
     GradeManagerApplicationData,
     GrantActionApplicationData,
     GroupApplicationData,
+    HandoverApplicationData,
     TypeUnionApplicationData,
 )
 
@@ -202,6 +203,29 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 "schemes": FORM_SCHEMES,
                 "form_data": GradeManagerForm.from_application(data.content).form_data,
             }
+
+        params["tag"] = tag or DEFAULT_TAG
+        ticket = itsm.create_ticket(**params)
+        return ticket["sn"]
+
+    def create_for_handover(
+        self,
+        data: HandoverApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
+        tag: str = "",
+    ) -> str:
+        """创建 - 权限交接审批单据"""
+        params = self._generate_ticket_common_params(data, process, callback_url)
+
+        if approval_title:
+            params["title"] = approval_title
+        else:
+            params["title"] = f"申请将 {data.content.handover_from} 的权限交接给 {data.content.handover_to}"
+
+        params["content"] = approval_content
 
         params["tag"] = tag or DEFAULT_TAG
         ticket = itsm.create_ticket(**params)

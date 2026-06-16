@@ -8,14 +8,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List
+from typing import Any, Dict, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, parse_obj_as
 
+from backend.common.time import expired_at_display
 from backend.service.constants import (
     ANY_ID,
     PolicyEnvConditionType,
     PolicyEnvType,
+    RoleType,
     SensitivityLevel,
     SubjectType,
     WeekDayEnum,
@@ -35,6 +37,7 @@ from backend.service.models import (
     GradeManagerApplicationContent,
     GrantActionApplicationContent,
     GroupApplicationContent,
+    HandoverApplicationContent,
 )
 
 from .ticket_content_tpl import FormSchemeEnum
@@ -536,5 +539,166 @@ class GradeManagerForm(BaseModel):
             department_values = [BaseDictStrValue(value=d.full_name) for d in departments]
             department_values.insert(0, BaseDictStrValue(label="【可授权的组织范围】: "))
             form_data.append(BaseMultiLineText(value=department_values))
+
+        return cls(form_data=[d.dict() for d in form_data])
+
+
+# ---------------------------- 权限交接申请 ----------------------------
+class HandoverGroupColumnValue(BaseModel):
+    """权限交接 - 用户组表格每一列的值"""
+
+    id: BaseDictStrValue
+    role_name: BaseDictStrValue
+    name: BaseDictStrValue
+    highest_sensitivity_level: BaseDictStrValue
+    desc: BaseDictStrValue
+    expired_display: BaseDictStrValue
+
+    @classmethod
+    def from_group_info(cls, group_info: Dict[str, Any]) -> "HandoverGroupColumnValue":
+        expired_display = expired_at_display(group_info["expired_at"]) if group_info.get("expired_at") else "--"
+        return cls(
+            id=BaseDictStrValue(value=f"#{group_info.get('id', '')}"),
+            role_name=BaseDictStrValue(value=group_info.get("role_name") or "--"),
+            name=BaseDictStrValue(value=group_info.get("name", "")),
+            highest_sensitivity_level=BaseDictStrValue(
+                value=SensitivityLevel.get_choice_label(
+                    group_info.get("highest_sensitivity_level") or SensitivityLevel.L1.value
+                )
+            ),
+            desc=BaseDictStrValue(value=group_info.get("description") or "--"),
+            expired_display=BaseDictStrValue(value=expired_display),
+        )
+
+
+class HandoverGroupTable(BaseModel):
+    """权限交接 - 用户组权限表格"""
+
+    label: str = "用户组权限"
+    scheme: str = FormSchemeEnum.HANDOVER_GROUP_TABLE.value
+    value: List[HandoverGroupColumnValue]
+
+    @classmethod
+    def from_groups(cls, groups: List[Dict[str, Any]]) -> "HandoverGroupTable":
+        return cls(value=[HandoverGroupColumnValue.from_group_info(g) for g in groups if isinstance(g, dict)])
+
+
+class HandoverRoleColumnValue(BaseModel):
+    """权限交接 - 管理员身份表格每一列的值"""
+
+    name: BaseDictStrValue
+    role_type: BaseDictStrValue
+    description: BaseDictStrValue
+
+    @classmethod
+    def from_role_info(cls, role_info: Dict[str, Any]) -> "HandoverRoleColumnValue":
+        return cls(
+            name=BaseDictStrValue(value=role_info.get("name", "")),
+            role_type=BaseDictStrValue(
+                value=RoleType.get_choice_label(role_info.get("type", "")) or role_info.get("type", "")
+            ),
+            description=BaseDictStrValue(value=role_info.get("description") or "--"),
+        )
+
+
+class HandoverRoleTable(BaseModel):
+    """权限交接 - 管理员身份表格"""
+
+    label: str = "管理员身份"
+    scheme: str = FormSchemeEnum.HANDOVER_ROLE_TABLE.value
+    value: List[HandoverRoleColumnValue]
+
+    @classmethod
+    def from_roles(cls, roles: List[Dict[str, Any]]) -> "HandoverRoleTable":
+        return cls(value=[HandoverRoleColumnValue.from_role_info(r) for r in roles if isinstance(r, dict)])
+
+
+class HandoverSubjectTemplateColumnValue(BaseModel):
+    """权限交接 - 人员模板表格每一列的值"""
+
+    name: BaseDictStrValue
+    description: BaseDictStrValue
+
+    @classmethod
+    def from_template_info(cls, template_info: Dict[str, Any]) -> "HandoverSubjectTemplateColumnValue":
+        return cls(
+            name=BaseDictStrValue(value=template_info.get("name", "")),
+            description=BaseDictStrValue(value=template_info.get("description") or "--"),
+        )
+
+
+class HandoverSubjectTemplateTable(BaseModel):
+    """权限交接 - 人员模板表格"""
+
+    label: str = "人员模板"
+    scheme: str = FormSchemeEnum.HANDOVER_SUBJECT_TEMPLATE_TABLE.value
+    value: List[HandoverSubjectTemplateColumnValue]
+
+    @classmethod
+    def from_templates(cls, templates: List[Dict[str, Any]]) -> "HandoverSubjectTemplateTable":
+        return cls(
+            value=[HandoverSubjectTemplateColumnValue.from_template_info(t) for t in templates if isinstance(t, dict)]
+        )
+
+
+class HandoverActionTable(BaseModel):
+    """权限交接 - 自定义权限按系统分组的操作表格(复用 ACTION_TABLE 渲染样式)"""
+
+    label: str = "系统"
+    scheme: str = FormSchemeEnum.ACTION_TABLE.value
+    value: List[ActionColumnValue]
+
+    @classmethod
+    def from_system_policy(cls, system_policy: Dict[str, Any]) -> "HandoverActionTable":
+        """从单个系统的自定义权限信息创建表格"""
+        application_policies = parse_obj_as(List[ApplicationPolicyInfo], system_policy.get("policies") or [])
+        values = [ActionColumnValue.from_policy(p) for p in application_policies]
+        return cls(label=f"系统: {system_policy.get('name', '')}", value=values)
+
+
+class HandoverForm(BaseModel):
+    """权限交接表单"""
+
+    # Note: dont use `List[Union[BaseText, ...]]`
+    # reason: https://pydantic-docs.helpmanual.io/usage/types/#unions
+    form_data: List
+
+    @classmethod
+    def from_application(cls, application_data: HandoverApplicationContent):
+        """从权限交接申请内容创建表单, 按类别分表格渲染"""
+        # 读取 handover_detail 字典
+        handover_detail = application_data.handover_detail or {}
+
+        form_data: List = [
+            BaseText(label="【交出人】", value=application_data.handover_from),
+            BaseText(label="【接收人】", value=application_data.handover_to),
+        ]
+
+        # 用户组权限
+        groups = [g for g in (handover_detail.get("group_ids") or []) if isinstance(g, dict)]
+        if groups:
+            form_data.append(BaseText(label="【用户组权限】"))
+            form_data.append(HandoverGroupTable.from_groups(groups))
+
+        # 自定义权限: 按系统分组, 每个系统一张表
+        custom_policies = [p for p in (handover_detail.get("custom_policies") or []) if isinstance(p, dict)]
+        if custom_policies:
+            form_data.append(BaseText(label="【自定义权限】"))
+            for system_policy in custom_policies:
+                if not (system_policy.get("policies") or []):
+                    continue
+                form_data.append(HandoverActionTable.from_system_policy(system_policy))
+
+        # 管理员身份
+        roles = [r for r in (handover_detail.get("role_ids") or []) if isinstance(r, dict)]
+        if roles:
+            form_data.append(BaseText(label="【管理员身份】"))
+            form_data.append(HandoverRoleTable.from_roles(roles))
+
+        # 人员模板
+        templates = [t for t in (handover_detail.get("subject_template_ids") or []) if isinstance(t, dict)]
+        if templates:
+            form_data.append(BaseText(label="【人员模板】"))
+            form_data.append(HandoverSubjectTemplateTable.from_templates(templates))
 
         return cls(form_data=[d.dict() for d in form_data])

@@ -8,65 +8,47 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
 import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-from django.utils.functional import cached_property
 from rest_framework import serializers
 
-from backend.apps.group.models import Group
-from backend.apps.role.models import Role, RoleUser
-from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateRelation
-from backend.biz.group import GroupBiz, SubjectGroupBean
+from backend.apps.role.models import RoleUser
+from backend.apps.subject_template.models import SubjectTemplateRelation
+from backend.biz.handover import GroupInfoProvider
 from backend.biz.policy import PolicyQueryBiz
-from backend.biz.system import SystemBiz
 from backend.service.constants import SubjectType
 from backend.service.models.subject import Subject
 
+"""仅用于数据校验"""
 
-class BaseHandoverDataProcessor(ABC):
+
+class BaseHandoverValidator(ABC):
     @abstractmethod
     def validate(self):
         pass
 
-    @abstractmethod
-    def get_info(self):
-        pass
 
-
-class GroupInfoProcessor(BaseHandoverDataProcessor):
-    biz = GroupBiz()
-
+class GroupInfoValidator(BaseHandoverValidator):
     def __init__(self, handover_from: str, group_ids: List[int]) -> None:
         self.handover_from = handover_from
         self.group_ids = group_ids
+        # 组合使用 Provider 获取数据
+        self._provider = GroupInfoProvider(handover_from, group_ids)
 
     def validate(self):
         # 校验用户是否在属于用户组
         now_ts = int(time.time())
-        subject_group_id_set = {g.id for g in self.subject_groups if g.expired_at > now_ts}
+        subject_group_id_set = {g.id for g in self._provider.subject_groups if g.expired_at > now_ts}
 
         for _id in self.group_ids:
             if _id not in subject_group_id_set:
                 raise serializers.ValidationError("用户组: {} 不在当前用户的可交接范围内!".format(_id))
 
-    def get_info(self):
-        groups = Group.objects.filter(id__in=self.group_ids)
-        group_expired_at = {g.id: g.expired_at for g in self.subject_groups}
-        return [{"id": group.id, "name": group.name, "expired_at": group_expired_at[group.id]} for group in groups]
 
-    @cached_property
-    def subject_groups(self) -> List[SubjectGroupBean]:
-        subject = Subject.from_username(self.handover_from)
-        # NOTE: 可能会有性能问题, 这里需要查询用户的所有组列表
-        return self.biz.list_all_subject_group(subject)
-
-
-class GustomPolicyProcessor(BaseHandoverDataProcessor):
+class CustomPolicyValidator(BaseHandoverValidator):
     biz = PolicyQueryBiz()
-    system_biz = SystemBiz()
 
     def __init__(self, handover_from: str, custom_policies: List[Dict[str, Any]]) -> None:
         self.handover_from = handover_from
@@ -87,23 +69,8 @@ class GustomPolicyProcessor(BaseHandoverDataProcessor):
                         "自定义权限: {}{} 不在当前用户的可交接范围内!".format(system_policy["system_id"], _id)
                     )
 
-    def get_info(self):
-        system_list = self.system_biz.new_system_list()
-        infos = []
-        for system_policy in self.custom_policies:
-            sys = system_list.get(system_policy["system_id"])
-            infos.append(
-                {
-                    "id": system_policy["system_id"],
-                    "policy_ids": system_policy["policy_ids"],
-                    "name": sys.name if sys else "",
-                    "name_en": sys.name_en if sys else "",
-                }
-            )
-        return infos
 
-
-class RoleInfoProcessor(BaseHandoverDataProcessor):
+class RoleInfoValidator(BaseHandoverValidator):
     def __init__(self, handover_from: str, role_ids: List[int]) -> None:
         self.handover_from = handover_from
         self.role_ids = role_ids
@@ -113,12 +80,8 @@ class RoleInfoProcessor(BaseHandoverDataProcessor):
             if not RoleUser.objects.user_role_exists(self.handover_from, _id):
                 raise serializers.ValidationError("角色: {} 不在当前用户的可交接范围内!".format(_id))
 
-    def get_info(self):
-        roles = Role.objects.filter(id__in=self.role_ids)
-        return [{"id": role.id, "type": role.type, "name": role.name, "name_en": role.name_en} for role in roles]
 
-
-class SubjectTemplateProcessor(BaseHandoverDataProcessor):
+class SubjectTemplateValidator(BaseHandoverValidator):
     def __init__(self, handover_from: str, subject_template_ids: List[int]) -> None:
         self.handover_from = handover_from
         self.subject_template_ids = subject_template_ids
@@ -128,8 +91,4 @@ class SubjectTemplateProcessor(BaseHandoverDataProcessor):
             if not SubjectTemplateRelation.objects.filter(
                 template_id=_id, subject_id=self.handover_from, subject_type=SubjectType.USER.value
             ).exists():
-                raise serializers.ValidationError("角色: {} 不在当前用户的可交接范围内!".format(_id))
-
-    def get_info(self):
-        templates = SubjectTemplate.objects.filter(id__in=self.subject_template_ids)
-        return [{"id": t.id, "name": t.name} for t in templates]
+                raise serializers.ValidationError("人员模板: {} 不在当前用户的可交接范围内!".format(_id))
