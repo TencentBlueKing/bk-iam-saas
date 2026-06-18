@@ -1,8 +1,7 @@
 <template>
   <div class="iam-transfer-wrapper" v-bkloading="{ isLoading: submitLoading, opacity: 1 }">
     <bk-button
-      v-if="enablePermissionHandover.toLowerCase() === 'true'
-        && !externalSystemsLayout.myPerm.transfer.hideTextBtn"
+      v-if="enablePermissionHandover && !externalSystemsLayout.myPerm.transfer.hideTextBtn"
       data-test-id="permTransfer_btn_history"
       text
       style="position: relative; top: -13px; width: 100%; text-align: right;"
@@ -124,13 +123,14 @@
         userApi: window.BK_USER_API,
         pageContainer: null,
         submitLoading: false,
-        enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
+        enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER.toLowerCase() === 'true',
+        enableHandoverApproval: window.BKAPP_ENABLE_HANDOVER_APPROVAL.toLowerCase() === 'true',
         isPermissionsPrompt: false,
         isLoading: false
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemsLayout'])
+      ...mapGetters(['user', 'externalSystemsLayout'])
     },
     created () {
       // this.fetchCategories()
@@ -146,64 +146,6 @@
       });
     },
     methods: {
-      // async fetchCategories () {
-      //     try {
-      //         const res = await this.$store.dispatch('organization/getCategories')
-      //         const categories = [...res.data]
-      //         categories.forEach((item, index) => {
-      //             item.visiable = true
-      //             item.level = 0
-      //             item.showRadio = false
-      //             item.selected = false
-      //             item.expanded = index === 0
-      //             item.count = 0
-      //             item.disabled = !item.departments || item.departments.length < 1
-      //             item.type = 'depart'
-      //             item.showCount = false
-      //             item.async = item.departments && item.departments.length > 0
-      //             item.isNewMember = false
-      //             item.loading = false
-      //             item.is_selected = false
-      //             item.parentNodeId = ''
-      //             item.id = `${item.id}&${item.level}`
-      //             if (item.departments && item.departments.length > 0) {
-      //                 item.departments.forEach((child, childIndex) => {
-      //                     child.visiable = false
-      //                     child.level = 1
-      //                     child.loading = false
-      //                     child.showRadio = false
-      //                     child.selected = false
-      //                     child.expanded = false
-      //                     child.disabled = false
-      //                     child.type = 'depart'
-      //                     child.count = child.recursive_member_count
-      //                     child.showCount = true
-      //                     child.async = child.child_count > 0 || child.member_count > 0
-      //                     child.isNewMember = false
-      //                     child.parentNodeId = item.id
-      //                 })
-      //                 item.children = _.cloneDeep(item.departments)
-      //             }
-      //         })
-      //         // 默认展开第一个目录下的节点且选中第一个子节点
-      //         const firstIndex = 0
-      //         const children = categories[firstIndex].children
-      //         children.forEach(item => {
-      //             item.visiable = true
-      //         })
-      //         categories.splice(firstIndex + 1, 0, ...children)
-      //         // this.treeList = _.cloneDeep(categories)
-      //         console.warn(categories)
-      //     } catch (e) {
-      //         console.error(e)
-      //         this.bkMessageInstance = this.$bkMessage({
-      //             theme: 'error',
-      //             message: e.message || e.data.msg || e.statusText
-      //         })
-      //     } finally {
-      //         this.treeLoading = false
-      //     }
-      // },
       handleGroupSelection (list) {
         this.groupSelectData.splice(0, this.groupSelectData.length, ...list);
       },
@@ -340,114 +282,17 @@
             delay: 500,
             message: this.$t(`m.permTransfer['权限交接成功']`),
             onClose: () => {
+              const routeName = this.enableHandoverApproval ? 'myApply' : 'myPerm';
               this.$router.push({
-                name: 'myPerm'
+                name: routeName
               });
             }
           });
         } catch (e) {
-          console.error(e);
-          this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            delay: 1500,
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }
-
-        // const customData = []
-        // Object.keys(this.customSelectData).forEach(key => {
-        //     this.customSelectData[key].forEach(policyInfo => {
-        //         const arr = key.split('|||')
-        //         customData.push({
-        //             id: arr[0],
-        //             name: arr[1],
-        //             policy_info: {
-        //                 id: policyInfo.id,
-        //                 related_resource_types: policyInfo.related_resource_types,
-        //                 policy_id: policyInfo.policy_id,
-        //                 expired_at: policyInfo.expired_at,
-        //                 type: policyInfo.type,
-        //                 name: policyInfo.name,
-        //                 description: policyInfo.description,
-        //                 expired_display: policyInfo.expired_display
-        //             }
-        //         })
-        //     })
-        // })
-
-        // const groupData = []
-        // this.groupSelectData.forEach(item => {
-        //     groupData.push({
-        //         id: item.id,
-        //         name: item.name,
-        //         expired_at: item.expired_at,
-        //         expired_at_display: item.expired_at_display,
-        //         department_id: item.department_id
-        //     })
-        // })
-
-        // const superManager = this.managerSelectData.filter(item => item.type === 'super_manager')
-        // const systemManager = this.managerSelectData.filter(item => item.type === 'system_manager')
-        // const gradeManager = this.managerSelectData.filter(item =>
-        //     item.type === 'grade_manager' || item.type === 'rating_manager'
-        // )
-
-        // const handoverInfo = {}
-        // if (superManager.length) {
-        //     handoverInfo.super_manager = superManager
-        // }
-        // if (systemManager.length) {
-        //     handoverInfo.system_manager = systemManager
-        // }
-        // if (gradeManager.length) {
-        //     handoverInfo.grade_manager = gradeManager
-        // }
-        // if (customData.length) {
-        //     handoverInfo.custom = customData
-        // }
-        // if (groupData.length) {
-        //     handoverInfo.group = groupData
-        // }
-
-        // const submitData = {
-        //     handover_to: this.formData.members[0],
-        //     reason: this.formData.reason,
-        //     handover_info: handoverInfo
-        // }
-
-        // console.error(submitData)
-
-        // try {
-        //     this.submitLoading = true
-        //     await this.$store.dispatch('perm/permTransfer', submitData)
-        //     this.$bkMessage({
-        //         theme: 'success',
-        //         delay: 500,
-        //         message: this.$t(`m.permTransfer['权限交接成功']`),
-        //         onClose: () => {
-        //             this.$router.push({
-        //                 name: 'myPerm'
-        //             })
-        //         }
-        //     })
-        // } catch (e) {
-        //     console.error(e)
-        //     this.$bkMessage({
-        //         limit: 1,
-        //         theme: 'error',
-        //         delay: 1500,
-        //         message: e.message || e.data.msg || e.statusText,
-        //         ellipsisLine: 2,
-        //         ellipsisCopy: true
-        //     })
-        // } finally {
-        //     this.submitLoading = false
-        // }
       },
 
       // 权限交接历史

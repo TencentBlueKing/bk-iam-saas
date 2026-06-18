@@ -86,8 +86,15 @@
           }
           const res = await this.$store.dispatch('myApply/getApplyDetail', params);
           const {
-            sn, type, applicant, organizations, reason, data,
-            status, created_time, ticket_url
+            sn,
+            type,
+            applicant,
+            organizations,
+            reason,
+            data,
+            status,
+            created_time,
+            ticket_url
           } = res.data;
           this.basicInfo = {
             sn,
@@ -99,15 +106,11 @@
             created_time,
             ticket_url,
             applicants: data.applicants || []
-          }
-          ;(data.groups || []).forEach(item => {
-            item.display_id = `#${item.id}`;
-          });
+          };
           this.tableList = [...data.groups];
           this.count = data.groups.length;
           this.status = status;
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.initRequestQueue.shift();
