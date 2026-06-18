@@ -38,6 +38,7 @@
         </div>
         <GroupTable
           :data="groupList"
+          :count="groupList.length"
           :apply-type="'group_handover'"
           :is-show-role-name="true"
           :is-show-sensitivity-level="true"
@@ -71,7 +72,10 @@
         <div class="handover-content-info">
           <span class="name">{{ $t('m.myApply.管理员身份') }}</span>
         </div>
-        <RolesTable :list="rolesList" />
+        <RolesTable
+          :list="rolesList"
+          :count="rolesList.length"
+        />
       </template>
 
       <RenderProcess :link="basicInfo.ticket_url" />
