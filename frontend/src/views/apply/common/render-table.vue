@@ -60,7 +60,7 @@
           return this.$t(`m.perm['加入的用户组']`);
         }
 
-        if (this.curType === 'group_handover') {
+        if (['group_handover', 'roles_handover'].includes(this.curType)) {
           return this.$t(`m.myApply['申请的权限交接']`);
         }
 
@@ -71,10 +71,22 @@
           return this.$t(`m.myApply['申请加入']`);
         }
 
+        if (['group_handover', 'roles_handover'].includes(this.curType)) {
+          return this.$t(`m.myApply['申请交接']`);
+        }
+
         return this.$t(`m.myApply['申请']`);
       },
       expandCountText () {
-        return ['group', 'group_handover'].includes(this.curType) ? this.$t(`m.myApply['用户组']`) : this.$t(`m.myApply['权限模板']`);
+        if (['group', 'group_handover'].includes(this.curType)) {
+          return this.$t(`m.myApply['用户组']`);
+        }
+
+        if (['roles_handover'].includes(this.curType)) {
+          return this.$t(`m.common['管理员']`);
+        }
+
+        return this.$t(`m.myApply['权限模板']`);
       }
     },
     watch: {

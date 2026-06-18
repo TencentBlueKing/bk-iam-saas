@@ -767,6 +767,7 @@ export const m = {
         '申请的权限模板': 'Permission Template for Application',
         '申请的权限交接': 'Transfer of Authority for Application',
         '申请加入': 'Apply to join',
+        '申请交接': 'Apply for Handover',
         '申请': 'Apply',
         '用户组': 'Group',
         '权限模板': 'Permission Template',

@@ -51,7 +51,7 @@
       },
       applyType: {
         type: String,
-        default: 'group'
+        default: 'roles_handover'
       }
     },
     data () {

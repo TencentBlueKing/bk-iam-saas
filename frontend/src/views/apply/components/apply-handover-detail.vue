@@ -71,13 +71,7 @@
         <div class="handover-content-info">
           <span class="name">{{ $t('m.myApply.管理员身份') }}</span>
         </div>
-        <RolesTable
-          :list="rolesList"
-          :apply-type="'group_handover'"
-          :is-show-role-name="true"
-          :is-show-sensitivity-level="true"
-          :is-show-expired="true"
-        />
+        <RolesTable :list="rolesList" />
       </template>
 
       <RenderProcess :link="basicInfo.ticket_url" />
