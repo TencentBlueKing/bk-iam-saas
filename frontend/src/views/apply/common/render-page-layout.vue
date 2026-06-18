@@ -50,7 +50,7 @@
             overflow: hidden;
         }
         .right-layout {
-            padding: 30px;
+            padding: 24px;
             flex: 1 0 auto;
             width: calc(100% - 280px);
             height: calc(100vh - 61px);
