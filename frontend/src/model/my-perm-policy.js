@@ -30,5 +30,6 @@ export default class PermPolicy extends Policy {
   constructor (payload) {
     super(payload);
     this.expired_dis = payload.expired_display;
+    this.sensitivity_level = payload.sensitivity_level;
   }
 }

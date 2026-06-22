@@ -492,3 +492,23 @@ export const IAMV4_ROUTES_ENUM = new Map([
   [['myManageSpace'], 'space/my-own'],
   [['myManageSpaceCreate'], 'space/create']
 ]);
+
+// 所有管理员身份类型
+export const ALL_ROLES_MANAGERS = [
+  {
+    label: il8n('myApproval', '超级管理员'),
+    value: 'super_manager'
+  },
+  {
+    label: il8n('nav', '系统管理员'),
+    value: 'system_manager'
+  },
+  {
+    label: il8n('nav', '一级空间管理员'),
+    value: 'rating_manager'
+  },
+  {
+    label: il8n('nav', '二级空间管理员'),
+    value: 'subset_manager'
+  }
+];
