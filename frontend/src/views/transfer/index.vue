@@ -275,7 +275,7 @@
           this.$bkMessage({
             theme: 'success',
             delay: 500,
-            message: this.$t(`m.permTransfer['权限交接成功']`),
+            message: this.enableHandoverApproval ? this.$t(`m.permTransfer['申请提交成功']`) : this.$t(`m.permTransfer['权限交接成功']`),
             onClose: () => {
               const routeName = this.enableHandoverApproval ? 'apply' : 'myPerm';
               this.$router.push({
