@@ -126,9 +126,6 @@
     computed: {
       ...mapGetters(['user', 'externalSystemsLayout'])
     },
-    created () {
-      // this.fetchCategories()
-    },
     mounted () {
       this.pageContainer = document.querySelector('.main-scroller');
       bus.$on('nav-resize', flag => {
@@ -196,11 +193,9 @@
           this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`);
           this.isShowReasonError = true;
         }
-        if (!this.isShowNameError) {
-          if (reason.trim().length > maxLength) {
-            this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由最长不超过100个字符']`);
-            this.isShowReasonError = true;
-          }
+        if (reason.trim().length > maxLength) {
+          this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由最长不超过100个字符']`);
+          this.isShowReasonError = true;
         }
 
         this.isShowMemberError = members.length < 1;
@@ -274,9 +269,9 @@
           this.$bkMessage({
             theme: 'success',
             delay: 500,
-            message: this.$t(`m.permTransfer['权限交接成功']`),
+            message: this.enableHandoverApproval ? this.$t(`m.permTransfer['申请提交成功']`) : this.$t(`m.permTransfer['权限交接成功']`),
             onClose: () => {
-              const routeName = this.enableHandoverApproval ? 'myApply' : 'myPerm';
+              const routeName = this.enableHandoverApproval ? 'apply' : 'myPerm';
               this.$router.push({
                 name: routeName
               });
