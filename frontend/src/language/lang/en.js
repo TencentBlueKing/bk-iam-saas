@@ -1445,7 +1445,8 @@ export const m = {
         '系统管理员权限交接': 'System manager Permission Handover',
         '超级管理员权限交接': 'Super user Permission Handover',
         '管理空间权限交接': 'Manage Space Permission Handover',
-        '您还没有权限，无需交接': "You don't have permission and don't need to hand over"
+        '您还没有权限，无需交接': "You don't have permission and don't need to hand over",
+        '申请提交成功': 'Application submitted'
     },
     resourcePermiss: {
         '有权限的成员': 'Authorized members',
