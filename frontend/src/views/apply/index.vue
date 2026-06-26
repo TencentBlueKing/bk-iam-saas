@@ -35,14 +35,12 @@
   import RenderDetail from './components/apply-detail';
   import RenderGroupDetail from './components/apply-group-detail';
   import RenderRatingManager from './components/apply-create-rate-manager-detail';
-  import RenderHandoverDetail from './components/apply-handover-detail';
 
   const COM_MAP = new Map([
     [['grant_action', 'renew_action', 'grant_temporary_action'], 'RenderDetail'],
     [['join_group', 'renew_group'], 'RenderGroupDetail'],
     [['create_rating_manager'], 'RenderRatingManager'],
-    [['update_rating_manager'], 'RenderRatingManager'],
-    [['handover'], 'RenderHandoverDetail']
+    [['update_rating_manager'], 'RenderRatingManager']
   ]);
     
   export default {
@@ -51,8 +49,7 @@
       LeftLayout,
       RenderDetail,
       RenderGroupDetail,
-      RenderRatingManager,
-      RenderHandoverDetail
+      RenderRatingManager
     },
     data () {
       return {

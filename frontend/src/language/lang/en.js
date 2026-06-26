@@ -767,7 +767,6 @@ export const m = {
         '申请的权限模板': 'Permission Template for Application',
         '申请的权限交接': 'Transfer of Authority for Application',
         '申请加入': 'Apply to join',
-        '申请交接': 'Apply for Handover',
         '申请': 'Apply',
         '用户组': 'Group',
         '权限模板': 'Permission Template',
@@ -779,13 +778,7 @@ export const m = {
         '创建项目': 'Create project',
         '编辑项目': 'Edit project',
         '申请创建项目': 'Apply for creating project',
-        '申请编辑项目': 'Apply for editing project',
-        '申请权限交接': 'Apply for permission handover',
-        '交出人': 'Hand over the person',
-        '接收人': 'Recipient',
-        '交接理由': 'Reason for handover',
-        '最高敏感等级': 'Maximum Sensitivity Level',
-        "管理员身份": "Administrator identity"
+        '申请编辑项目': 'Apply for editing project'
     },
     myApproval: {
         '审批列表': 'Approval List',

@@ -80,7 +80,7 @@
         return this.data.organizations && this.data.organizations.length > 0;
       },
       isShowPermManager () {
-        return !['handover', 'create_rating_manager', 'update_rating_manager'].includes(this.data.type);
+        return !['create_rating_manager', 'update_rating_manager'].includes(this.data.type);
       },
       getPermManager () {
         const { applicants = [] } = this.data;
@@ -111,9 +111,6 @@
             break;
           case 'renew_group':
             str = this.$t(`m.myApply['用户组续期']`);
-            break;
-          case 'handover':
-            str = this.$t(`m.permTransfer['权限交接']`);
             break;
           case 'create_rating_manager':
             str = this.$t(source && source === 'externalApp' ? `m.myApply['创建项目']` : `m.myApply['创建管理空间']`);

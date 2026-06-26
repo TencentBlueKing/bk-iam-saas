@@ -47,16 +47,6 @@
             </template>
           </template>
         </bk-table-column>
-        <template v-if="isShowSensitivityLevel">
-          <bk-table-column :label="$t(`m.nav['敏感等级']`)">
-            <template slot-scope="{ row }">
-              <span>{{ getSensitivityLevel(row.sensitivity_level) }}</span>
-            </template>
-          </bk-table-column>
-        </template>
-        <template v-if="isShowExpired">
-          <bk-table-column prop="expired_display" min-width="100" :label="$t(`m.common['申请期限']`)" />
-        </template>
       </bk-table>
     </render-vertical-block>
     <bk-sideslider
@@ -74,7 +64,6 @@
 
 <script>
   import { cloneDeep } from 'lodash';
-  import { SENSITIVITY_LEVEL_ENUM } from '@/common/constants';
   import Resource from '@/components/render-resource/detail';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import DetailContent from './detail-content';
@@ -88,14 +77,6 @@
       data: {
         type: Array,
         default: () => []
-      },
-      isShowSensitivityLevel: {
-        type: Boolean,
-        default: false
-      },
-      isShowExpired: {
-        type: Boolean,
-        default: false
       }
     },
     data () {
@@ -129,14 +110,6 @@
         this.renderDetailCom = 'DetailContent';
         this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}` });
         this.isShowSideslider = true;
-      },
-
-      getSensitivityLevel (level) {
-        const name = SENSITIVITY_LEVEL_ENUM.find(item => item.id === level)?.name;
-        if (name) {
-          return this.$t(`m.sensitivityLevel['${name}']`);
-        }
-        return '--';
       },
 
       getDetailData (payload) {
