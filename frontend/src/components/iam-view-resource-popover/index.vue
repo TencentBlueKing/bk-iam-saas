@@ -5,7 +5,7 @@
       ext-cls="iam-view-resource-tooltips-cls"
       ref="iamResourcePopover"
       :confirm-button-is-text="false"
-      placement="right"
+      placement="top"
       :confirm-text="''"
       cancel-text="">
       <div slot="content">

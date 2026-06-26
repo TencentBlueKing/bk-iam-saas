@@ -503,7 +503,7 @@ export const m = {
         '每周日': 'Every Sunday',
         '功能升级!': 'Function upgrade!',
         '原来的': 'Customary',
-        '分级管理员': 'rating manager',
+        '分级管理员': 'Rating manager',
         '升级为': 'upgrade to',
         '管理空间': 'management space',
         '支持一级、二级管理空间，更加精细化管理。': 'Supports one-level and secondary management of space, with more refined management.',
@@ -763,8 +763,10 @@ export const m = {
         '临时权限': 'Temporary Permission',
         '再次申请': 'Apply Again',
         '加入用户组': 'Join The Group',
-        '申请的权限模板': 'Permission template applied',
+        '申请的权限模板': 'Permission Template for Application',
+        '申请的权限交接': 'Transfer of Authority for Application',
         '申请加入': 'Apply to join',
+        '申请交接': 'Apply for Handover',
         '申请': 'Apply',
         '用户组': 'Group',
         '权限模板': 'Permission Template',
@@ -775,8 +777,14 @@ export const m = {
         '编辑管理空间': 'Edit management space',
         '创建项目': 'Create project',
         '编辑项目': 'Edit project',
-        '申请创建项目': 'Apply to create project',
-        '申请编辑项目': 'Apply for edit project'
+        '申请创建项目': 'Apply for creating project',
+        '申请编辑项目': 'Apply for editing project',
+        '申请权限交接': 'Apply for permission handover',
+        '交出人': 'Hand over the person',
+        '接收人': 'Recipient',
+        '交接理由': 'Reason for handover',
+        '最高敏感等级': 'Maximum Sensitivity Level',
+        "管理员身份": "Administrator identity"
     },
     myApproval: {
         '审批列表': 'Approval List',
@@ -1426,7 +1434,7 @@ export const m = {
         '超级管理员交接': 'super manager handover:',
         '系统管理员交接': 'system manager handover:',
         '分级管理员交接': 'rating manager handover',
-        '管理员名称': 'ManagerName',
+        '管理员名称': 'Manager name',
         '无法交接用户组：': 'Unable to handover group:',
         '（通过组织加入、已过期的组无法交接）': '(Joined via an organization, expired groups cannot be handover)',
         '无法交接自定义权限：': 'Unable to hand over custom permissions:',
@@ -1437,7 +1445,8 @@ export const m = {
         '系统管理员权限交接': 'System manager Permission Handover',
         '超级管理员权限交接': 'Super user Permission Handover',
         '管理空间权限交接': 'Manage Space Permission Handover',
-        '您还没有权限，无需交接': "You don't have permission and don't need to hand over"
+        '您还没有权限，无需交接': "You don't have permission and don't need to hand over",
+        '申请提交成功': 'Application submitted'
     },
     resourcePermiss: {
         '有权限的成员': 'Authorized members',

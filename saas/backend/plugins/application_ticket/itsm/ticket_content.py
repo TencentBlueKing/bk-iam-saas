@@ -651,9 +651,12 @@ class HandoverActionTable(BaseModel):
     @classmethod
     def from_system_policy(cls, system_policy: Dict[str, Any]) -> "HandoverActionTable":
         """从单个系统的自定义权限信息创建表格"""
-        application_policies = parse_obj_as(List[ApplicationPolicyInfo], system_policy.get("policies") or [])
+        application_policies = parse_obj_as(List[ApplicationPolicyInfo], system_policy.get("actions") or [])
         values = [ActionColumnValue.from_policy(p) for p in application_policies]
-        return cls(label=f"系统: {system_policy.get('name', '')}", value=values)
+        # 从 system 对象中获取系统名称
+        system_info = system_policy.get("system", {})
+        system_name = system_info.get("name", "")
+        return cls(label=f"系统: {system_name}", value=values)
 
 
 class HandoverForm(BaseModel):
@@ -675,7 +678,7 @@ class HandoverForm(BaseModel):
         ]
 
         # 用户组权限
-        groups = [g for g in (handover_detail.get("group_ids") or []) if isinstance(g, dict)]
+        groups = [g for g in (handover_detail.get("groups") or []) if isinstance(g, dict)]
         if groups:
             form_data.append(BaseText(label="【用户组权限】"))
             form_data.append(HandoverGroupTable.from_groups(groups))
@@ -685,18 +688,18 @@ class HandoverForm(BaseModel):
         if custom_policies:
             form_data.append(BaseText(label="【自定义权限】"))
             for system_policy in custom_policies:
-                if not (system_policy.get("policies") or []):
+                if not (system_policy.get("actions") or []):
                     continue
                 form_data.append(HandoverActionTable.from_system_policy(system_policy))
 
         # 管理员身份
-        roles = [r for r in (handover_detail.get("role_ids") or []) if isinstance(r, dict)]
+        roles = [r for r in (handover_detail.get("roles") or []) if isinstance(r, dict)]
         if roles:
             form_data.append(BaseText(label="【管理员身份】"))
             form_data.append(HandoverRoleTable.from_roles(roles))
 
         # 人员模板
-        templates = [t for t in (handover_detail.get("subject_template_ids") or []) if isinstance(t, dict)]
+        templates = [t for t in (handover_detail.get("subject_templates") or []) if isinstance(t, dict)]
         if templates:
             form_data.append(BaseText(label="【人员模板】"))
             form_data.append(HandoverSubjectTemplateTable.from_templates(templates))

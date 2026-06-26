@@ -1001,13 +1001,12 @@ class ApplicationBiz:
                 continue
 
             if key == HandoverObjectType.GROUP_IDS.value:
-                detailed_info[key] = self._get_group_detailed_info(handover_from, value)
+                detailed_info["groups"] = self._get_group_detailed_info(handover_from, value)
             elif key == HandoverObjectType.CUSTOM_POLICIES.value:
-                detailed_info[key] = self._get_custom_policies_detailed_info(handover_from, value)
+                detailed_info["custom_policies"] = self._get_custom_policies_detailed_info(handover_from, value)
             elif key == HandoverObjectType.ROLE_IDS.value:
-                # value 是 role_ids 列表
                 roles = Role.objects.filter(id__in=value)
-                detailed_info[key] = [
+                detailed_info["roles"] = [
                     {
                         "id": role.id,
                         "type": role.type,
@@ -1018,9 +1017,10 @@ class ApplicationBiz:
                     for role in roles
                 ]
             elif key == HandoverObjectType.SUBJECT_TEMPLATE_IDS.value:
-                # value 是 subject_template_ids 列表
                 templates = SubjectTemplate.objects.filter(id__in=value)
-                detailed_info[key] = [{"id": t.id, "name": t.name, "description": t.description} for t in templates]
+                detailed_info["subject_templates"] = [
+                    {"id": t.id, "name": t.name, "description": t.description} for t in templates
+                ]
 
         return detailed_info
 
@@ -1056,6 +1056,7 @@ class ApplicationBiz:
                 "name": group.name,
                 "description": group.description,
                 "expired_at": group_expired_at.get(group.id),
+                "expired_display": expired_at_display(group_expired_at[group.id]),
                 "role_name": role_name_map.get(group_role_map.get(group.id, 0), ""),
                 "highest_sensitivity_level": highest_sensitivity_level_map.get(group.id, SensitivityLevel.L1.value),
             }
@@ -1074,12 +1075,13 @@ class ApplicationBiz:
         result = []
         for system_policy in system_policies_list:
             sys = system_list.get(system_policy["system_id"])
+            system_id = system_policy["system_id"]
 
             # 获取策略详情
             # Note: 不过滤过期策略，因为展示详情时需要显示申请时的数据
             application_policies: List[Dict[str, Any]] = []
             if system_policy["policy_ids"]:
-                policies = query_biz.list_by_subject(system_policy["system_id"], subject)
+                policies = query_biz.list_by_subject(system_id, subject)
                 policy_map = {p.policy_id: p for p in policies}
                 hit_policies = [policy_map[pid] for pid in system_policy["policy_ids"] if pid in policy_map]
                 if hit_policies:
@@ -1091,13 +1093,26 @@ class ApplicationBiz:
             if not application_policies and system_policy.get("policies"):
                 application_policies = system_policy["policies"]
 
+            actions = []
+            for policy in application_policies:
+                actions.append(
+                    {
+                        "id": policy.get("id", ""),
+                        "resource_groups": policy.get("resource_groups", []),
+                        "expired_at": policy.get("expired_at", 0),
+                        "expired_display": policy.get("expired_display", ""),
+                        "name": policy.get("name", ""),
+                        "sensitivity_level": policy.get("sensitivity_level", "L1"),
+                    }
+                )
+
             result.append(
                 {
-                    "id": system_policy["system_id"],
-                    "policy_ids": system_policy["policy_ids"],
-                    "name": sys.name if sys else "",
-                    "name_en": sys.name_en if sys else "",
-                    "policies": application_policies,
+                    "system": {
+                        "id": system_id,
+                        "name": sys.name if sys else "",
+                    },
+                    "actions": actions,
                 }
             )
 
