@@ -87,8 +87,11 @@
     },
     methods: {
       getRolesType (role) {
-        const roleType = ALL_ROLES_MANAGERS.find(item => item.value === role)?.label || '--';
-        return roleType;
+        const roleData = ALL_ROLES_MANAGERS.find(item => item.value === role);
+        if (roleData) {
+          return roleData.label;
+        }
+        return '--';
       },
 
       getDataByPage (page) {

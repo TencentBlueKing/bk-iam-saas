@@ -132,9 +132,9 @@
       },
 
       getSensitivityLevel (level) {
-        const name = SENSITIVITY_LEVEL_ENUM.find(item => item.id === level)?.name;
-        if (name) {
-          return this.$t(`m.sensitivityLevel['${name}']`);
+        const levelData = SENSITIVITY_LEVEL_ENUM.find(item => item.id === level);
+        if (levelData) {
+          return this.$t(`m.sensitivityLevel['${levelData.name}']`);
         }
         return '--';
       },
