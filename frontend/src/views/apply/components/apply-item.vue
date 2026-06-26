@@ -97,9 +97,6 @@
           case 'update_rating_manager':
             str = this.$t(source && source === 'externalApp' ? `m.myApply['申请编辑项目']` : `m.info['申请编辑管理空间']`);
             break;
-          case 'handover':
-            str = this.$t(`m.myApply['申请权限交接']`);
-            break;
           default:
             str = '';
         }

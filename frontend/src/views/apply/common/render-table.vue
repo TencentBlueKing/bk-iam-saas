@@ -2,9 +2,9 @@
   <div :class="['iam-perm-item', extCls]">
     <div class="header" @click="handleExpanded">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
-      <label class="title">{{ expandTitle }}</label>
+      <label class="title">{{ curType === 'group' ? $t(`m.perm['加入的用户组']`) : $t(`m.myApply['申请的权限模板']`) }}</label>
       <div class="sub-title" v-if="data.length > 0 && !isExpanded">
-        {{ expandSubTitle }}
+        {{ curType === 'group' ? $t(`m.myApply['申请加入']`) : $t(`m.myApply['申请']`) }}
         <div class="sub-item">
           <span v-for="item in data" :key="item.id">
             {{$t(`m.common['【']`)}}{{ item.name }}{{$t(`m.common['】']`)}}
@@ -13,7 +13,7 @@
         {{ $t(`m.common['共']`) }}
         <span class="number">{{ data.length }}</span>
         {{ $t(`m.common['个']`) }}
-        {{ expandCountText }}
+        {{ curType === 'group' ? $t(`m.myApply['用户组']`) : $t(`m.myApply['权限模板']`) }}
       </div>
     </div>
     <div class="content" v-if="isExpanded">
@@ -53,41 +53,6 @@
         isExpanded: this.expanded,
         curType: ''
       };
-    },
-    computed: {
-      expandTitle () {
-        if (this.curType === 'group') {
-          return this.$t(`m.perm['加入的用户组']`);
-        }
-
-        if (['group_handover', 'roles_handover'].includes(this.curType)) {
-          return this.$t(`m.myApply['申请的权限交接']`);
-        }
-
-        return this.$t(`m.myApply['申请的权限模板']`);
-      },
-      expandSubTitle () {
-        if (this.curType === 'group') {
-          return this.$t(`m.myApply['申请加入']`);
-        }
-
-        if (['group_handover', 'roles_handover'].includes(this.curType)) {
-          return this.$t(`m.myApply['申请交接']`);
-        }
-
-        return this.$t(`m.myApply['申请']`);
-      },
-      expandCountText () {
-        if (['group', 'group_handover'].includes(this.curType)) {
-          return this.$t(`m.myApply['用户组']`);
-        }
-
-        if (['roles_handover'].includes(this.curType)) {
-          return this.$t(`m.common['管理员']`);
-        }
-
-        return this.$t(`m.myApply['权限模板']`);
-      }
     },
     watch: {
       expanded (value) {

@@ -118,7 +118,6 @@
         pageContainer: null,
         submitLoading: false,
         enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER.toLowerCase() === 'true',
-        enableHandoverApproval: window.BKAPP_ENABLE_HANDOVER_APPROVAL.toLowerCase() === 'true',
         isPermissionsPrompt: false,
         isLoading: false
       };
@@ -269,11 +268,10 @@
           this.$bkMessage({
             theme: 'success',
             delay: 500,
-            message: this.enableHandoverApproval ? this.$t(`m.permTransfer['申请提交成功']`) : this.$t(`m.permTransfer['权限交接成功']`),
+            message: this.$t(`m.permTransfer['权限交接成功']`),
             onClose: () => {
-              const routeName = this.enableHandoverApproval ? 'apply' : 'myPerm';
               this.$router.push({
-                name: routeName
+                name: 'myPerm'
               });
             }
           });

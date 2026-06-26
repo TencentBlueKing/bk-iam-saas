@@ -18,25 +18,11 @@
             <span :title="`#${row.id}`">{{ `#${row.id}` }}</span>
           </template>
         </bk-table-column>
-        <template v-if="isShowRoleName">
-          <bk-table-column :label="$t(`m.nav['管理空间']`)" prop="role_name" width="180">
-            <template slot-scope="{ row }">
-              <span :title="row.role_name">{{ row.role_name || '--' }}</span>
-            </template>
-          </bk-table-column>
-        </template>
         <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
           <template slot-scope="{ row }">
             <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
           </template>
         </bk-table-column>
-        <template v-if="isShowSensitivityLevel">
-          <bk-table-column :label="$t(`m.myApply['最高敏感等级']`)">
-            <template slot-scope="{ row }">
-              <span>{{ getSensitivityLevel(row.highest_sensitivity_level) }}</span>
-            </template>
-          </bk-table-column>
-        </template>
         <bk-table-column :label="$t(`m.common['描述']`)">
           <template slot-scope="{ row }">
             <span :title="Boolean(row.description) ? row.description : ''">
@@ -44,9 +30,6 @@
             </span>
           </template>
         </bk-table-column>
-        <template v-if="isShowExpired">
-          <bk-table-column prop="expired_display" min-width="100" :label="$t(`m.common['申请期限']`)" />
-        </template>
       </bk-table>
     </render-table>
 
@@ -59,7 +42,6 @@
 </template>
 
 <script>
-  import { SENSITIVITY_LEVEL_ENUM } from '@/common/constants';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import RenderTable from '../common/render-table';
 
@@ -80,18 +62,6 @@
       applyType: {
         type: String,
         default: 'group'
-      },
-      isShowRoleName: {
-        type: Boolean,
-        default: false
-      },
-      isShowExpired: {
-        type: Boolean,
-        default: false
-      },
-      isShowSensitivityLevel: {
-        type: Boolean,
-        default: false
       }
     },
     data () {
@@ -135,14 +105,6 @@
           current: 1,
           count: 0
         });
-      },
-
-      getSensitivityLevel (level) {
-        const name = SENSITIVITY_LEVEL_ENUM.find(item => item.id === level)?.name;
-        if (name) {
-          return this.$t(`m.sensitivityLevel['${name}']`);
-        }
-        return '--';
       },
 
       getDataByPage (page) {
