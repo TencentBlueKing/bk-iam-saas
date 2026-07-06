@@ -54,7 +54,7 @@ class ManagementTemplateViewSet(TemplateQueryMixin, GenericViewSet):
             ManagementAPIEnum.V2_GRADE_MANAGER_TEMPLATE_CREATE.value,
         ),
         "update": (
-            VerifyApiParamLocationEnum.TEMPLATE_IN_PATH.value,
+            VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
             ManagementAPIEnum.V2_GRADE_MANAGER_TEMPLATE_UPDATE.value,
         ),
     }

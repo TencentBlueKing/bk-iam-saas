@@ -181,13 +181,34 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
         对Group/Role等对象下操作的管理类API认证和鉴权
         其实上是对verify_api_by_role和verify_api_by_group的统一封装
         """
-        if object_type not in [VerifyAPIObjectTypeEnum.ROLE.value, VerifyAPIObjectTypeEnum.GROUP.value]:
+        if object_type not in [
+            VerifyAPIObjectTypeEnum.ROLE.value,
+            VerifyAPIObjectTypeEnum.GROUP.value,
+            VerifyAPIObjectTypeEnum.TEMPLATE.value,
+        ]:
             raise exceptions.PermissionDenied(detail=f"not support verify api by [{object_type}]")
 
         if object_type == VerifyAPIObjectTypeEnum.ROLE.value:
             self._verify_api_by_role(app_code, object_id, api, system_id)
         elif object_type == VerifyAPIObjectTypeEnum.GROUP.value:
             self._verify_api_by_group(app_code, object_id, api, system_id)
+        elif object_type == VerifyAPIObjectTypeEnum.TEMPLATE.value:
+            self._verify_api_by_template(app_code, object_id, api, system_id)
+
+    def _verify_api_by_template(self, app_code: str, template_id: int, api: ManagementAPIEnum, system_id: str):
+        """
+        对权限模板下的操作进行API认证鉴权
+        通过 RoleRelatedObject 找到模板所属角色，再调用 _verify_api_by_role 完成校验
+        """
+        role_related_object = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.TEMPLATE.value, object_id=template_id
+        ).first()
+        if role_related_object is None:
+            raise exceptions.PermissionDenied(
+                detail=f"template[{template_id}] can not be operated by app_code[{app_code}], "
+                f"since related role of template is not created by system[{system_id}]."
+            )
+        self._verify_api_by_role(app_code, role_related_object.role_id, api, system_id)
 
     def _verify_api_by_groups(self, app_code: str, group_ids: List[int], api: ManagementAPIEnum, system_id: str):
         """

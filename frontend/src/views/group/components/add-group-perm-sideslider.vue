@@ -481,6 +481,19 @@
       async handlerChange (selection, row) {
         window.changeAlert = true;
         if (!this.curSelectedTemplate.includes(row.id)) {
+          // 新增模板时检查是否超过单次授权上限
+          const projectedIds = new Set([
+            ...selection.map(item => String(item.id)),
+            ...this.curSelectedTemplate.map(id => String(id))
+          ]);
+          if (projectedIds.size > this.maxSelectCount) {
+            this.$nextTick(() => {
+              this.$refs.permTemplateTableRef
+                && this.$refs.permTemplateTableRef.toggleRowSelection(row, false);
+            });
+            this.messageWarn(this.$t(`m.info['最多选择权限模板数量']`, { value: this.maxSelectCount }));
+            return;
+          }
           const obj = {};
           this.selection = [...this.selection, ...selection].reduce((pre, item) => {
             // eslint-disable-next-line no-unused-expressions
