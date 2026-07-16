@@ -153,8 +153,11 @@ class GroupAddMemberSLZ(serializers.Serializer):
         return value
 
     def validate_members(self, value):
-        # 屏蔽 admin 授权
-        return [m for m in value if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER)]
+        # 屏蔽 admin 授权，admin 不能被添加到用户组
+        if any(m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER for m in value):
+            raise serializers.ValidationError(_("admin 账号不能被添加到用户组"))
+        return value
+
 
     def validate(self, attrs):
         # Note: GroupAddMemberSLZ 是复用的，只有部分场景需要限制只允许部门成员设置过期时间为永久
