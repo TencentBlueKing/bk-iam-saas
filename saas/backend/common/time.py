@@ -30,6 +30,9 @@ EXPIRE_SOON_SECONDS = 15 * DAY_SECONDS  # 15天
 # 默认过期时长(单位：秒)
 PERMANENT_SECONDS = 4102444800
 DEFAULT_EXPIRED_DURATION = 365 * DAY_SECONDS  # 1年
+# 续期场景下，续期后的过期时间距当前时间最长不超过 2 年
+# 由于提前续期是在原有效期(最长约 1 年)基础上叠加续期时长(1 年)，因此上限放宽到 2 年以预留冗余
+RENEW_EXPIRED_DURATION = 2 * DEFAULT_EXPIRED_DURATION  # 2年
 
 EXPIRED = _("已过期")
 PERMANENT = _("永久")

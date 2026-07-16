@@ -21,7 +21,7 @@ from backend.apps.role.serializers import GradeMangerCreateSLZ
 from backend.biz.application import ApplicationBiz
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
-from backend.common.time import DEFAULT_EXPIRED_DURATION, PERMANENT_SECONDS, expired_at_display
+from backend.common.time import DEFAULT_EXPIRED_DURATION, PERMANENT_SECONDS, RENEW_EXPIRED_DURATION, expired_at_display
 from backend.service.constants import ApplicationType, SubjectType
 from backend.service.models import Subject
 
@@ -285,9 +285,9 @@ class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
     # 用户组续期申请时，过期时间校验
     def validate_expired_at(self, value):
         super().validate_expired_at(value)
-        # 过期时间不能大于一年
-        if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
-            raise serializers.ValidationError("The expiration date must not exceed one year.")
+        # 续期场景：续期后的过期时间距当前时间不能超过两年
+        if value > int(time.time()) + RENEW_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed two years.")
         return value
 
 
@@ -302,9 +302,9 @@ class IDExpiredAtSLZ(ExpiredAtSLZ):
     # 自定义权限续期申请时，过期时间校验
     def validate_expired_at(self, value):
         super().validate_expired_at(value)
-        # 过期时间不能大于一年
-        if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
-            raise serializers.ValidationError("The expiration date must not exceed one year.")
+        # 续期场景：续期后的过期时间距当前时间不能超过两年
+        if value > int(time.time()) + RENEW_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed two years.")
         return value
 
 
