@@ -1,3 +1,21 @@
+<!-- 2026-07-16 -->
+# V1.10.63 Version Update Log
+
+### Features
+* Added ITSM approval workflow support for permission handover, with approval type display and table pagination in approval ticket details
+* Added query and update APIs for user group custom permissions in super-admin APIs
+* Added object-level allowlist configuration for management APIs, and added the bk_aidev system to the management API allowlist
+* Extended the maximum permission renewal duration to two years
+
+### Fixes
+* Fixed the issue where more than 10 permission templates could be selected
+* Fixed the mgmt_api_update_templates API failing due to a missing parameter
+* Fixed the issue where adding an admin user to a management space group succeeded silently
+* Fixed the compilation failure caused by ES2020 optional chaining
+* Fixed the incorrect route redirection path for approval tickets
+
+---
+
 <!-- 2026-05-28 -->
 # V1.10.62 Version Update Log
 
