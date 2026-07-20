@@ -143,15 +143,46 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
             object_id_key = view.lookup_url_kwarg or view.lookup_field
             object_id = int(request.parser_context["kwargs"][object_id_key])
             object_type = VerifyAPIParamSourceToObjectTypeMap[param_source]
-            return ManagementObjectAPIAllowListConfig.is_allowed(app_code, object_type, object_id, api)
 
-        # 批量用户组操作：所有用户组都需要命中白名单
+            if ManagementObjectAPIAllowListConfig.is_allowed(app_code, object_type, object_id, api):
+                return True
+
+            # Group/Template 向上级联：检查其所属 Role 是否有白名单
+            if object_type in [VerifyAPIObjectTypeEnum.GROUP.value, VerifyAPIObjectTypeEnum.TEMPLATE.value]:
+                related_object_type = (
+                    RoleRelatedObjectType.GROUP.value
+                    if object_type == VerifyAPIObjectTypeEnum.GROUP.value
+                    else RoleRelatedObjectType.TEMPLATE.value
+                )
+                role_related = RoleRelatedObject.objects.filter(
+                    object_type=related_object_type, object_id=object_id
+                ).first()
+                if role_related and ManagementObjectAPIAllowListConfig.is_allowed(
+                    app_code, VerifyAPIObjectTypeEnum.ROLE.value, role_related.role_id, api
+                ):
+                    return True
+
+            return False
+
+        # 批量用户组操作：所有用户组都需要命中白名单（含级联到 Role）
         group_ids = self._try_extract_group_ids(request, param_source)
         if group_ids:
-            return all(
-                ManagementObjectAPIAllowListConfig.is_allowed(app_code, VerifyAPIObjectTypeEnum.GROUP.value, gid, api)
-                for gid in group_ids
-            )
+            return all(self._is_group_allow_list_matched(app_code, gid, api) for gid in group_ids)
+
+        return False
+
+    def _is_group_allow_list_matched(self, app_code, group_id, api):
+        """检查单个用户组是否命中白名单，支持级联到所属 Role"""
+        if ManagementObjectAPIAllowListConfig.is_allowed(app_code, VerifyAPIObjectTypeEnum.GROUP.value, group_id, api):
+            return True
+
+        role_related = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
+        ).first()
+        if role_related and ManagementObjectAPIAllowListConfig.is_allowed(
+            app_code, VerifyAPIObjectTypeEnum.ROLE.value, role_related.role_id, api
+        ):
+            return True
 
         return False
 

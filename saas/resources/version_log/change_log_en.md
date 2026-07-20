@@ -1,3 +1,12 @@
+<!-- 2026-07-20 -->
+# V1.10.64 Version Update Log
+
+### Feature Enhancements
+* Added cascading allowlist verification for management APIs, allowing user groups and permission templates to inherit the allowlist configuration of their owning grading manager (role)
+* Improved resignation handover record creation to be handled uniformly by the handover business layer
+
+---
+
 <!-- 2026-07-16 -->
 # V1.10.63 Version Update Log
 
