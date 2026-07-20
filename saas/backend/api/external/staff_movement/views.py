@@ -132,7 +132,9 @@ class ResignHandoverViewSet(HandoverViewSet):
         # 还有未过期的资产需要交接
         if handover_info["group_ids"] or handover_info["custom_policies"]:
             # 非预期异常（锁冲突、DB 等）不再 try/except，交给 handle_exception 兜底
-            handover_record = self._create_handover_record(activity_rtx, handover_rtx, "[PCG] 离职交接", handover_info)
+            handover_record = self.handover_biz.create_handover_record(
+                activity_rtx, handover_rtx, "[PCG] 离职交接", handover_info
+            )
             execute_handover_task.delay(
                 handover_from=activity_rtx, handover_to=handover_rtx, handover_record_id=handover_record.id
             )
