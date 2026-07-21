@@ -79,39 +79,9 @@
           </div>
         </div>
       </div>
-      <p
-        class="user-name"
-      >
+      <p class="user-name">
         <UserInfo />
       </p>
-      <transition name="toggle-slide">
-        <section
-          v-show="isShowUserDropdown"
-          v-bk-clickoutside="handleClickOutSide"
-          class="iam-grading-admin-list-wrapper"
-          :style="{ height: `${userHeight}px` }"
-        >
-          <template>
-            <div class="operation">
-              <!-- <div
-                v-if="BK_PERSONAL_CENTER_URL"
-                class="user-dropdown-item"
-                :title="$t(`m.common['个人中心']`)"
-                @click="handleOpenPersonalCenter"
-              >
-                {{ $t(`m.common['个人中心']`) }}
-              </div>
-              <div
-                class="user-dropdown-item"
-                :title="$t(`m.nav['退出登录']`)"
-                @click="handleLogout"
-              >
-                {{ $t(`m.nav['退出登录']`) }}
-              </div> -->
-            </div>
-          </template>
-        </section>
-      </transition>
     </div>
     <system-log v-model="showSystemLog" />
   </header>
@@ -278,11 +248,6 @@
         // 如果未获取到配置，使用默认logo
         const src = this.globalConfig.appLogo || logoSvg;
         return src;
-      },
-      userHeight () {
-        const itemHeight = 32;
-        const length = this.BK_PERSONAL_CENTER_URL ? 2 : 1;
-        return itemHeight * length;
       }
     },
     watch: {
@@ -392,9 +357,6 @@
           console.error(e);
           this.messageAdvancedError(e);
         }
-      },
-      handleClickOutSide (e) {
-        this.isShowUserDropdown = false;
       },
 
       // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
