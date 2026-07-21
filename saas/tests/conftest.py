@@ -86,12 +86,14 @@ class ForceRoleAuthClientHandler(ForceAuthClientHandler):
 
     def __init__(self, *args, **kwargs):
         self._force_role = None
+        self._force_tenant_id = "system"
         super().__init__(*args, **kwargs)
 
     def get_response(self, request):
         # This is the simplest place we can hook into to patch the
         # request object.
         request._force_role = self._force_role
+        request.tenant_id = self._force_tenant_id
         return super().get_response(request)
 
 

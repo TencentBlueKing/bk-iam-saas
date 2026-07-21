@@ -43,6 +43,7 @@ from backend.apps.mgmt.serializers import (
     QueryApiSLZ,
 )
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.mixins import TenantMixin
 from backend.service.constants import PermissionCodeEnum
 
 
@@ -131,7 +132,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response({})
 
 
-class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
+class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet, TenantMixin):
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
@@ -142,6 +143,9 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     queryset = AuthAPIAllowListConfig.objects.all()
     serializer_class = AuthorizationApiWhiteListSLZ
     filterset_class = AuthorizationApiWhiteListFilter
+
+    def get_serializer_context(self):
+        return {"tenant_id": self.tenant_id}
 
     @swagger_auto_schema(
         operation_description="授权类 API 白名单列表",
@@ -199,7 +203,7 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         return Response({})
 
 
-class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
+class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet, TenantMixin):
     permission_classes = [RolePermission]
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
@@ -209,6 +213,9 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     queryset = ManagementAPIAllowListConfig.objects.all()
     serializer_class = ManagementApiWhiteListSLZ
+
+    def get_serializer_context(self):
+        return {"tenant_id": self.tenant_id}
 
     @swagger_auto_schema(
         operation_description="管理类 API 白名单列表",

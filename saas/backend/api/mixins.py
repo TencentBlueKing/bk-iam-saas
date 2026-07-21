@@ -15,11 +15,12 @@ from backend.biz.system import SystemBiz
 
 
 class SystemClientCheckMixin:
-    def verify_system_client(self, system_id: str, app_code: str):
+    def verify_system_client(self, tenant_id: str, system_id: str, app_code: str):
         """
         验证 app_code 是否能访问系统
         """
-        clients = SystemBiz().list_client(system_id)
+
+        clients = SystemBiz(tenant_id).list_client(system_id)
 
         if app_code not in clients:
             raise exceptions.PermissionDenied(

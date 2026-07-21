@@ -1,6 +1,7 @@
 <template>
   <div :class="['iam-render-perm', extCls]">
     <div class="header" @click="handleExpanded">
+      <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
       <label class="title">{{ title }}</label>
       <template v-if="['action'].includes(mode)">
         <div class="sub-title" v-if="permLength > 0">
@@ -129,6 +130,7 @@
         .header {
             display: flex;
             justify-content: flex-start;
+            position: relative;
             padding: 0 30px;
             height: 64px;
             line-height: 60px;
@@ -136,6 +138,11 @@
             color: #63656e;
             border-radius: 2px;
             cursor: pointer;
+            .expanded-icon {
+              position: absolute;
+              top: 23px;
+              left: 10px;
+            }
             .title {
                 font-weight: 600;
             }

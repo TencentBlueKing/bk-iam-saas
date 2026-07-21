@@ -40,7 +40,6 @@ class QueryAuthorizedSubjectsViewSet(TenantMixin, GenericViewSet):
         serializer = QueryAuthorizedSubjectsSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-
         # 校验系统管理员权限
         if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != data["system_id"]:
             raise error_codes.FORBIDDEN

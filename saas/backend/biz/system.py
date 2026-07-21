@@ -16,12 +16,14 @@ from backend.service.system import SystemService
 
 
 class SystemBiz:
-    svc = SystemService()
-
     get = SystemService.__dict__["get"]
     list = SystemService.__dict__["list"]
     new_system_list = SystemService.__dict__["new_system_list"]
     list_system_manger = SystemService.__dict__["list_system_manger"]
+
+    def __init__(self, tenant_id: str) -> None:
+        self.tenant_id = tenant_id
+        self.svc = SystemService(self.tenant_id)
 
     @cachedmethod(timeout=5 * 60)  # 缓存5分钟
     def list_client(self, system_id: str) -> List[str]:

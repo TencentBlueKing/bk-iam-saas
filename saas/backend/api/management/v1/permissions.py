@@ -109,7 +109,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
             slz.is_valid(raise_exception=True)
             source_system_id = slz.validated_data["system"]
 
-            self.verify_api(app_code, source_system_id, api)
+            self.verify_api(request.tenant_id, app_code, source_system_id, api)
             return
 
         # 参数来自 body data - group_ids
@@ -138,7 +138,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
             )
 
         # API 认证和 API 鉴权
-        self.verify_api(app_code, role_source.source_system_id, api)
+        self.verify_api(tenant_id, app_code, role_source.source_system_id, api)
 
     def _verify_api_by_group(self, tenant_id: str, app_code: str, group_id: int, api: ManagementAPIEnum):
         """

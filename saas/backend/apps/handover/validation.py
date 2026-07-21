@@ -73,7 +73,7 @@ class GustomPolicyProcessor(BaseHandoverDataProcessor):
         self.handover_from = handover_from
         self.custom_policies = custom_policies
         self.biz = PolicyQueryBiz(user.tenant_id)
-        self.system_biz = SystemBiz()
+        self.system_biz = SystemBiz(user.tenant_id)
 
     def validate(self):
         """

@@ -61,7 +61,7 @@ class AuthorizationApiWhiteListSLZ(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._system_list = SystemBiz().new_system_list()
+        self._system_list = SystemBiz(self.context["tenant_id"]).new_system_list()
 
     def get_api_info(self, obj):
         api = obj.type
@@ -96,7 +96,7 @@ class ManagementApiWhiteListSLZ(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._system_list = SystemBiz().new_system_list()
+        self._system_list = SystemBiz(self.context["tenant_id"]).new_system_list()
 
     def get_api_info(self, obj):
         api = obj.api

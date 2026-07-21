@@ -45,13 +45,15 @@ logger = logging.getLogger("celery")
 def sync_organization(tenant_id: str = "", executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
     if not tenant_id:
         for tenant in BkUserClient(settings.BK_APP_TENANT_ID).list_tenant():
-            _sync_organization(tenant["id"])
+            execute_sync_organization(tenant["id"])
     else:
-        _sync_organization(tenant_id, executor)
+        execute_sync_organization(tenant_id, executor)
 
 
-@shared_task(ignore_result=True)
-def _sync_organization(tenant_id: str, executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
+def execute_sync_organization(tenant_id: str, executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
+    """
+    同步组织架构
+    """
     try:
         # 分布式锁，避免同一时间该任务多个 worker 执行
         with gen_organization_sync_lock(tenant_id):  # type: ignore[attr-defined]
@@ -68,7 +70,7 @@ def _sync_organization(tenant_id: str, executor: str = SYNC_TASK_DEFAULT_EXECUTO
 
     except Exception:  # pylint: disable=broad-except
         traceback_msg = traceback.format_exc()
-        exception_msg = "sync_organization cache lock error"
+        exception_msg = "execute_sync_organization cache lock error"
         logger.exception(exception_msg)
         # 获取分布式锁失败时，需要创建一条失败记录
         record = SyncRecord.objects.create(
@@ -112,7 +114,7 @@ def _sync_organization(tenant_id: str, executor: str = SYNC_TASK_DEFAULT_EXECUTO
         sync_status, exception_msg, traceback_msg = SyncTaskStatus.Succeed.value, "", ""
     except Exception:  # pylint: disable=broad-except
         sync_status = SyncTaskStatus.Failed.value
-        exception_msg = "sync_organization error"
+        exception_msg = "execute_sync_organization error"
         logger.exception(exception_msg)
         traceback_msg = traceback.format_exc()
 

@@ -52,7 +52,7 @@ class EventListSchemaSLZ(serializers.ModelSerializer):
 class EventListSLZ(EventListSchemaSLZ):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._systems = {s.id: s for s in SystemBiz().list()}
+        self._systems = {s.id: s for s in SystemBiz(self.context["tenant_id"]).list()}
 
     def get_system(self, obj):
         system_id = obj.system_id
@@ -122,7 +122,7 @@ class EventDetailSchemaSLZ(serializers.ModelSerializer):
 class EventDetailSLZ(EventDetailSchemaSLZ):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._systems = {s.id: s for s in SystemBiz().list()}
+        self._systems = {s.id: s for s in SystemBiz(self.context["tenant_id"]).list()}
         if self.instance:
             self._extra = EventDetailExtra(self.instance)
 

@@ -8,31 +8,31 @@
   >
     <div class="title">{{ $t(`m.common['基本信息']`) }}</div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['申请单号']`) }}{{$t(`m.common['：']`)}}</label>
+      <label class="label">{{ $t(`m.myApply['申请单号']`) }}{{$t(`m.common['：']`) }}</label>
       <div class="content">{{ data.sn }}</div>
     </div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['申请类型']`) }}{{$t(`m.common['：']`)}}</label>
+      <label class="label">{{ $t(`m.myApply['申请类型']`) }}{{$t(`m.common['：']`) }}</label>
       <div class="content">{{ getApplyTypeDisplay(data.type) }}</div>
     </div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['申请人']`) }}{{$t(`m.common['：']`)}}</label>
+      <label class="label">{{ $t(`m.myApply['申请人']`) }}{{$t(`m.common['：']`) }}</label>
       <div class="content">
         <IamUserDisplayName :user-id="data.applicant" :tool-tip-config="{ disabled: true }" />
       </div>
     </div>
-    <div class="item" v-if="!['create_rating_manager', 'update_rating_manager'].includes(data.type)">
-      <label class="label">{{ $t(`m.myApply['权限获得者']`) }}{{$t(`m.common['：']`)}}</label>
+    <div class="item" v-if="isShowPermManager">
+      <label class="label">{{ $t(`m.myApply['权限获得者']`) }}{{$t(`m.common['：']`) }}</label>
       <div class="content">
         <IamUserDisplayName :user-id="getPermManager" :tool-tip-config="{ disabled: true }" />
       </div>
     </div>
     <div class="item" v-if="isShowExpired">
-      <label class="label">{{ $t(`m.common['申请期限']`) }}{{$t(`m.common['：']`)}}</label>
+      <label class="label">{{ $t(`m.common['申请期限']`) }}{{$t(`m.common['：']`) }}</label>
       <div class="content">{{ data.expiredDisplay }}</div>
     </div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['申请时间']`) }}{{$t(`m.common['：']`)}}</label>
+      <label class="label">{{ $t(`m.myApply['申请时间']`) }}{{$t(`m.common['：']`) }}</label>
       <div class="content">{{ data.created_time }}</div>
     </div>
     <div class="item">
@@ -46,41 +46,41 @@
         <template v-else>--</template>
       </div>
     </div>
+    <slot />
     <div class="item">
-      <label class="label">{{ $t(`m.common['理由']`) }}：</label>
-      <div class="content" :title="data.reason !== '' ? data.reason : ''">
+      <label class="label">{{ reasonLabel }}</label>
+      <div class="content" :title="Boolean(data.reason) ? data.reason : ''">
         {{ data.reason || '--' }}
       </div>
     </div>
   </div>
 </template>
+
 <script>
+  import il8n from '@/language';
   export default {
-    name: '',
     props: {
-      /**
-       * data props
-       */
       data: {
         type: Object,
         default: () => {
           return {};
         }
       },
-      /**
-       * isShowExpired props
-       */
       isShowExpired: {
         type: Boolean,
         default: false
+      },
+      reasonLabel: {
+        type: String,
+        default: `${il8n('common', '理由')}${il8n('common', '：')}`
       }
     },
     computed: {
-      /**
-       * isHasOrg
-       */
       isHasOrg () {
         return this.data.organizations && this.data.organizations.length > 0;
+      },
+      isShowPermManager () {
+        return !['create_rating_manager', 'update_rating_manager'].includes(this.data.type);
       },
       getPermManager () {
         const { applicants = [] } = this.data;
@@ -127,6 +127,7 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
 @import './basic-info.css';
 </style>

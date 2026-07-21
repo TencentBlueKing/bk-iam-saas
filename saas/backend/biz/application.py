@@ -427,7 +427,7 @@ class ApplicationBiz:
         self.svc = ApplicationService(tenant_id)
         self.approval_process_svc = ApprovalProcessService(tenant_id)
 
-        self.system_svc = SystemService()
+        self.system_svc = SystemService(tenant_id)
         self.approval_processor_biz = ApprovalProcessorBiz(tenant_id)
         self.approved_pass_biz = ApprovedPassApplicationBiz(tenant_id)
 

@@ -240,6 +240,7 @@ class ActionSensitivityLevelViewSet(BizMixin, GenericViewSet):
 
         # 目前只支持同一系统的批量 Action 设置审批流程
         system_id = actions[0]["system_id"]
+
         action_ids = [a["id"] for a in actions]
 
         # 校验系统管理员权限

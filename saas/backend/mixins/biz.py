@@ -42,7 +42,7 @@ class BizMixin(TenantMixin):
 
     @property
     def system_biz(self):
-        return SystemBiz()
+        return SystemBiz(self.tenant_id)
 
     @property
     def resource_type_biz(self):

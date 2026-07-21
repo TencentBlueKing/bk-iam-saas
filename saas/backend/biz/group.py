@@ -134,7 +134,7 @@ class GroupBiz:
 
         self.policy_query_svc = PolicyQueryService()
         self.template_svc = TemplateService(tenant_id)
-        self.system_svc = SystemService()
+        self.system_svc = SystemService(tenant_id)
         self.group_svc = GroupService(tenant_id)
         self.group_attribute_svc = GroupAttributeService(tenant_id)
         self.engine_svc = EngineService()
