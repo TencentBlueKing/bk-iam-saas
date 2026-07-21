@@ -507,8 +507,9 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     font-size: 16px;
                 }
                 .text {
+                    width: 100%;
+                    text-align: center;
                     font-size: 12px;
-                    margin-left: 4px;
                 }
                 &:hover {
                     background-color: #2c3e5e;

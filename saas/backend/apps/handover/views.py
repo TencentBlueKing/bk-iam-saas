@@ -10,39 +10,40 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict, Type
 
-from django.db import transaction
+from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.apps.application.views import admin_not_need_apply_check
-from backend.apps.handover.constants import HandoverStatus
+from backend.apps.handover.constants import HandoverObjectType
 from backend.apps.handover.models import HandoverRecord, HandoverTask
-from backend.common.error_codes import error_codes
-from backend.common.lock import gen_permission_handover_lock
-from backend.util.json import json_dumps
-
-from .constants import HandoverObjectType
-from .serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
-from .tasks import execute_handover_task
-from .validation import (
-    BaseHandoverDataProcessor,
-    GroupInfoProcessor,
-    GustomPolicyProcessor,
-    RoleInfoProcessor,
-    SubjectTemplateProcessor,
+from backend.apps.handover.serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
+from backend.apps.handover.validation import (
+    BaseHandoverValidator,
+    CustomPolicyValidator,
+    GroupInfoValidator,
+    RoleInfoValidator,
+    SubjectTemplateValidator,
 )
+from backend.biz.application import ApplicationBiz, HandoverApplicationDataBean
+from backend.biz.handover import HandoverBiz
 
-HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseHandoverDataProcessor]] = {
-    HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
-    HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyProcessor,
-    HandoverObjectType.ROLE_IDS.value: RoleInfoProcessor,
-    HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateProcessor,
+from .tasks import execute_handover_task
+
+HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseHandoverValidator]] = {
+    HandoverObjectType.GROUP_IDS.value: GroupInfoValidator,
+    HandoverObjectType.CUSTOM_POLICIES.value: CustomPolicyValidator,
+    HandoverObjectType.ROLE_IDS.value: RoleInfoValidator,
+    HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateValidator,
 }
 
 
 class HandoverViewSet(GenericViewSet):
+    handover_biz = HandoverBiz()
+    application_biz = ApplicationBiz()
+
     @swagger_auto_schema(
         operation_description="执行权限交接",
         request_body=HandoverSLZ(label="交接信息"),
@@ -61,60 +62,31 @@ class HandoverViewSet(GenericViewSet):
         reason = data["reason"]
         handover_info = data["handover_info"]
 
-        lock = gen_permission_handover_lock(handover_from)
-        if not lock.acquire():
-            # 拿不到锁，直接返回
-            raise error_codes.TASK_EXIST
-
-        try:
-            handover_record = HandoverRecord.objects.filter(
-                handover_from=handover_from, status=HandoverStatus.RUNNING.value
-            ).first()
-            if handover_record is not None:
-                # 已存在正在运行的任务，不能新建任务
-                raise error_codes.TASK_EXIST
-
-            with transaction.atomic():
-                # 创建任务
-                handover_record = HandoverRecord.objects.create(
-                    handover_from=handover_from, handover_to=handover_to, reason=reason
-                )
-
-                handover_task_details = self._gen_handover_tasks(handover_from, handover_info, handover_record)
-
-                # 创建子任务信息
-                if handover_task_details:
-                    HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
-            # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
-            execute_handover_task.delay(
-                handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
-            )
-        finally:
-            # 释放锁
-            lock.release()
-
-        return Response({"id": handover_record.id})
-
-    def _gen_handover_tasks(self, handover_from, handover_info, handover_record):
-        handover_task_details = []
+        # 校验 handover_info 合法性
         for key, value in handover_info.items():
             if not value:
                 continue
             validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value)
-            # 校验任务数据是否合法
             validator.validate()
-            info = validator.get_info()
-            for one in info:
-                handover_task_details.append(
-                    HandoverTask(
-                        handover_record_id=handover_record.id,
-                        object_type=key,
-                        object_id=one["id"],
-                        object_detail=json_dumps(one),
-                    )
-                )
 
-        return handover_task_details
+        # 审批开关开启时, 走 Application + ITSM 审批流; 否则保持原有立即生效逻辑
+        if settings.ENABLE_HANDOVER_APPROVAL:
+            data_bean = HandoverApplicationDataBean(
+                applicant=handover_from,
+                reason=reason,
+                handover_to=handover_to,
+                handover_info=handover_info,
+            )
+            result = self.application_biz.create_handover_with_approval(data_bean)
+            return Response(result)
+
+        handover_record = self.handover_biz.create_handover_record(handover_from, handover_to, reason, handover_info)
+        # 不可在事务里启动异步任务，因为任务启动时可能 DB 查询不到 HandoverTask 数据（事务提交比任务启动慢的情况）
+        execute_handover_task.delay(
+            handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
+        )
+
+        return Response({"id": handover_record.id})
 
 
 class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):

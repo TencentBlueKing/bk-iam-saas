@@ -19,7 +19,8 @@ class Command(BaseCommand):
     help = "migrate role resource label"
 
     def handle(self, *args, **options):
-        queryset = Role.objects.filter(hidden=False).all()
+        # 使用only("id")只加载id字段，避免引用Role模型中可能存在但数据库表中不存在的字段
+        queryset = Role.objects.filter(hidden=False).only("id")
 
         paginator = Paginator(queryset, 100)
 

@@ -1,3 +1,64 @@
+<!-- 2026-07-20 -->
+# V1.10.64 Version Update Log
+
+### Feature Enhancements
+* Added cascading allowlist verification for management APIs, allowing user groups and permission templates to inherit the allowlist configuration of their owning grading manager (role)
+* Improved resignation handover record creation to be handled uniformly by the handover business layer
+
+---
+
+<!-- 2026-07-16 -->
+# V1.10.63 Version Update Log
+
+### Features
+* Added ITSM approval workflow support for permission handover, with approval type display and table pagination in approval ticket details
+* Added query and update APIs for user group custom permissions in super-admin APIs
+* Added object-level allowlist configuration for management APIs, and added the bk_aidev system to the management API allowlist
+* Extended the maximum permission renewal duration to two years
+
+### Fixes
+* Fixed the issue where more than 10 permission templates could be selected
+* Fixed the mgmt_api_update_templates API failing due to a missing parameter
+* Fixed the issue where adding an admin user to a management space group succeeded silently
+* Fixed the compilation failure caused by ES2020 optional chaining
+* Fixed the incorrect route redirection path for approval tickets
+
+---
+
+<!-- 2026-05-28 -->
+# V1.10.62 Version Update Log
+
+### Fixes
+* Fixed staff movement handover and recycle APIs to return actual failure reasons instead of generic FAILED
+
+---
+
+<!-- 2026-05-20 -->
+# V1.10.61 Version Update Log
+
+### Fixes
+* Fixed migration file error when performing a fresh deployment on single-tenant branch
+* Fixed duplicate resource IDs in resource name validation before adding permissions to user groups
+
+---
+
+<!-- 2026-05-14 -->
+# V1.10.60 Version Update Log
+
+### Features
+* Added recycle audit logging for staff handover
+
+### Feature Enhancements
+* Refined concurrency control for staff handover and adapted PB protocol
+
+### Fixes
+* Fixed permission expiry cleanup task not functioning correctly
+* Fixed cross-system tampering vulnerability in action approval process update API
+* Locked axios version to prevent unintended dependency auto-upgrade
+* Fixed default page styling for group permission application
+
+---
+
 <!-- 2026-04-24 -->
 # V1.10.59 Version Update Log
 

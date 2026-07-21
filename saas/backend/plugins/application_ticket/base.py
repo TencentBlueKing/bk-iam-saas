@@ -19,6 +19,7 @@ from backend.service.models import (
     GradeManagerApplicationData,
     GrantActionApplicationData,
     GroupApplicationData,
+    HandoverApplicationData,
 )
 
 
@@ -71,6 +72,19 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         tag: str = "",
     ) -> str:
         """创建 - 创建或更新分级管理员"""
+        pass
+
+    @abc.abstractmethod
+    def create_for_handover(
+        self,
+        data: HandoverApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
+        tag: str = "",
+    ) -> str:
+        """创建 - 权限交接审批单据"""
         pass
 
     @abc.abstractmethod

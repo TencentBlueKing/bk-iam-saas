@@ -25,6 +25,7 @@ from backend.api.admin.serializers import (
     AdminGroupBasicSLZ,
     AdminGroupCreateSLZ,
     AdminGroupMemberSLZ,
+    AdminGroupPolicyQuerySLZ,
     AdminGroupRemoveMemberSLZ,
 )
 from backend.api.authentication import ESBAuthentication
@@ -38,10 +39,12 @@ from backend.apps.group.audit import (
 from backend.apps.group.constants import OperateEnum
 from backend.apps.group.models import Group
 from backend.apps.group.views import check_readonly_group
+from backend.apps.policy.serializers import PolicySLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean
+from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.utils import remove_not_exist_subject
 from backend.common.lock import gen_group_upsert_lock
@@ -230,7 +233,11 @@ class AdminGroupPolicyViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
 
-    admin_api_permission = {"create": AdminAPIEnum.GROUP_POLICY_GRANT.value}
+    admin_api_permission = {
+        "list": AdminAPIEnum.GROUP_POLICY_LIST.value,
+        "create": AdminAPIEnum.GROUP_POLICY_GRANT.value,
+        "update": AdminAPIEnum.GROUP_POLICY_UPDATE.value,
+    }
 
     pagination_class = None  # 去掉swagger中的limit offset参数
     queryset = Group.objects.all()
@@ -238,6 +245,8 @@ class AdminGroupPolicyViewSet(GenericViewSet):
 
     group_biz = GroupBiz()
     role_biz = RoleBiz()
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
 
     group_trans = GroupTrans()
 
@@ -267,3 +276,50 @@ class AdminGroupPolicyViewSet(GenericViewSet):
         )
 
         return Response({}, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        operation_description="查询用户组自定义权限列表",
+        query_serializer=AdminGroupPolicyQuerySLZ(label="查询参数"),
+        responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
+        tags=["admin.group.policy"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = AdminGroupPolicyQuerySLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        system_id = slz.validated_data["system_id"]
+
+        group = self.get_object()
+        subject = Subject.from_group_id(group.id)
+
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
+        # ResourceNameAutoUpdate
+        updated_policies = self.policy_operation_biz.update_due_to_renamed_resource(system_id, subject, policies)
+
+        return Response([p.dict() for p in updated_policies])
+
+    @swagger_auto_schema(
+        operation_description="更新用户组权限",
+        request_body=AdminGroupAuthorizationSLZ(label="授权信息"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["admin.group.policy"],
+    )
+    @view_audit_decorator(GroupTemplateCreateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_CREATE.label)
+    def update(self, request, *args, **kwargs):
+        serializer = AdminGroupAuthorizationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        group = self.get_object()
+        data = serializer.validated_data
+
+        role = self.role_biz.get_role_by_group_id(group.id)
+        templates = self.group_trans.from_group_grant_data(data["templates"])
+        self.group_biz.grant(role, group, templates)
+
+        # 写入审计上下文
+        audit_context_setter(
+            group=group,
+            templates=[{"system_id": t["system_id"], "template_id": t["template_id"]} for t in data["templates"]],
+        )
+
+        return Response({})

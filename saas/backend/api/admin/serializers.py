@@ -57,6 +57,10 @@ class AdminGroupAuthorizationSLZ(GroupAuthorizationSLZ):
     pass
 
 
+class AdminGroupPolicyQuerySLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+
+
 class AdminSystemProviderConfigSLZ(serializers.Serializer):
     token = serializers.CharField(label="回调token")
     host = serializers.CharField(label="回调地址")

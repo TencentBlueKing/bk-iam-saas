@@ -30,7 +30,7 @@ urlpatterns = [
     # 用户组授权
     path(
         "groups/<str:id>/policies/",
-        views.AdminGroupPolicyViewSet.as_view({"post": "create"}),
+        views.AdminGroupPolicyViewSet.as_view({"get": "list", "post": "create", "put": "update"}),
         name="open.admin.group_policy",
     ),
     # 批量创建模板

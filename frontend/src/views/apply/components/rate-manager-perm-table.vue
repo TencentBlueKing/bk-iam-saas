@@ -5,14 +5,16 @@
         :data="tableList"
         ext-cls="apply-content-table"
         border
-        :cell-class-name="getCellClass">
-        <bk-table-column :label="$t(`m.common['操作']`)" width="360">
+        :cell-class-name="getCellClass"
+      >
+        <bk-table-column :label="$t(`m.common['操作']`)" width="180">
           <template slot-scope="{ row }">
             <Icon
+              v-if="row.tag === 'related'"
               type="pin"
               class="relate-action-tips-icon"
               v-bk-tooltips="{ content: $t(`m.common['依赖操作']`), extCls: 'iam-tooltips-cls' }"
-              v-if="row.tag === 'related'" />
+            />
             <span :title="row.name">{{ row.name }}</span>
           </template>
         </bk-table-column>
@@ -41,10 +43,20 @@
               </div>
             </template>
             <template v-else>
-              <span class="pl20">{{ $t(`m.common['无需关联实例']`) }}</span>
+              <span>{{ $t(`m.common['无需关联实例']`) }}</span>
             </template>
           </template>
         </bk-table-column>
+        <template v-if="isShowSensitivityLevel">
+          <bk-table-column :label="$t(`m.nav['敏感等级']`)">
+            <template slot-scope="{ row }">
+              <span>{{ getSensitivityLevel(row.sensitivity_level) }}</span>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-if="isShowExpired">
+          <bk-table-column prop="expired_display" min-width="100" :label="$t(`m.common['申请期限']`)" />
+        </template>
       </bk-table>
     </render-vertical-block>
     <bk-sideslider
@@ -59,13 +71,14 @@
     </bk-sideslider>
   </div>
 </template>
+
 <script>
-  import _ from 'lodash';
+  import { cloneDeep } from 'lodash';
+  import { SENSITIVITY_LEVEL_ENUM } from '@/common/constants';
   import Resource from '@/components/render-resource/detail';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import DetailContent from './detail-content';
   export default {
-    name: '',
     components: {
       Resource,
       DetailContent,
@@ -75,6 +88,14 @@
       data: {
         type: Array,
         default: () => []
+      },
+      isShowSensitivityLevel: {
+        type: Boolean,
+        default: false
+      },
+      isShowExpired: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -90,7 +111,7 @@
     watch: {
       data: {
         handler (value) {
-          this.tableList = _.cloneDeep(value);
+          this.tableList = cloneDeep(value);
         },
         immediate: true
       }
@@ -104,13 +125,21 @@
       },
 
       handleViewResource (groupItem, row) {
-        this.previewData = _.cloneDeep(this.handleDetailData(groupItem));
+        this.previewData = cloneDeep(this.getDetailData(groupItem));
         this.renderDetailCom = 'DetailContent';
         this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}` });
         this.isShowSideslider = true;
       },
 
-      handleDetailData (payload) {
+      getSensitivityLevel (level) {
+        const levelData = SENSITIVITY_LEVEL_ENUM.find(item => item.id === level);
+        if (levelData) {
+          return this.$t(`m.sensitivityLevel['${levelData.name}']`);
+        }
+        return '--';
+      },
+
+      getDetailData (payload) {
         this.curId = payload.id;
         const params = [];
         if (payload.related_resource_types.length > 0) {
@@ -129,81 +158,62 @@
     }
   };
 </script>
+
 <style lang='postcss'>
-    .iam-apply-create-rate-manager-content {
-        background: #fff;
-        .bk-table-enable-row-hover .bk-table-body tr:hover > td {
-            background-color: #fff;
-        }
-        .apply-content-table {
-            border-right: none;
-            border-bottom: none;
-            .bk-table-header-wrapper {
-                .cell {
-                    padding-left: 20px !important;
-                }
-            }
-            .relate-action-tips-icon {
-                position: absolute;
-                top: 50%;
-                left: 5px;
-                transform: translateY(-50%);
-                &:hover {
-                    color: #3a84ff;
-                }
-            }
+.iam-apply-create-rate-manager-content {
+  background-color: #ffffff;
 
-            .related-resource-list{
-                position: relative;
-                .related-resource-item{
-                    margin: 20px !important;
-                }
-                .view-icon {
-                    display: none;
-                    position: absolute;
-                    top: 50%;
-                    right: 10px;
-                    transform: translate(0, -50%);
-                    font-size: 18px;
-                    cursor: pointer;
-                }
-                &:hover {
-                    .view-icon {
-                        display: inline-block;
-                        color: #3a84ff;
-                    }
-                }
-                .effect-icon {
-                    display: none;
-                    position: absolute;
-                    top: 50%;
-                    right: 10px;
-                    transform: translate(0, -50%);
-                    font-size: 18px;
-                    cursor: pointer;
-                }
-                &:hover {
-                    .effect-icon {
-                        display: inline-block;
-                        color: #3a84ff;
-                    }
-                }
-                &-border{border-bottom: 1px solid #dfe0e5;}
-            }
-            .bk-table-body-wrapper {
-                .cell {
-                    padding: 20px !important;
-                }
-            }
+  .apply-content-table {
+    border-right: none;
+    border-bottom: none;
 
-            .iam-perm-table-cell-cls {
-                .cell {
-                    padding: 0px !important;
-                }
-            }
-            tr:hover {
-                background-color: #fff;
-            }
-        }
+    .relate-action-tips-icon {
+      position: absolute;
+      top: 50%;
+      left: 6px;
+      transform: translateY(-50%);
+      
+      &:hover {
+        color: #3a84ff;
+      }
     }
+
+    .related-resource-list {
+      position: relative;
+
+      .view-icon {
+        display: none;
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translate(0, -50%);
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      .effect-icon {
+        display: none;
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translate(0, -50%);
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      &:hover {
+
+        .view-icon,
+        .effect-icon {
+          display: inline-block;
+          color: #3a84ff;
+        }
+      }
+
+      &-border {
+        border-bottom: 1px solid #dfe0e5;
+      }
+    }
+  }
+}
 </style>

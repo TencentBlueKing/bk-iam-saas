@@ -26,6 +26,7 @@ from .models import (
     GradeManagerApplicationData,
     GrantActionApplicationData,
     GroupApplicationData,
+    HandoverApplicationData,
     TypeUnionApplicationData,
 )
 
@@ -147,6 +148,25 @@ class ApplicationService:
             source_system_id=source_system_id,
             callback_id=callback_id,
             callback_url=callback_url,
+        )
+
+    def create_for_handover(
+        self,
+        data: HandoverApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
+    ) -> Application:
+        """创建权限交接审批单据"""
+        return self._create(
+            data,
+            lambda callback_url: self.provider.create_for_handover(
+                data,
+                process,
+                callback_url,
+                approval_title=approval_title,
+                approval_content=approval_content,
+            ),
         )
 
     def get_approval_ticket_from_callback_request(self, request: Request) -> ApplicationTicket:
