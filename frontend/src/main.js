@@ -46,6 +46,7 @@ import RenderVerticalBlock from './components/render-block/vertical.vue';
 import RenderSearch from './components/render-search/index.vue';
 import BkUserDisplayName from '@blueking/bk-user-display-name';
 import BkUserSelector from '@blueking/bk-user-selector/vue2/index.umd.min.js';
+import BkLoginUserInfo from '@blueking/login-userinfo/vue2/index.umd.min.js';
 import IamUserSelector from './components/iam-user-selector/index.vue';
 import IamUserDisplayName from './components/iam-user-display-name/index.vue';
 import Icon from './components/icon';
@@ -63,6 +64,8 @@ import '@icon-cool/bk-icon-bk-iam';
 import '@/directive';
 // 多租户人员选择器样式
 import '@blueking/bk-user-selector/vue2/vue2.css';
+// 个人中心设置样式
+import '@blueking/login-userinfo/vue2/vue2.css';
 
 Vue.use(BkXssFilterDirective);
 
@@ -80,6 +83,7 @@ Vue.component('ExceptionEmpty', ExceptionEmpty);
 Vue.component('BkUserSelector', BkUserSelector);
 Vue.component('IamUserSelector', IamUserSelector);
 Vue.component('IamUserDisplayName', IamUserDisplayName);
+Vue.component('BkLoginUserInfo', BkLoginUserInfo);
 
 Vue.prototype.scrollToLocation = function ($ref) {
   const distance = ($ref && $ref.getBoundingClientRect().top) || 0;
