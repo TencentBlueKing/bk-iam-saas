@@ -89,6 +89,7 @@
     "@blueking/bkui-library": "0.0.0-beta.6",
     "@blueking/functional-dependency": "0.0.1-beta.12",
     "@blueking/login-modal": "^1.0.0",
+    "@blueking/login-userinfo": "0.0.18",
     "@blueking/notice-component-vue2": "^2.0.3",
     "@blueking/platform-config": "^1.0.5",
     "@blueking/sub-saas": "0.0.0-beta.7",
