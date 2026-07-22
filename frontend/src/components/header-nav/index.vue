@@ -79,49 +79,13 @@
           </div>
         </div>
       </div>
-      <p
-        class="flex-center user-name"
-        @click.stop="handleSwitchIdentity"
-      >
-        <IamUserDisplayName :user-id="user.username" />
-        <Icon
-          type="down-angle"
-          :class="['user-name-angle', { dropped: isShowUserDropdown }]"
-        />
+      <p class="user-name">
+        <UserInfo />
       </p>
-      <transition name="toggle-slide">
-        <section
-          v-show="isShowUserDropdown"
-          v-bk-clickoutside="handleClickOutSide"
-          class="iam-grading-admin-list-wrapper"
-          :style="{ height: `${userHeight}px` }"
-        >
-          <template>
-            <div class="operation">
-              <div
-                v-if="BK_PERSONAL_CENTER_URL"
-                class="user-dropdown-item"
-                :title="$t(`m.common['个人中心']`)"
-                @click="handleOpenPersonalCenter"
-              >
-                {{ $t(`m.common['个人中心']`) }}
-              </div>
-              <div
-                class="user-dropdown-item"
-                :title="$t(`m.nav['退出登录']`)"
-                @click="handleLogout"
-              >
-                {{ $t(`m.nav['退出登录']`) }}
-              </div>
-            </div>
-          </template>
-        </section>
-      </transition>
     </div>
     <system-log v-model="showSystemLog" />
   </header>
 </template>
-
 <script>
   import { mapGetters } from 'vuex';
   // import IamGuide from '@/components/iam-guide/index.vue';
@@ -135,6 +99,7 @@
   import Cookies from 'js-cookie';
   import magicbox from 'bk-magic-vue';
   import logoSvg from '@/images/logo.svg';
+  import UserInfo from '@/components/user-info/index.vue';
 
   // 有选项卡的页面，user-group-detail 以及 perm-template-detail
   const getTabData = (routerName) => {
@@ -178,7 +143,8 @@
   export default {
     inject: ['reloadCurPage'],
     components: {
-      SystemLog
+      SystemLog,
+      UserInfo
       // IamGuide
     },
     props: {
@@ -282,11 +248,6 @@
         // 如果未获取到配置，使用默认logo
         const src = this.globalConfig.appLogo || logoSvg;
         return src;
-      },
-      userHeight () {
-        const itemHeight = 32;
-        const length = this.BK_PERSONAL_CENTER_URL ? 2 : 1;
-        return itemHeight * length;
       }
     },
     watch: {
@@ -397,9 +358,6 @@
           this.messageAdvancedError(e);
         }
       },
-      handleClickOutSide (e) {
-        this.isShowUserDropdown = false;
-      },
 
       // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
       isShowSuperManager (value) {
@@ -436,11 +394,6 @@
 
       handleOpenSource () {
         window.open(`https://github.com/TencentBlueKing/bk-iam`);
-      },
-
-      handleOpenPersonalCenter () {
-        this.isShowUserDropdown = false;
-        window.open(this.BK_PERSONAL_CENTER_URL);
       },
 
       handleOpenNewIAM () {
@@ -654,13 +607,6 @@
 
       handleSwitchIdentity () {
         this.isShowUserDropdown = !this.isShowUserDropdown;
-      },
-      
-      handleLogout () {
-        window.localStorage.removeItem('iam-header-title-cache');
-        window.localStorage.removeItem('iam-header-name-cache');
-        window.localStorage.removeItem('applyGroupList');
-        window.location = `${window.LOGIN_SERVICE_URL}/?c_url=${encodeURIComponent(window.location.href)}&is_from_logout=1`;
       },
 
       handleManager () {
