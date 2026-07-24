@@ -55,8 +55,21 @@
   };
 </script>
 
-<style scoped>
-/deep/ .logout-setting-icon {
-  font-size: 20px;
+<style langs="scss" scoped>
+/deep/ .bk-login-userinfo-action-item.is-danger {
+
+  .bk-login-userinfo-action-item-icon {
+    margin-right: 6px;
+
+    .logout-setting-icon {
+      font-size: 20px;
+    }
+  }
+}
+
+/deep/ .bk-login-userinfo-action-item,
+/deep/ .bk-login-userinfo-payload-item {
+  font-weight: 400;
+  color: #313238;
 }
 </style>
