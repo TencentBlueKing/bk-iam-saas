@@ -129,19 +129,22 @@ class Value(BaseModel):
 class Attribute(BaseModel):
     id: str
     name: str
+    type: str = "STRING"
+    operator: str = "eq"
     values: List[Value]
 
     def sort_values(self):
         self.values.sort(key=lambda value: value.id)
 
     def trim(self) -> Tuple:
-        return self.id, tuple([value.id for value in self.values])
+        return self.id, self.type, self.operator, tuple([value.id for value in self.values])
 
 
 class Condition(BaseModel):
     instances: List[Instance]
     attributes: List[Attribute]
     id: str
+    attribute_aggregation: str = "AND"
 
     def __init__(self, **data: Any) -> None:
         if "id" not in data:
@@ -155,7 +158,7 @@ class Condition(BaseModel):
 
     def hash_attributes(self):
         self.sort_attributes()
-        return hash(tuple([attribute.trim() for attribute in self.attributes]))
+        return hash((self.attribute_aggregation, tuple([attribute.trim() for attribute in self.attributes])))
 
     def has_no_attributes(self) -> bool:
         return len(self.attributes) == 0

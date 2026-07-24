@@ -46,6 +46,7 @@ export default class Condition {
     this.isInstanceEmpty = false;
     this.isAttributeEmpty = false;
     this.id = payload.id || '';
+    this.attribute_aggregation = payload.attribute_aggregation || 'AND';
     this.flag = flag;
     this.selectionMode = payload.selection_mode || 'all';
     if (this.selectionMode === 'all') {

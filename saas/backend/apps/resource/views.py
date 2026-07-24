@@ -86,8 +86,9 @@ class ResourceViewSet(ViewSet):
         # 分页
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
+        iam_topo_path = slz.validated_data["_iam_topo_path_"]
 
-        attrs = self.biz.list_attr(system_id, resource_type_id)
+        attrs = self.biz.list_attr(system_id, resource_type_id, iam_topo_path)
 
         count, results = len(attrs), attrs[offset : offset + limit]
 
@@ -107,12 +108,15 @@ class ResourceViewSet(ViewSet):
         system_id = slz.validated_data["system_id"]
         resource_type_id = slz.validated_data["type"]
         attr = slz.validated_data["attribute"]
+        attribute_type = slz.validated_data["attribute_type"]
         keyword = slz.validated_data.get("keyword", "")
         # 分页
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
 
-        count, results = self.biz.list_attr_value(system_id, resource_type_id, attr, keyword, limit, offset)
+        count, results = self.biz.list_attr_value(
+            system_id, resource_type_id, attr, keyword, limit, offset, attribute_type
+        )
 
         return Response({"count": count, "results": [i.dict() for i in results]})
 

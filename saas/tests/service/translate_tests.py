@@ -75,6 +75,41 @@ class TransferAttributeTests(TestCase):
 
         self.assertEqual(expression, {"Bool": {"system.type.id": [True]}})
 
+    def test_string_contains_ok(self):
+        attribute = new_attribute_dict("title", "title", [{"id": "urgent", "name": "urgent"}])
+        attribute.update({"type": "STRING", "operator": "contains"})
+
+        expression = self.translator._translate_attribute("system", "ticket", attribute)
+
+        self.assertEqual(expression, {"StringContains": {"system.ticket.title": ["urgent"]}})
+
+    def test_string_contains_rejects_multiple_values(self):
+        attribute = new_attribute_dict(
+            "title", "title", [{"id": "urgent", "name": "urgent"}, {"id": "vip", "name": "vip"}]
+        )
+        attribute["operator"] = "contains"
+
+        with pytest.raises(APIError):
+            self.translator._translate_attribute("system", "ticket", attribute)
+
+    def test_starts_with_ok(self):
+        attribute = new_attribute_dict("dept_path", "dept", [{"id": "/dept,1/", "name": "dept"}])
+        attribute["operator"] = "starts_with"
+
+        expression = self.translator._translate_attribute("system", "ticket", attribute)
+
+        self.assertEqual(expression, {"StringPrefix": {"system.ticket.dept_path": ["/dept,1/"]}})
+
+    def test_in_uses_native_condition(self):
+        attribute = new_attribute_dict(
+            "group_ids", "groups", [{"id": "group1", "name": "group1"}, {"id": "group2", "name": "group2"}]
+        )
+        attribute["operator"] = "in"
+
+        expression = self.translator._translate_attribute("system", "ticket", attribute)
+
+        self.assertEqual(expression, {"IN": {"system.ticket.group_ids": ["group1", "group2"]}})
+
 
 def new_instance_dict(_type: str, name: str, paths: Optional[List[List[Dict]]] = None) -> Dict:
     return {
@@ -194,8 +229,16 @@ def new_resource_dict(system_id: str, _type: str, name: str, condition: Optional
     return {"system_id": system_id, "type": _type, "name": name, "condition": condition or []}
 
 
-def new_condition_dict(instances: Optional[List[Dict]] = None, attributes: Optional[List[Dict]] = None) -> Dict:
-    return {"instances": instances or [], "attributes": attributes or []}
+def new_condition_dict(
+    instances: Optional[List[Dict]] = None,
+    attributes: Optional[List[Dict]] = None,
+    attribute_aggregation: str = "AND",
+) -> Dict:
+    return {
+        "instances": instances or [],
+        "attributes": attributes or [],
+        "attribute_aggregation": attribute_aggregation,
+    }
 
 
 class TransferConditionTests(TestCase):
@@ -213,6 +256,36 @@ class TransferConditionTests(TestCase):
         self.assertEqual(
             expression["Any"]["bk_cmdb.host.id"],
             [],
+        )
+
+    def test_attribute_or_aggregation(self):
+        resource = new_resource_dict(
+            "bk_itsm",
+            "ticket",
+            "ticket",
+            [
+                new_condition_dict(
+                    attributes=[
+                        new_attribute_dict("service", "service", [{"id": "network", "name": "network"}]),
+                        new_attribute_dict("priority", "priority", [{"id": "high", "name": "high"}]),
+                    ],
+                    attribute_aggregation="OR",
+                )
+            ],
+        )
+
+        expression = self.translator._translate_condition(resource)
+
+        self.assertEqual(
+            expression,
+            {
+                "OR": {
+                    "content": [
+                        {"StringEquals": {"bk_itsm.ticket.service": ["network"]}},
+                        {"StringEquals": {"bk_itsm.ticket.priority": ["high"]}},
+                    ]
+                }
+            },
         )
 
     def test_instance_ok(self):

@@ -270,9 +270,11 @@ class ResourceProviderClient:
                 f"[POST {urlparse(self.url).path} request_id={self.request_id}]."
             )
 
-    def list_attr(self) -> List[Dict[str, str]]:
+    def list_attr(self, iam_topo_path: List[List[Dict[str, str]]] = None) -> List[Dict[str, Any]]:
         """查询某个资源类型可用于配置权限的属性列表"""
         data = {"type": self.resource_type_id, "method": ResourceAPIEnum.LIST_ATTR.value}
+        if iam_topo_path is not None:
+            data["_iam_topo_path_"] = iam_topo_path
         resp_data = self._handle_empty_data(self._call_api(data), default=[])
 
         # {"id": "id", "display_name":""} should not be displayed in frontend for making policy

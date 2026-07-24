@@ -63,6 +63,10 @@ class ValueSLZ(serializers.Serializer):
 class AttributeSLZ(serializers.Serializer):
     id = serializers.CharField(label="属性 KEY")
     name = serializers.CharField(label="属性 KEY 名称", allow_blank=True)
+    type = serializers.ChoiceField(choices=("STRING", "USER", "DEPT"), required=False, default="STRING")
+    operator = serializers.ChoiceField(
+        choices=("eq", "in", "starts_with", "contains"), required=False, default="eq"
+    )
     values = serializers.ListField(label="属性 VALUE", child=ValueSLZ(label="值"), allow_empty=False)
 
 
@@ -70,6 +74,7 @@ class ConditionSLZ(serializers.Serializer):
     id = serializers.CharField(label="条件 id", allow_blank=True)
     instances = serializers.ListField(label="拓扑选择", child=InstanceSLZ(label="拓扑实例"))
     attributes = serializers.ListField(label="属性选择", child=AttributeSLZ(label="属性"))
+    attribute_aggregation = serializers.ChoiceField(choices=("AND", "OR"), required=False, default="AND")
 
     def validate(self, data):
         if not data["instances"] and not data["attributes"]:

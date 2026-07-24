@@ -453,7 +453,13 @@
                   ? resItem.condition.map(conItem => {
                     const { id, instance, attribute } = conItem;
                     const attributeList = (attribute && attribute.length > 0)
-                      ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                      ? attribute.map(({ id, name, type, operator, values }) => ({
+                        id,
+                        name,
+                        type: type || 'STRING',
+                        operator: operator || 'eq',
+                        values
+                      }))
                       : [];
 
                     const instanceList = (instance && instance.length > 0)
@@ -474,7 +480,8 @@
                     return {
                       id,
                       instances: instanceList,
-                      attributes: attributeList
+                      attributes: attributeList,
+                      attribute_aggregation: conItem.attribute_aggregation || 'AND'
                     };
                   })
                   : [];

@@ -12,10 +12,12 @@ specific language governing permissions and limitations under the License.
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple
 
+from django.db.models import Q
 from django.utils.translation import gettext as _
 from pydantic import BaseModel
 from pydantic.tools import parse_obj_as
 
+from backend.apps.organization.models import Department, User
 from backend.common.error_codes import error_codes
 from backend.service.models import (
     ResourceAttribute,
@@ -91,16 +93,47 @@ class ResourceBiz:
     def new_resource_provider(self, system_id: str, resource_type_id: str):
         return ResourceProvider(system_id, resource_type_id)
 
-    def list_attr(self, system_id: str, resource_type_id: str) -> List[ResourceAttributeBean]:
+    def list_attr(
+        self, system_id: str, resource_type_id: str, iam_topo_path: List[List[Dict[str, str]]] = None
+    ) -> List[ResourceAttributeBean]:
         """查询某个资源类型可用于配置权限的属性列表"""
         rp = self.new_resource_provider(system_id, resource_type_id)
-        attrs = rp.list_attr()
+        attrs = rp.list_attr(iam_topo_path or [])
         return parse_obj_as(List[ResourceAttributeBean], attrs)
 
     def list_attr_value(
-        self, system_id: str, resource_type_id: str, attr: str, keyword: str = "", limit: int = 10, offset: int = 0
+        self,
+        system_id: str,
+        resource_type_id: str,
+        attr: str,
+        keyword: str = "",
+        limit: int = 10,
+        offset: int = 0,
+        attribute_type: str = "STRING",
     ) -> Tuple[int, List[ResourceAttributeValueBean]]:
         """获取一个资源类型某个属性的值列表"""
+        if attribute_type == "USER":
+            queryset = User.objects.all()
+            if keyword:
+                queryset = queryset.filter(Q(username__icontains=keyword) | Q(display_name__icontains=keyword))
+            count = queryset.count()
+            results = [
+                ResourceAttributeValueBean(id=user.username, display_name=user.display_name or user.username)
+                for user in queryset[offset : offset + limit]
+            ]
+            return count, results
+
+        if attribute_type == "DEPT":
+            queryset = Department.objects.all()
+            if keyword:
+                queryset = queryset.filter(name__icontains=keyword)
+            count = queryset.count()
+            results = [
+                ResourceAttributeValueBean(id=str(department.id), display_name=department.name)
+                for department in queryset[offset : offset + limit]
+            ]
+            return count, results
+
         rp = self.new_resource_provider(system_id, resource_type_id)
         count, results = rp.list_attr_value(attr, keyword, limit, offset)
         return count, parse_obj_as(List[ResourceAttributeValueBean], results)

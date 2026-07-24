@@ -18,7 +18,27 @@
             :name="option.display_name">
           </bk-option>
         </bk-select>
-        <template v-if="isMemberSelector(item)">
+        <bk-select
+          v-if="enableAbacExtAttrAbility"
+          v-model="item.operator"
+          :clearable="false"
+          :disabled="formatDisabled(item)"
+          style="width: 120px; margin-left: 8px;"
+          @selected="handleOperatorSelected(...arguments, item)">
+          <bk-option
+            v-for="operator in formatOperators(item)"
+            :key="operator.id"
+            :id="operator.id"
+            :name="operator.name" />
+        </bk-select>
+        <template v-if="isStringContains(item)">
+          <bk-input
+            v-model="item.inputValue"
+            class="sub-selector-content"
+            :disabled="formatDisabled(item)"
+            @change="handleInputChange(...arguments, item)" />
+        </template>
+        <template v-else-if="isMemberSelector(item)">
           <BkUserSelector
             ref="selector"
             class="sub-selector-content"
@@ -117,6 +137,7 @@
     },
     data () {
       return {
+        enableAbacExtAttrAbility: String(window.ENABLE_ABAC_EXT_ATTR_ABILITY || 'false').toLowerCase() === 'true',
         userApi: window.BK_USER_API,
         attrValues: [],
         curOperateData: {},
@@ -143,8 +164,21 @@
       },
       isMemberSelector () {
         return (payload) => {
-          return ['bk_cmdb'].includes(this.params.system_id) && ['operator', 'bk_bak_operator'].includes(payload.id);
+          return ['bk_cmdb'].includes(this.params.system_id)
+            && ['operator', 'bk_bak_operator'].includes(payload.id);
         };
+      },
+      isStringContains () {
+        return payload => payload.type === 'STRING'
+          && payload.operator === 'contains';
+      },
+      formatOperators () {
+        return payload => (payload.operators || [{ id: 'eq', name: 'Equal' }]).map(operator => {
+          if (typeof operator === 'string') {
+            return { id: operator, name: operator };
+          }
+          return operator;
+        });
       },
       formatDisabled () {
         return (payload) => {
@@ -171,7 +205,7 @@
           this.attrValues = val;
           const flag = Object.keys(this.attrValueListMap).length > 0;
           this.attrValues.forEach(async item => {
-            if (!flag && item.id) {
+            if (!flag && item.id && !this.isStringContains(item)) {
               await this.fetchValue(item);
             }
           });
@@ -234,6 +268,26 @@
       }
     },
     methods: {
+      handleInputChange (value, event, payload) {
+        const row = payload || event;
+        const inputValue = typeof value === 'string' ? value : row.inputValue;
+        row.inputValue = inputValue;
+        row.selecteds = inputValue ? [inputValue] : [];
+        row.values = inputValue ? [{ id: inputValue, name: inputValue }] : [];
+        this.trigger();
+      },
+
+      handleOperatorSelected (operator, option, row) {
+        row.operator = operator;
+        row.values = [];
+        row.selecteds = [];
+        row.inputValue = '';
+        if (!this.isStringContains(row)) {
+          this.resetPagination(row, '', true, false);
+        }
+        this.trigger();
+      },
+
       handleMemberChange (payload, row) {
         this.$set(row, 'selecteds', payload);
         if (!payload.length) {
@@ -276,6 +330,9 @@
       },
             
       async fetchValue (item) {
+        if (this.isStringContains(item)) {
+          return;
+        }
         item.loading = true;
         try {
           const res = await this.$store.dispatch('permApply/getResourceAttrValues', {
@@ -283,6 +340,8 @@
             limit: this.pagination.limit,
             offset: this.pagination.limit * (this.pagination.current - 1),
             attribute: item.id,
+            attribute_type: item.type,
+            operator: item.operator,
             keyword: ''
           });
           this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
@@ -324,13 +383,23 @@
         const curAttr = this.list.find(item => item.id === newVal);
         if (curAttr) {
           payload.name = curAttr.display_name || '';
+          payload.type = curAttr.type || 'STRING';
+          payload.operators = curAttr.operators || [{ id: 'eq', name: 'Equal' }];
+          payload.operator = this.formatOperators(payload)[0].id;
         }
-        if (this.attrValueListMap[payload.id] && this.attrValueListMap[payload.id].length < 1) {
+        payload.inputValue = '';
+        if (!this.isStringContains(payload)
+          && this.attrValueListMap[payload.id]
+          && this.attrValueListMap[payload.id].length < 1) {
           this.resetPagination(payload, '', true, false);
         }
+        this.trigger();
       },
 
       handleAttrValueToggle (val, index, payload) {
+        if (this.isStringContains(payload)) {
+          return;
+        }
         if (this.isDisabledMode) {
           return;
         }
@@ -394,6 +463,8 @@
             limit: limit,
             offset: limit * (current - 1),
             attribute: payload.id,
+            attribute_type: payload.type,
+            operator: payload.operator,
             keyword
           });
           if (isScrollRemote) {

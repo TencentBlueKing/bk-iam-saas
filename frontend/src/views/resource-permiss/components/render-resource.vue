@@ -131,7 +131,14 @@
                         :hovering="condition.isHovering"
                         @on-add="handleAdd(condition, index, 'attribute')"
                         @on-delete="handleDelete(condition, index, 'attribute')">
-                        <attribute
+            <bk-radio-group
+              v-if="enableAbacExtAttrAbility && condition.attribute.length > 1"
+              v-model="condition.attribute_aggregation"
+              style="margin-bottom: 12px;">
+              <bk-radio value="AND">AND</bk-radio>
+              <bk-radio value="OR">OR</bk-radio>
+            </bk-radio-group>
+            <attribute
                             :value="condition.attribute"
                             :list="attributes"
                             :params="attributeParams"
@@ -244,6 +251,9 @@
       };
     },
     computed: {
+      enableAbacExtAttrAbility () {
+        return String(window.ENABLE_ABAC_EXT_ATTR_ABILITY || 'false').toLowerCase() === 'true';
+      },
       isLoading () {
         return this.requestQueue.length > 0;
       },
@@ -427,15 +437,55 @@
         }
       },
 
+      formatIamTopoPath () {
+        const paths = [];
+        this.conditionData.forEach(condition => {
+          (condition.instance || []).forEach(instance => {
+            (instance.path || []).forEach(path => {
+              const normalizedPath = path.map(({ type, id }) => ({ type, id }));
+              if (normalizedPath.length > 0) {
+                paths.push(normalizedPath);
+              }
+            });
+          });
+        });
+        return paths;
+      },
+
       async fetchResourceAttrs () {
         try {
-          const res = await this.$store.dispatch('permApply/getResourceAttrs', this.attributeParams);
-          this.attributes = [...res.data.results];
+          const enableExtendedAbility = String(
+            window.ENABLE_ABAC_EXT_ATTR_ABILITY || 'false'
+          ).toLowerCase() === 'true';
+          const params = enableExtendedAbility
+            ? { ...this.attributeParams, _iam_topo_path_: this.formatIamTopoPath() }
+            : this.attributeParams;
+          const res = await this.$store.dispatch('permApply/getResourceAttrs', params);
+          const attributes = [...res.data.results];
+          const selectedAttributes = this.conditionData.reduce((result, condition) => {
+            result.push(...(condition.attribute || []));
+            return result;
+          }, []);
+          selectedAttributes.forEach(attribute => {
+            if (attribute.id && !attributes.some(item => item.id === attribute.id)) {
+              attributes.push({
+                id: attribute.id,
+                display_name: `${attribute.name} (Unavailable)`,
+                type: attribute.type || 'STRING',
+                operators: attribute.operators || [{ id: attribute.operator || 'eq', name: attribute.operator || 'eq' }],
+                unavailable: true
+              });
+            }
+          });
+          this.attributes = attributes;
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
         } finally {
-          this.requestQueue.shift();
+          const requestIndex = this.requestQueue.indexOf('resourceAttr');
+          if (requestIndex > -1) {
+            this.requestQueue.splice(requestIndex, 1);
+          }
         }
       },
 
@@ -507,6 +557,9 @@
 
       handleMouseleave (payload) {
         payload.isHovering = false;
+        if (String(window.ENABLE_ABAC_EXT_ATTR_ABILITY || 'false').toLowerCase() === 'true') {
+          this.fetchResourceAttrs();
+        }
       },
 
       handleAddInstance () {

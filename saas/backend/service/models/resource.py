@@ -11,7 +11,14 @@ specific language governing permissions and limitations under the License.
 
 from typing import Any, Dict, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
+
+ATTRIBUTE_OPERATOR_NAMES = {
+    "eq": "Equal",
+    "in": "In",
+    "starts_with": "Starts with",
+    "contains": "Contains",
+}
 
 
 class SystemProviderConfig(BaseModel):
@@ -25,9 +32,45 @@ class ResourceTypeProviderConfig(BaseModel):
     path: str
 
 
+class ResourceAttributeOperator(BaseModel):
+    id: str
+    name: str
+
+
 class ResourceAttribute(BaseModel):
     id: str
     display_name: str
+    type: str = "STRING"
+    operators: List[ResourceAttributeOperator] = Field(
+        default_factory=lambda: [ResourceAttributeOperator(id="eq", name=ATTRIBUTE_OPERATOR_NAMES["eq"])]
+    )
+
+    @validator("type", pre=True, always=True)
+    def validate_type(cls, value):  # noqa: N805
+        value = (value or "STRING").upper()
+        if value not in {"STRING", "USER", "DEPT"}:
+            raise ValueError("type only supports STRING, USER and DEPT")
+        return value
+
+    @validator("operators", pre=True, always=True)
+    def normalize_operators(cls, value):  # noqa: N805
+        value = value or ["eq"]
+        operators = []
+        for operator in value:
+            if isinstance(operator, str):
+                if operator not in ATTRIBUTE_OPERATOR_NAMES:
+                    raise ValueError(f"unsupported operator: {operator}")
+                operators.append({"id": operator, "name": ATTRIBUTE_OPERATOR_NAMES.get(operator, operator)})
+            else:
+                operator_data = dict(operator)
+                operator_id = operator_data.get("id", "")
+                if operator_id not in ATTRIBUTE_OPERATOR_NAMES:
+                    raise ValueError(f"unsupported operator: {operator_id}")
+                operator_data["name"] = operator_data.get("name") or ATTRIBUTE_OPERATOR_NAMES.get(
+                    operator_id, operator_id
+                )
+                operators.append(operator_data)
+        return operators
 
 
 class ResourceAttributeValue(BaseModel):
