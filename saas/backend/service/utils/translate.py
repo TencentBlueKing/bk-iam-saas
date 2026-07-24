@@ -142,7 +142,7 @@ class ResourceExpressionTranslator:
             else:
                 instance = {"OR": {"content": instance_content}}
 
-            # 转换属性选择，每个属性之间是 AND
+            # 转换属性选择，旧策略缺省为 AND
             attribute_content = []
             for a in c["attributes"]:
                 attribute_content.append(self._translate_attribute(system_id, _type, a))
@@ -152,7 +152,10 @@ class ResourceExpressionTranslator:
             elif len(attribute_content) == 1:
                 attribute = attribute_content[0]
             else:
-                attribute = {"AND": {"content": attribute_content}}
+                aggregation = c.get("attribute_aggregation", "AND")
+                if aggregation not in {"AND", "OR"}:
+                    raise error_codes.INVALID_ARGS.format("attribute_aggregation only supports AND or OR")
+                attribute = {aggregation: {"content": attribute_content}}
 
             # instance 与 attribute 之间 AND
             if instance and attribute:
@@ -187,17 +190,36 @@ class ResourceExpressionTranslator:
         if len(values) == 0:
             raise error_codes.INVALID_ARGS.format("values must not empty")
 
+        operator = attribute.get("operator", "eq")
+        field_name = self._gen_field_name(system_id, _type, attribute["id"])
+
+        if operator == "starts_with":
+            if not all(isinstance(value, str) for value in values):
+                raise error_codes.INVALID_ARGS.format("starts_with values only support str")
+            return {"StringPrefix": {field_name: values}}
+
+        if operator == "contains":
+            if len(values) != 1 or not isinstance(values[0], str):
+                raise error_codes.INVALID_ARGS.format("contains must have exactly one string value")
+            return {"StringContains": {field_name: values}}
+
+        if operator == "in":
+            return {"IN": {field_name: values}}
+
+        if operator != "eq":
+            raise error_codes.INVALID_ARGS.format("unsupported attribute operator: {}".format(operator))
+
         if isinstance(values[0], bool):
             # bool 属性值只能有一个
             if len(values) != 1:
                 raise error_codes.INVALID_ARGS.format("bool value must has one")
-            return {"Bool": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
+            return {"Bool": {field_name: values}}
 
         if isinstance(values[0], (int, float)):
-            return {"NumericEquals": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
+            return {"NumericEquals": {field_name: values}}
 
         if isinstance(values[0], str):
-            return {"StringEquals": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
+            return {"StringEquals": {field_name: values}}
 
         raise error_codes.INVALID_ARGS.format("values only support (bool, int, float, str)")
 

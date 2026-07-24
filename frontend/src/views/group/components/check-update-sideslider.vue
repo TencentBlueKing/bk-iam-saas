@@ -131,6 +131,7 @@
             condition.push({
               id,
               attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
+              attribute_aggregation: item.attribute_aggregation || 'AND',
               instances: instance ? instance.filter(item => item.path.length > 0) : []
             });
           });

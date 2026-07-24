@@ -12,6 +12,8 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
+from django.conf import settings
+
 from backend.common.cache import Cache, CacheEnum, CacheKeyPrefixEnum, cachedmethod
 from backend.common.error_codes import error_codes
 from backend.component import iam, resource_provider
@@ -162,11 +164,19 @@ class ResourceProvider:
             "offset": offset,
         }
 
-    def list_attr(self) -> List[ResourceAttribute]:
+    def list_attr(self, iam_topo_path: List[List[Dict[str, str]]] = None) -> List[ResourceAttribute]:
         """查询某个资源类型可用于配置权限的属性列表"""
+        extended_ability_enabled = settings.ENABLE_ABAC_EXT_ATTR_ABILITY
+        attributes = (
+            self.client.list_attr(iam_topo_path or []) if extended_ability_enabled else self.client.list_attr()
+        )
         return [
-            ResourceAttribute(**i)
-            for i in self.client.list_attr()
+            ResourceAttribute(
+                **i
+                if extended_ability_enabled
+                else {"id": i["id"], "display_name": i["display_name"], "type": "STRING", "operators": ["eq"]}
+            )
+            for i in attributes
             # 由于存在接入系统将内置属性_bk_xxx，包括_bk_iam_path_或将id的返回，防御性过滤掉
             if not i["id"].startswith("_bk_") and i["id"] != "id"
         ]

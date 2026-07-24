@@ -450,6 +450,7 @@ MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=3
 SUBJECT_DELETE_DAYS = env.int("BKAPP_SUBJECT_DELETE_DAYS", default=30)
 
 # 前端页面功能开关
+ENABLE_ABAC_EXT_ATTR_ABILITY = env.bool("BKAPP_ENABLE_ABAC_EXT_ATTR_ABILITY", default=False)
 ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": env.bool("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", default=False),
     "enable_permission_handover": env.bool("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", default=True),
@@ -458,6 +459,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_organization_count": env.bool("BKAPP_ENABLE_FRONT_END_ORGANIZATION_COUNT", default=False),
     "enable_assistant": env.bool("BKAPP_ENABLE_FRONT_END_ASSISTANT", default=False),
     "enable_bk_notice": env.bool("BKAPP_ENABLE_BK_NOTICE", default=False),
+    "enable_abac_ext_attr_ability": ENABLE_ABAC_EXT_ATTR_ABILITY,
 }
 
 # Open API 接入 APIGW 后，需要对 APIGW 请求来源认证，使用公钥解开 jwt

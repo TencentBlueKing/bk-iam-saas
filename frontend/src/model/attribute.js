@@ -29,11 +29,15 @@ export default class Attribute {
   constructor (payload, flag = 'add') {
     this.id = payload.id || '';
     this.name = payload.name || '';
+    this.type = payload.type || 'STRING';
+    this.operators = payload.operators || [{ id: 'eq', name: 'Equal' }];
+    this.operator = payload.operator || 'eq';
     this.disabled = flag === '';
     this.loading = false;
     this.init(payload);
   }
   init (payload) {
+    this.inputValue = '';
     if (!payload.values || payload.values.length < 1) {
       this.values = [];
       this.selecteds = [];
@@ -41,5 +45,6 @@ export default class Attribute {
     }
     this.values = payload.values;
     this.selecteds = payload.values.map(item => item.id) || [];
+    this.inputValue = payload.values[0] ? payload.values[0].id : '';
   }
 }
