@@ -57,6 +57,12 @@
 
 <style scoped>
 /deep/ .logout-setting-icon {
-  font-size: 20px;
+  font-size: 16px;
+}
+
+/deep/ .bk-login-userinfo-action-item,
+/deep/ .bk-login-userinfo-payload-item {
+  font-weight: 400;
+  color: #313238;
 }
 </style>
