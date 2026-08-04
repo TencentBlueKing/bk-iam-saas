@@ -1079,7 +1079,7 @@ export const m = {
         '超级管理员提示': 'Super administrators have all authorization permissions default',
         '系统管理员提示': 'The system administrators have all authorization permissions of the corresponding system default',
         '审计管理员': 'Audit Administrator',
-        '审计管理员提示': 'Audit administrators are allowed to view all audit logs',
+        '审计管理员提示': 'Audit administrators are allowed to view Permission Center audit logs',
         '添加超级管理员': 'Add super administrators',
         '添加审计管理员': 'Add audit administrators',
         '名称': 'Name',
