@@ -172,6 +172,7 @@
           this.$refs.selector && this.$refs.selector.focus();
           this.handleDefaultData(this.value);
           this.handleReadOnly();
+          this.$emit('focus', this.index);
         });
       },
 
@@ -191,6 +192,7 @@
 
       hideEdit (event) {
         // this.isEditable = false;
+        this.$emit('blur', this.index);
         if (this.displayValue.length < 1) {
           return;
         }
@@ -206,7 +208,6 @@
       },
             
       triggerChange () {
-        console.log(this.isAllowTrigger, this.displayValue, '显示内容');
         // 单独处理初始化为空但编辑不能为空数据
         if (!this.displayValue.length && !this.isEditAllowEmpty) {
           this.displayValue = [...this.value];

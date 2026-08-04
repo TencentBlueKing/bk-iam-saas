@@ -13,42 +13,46 @@
       :empty-data="emptyData"
       @on-change="handleChange"
       @on-filter-change="handleFilterChange"
-      @on-load="handleLoadMore" />
+      @on-load="handleLoadMore"
+    />
     <div slot="right">
       <component
         :key="comKey"
         :is="curCom"
         :params="currentApplyData"
         :loading="cancelLoading"
-        @on-cancel="handleCancel">
-      </component>
+        @on-cancel="handleCancel"
+      />
     </div>
   </layout>
 </template>
+
 <script>
+  import { mapGetters } from 'vuex';
+  import { formatCodeData } from '@/common/util';
   import Layout from './common/render-page-layout';
   import LeftLayout from './components/left';
   import RenderDetail from './components/apply-detail';
   import RenderGroupDetail from './components/apply-group-detail';
   import RenderRatingManager from './components/apply-create-rate-manager-detail';
-  import { mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
+  import RenderHandoverDetail from './components/apply-handover-detail';
 
   const COM_MAP = new Map([
     [['grant_action', 'renew_action', 'grant_temporary_action'], 'RenderDetail'],
     [['join_group', 'renew_group'], 'RenderGroupDetail'],
     [['create_rating_manager'], 'RenderRatingManager'],
-    [['update_rating_manager'], 'RenderRatingManager']
+    [['update_rating_manager'], 'RenderRatingManager'],
+    [['handover'], 'RenderHandoverDetail']
   ]);
     
   export default {
-    name: '',
     components: {
       Layout,
       LeftLayout,
       RenderDetail,
       RenderGroupDetail,
-      RenderRatingManager
+      RenderRatingManager,
+      RenderHandoverDetail
     },
     data () {
       return {

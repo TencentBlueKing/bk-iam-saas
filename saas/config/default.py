@@ -19,6 +19,8 @@ from celery.schedules import crontab
 from django.db.backends.mysql.features import DatabaseFeatures
 from django.utils.functional import cached_property
 
+from backend.util.crontab import crontab_from_string
+
 # connect mysql
 pymysql.install_as_MySQLdb()
 
@@ -96,6 +98,7 @@ INSTALLED_APPS = [
     "backend.api.admin",
     "backend.api.management",
     "backend.api.bkci",
+    "backend.api.external.staff_movement",
 ]
 
 # 登录中间件
@@ -238,27 +241,13 @@ CELERY_IMPORTS = (
     "backend.api.bkci.tasks",
     "backend.apps.handover.tasks",
 )
-
-ORGANIZATION_SYNC_PERIOD = env.int("BKAPP_ORGANIZATION_SYNC_PERIOD", default=86400)  # 默认 24 小时
-
-# 根据同步周期计算 crontab 表达式
-if ORGANIZATION_SYNC_PERIOD < 3600:
-    _org_sync_minutes = ORGANIZATION_SYNC_PERIOD // 60
-    _org_sync_schedule = crontab(minute=f"*/{_org_sync_minutes}")
-elif ORGANIZATION_SYNC_PERIOD < 86400:
-    _org_sync_hours = ORGANIZATION_SYNC_PERIOD // 3600
-    _org_sync_schedule = crontab(minute=0, hour=f"*/{_org_sync_hours}")
-else:  # 大于等于1天，使用天级别
-    _org_sync_days = ORGANIZATION_SYNC_PERIOD // 86400
-    if _org_sync_days == 1:
-        _org_sync_schedule = crontab(minute=0, hour=0)
-    else:
-        _org_sync_schedule = crontab(minute=0, hour=0, day_of_month=f"*/{_org_sync_days}")
+ORGANIZATION_SYNC_CRONTAB = env.str("BKAPP_ORGANIZATION_SYNC_CRONTAB", default="0 0 * * *")  # 默认每天 0 时
+_org_sync_schedule = crontab_from_string(ORGANIZATION_SYNC_CRONTAB)
 
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
-        "schedule": _org_sync_schedule,
+        "schedule": _org_sync_schedule,  # 根据环境变量设置的同步周期动态调整
     },
     "periodic_clean_subject_to_delete": {
         "task": "backend.apps.organization.tasks.clean_subject_to_delete",
@@ -452,7 +441,7 @@ APPLY_POLICY_ADD_INSTANCES_LIMIT = env.int("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIM
 # 临时权限一个操作最大数量
 TEMPORARY_POLICY_LIMIT = env.int("BKAPP_TEMPORARY_POLICY_LIMIT", default=10)
 # 最长已过期权限删除期限
-MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1 年
+MAX_EXPIRED_POLICY_DELETE_TIME = env.int("BKAPP_MAX_EXPIRED_POLICY_DELETE_TIME", default=365 * 24 * 60 * 60)
 # 最长已过期临时权限期限
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例 ID 最大长度，默认 36（已存在长度为 36 的数据）
@@ -556,5 +545,21 @@ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED
 # 问题反馈地址
 BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
 
-# 接入用户管理的接口page_size默认值
+# 接入用户管理的接口 page_size 默认值
 USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1000)
+
+# 个人中心地址
+BK_PERSONAL_CENTER_URL = env.str("BK_PERSONAL_CENTER_URL", default="")
+
+# 是否开启超级管理员拥有所有权限配置
+ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING = env.bool(
+    "ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING", default=False
+)
+
+# PCG 离职交接相关配置
+PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
+PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")
+PCG_DEPARTMENT_IDS = env.list("PCG_DEPARTMENT_IDS", cast=int, default=[])
+
+# 是否开启权限交接 ITSM 审批流程
+ENABLE_HANDOVER_APPROVAL = env.bool("BKAPP_ENABLE_HANDOVER_APPROVAL", default=False)

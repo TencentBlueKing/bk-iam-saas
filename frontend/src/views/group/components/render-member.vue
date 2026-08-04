@@ -23,7 +23,11 @@
       :data="templates"
       @on-delete="handleDeleteTemplate" />
     <render-vertical-block :label="$t(`m.common['授权期限']`)" ext-cls="auth-expired-at">
-      <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
+      <iam-deadline
+        :value="expiredAt"
+        :show-permanent-renewal="isHasUser && !isHasDepartment && !isHasTemplate"
+        @on-change="handleDeadlineChange"
+      />
       <p class="expired-at-error" v-if="expiredAtError">{{ $t(`m.verify['请选择授权期限']`) }}</p>
     </render-vertical-block>
   </render-horizontal-block>

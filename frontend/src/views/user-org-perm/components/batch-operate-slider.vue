@@ -66,7 +66,12 @@
               class="apply-expired-at"
               :required="true"
             >
-              <IamDeadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
+              <IamDeadline
+                :value="expiredAt"
+                :cur-role="curRole"
+                :show-permanent-renewal="userList.length < 1 && departList.length > 0"
+                @on-change="handleDeadlineChange"
+              />
               <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.userOrOrg['请选择续期时长']`) }}</p>
             </bk-form-item>
             <bk-form-item class="group-table-content" :label-width="0" :required="false">

@@ -173,6 +173,7 @@ class VerifyAPIObjectTypeEnum(ChoicesEnum, LowerStrEnum):
 
     ROLE = auto()
     GROUP = auto()
+    TEMPLATE = auto()
 
 
 class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
@@ -204,6 +205,7 @@ class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
 VerifyAPIParamSourceToObjectTypeMap = {
     VerifyApiParamLocationEnum.ROLE_IN_PATH.value: VerifyAPIObjectTypeEnum.ROLE.value,
     VerifyApiParamLocationEnum.GROUP_IN_PATH.value: VerifyAPIObjectTypeEnum.GROUP.value,
+    VerifyApiParamLocationEnum.TEMPLATE_IN_PATH.value: VerifyAPIObjectTypeEnum.TEMPLATE.value,
 }
 
 # 主要用于 ViewSet 里配置了 ManagementAPIPermission，

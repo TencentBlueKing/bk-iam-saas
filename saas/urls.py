@@ -70,6 +70,8 @@ urlpatterns = [
                 re_path(
                     r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")
                 ),
+                # 为外部系统提供API
+                re_path(r"^external/", include("backend.api.external.urls")),
             ]
         ),
     ),

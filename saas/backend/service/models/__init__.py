@@ -35,6 +35,8 @@ from .application import (
     GrantActionApplicationData,
     GroupApplicationContent,
     GroupApplicationData,
+    HandoverApplicationContent,
+    HandoverApplicationData,
     TypeUnionApplicationData,
 )
 from .approval import (
@@ -112,10 +114,12 @@ __all__ = [
     "GrantActionApplicationData",
     "GroupApplicationData",
     "GradeManagerApplicationData",
+    "HandoverApplicationData",
     "TypeUnionApplicationData",
     "GrantActionApplicationContent",
     "GroupApplicationContent",
     "GradeManagerApplicationContent",
+    "HandoverApplicationContent",
     "ApplicationPolicyInfo",
     "ApplicationRelatedResource",
     "ApplicationResourceCondition",
