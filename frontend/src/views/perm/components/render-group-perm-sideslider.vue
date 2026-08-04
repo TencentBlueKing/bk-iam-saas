@@ -98,6 +98,7 @@
     .iam-group-perm-sideslider {
         .bk-sideslider-content {
             background: #f5f6fa;
+            height: 100%;
         }
         .group-id {
             position: relative;

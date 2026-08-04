@@ -114,7 +114,7 @@
     }
     .right-wrapper {
       position: relative;
-      flex: 0 0 calc(100% - 240px);
+      flex: 0 0 calc(100% - 241px);
       padding: 12px 20px;
       background-color: #f5f6fa;
       max-height: calc(100vh - 114px);

@@ -1,3 +1,167 @@
+<!-- 2026-07-20 -->
+# V1.10.64 Version Update Log
+
+### Feature Enhancements
+* Added cascading allowlist verification for management APIs, allowing user groups and permission templates to inherit the allowlist configuration of their owning grading manager (role)
+* Improved resignation handover record creation to be handled uniformly by the handover business layer
+
+---
+
+<!-- 2026-07-16 -->
+# V1.10.63 Version Update Log
+
+### Features
+* Added ITSM approval workflow support for permission handover, with approval type display and table pagination in approval ticket details
+* Added query and update APIs for user group custom permissions in super-admin APIs
+* Added object-level allowlist configuration for management APIs, and added the bk_aidev system to the management API allowlist
+* Extended the maximum permission renewal duration to two years
+
+### Fixes
+* Fixed the issue where more than 10 permission templates could be selected
+* Fixed the mgmt_api_update_templates API failing due to a missing parameter
+* Fixed the issue where adding an admin user to a management space group succeeded silently
+* Fixed the compilation failure caused by ES2020 optional chaining
+* Fixed the incorrect route redirection path for approval tickets
+
+---
+
+<!-- 2026-05-28 -->
+# V1.10.62 Version Update Log
+
+### Fixes
+* Fixed staff movement handover and recycle APIs to return actual failure reasons instead of generic FAILED
+
+---
+
+<!-- 2026-05-20 -->
+# V1.10.61 Version Update Log
+
+### Fixes
+* Fixed migration file error when performing a fresh deployment on single-tenant branch
+* Fixed duplicate resource IDs in resource name validation before adding permissions to user groups
+
+---
+
+<!-- 2026-05-14 -->
+# V1.10.60 Version Update Log
+
+### Features
+* Added recycle audit logging for staff handover
+
+### Feature Enhancements
+* Refined concurrency control for staff handover and adapted PB protocol
+
+### Fixes
+* Fixed permission expiry cleanup task not functioning correctly
+* Fixed cross-system tampering vulnerability in action approval process update API
+* Locked axios version to prevent unintended dependency auto-upgrade
+* Fixed default page styling for group permission application
+
+---
+
+<!-- 2026-04-24 -->
+# V1.10.59 Version Update Log
+
+### Fixes
+* Fixed resource instance table action button group overflow not displaying completely
+* Fixed validation error when grade manager members no longer exist, now automatically skipped
+* Fixed error when syncing new users that are already pending deletion in backend
+
+---
+
+<!-- 2026-04-22 -->
+# V1.10.58 Version Update Log
+
+### Fixes
+* Fixed validation failure for ANY_ID instances in multi-language scenarios caused by display name checks
+* Fixed issue where first-time setting of system admin to have all permissions of the system did not take effect
+* Fixed staff movement handler URL error and erroneous call on ancestor_department_ids property
+* Fixed rejection of permanent validity period during custom and temporary permission applications due to expiration time validation
+* Fixed sync_subset_manager_subject_scope task executing before transaction commit after grade manager approval
+
+---
+
+<!-- 2026-04-13 -->
+# V1.10.57 Version Update Log
+
+### Feature Enhancements
+* Moved Personal Center option into the user profile section
+* Added internationalization support for Personal Center
+
+### Fixes
+* Fixed validate_members_compat_string_list member validation issue
+
+---
+
+<!-- 2026-04-09 -->
+# V1.10.56 Version Update Log
+
+### Features
+* Added a link to Personal Center in the user profile section
+* Super admin auto-possessing all operation permissions is now controlled by environment variable
+* Person selector now supports displaying organization structure
+* Added API for querying, cleaning, and handing over permissions of departed employees
+* Supported cleaning IAM grade manager data when employees leave or transfer
+* Added organization structure synchronization API for super admin APIs
+* Added admin_list_groups and admin_list_subject_groups APIs to the gateway
+
+### Feature Enhancements
+* IAM V3 now controls the display of IAM V4 entry via environment variable
+* Optimized organization structure display to only show for searched personnel
+* Supported quantity tag display when a member belongs to multiple organizations
+* Changed the maximum expired permission deletion period to 3 months
+
+### Fixes
+* Fixed incorrect display of overly long permission template names
+* Fixed abnormal permission recipient handling logic when applying for custom permissions
+* Fixed incorrect V4 access URL
+* Fixed an issue where admin user groups were inconsistent after modifying management space instances
+* Fixed insufficient input data validation in the admin modification API
+* Fixed admin API gateway permission issue
+* Fixed an issue where validity period could bypass frontend restrictions
+* Fixed missing permission check when deleting user group permission templates
+
+---
+
+<!-- 2026-03-05 -->
+# V1.10.55 Version Update Log
+
+### Features
+* Supported sub-path deployment
+
+### Feature Enhancements
+* Organization selector now only auto-selects when there is an exact match
+* When applying for custom permissions, existing personal permissions are only displayed when the permission recipient is the current logged-in user
+* When applying to join user groups, existing user groups are only displayed when the permission recipient is the current logged-in user
+
+### Fixes
+* Fixed an issue where switching to organization option in organization selector would auto-select by default
+* Fixed an issue where switching to personnel template option in organization selector would auto-select by default
+
+---
+
+<!-- 2026-02-04 -->
+# V1.10.53 Version Update Log
+
+### Fixes
+* Fixed an issue with permanent validity parameter validation when adding members to user groups
+
+---
+
+<!-- 2026-02-03 -->
+# V1.10.52 Version Update Log
+
+### Features
+* Organization authorization now supports permanent validity period
+
+### Fixes
+* Fixed an issue where clicking to switch navigation bar on handover history page was not working
+* Fixed an intermittent handover failure issue
+* Fixed an issue where custom permission instance path count was out of sync in user group permissions
+* Fixed an issue where overly long instance path in policy caused oversized audit logs
+
+---
+
 <!-- 2026-01-15 -->
 # V1.10.51 Version Update Log
 

@@ -161,7 +161,7 @@ class AuditEventHandler:
 
         return [audit_event]
 
-    def _truncate_policies_instances(self, extra_data: Dict[str, Any], max_instances: int = 10):
+    def _truncate_policies_instances(self, extra_data: Dict[str, Any], max_instances: int = 10, max_paths: int = 10):
         """
         裁剪 policies 中的资源实例数据，避免单条审计日志过大
 
@@ -169,6 +169,11 @@ class AuditEventHandler:
         - 只保留前 max_instances 个 instances
         - 添加 instances_total_count 记录原始总数
         - 添加 instances_truncated = True 标记数据已被裁剪
+
+        当 instance 中的 path 数量超过 max_paths 时：
+        - 只保留前 max_paths 条路径
+        - 添加 path_total_count 记录原始总数
+        - 添加 path_truncated = True 标记数据已被裁剪
         """
         policies = extra_data.get("policies", [])
         for policy in policies:
@@ -181,6 +186,13 @@ class AuditEventHandler:
                             condition["instances"] = instances[:max_instances]
                             condition["instances_truncated"] = True
 
+                        for instance in condition.get("instances", []):
+                            paths = instance.get("path", [])
+                            if len(paths) > max_paths:
+                                instance["path_total_count"] = len(paths)
+                                instance["path"] = paths[:max_paths]
+                                instance["path_truncated"] = True
+
     def handle_policy_update(self, event: Event) -> List[AuditEvent]:
         extra_data = event.extra
         # 如果是用户组模板策略更新
@@ -189,6 +201,9 @@ class AuditEventHandler:
                 "type": event.object_type,
                 "id": event.object_id,
             }
+
+            # 裁剪 policies 中的资源实例数据，避免单条审计日志过大
+            self._truncate_policies_instances(extra_data)
 
             return [
                 AuditEvent(

@@ -3,7 +3,11 @@
     <div class="ghost-wrapper" :style="ghostStyle"></div>
     <div class="render-wrapper" ref="content">
       <div
-        v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
+        v-bk-tooltips="{
+          content: nameType(item),
+          placements: ['top-end'],
+          allowHtml: true
+        }"
         v-for="item in renderData"
         :key="item.id"
         :style="getNodeStyle(item)"
@@ -12,13 +16,15 @@
           { 'active': item.isSelected && !item.disabled },
           { 'is-disabled': item.disabled || isDisabled }
         ]"
-        @click.stop="nodeClick(item)">
+        @click.stop="nodeClick(item)"
+      >
         <Icon
           bk
           v-if="item.async"
           class="arrow-icon"
           :type="item.expanded ? 'down-shape' : 'right-shape'"
-          @click.stop="expandNode(item)" />
+          @click.stop="expandNode(item)"
+        />
         <div class="node-radio" v-if="item.showRadio">
           <span class="node-checkbox"
             :class="{
@@ -46,17 +52,46 @@
           type="personal-user"
           :class="['node-icon', { 'active': item.isSelected && !item.disabled }]"
         />
-        <!-- eslint-disable max-len -->
-        <span
+        <div
           :style="nameStyle(item)"
-          :class="['node-title', { 'node-selected': item.isSelected && !item.disabled }]"
+          :class="[
+            'single-hide node-title',
+            { 'node-selected': item.isSelected && !item.disabled }
+          ]"
         >
-          {{ item.type === 'user' ? item.username : item.name }}
-          <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
-        </span>
-        <span class="red-dot" v-if="item.isNewMember"></span>
+          <!-- 区分需要外显完整组织架构的排版 -->
+          <template v-if="showFullName">
+            <span class="node-full-name-box">
+              <span class="single-hide node-full-name">
+                {{ item.type === 'user' ? item.username : item.name }}
+                <template v-if="item.type === 'user' && item.name !== ''">
+                  ({{ item.name }})
+                </template>
+              </span>
+              <span
+                v-if="item.showCount && enableOrganizationCount"
+                class="node-user-count"
+              >
+                {{ '(' + item.count + `)` }}
+              </span>
+            </span>
+            <span v-if="item.full_name" class="flex-align-center">
+              <span class="single-hide extra-full-name">
+                {{ getFullName(item.full_name) }}
+              </span>
+              <bk-tag v-if="getFullNameLen(item.full_name) > 1">
+                +{{ getFullNameLen(item.full_name) - 1 }}
+              </bk-tag>
+            </span>
+          </template>
+          <template v-else>
+            {{ item.type === 'user' ? item.username : item.name }}
+            <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
+          </template>
+        </div>
+        <span v-if="item.isNewMember" class="red-dot" />
         <span
-          v-if="item.showCount && enableOrganizationCount"
+          v-if="item.showCount && enableOrganizationCount && !showFullName"
           class="node-user-count"
         >
           {{ '(' + item.count + `)` }}
@@ -130,6 +165,11 @@
         type: Boolean,
         default: true
       },
+      // 是否显示完整组织架构
+      showFullName: {
+        type: Boolean,
+        default: false
+      },
       // 根据状态码渲染落地空内容
       emptyData: {
         type: Object,
@@ -195,29 +235,42 @@
               otherOffset += 14;
           }
           return {
-              'maxWidth': `calc(100% - ${otherOffset}px)`
+              'maxWidth': !payload.level ? '100%' : `calc(100% - ${otherOffset}px)`
           };
         };
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName, disabled } = payload;
+          const {
+            name = '',
+            type = '',
+            username = '',
+            full_name: fullName = '',
+            disabled = false
+          } = payload;
+
+          // 禁用状态优先返回
           if (disabled) {
             return this.$t(`m.common['该成员已添加']`);
           }
+
+          // 处理分号换行的函数，存在分号则替换为 <br/>，不存在则返回原字符串
+          const formatName = (text) => text.includes(';') ? text.replace(';', '<br/>') : text;
+
+          // 类型处理映射，根据不同类型返回不同的名称显示逻辑
           const typeMap = {
             user: () => {
-              if (fullName) {
-                return fullName;
-              } else {
-                return name ? `${username}(${name})` : username;
-              }
+              const formatted = formatName(fullName);
+              return formatted || (name ? `${username}(${name})` : username);
             },
             depart: () => {
-              return fullName || name;
+              const formatted = formatName(fullName);
+              return formatted || name;
             }
           };
-          return typeMap[type]();
+
+          // 不存在的类型默认走 user
+          return (typeMap[type] || typeMap.user)();
         };
       },
       disabledNode () {
@@ -452,6 +505,17 @@
 
       handleEmptyRefresh () {
         this.$emit('on-refresh', {});
+      },
+
+      // 获取fullName的长度，分号分隔开算一个，返回分号分隔的数组长度
+      getFullNameLen (fullName) {
+        const text = fullName.split(';');
+        return text.length || 0;
+      },
+      // 存在分号则说明有换行，返回分号前的字符串，否则返回原字符串
+      getFullName (fullName) {
+        const text = fullName.split(';');
+        return this.getFullNameLen(fullName) > 1 ? text[0] : fullName;
       }
     }
   };
@@ -508,11 +572,31 @@
       position: relative;
       display: inline-block;
       min-width: 14px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       vertical-align: top;
       user-select: none;
+      .node-full-name-box {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        .node-full-name {
+          min-width: 0;
+          flex-shrink: 1;
+          flex-grow: 0;
+        }
+        .node-user-count {
+          flex-shrink: 0;
+          margin-left: 4px;
+          white-space: nowrap;
+        }
+      }
+      .extra-full-name {
+        display: block;
+        padding-bottom: 8px;
+        line-height: 20px;
+        font-size: 14px;
+        color: #999999;
+        word-break: break-all;
+      }
     }
     .node-user-count {
       color: #c4c6cc;
@@ -582,7 +666,8 @@
       color: #3a84ff;
       background-color: #eef4ff;
       .node-icon,
-      .node-user-count {
+      .node-user-count,
+      .extra-full-name {
         color: #3a84ff;
       }
     }
@@ -591,7 +676,8 @@
       background-color: transparent;
       cursor: not-allowed;
       .node-icon,
-      .node-user-count {
+      .node-user-count,
+      .extra-full-name {
         color: #c4c6cc;
       }
       &:hover {

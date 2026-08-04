@@ -13,15 +13,16 @@ def add_admin_to_super_manager_member(apps, schema_editor):
     #  由于admin的特殊性，IAM后台判断super permission时是先判断是否super user，然后再判断是否super role
     #  所以不向后台将admin添加为super role并不会影响admin的鉴权（admin在后台代码里默认初始化为super user）
 
-    # 使用 apps.get_model 获取历史模型，避免访问未创建的字段
-    Role = apps.get_model('role', 'Role')
-    RoleUser = apps.get_model('role', 'RoleUser')
-    RoleUserSystemPermission = apps.get_model('role', 'RoleUserSystemPermission')
+    # 使用历史模型，避免访问不存在的字段
+    Role = apps.get_model("role", "Role")
+    RoleUser = apps.get_model("role", "RoleUser")
+    RoleUserSystemPermission = apps.get_model("role", "RoleUserSystemPermission")
 
     username = "admin"
     role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-    # 判断是否已存在
-    if RoleUser.objects.filter(role_id=role.id, username=username).exists():
+    # 判断是否已存在 - 避免使用role.members属性
+    exists = RoleUser.objects.filter(role_id=role.id, username=username).exists()
+    if exists:
         return
 
     # 添加成员

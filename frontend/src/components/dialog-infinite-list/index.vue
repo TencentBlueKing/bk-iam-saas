@@ -4,7 +4,11 @@
     <div class="render-wrapper" ref="content">
       <div class="organization-content">
         <div
-          v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
+          v-bk-tooltips="{
+            content: nameType(item),
+            placements: ['top-end'],
+            allowHtml: true
+          }"
           v-for="(item, index) in renderOrganizationList"
           :key="item.id"
           :class="[
@@ -32,20 +36,47 @@
               { 'active': selectedNode(item) && !item.disabled }
             ]"
           />
-          <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
-            {{ item.name }}
-          </span>
-          <span
-            v-if="item.showCount && enableOrganizationCount"
-            class="node-user-count"
-          >
-            {{ '(' + item.count + ')' }}
-          </span>
+          <div v-if="showFullName" class="node-full-name-box">
+            <div class="node-full-name">
+              <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
+                {{ item.name }}
+              </span>
+              <span
+                v-if="item.showCount && enableOrganizationCount"
+                class="node-user-count"
+              >
+                {{ '(' + item.count + ')' }}
+              </span>
+            </div>
+            <span v-if="item.full_name" class="flex-align-center">
+              <span class="single-hide extra-full-name">
+                {{ getFullName(item.full_name) }}
+              </span>
+              <bk-tag v-if="getFullNameLen(item.full_name) > 1">
+                +{{ getFullNameLen(item.full_name) - 1 }}
+              </bk-tag>
+            </span>
+          </div>
+          <template v-else>
+            <span :class="['node-item-name', 'organization-name', { 'is-disabled': disabledNode(item) }]">
+              {{ item.name }}
+            </span>
+            <span
+              v-if="item.showCount && enableOrganizationCount"
+              class="node-user-count"
+            >
+              {{ '(' + item.count + ')' }}
+            </span>
+          </template>
         </div>
       </div>
       <div class="user-content">
         <div
-          v-bk-tooltips="{ content: nameType(item), placements: ['top-end'] }"
+          v-bk-tooltips="{
+            content: nameType(item),
+            placements: ['top-end'],
+            allowHtml: true
+          }"
           v-for="(item, index) in renderUserList"
           :key="item.id"
           :class="[
@@ -72,14 +103,32 @@
               { 'active': selectedNode(item) && !item.disabled }
             ]"
           />
-          <span
-            :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]"
-          >
-            {{ item.username }}
-            <template v-if="item.name !== ''">
-              ({{ item.name }})
-            </template>
-          </span>
+          <div v-if="showFullName" class="node-full-name-box">
+            <div class="node-full-name">
+              <span :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]">
+                {{ item.username }}
+                <template v-if="Boolean(item.name)">
+                  ({{ item.name }})
+                </template>
+              </span>
+            </div>
+            <span v-if="item.full_name" class="flex-align-center">
+              <span class="single-hide extra-full-name">
+                {{ getFullName(item.full_name) }}
+              </span>
+              <bk-tag v-if="getFullNameLen(item.full_name) > 1">
+                +{{ getFullNameLen(item.full_name) - 1 }}
+              </bk-tag>
+            </span>
+          </div>
+          <template v-else>
+            <span :class="['node-item-name', 'user-name', { 'is-disabled': disabledNode(item) }]">
+              {{ item.username }}
+              <template v-if="Boolean(item.name)">
+                ({{ item.name }})
+              </template>
+            </span>
+          </template>
         </div>
       </div>
     </div>
@@ -115,6 +164,11 @@
       },
 
       isDisabled: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示完整组织架构
+      showFullName: {
         type: Boolean,
         default: false
       },
@@ -170,22 +224,36 @@
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName, disabled } = payload;
+          const {
+            name = '',
+            type = '',
+            username = '',
+            full_name: fullName = '',
+            disabled = false
+          } = payload;
+
+          // 禁用状态优先返回
           if (disabled) {
             return this.$t(`m.common['该成员已添加']`);
           }
+
+         // 处理分号换行的函数，存在分号则替换为 <br/>，不存在则返回原字符串
+          const formatName = (text) => text.includes(';') ? text.replace(';', '<br/>') : text;
+
+          // 类型处理映射，根据不同类型返回不同的名称显示逻辑
           const typeMap = {
             user: () => {
-              if (fullName) {
-                return fullName;
-              }
-              return name ? `${username}(${name})` : username;
+              const formatted = formatName(fullName);
+              return formatted || (name ? `${username}(${name})` : username);
             },
             depart: () => {
-              return fullName || name;
+              const formatted = formatName(fullName);
+              return formatted || name;
             }
           };
-          return typeMap[type] ? typeMap[type]() : typeMap['user']();
+
+          // 不存在的类型默认走 user
+          return (typeMap[type] || typeMap.user)();
         };
       },
       selectedNode () {
@@ -381,6 +449,18 @@
             && data.find(item => item.type === subjectType && item.id === String(subjectId));
           return result;
         }
+      },
+
+      // 获取fullName的长度，分号分隔开算一个，返回分号分隔的数组长度
+      getFullNameLen (fullName) {
+        const text = fullName.split(';');
+        return text.length || 0;
+      },
+
+      // 存在分号则说明有换行，返回分号前的字符串，否则返回原字符串
+      getFullName (fullName) {
+        const text = fullName.split(';');
+        return this.getFullNameLen(fullName) > 1 ? text[0] : fullName;
       }
     }
   };
@@ -476,6 +556,25 @@
           color: #3a84ff;
         }
       }
+      .node-full-name-box {
+        width: 100%;
+        overflow-x: hidden;
+        .node-full-name {
+          display: flex;
+        }
+        .node-user-count {
+          flex-shrink: 0;
+          margin-left: 4px;
+          white-space: nowrap;
+        }
+      }
+      .extra-full-name {
+        display: block;
+        line-height: 20px;
+        font-size: 14px;
+        color: #999999;
+        word-break: break-all;
+      }
       .node-user-count {
         color: #c4c6cc;
       }
@@ -484,7 +583,8 @@
         color: #3a84ff;
         background: #eef4ff;
         .node-icon,
-        .node-user-count {
+        .node-user-count,
+        .extra-full-name {
           color: #3a84ff;
         }
       }
@@ -493,7 +593,8 @@
         background-color: transparent;
         cursor: not-allowed;
         .node-icon,
-        .node-user-count {
+        .node-user-count,
+        .extra-full-name {
           color: #c4c6cc;
         }
         &:hover {

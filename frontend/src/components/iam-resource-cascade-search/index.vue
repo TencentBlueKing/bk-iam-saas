@@ -96,25 +96,30 @@
                   <iam-form-item
                     class="form-item-resource"
                     :label="$t(`m.common['资源实例']`)">
-                    <div class="relation-content-item"
+                    <div
                       v-for="(content, contentIndex) in _.related_resource_types"
-                      :key="contentIndex">
-                      <div class="content"
+                      :key="contentIndex"
+                      class="relation-content-item"
+                    >
+                      <div
+                        class="content"
                         :style="{ width: contentWidth }"
                       >
-                        <render-condition
+                        <IamRenderCondition
                           :ref="`condition_${index}_${contentIndex}_ref`"
-                          :value="curResourceData.type ?
-                            content.value : $t(`m.verify['请选择']`)"
-                          :hover-title="!curResourceData.type ?
-                            $t(`m.verify['请选择资源类型']`) : ''"
+                          :value="curResourceData.type ? content.value : $t(`m.verify['请选择']`)"
+                          :hover-title="!curResourceData.type ? $t(`m.verify['请选择资源类型']`) : ''"
+                          :can-operate="false"
                           :is-empty="content.empty"
                           :params="curCopyParams"
                           :disabled="!curResourceData.type"
                           :is-error="content.isLimitExceeded || content.isError"
                           @on-click="handleShowResourceInstance(
                             resourceTypeData,
-                            content, contentIndex, index)"
+                            content,
+                            contentIndex,
+                            index
+                          )"
                         />
                         <p class="error-tips" v-if="resourceInstanceError">
                           {{$t(`m.resourcePermiss['请选择资源实例']`)}}
@@ -212,9 +217,9 @@
   import _ from 'lodash';
   import il8n from '@/language';
   import Policy from '@/model/policy';
-  import RenderCondition from '@/views/resource-permiss/components/render-condition';
-  import RenderResource from '@/views/resource-permiss/components/render-resource';
   import IamSearchSelect from '@/components/iam-search-select';
+  import IamRenderCondition from '@/components/iam-render-condition';
+  import RenderResource from '@/views/resource-permiss/components/render-resource';
   import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { delLocationHref } from '@/common/util';
@@ -227,7 +232,7 @@
     },
     components: {
       RenderResource,
-      RenderCondition,
+      IamRenderCondition,
       IamSearchSelect
     },
     props: {

@@ -3178,8 +3178,35 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
+        descriptionEn:
+    get:
+      operationId: admin_list_groups
+      description: 超管批量获取用户组列表
+      tags:
+        - open
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/admin/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/admin/groups/{id}/:
     delete:
@@ -3204,7 +3231,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
     put:
@@ -3229,10 +3257,37 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/groups/{id}/policies/:
+    get:
+      operationId: admin_groups_policies_list
+      description: 超管查询用户组权限
+      tags:
+        - open
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/admin/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+        disabledStages: []
+        descriptionEn:
     post:
       operationId: admin_groups_policies_grant
       description: 超管授权用户组
@@ -3255,7 +3310,34 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+        disabledStages: []
+        descriptionEn:
+    put:
+      operationId: admin_groups_policies_update
+      description: 超管更新用户组权限
+      tags:
+        - open
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/open/admin/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/groups/{id}/members/:
@@ -3281,7 +3363,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
     delete:
@@ -3306,8 +3389,36 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
+        descriptionEn:
+  /api/v1/open/admin/subjects/{subject_type}/{subject_id}/groups/:
+    get:
+      operationId: admin_list_subject_groups
+      description: 超管获取Subject 加入的用户组列表
+      tags:
+        - open
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/admin/subjects/{subject_type}/{subject_id}/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+        disabledStages: [ ]
         descriptionEn:
   /api/v1/open/admin/systems/{system_id}/provider_config/:
     get:
@@ -3332,7 +3443,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/templates/:
@@ -3358,7 +3470,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
     post:
@@ -3383,7 +3496,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/systems/:
@@ -3397,8 +3511,8 @@ paths:
         default:
           description: ""
       x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
+        isPublic: true
+        allowApplyPermission: true
         matchSubpath: false
         backend:
           type: HTTP
@@ -3410,7 +3524,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/roles/system_managers/systems/{system_id}/members/:
@@ -3424,8 +3539,8 @@ paths:
         default:
           description: ""
       x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
+        isPublic: true
+        allowApplyPermission: true
         matchSubpath: false
         backend:
           type: HTTP
@@ -3437,7 +3552,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/model/share/systems/{system_id}/query:
@@ -3467,7 +3583,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/templates/:
@@ -3758,7 +3875,8 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn:
   /api/v1/open/admin/organization/sync/:
@@ -3785,6 +3903,7 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-          resourcePermissionRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
         disabledStages: []
         descriptionEn: Admin - Trigger organization sync and optionally set sync period

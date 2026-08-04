@@ -194,7 +194,7 @@ class TemplateDetailQuerySLZ(serializers.Serializer):
 
 
 class TemplatePartialUpdateSLZ(serializers.Serializer):
-    name = serializers.CharField(label="模板名称", max_length=128)
+    name = serializers.CharField(label="模板名称", max_length=32)
     description = serializers.CharField(label="描述", max_length=255, allow_blank=True)
 
 
