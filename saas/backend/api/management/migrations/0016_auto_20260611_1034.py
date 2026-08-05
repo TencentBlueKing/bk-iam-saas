@@ -9,9 +9,8 @@ def init_allow_list(apps, schema_editor):
     """初始化授权API白名单"""
     ManagementAPIAllowListConfig = apps.get_model("management", "ManagementAPIAllowListConfig")
 
-    # 查询已存在白名单，避免重复
-    all_allow_list = ManagementAPIAllowListConfig.objects.all()
-    allow_set = set([(a.system_id, a.api) for a in all_allow_list])
+    # 只读取去重所需字段，避免历史 DateTime 数据在不同数据库驱动下发生无关的类型转换错误
+    allow_set = set(ManagementAPIAllowListConfig.objects.values_list("system_id", "api"))
 
     # 白名单列表
     system_id_allow_apis = {
