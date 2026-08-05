@@ -30,7 +30,7 @@ export default class Attribute {
     this.id = payload.id || '';
     this.name = payload.name || '';
     this.type = payload.type || 'STRING';
-    this.operators = payload.operators || [{ id: 'eq', name: 'Equal' }];
+    this.operators = payload.operators || ['eq'];
     this.operator = payload.operator || 'eq';
     this.disabled = flag === '';
     this.loading = false;

@@ -23,7 +23,7 @@
           v-model="item.operator"
           :clearable="false"
           :disabled="formatDisabled(item)"
-          style="width: 120px; margin-left: 8px;"
+          style="width: 120px; margin: 0 8px;"
           @selected="handleOperatorSelected(...arguments, item)">
           <bk-option
             v-for="operator in formatOperators(item)"
@@ -106,6 +106,12 @@
     id: '',
     display_name: ''
   };
+  const OPERATOR_I18N_KEY_MAP = {
+    eq: '等于',
+    in: '属于',
+    starts_with: '开头是',
+    contains: '包含'
+  };
     
   export default {
     components: {
@@ -174,11 +180,17 @@
           && payload.operator === 'contains';
       },
       formatOperators () {
-        return payload => (payload.operators || [{ id: 'eq', name: 'Equal' }]).map(operator => {
-          if (typeof operator === 'string') {
-            return { id: operator, name: operator };
-          }
-          return operator;
+        return payload => (payload.operators || ['eq']).map(operator => {
+          const normalizedOperator = typeof operator === 'string'
+            ? { id: operator, name: operator }
+            : operator;
+          const i18nKey = OPERATOR_I18N_KEY_MAP[normalizedOperator.id];
+          return {
+            ...normalizedOperator,
+            name: i18nKey
+              ? this.$t(`m.resource['${i18nKey}']`)
+              : normalizedOperator.name || normalizedOperator.id
+          };
         });
       },
       formatDisabled () {
@@ -385,7 +397,7 @@
         if (curAttr) {
           payload.name = curAttr.display_name || '';
           payload.type = curAttr.type || 'STRING';
-          payload.operators = curAttr.operators || [{ id: 'eq', name: 'Equal' }];
+          payload.operators = curAttr.operators || ['eq'];
           payload.operator = this.formatOperators(payload)[0].id;
         }
         payload.inputValue = '';

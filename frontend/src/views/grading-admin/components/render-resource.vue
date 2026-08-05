@@ -132,8 +132,8 @@
               v-if="enableAbacExtAttrAbility && condition.attribute.length > 1"
               v-model="condition.attribute_aggregation"
               style="margin-bottom: 12px;">
-              <bk-radio value="AND">AND</bk-radio>
-              <bk-radio value="OR">OR</bk-radio>
+              <bk-radio value="AND">{{ $t(`m.resource['且']`) }}</bk-radio>
+              <bk-radio value="OR">{{ $t(`m.resource['或']`) }}</bk-radio>
             </bk-radio-group>
             <attribute
               :value="condition.attribute"
@@ -468,7 +468,7 @@
             if (attribute.id && !attributes.some(item => item.id === attribute.id)) {
               attributes.push({
                 id: attribute.id,
-                display_name: `${attribute.name} (Unavailable)`,
+                display_name: `${attribute.name} (${this.$t(`m.resource['已失效']`)})`,
                 type: attribute.type || 'STRING',
                 operators: attribute.operators || [{ id: attribute.operator || 'eq', name: attribute.operator || 'eq' }],
                 unavailable: true
