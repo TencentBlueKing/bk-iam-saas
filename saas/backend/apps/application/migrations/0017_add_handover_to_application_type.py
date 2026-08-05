@@ -6,7 +6,10 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('application', '0015_alter_application_index_together'),
+        (
+            "application",
+            "0016_rename_application_created_time_application_created_ca3f79_idx_and_more",
+        ),
     ]
 
     operations = [
