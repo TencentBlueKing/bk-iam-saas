@@ -34,7 +34,10 @@ def init_allow_list(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('management', '0013_alter_managementapiallowlistconfig_api'),
+        (
+            "management",
+            "0015_rename_systemallowauthsystem_system_id_auth_system_id_management__system__a589b3_idx",
+        ),
     ]
 
     operations = [migrations.RunPython(init_allow_list)]
