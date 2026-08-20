@@ -3031,6 +3031,37 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v2/policy/systems/{system_id}/query_by_non_check_actions/:
+    post:
+      operationId: v2_policy_query_by_non_check_actions
+      description: 按不需要鉴权的操作查询策略
+      tags:
+        - policy
+        - v2
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/policy/systems/{system_id}/query_by_non_check_actions/
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+              - host: http://{env.backend}
+                weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /healthz:
     get:
       operationId: healthz
