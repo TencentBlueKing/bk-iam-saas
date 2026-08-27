@@ -31,7 +31,10 @@ export default class Attribute {
     this.name = payload.name || '';
     this.type = payload.type || 'STRING';
     this.operators = payload.operators || ['eq'];
-    this.operator = payload.operator || 'eq';
+    const firstOperator = this.operators[0];
+    this.operator = payload.operator
+      || (typeof firstOperator === 'string' ? firstOperator : firstOperator && firstOperator.id)
+      || 'eq';
     this.disabled = flag === '';
     this.loading = false;
     this.init(payload);
