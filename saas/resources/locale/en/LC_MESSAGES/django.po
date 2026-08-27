@@ -599,10 +599,8 @@ msgid "批量操作部分失败"
 msgstr ""
 
 #: backend/common/error_codes.py:67
-#, fuzzy
-#| msgid "请求第三方接口失败"
 msgid "请求第三方API错误"
-msgstr "Request for third-party interface failed"
+msgstr "Error requesting third-party API"
 
 #: backend/common/error_codes.py:70
 msgid "请求ENGINE错误"

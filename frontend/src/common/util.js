@@ -628,6 +628,50 @@ export function formatI18nKey () {
 }
 
 /**
+ * 根据当前语言获取业务数据中的本地化字段。
+ * 中文优先使用原字段，其他语言优先使用 `${field}_en`，缺失时相互回退。
+ *
+ * @param {Object} data 业务数据
+ * @param {string} field 字段名
+ *
+ * @return {string} 本地化字段值
+ */
+export function getLocalizedField (data, field = 'name') {
+  if (!data || typeof data !== 'object') {
+    return '';
+  }
+  const value = data[field] || '';
+  const valueEn = data[`${field}_en`] || '';
+  return formatI18nKey() === 'zh-cn' ? value || valueEn : valueEn || value;
+}
+
+// ITSM 暂未返回流程和节点的多语言字段，仅对 IAM 内置名称进行白名单翻译。
+const BUILTIN_APPROVAL_I18N_KEYS = [
+  '默认审批流程',
+  '用户组审批流程',
+  '权限交接默认审批流程',
+  '超级管理员',
+  '系统管理员',
+  '分级管理员',
+  '管理空间管理员',
+  '资源审批人',
+  '资源审批人（合并）'
+];
+
+/**
+ * 获取审批流程或节点名称。用户自定义名称保持原文，IAM 内置名称使用 i18n。
+ *
+ * @param {Object|string} data 审批流程、节点数据或名称
+ * @param {string} field 字段名
+ *
+ * @return {string} 展示名称
+ */
+export function getLocalizedApprovalName (data, field = 'name') {
+  const value = typeof data === 'string' ? data : getLocalizedField(data, field);
+  return BUILTIN_APPROVAL_I18N_KEYS.includes(value) ? il8n('approvalProcess', value) : value;
+}
+
+/**
  *  jsonp请求
  *
  * @param {url} str 请求地址
