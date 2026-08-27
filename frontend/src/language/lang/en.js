@@ -1113,6 +1113,7 @@ export const m = {
         '超级管理员': 'Super administrator',
         '系统管理员': 'System administrator',
         '分级管理员': 'Grade manager',
+        '分级管理员审批': 'Grade manager approval',
         '管理空间管理员': 'Management space administrator',
         '资源审批人': 'Resource approver',
         '资源审批人（合并）': 'Resource approver (merged)',

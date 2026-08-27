@@ -672,7 +672,7 @@ msgstr ""
 
 #: backend/common/error_codes.py:108
 msgid "ITSM流程里存在IAM不支持的流程处理者"
-msgstr ""
+msgstr "The ITSM process contains a processor unsupported by IAM"
 
 #: backend/common/time.py:33
 msgid "已过期"
@@ -718,9 +718,26 @@ msgstr ""
 msgid "用户组授权"
 msgstr ""
 
-#: backend/plugins/approval_process/itsm.py:80
+#: backend/plugins/approval_process/itsm.py:85
+#, python-brace-format
 msgid "ITSM未内置[{}]"
-msgstr ""
+msgstr "ITSM does not have the built-in [{}]"
+
+#: backend/plugins/approval_process/itsm.py:28
+msgid "默认审批流程"
+msgstr "Default approval process"
+
+#: backend/plugins/approval_process/itsm.py:29
+msgid "用户组审批流程"
+msgstr "User group approval process"
+
+#: backend/plugins/approval_process/itsm.py:30
+msgid "权限交接默认审批流程"
+msgstr "Default permission handover approval process"
+
+#: backend/plugins/approval_process/itsm.py:33
+msgid "分级管理员审批"
+msgstr "Grade manager approval"
 
 #: backend/service/approval.py:76
 msgid "不支持申请类型为[{}]拥有默认审批流程"
