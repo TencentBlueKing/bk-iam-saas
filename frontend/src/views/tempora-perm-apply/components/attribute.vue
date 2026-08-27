@@ -91,6 +91,7 @@
 
 <script>
   import { cloneDeep, debounce } from 'lodash';
+  import { mergeSelectedAttributeValues, syncAttributeMetadata } from '@/common/attribute';
   import { sleep } from '@/common/util';
   import Attribute from '@/model/attribute';
   import BkUserSelector from '@blueking/user-selector';
@@ -143,6 +144,7 @@
           totalPage: 0
         },
         attrValueListMap: {},
+        attrValueLoadedMap: {},
         curToggleItem: '',
         curKeyWord: '',
         curSelectDom: null
@@ -196,9 +198,11 @@
             return;
           }
           this.attrValues = val;
-          const flag = Object.keys(this.attrValueListMap).length > 0;
           this.attrValues.forEach(async item => {
-            if (!flag && item.id && !this.isStringContains(item)) {
+            syncAttributeMetadata(item, this.list);
+            const options = mergeSelectedAttributeValues(item, this.attrValueListMap[item.id]);
+            this.$set(this.attrValueListMap, item.id, options);
+            if (!this.attrValueLoadedMap[item.id] && item.id && !this.isStringContains(item)) {
               await this.fetchValue(item);
             }
           });
@@ -213,6 +217,7 @@
                 this.$set(this.attrValueListMap, item.id, []);
               }
             });
+            this.attrValues.forEach(item => syncAttributeMetadata(item, val));
           }
         },
         immediate: true
@@ -296,10 +301,12 @@
             keyword: ''
           });
           this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+          const results = mergeSelectedAttributeValues(item, res.data.results);
           if (this.pagination.totalPage > 1) {
-            res.data.results.push(LOADING_ITEM);
+            results.push(LOADING_ITEM);
           }
-          this.$set(this.attrValueListMap, item.id, res.data.results);
+          this.$set(this.attrValueListMap, item.id, results);
+          this.$set(this.attrValueLoadedMap, item.id, true);
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
@@ -424,7 +431,9 @@
           });
           if (isScrollRemote) {
             const len = this.attrValueListMap[payload.id].length;
-            this.attrValueListMap[payload.id].splice(len - 1, 0, ...res.data.results);
+            const currentIds = new Set(this.attrValueListMap[payload.id].map(item => String(item.id)));
+            const results = res.data.results.filter(item => !currentIds.has(String(item.id)));
+            this.attrValueListMap[payload.id].splice(len - 1, 0, ...results);
           } else {
             this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
             if (this.pagination.totalPage > 1) {
@@ -432,7 +441,10 @@
             } else {
               res.data.results = res.data.results.filter((item) => item.id !== '');
             }
-            this.attrValueListMap[payload.id] = cloneDeep(res.data.results);
+            this.attrValueListMap[payload.id] = cloneDeep(
+              mergeSelectedAttributeValues(payload, res.data.results)
+            );
+            this.$set(this.attrValueLoadedMap, payload.id, true);
           }
         } catch (e) {
           console.error(e);
