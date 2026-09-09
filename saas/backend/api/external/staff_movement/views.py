@@ -164,7 +164,7 @@ class ResignHandoverViewSet(HandoverViewSet):
                 handover_info["custom_policies"].append({"system_id": asset["info"], "policy_ids": policy_ids})
             else:
                 if asset["id"] not in valid_group_ids:
-                    err_list.append({"fail_reason": "用户组权限已过期，无法交接，只能回收", "info": asset})
+                    err_list.append({"fail_reason": "用户组权限已过期，无法更换负责人，只能删除权限", "info": asset})
                     continue
                 handover_info["group_ids"].append(asset["id"])
 
