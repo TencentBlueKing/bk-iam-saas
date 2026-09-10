@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 from django.conf import settings
 from django.db import transaction
@@ -45,7 +45,7 @@ from backend.service.constants import (
 from backend.service.models.subject import Subject
 
 from .group import GroupBiz, SubjectGroupBean
-from .role import RoleBiz
+from .role import RoleBiz, RoleCheckBiz
 from .template import TemplateBiz
 
 
@@ -311,6 +311,23 @@ def get_user_expired_groups_policies(
         for group in group_biz.list_all_subject_group_before_expired_at(subject, expired_at_before)
         if group.expired_at > expired_at_after
     ]
+    if groups:
+        role_check_biz = RoleCheckBiz()
+        role_enabled_map: Dict[int, bool] = {}
+        enabled_group_ids: Set[int] = set()
+
+        relations = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id__in=[g.id for g in groups]
+        ).values_list("object_id", "role_id")
+
+        for group_id, role_id in relations:
+            if role_id not in role_enabled_map:
+                role_enabled_map[role_id] = role_check_biz.is_role_enabled(role_id)
+
+            if role_enabled_map[role_id]:
+                enabled_group_ids.add(group_id)
+
+        groups = [g for g in groups if g.id in enabled_group_ids]
 
     policies = policy_biz.list_expired(subject, expired_at_before)
     # 同时过滤掉不接收续期通知的系统的权限策略
