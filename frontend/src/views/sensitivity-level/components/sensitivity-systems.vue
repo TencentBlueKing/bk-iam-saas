@@ -55,7 +55,7 @@
                 :class="['folder-icon', { 'folder-icon-active': item.id === active }]"
               />
               <div class="single-hide">
-                {{ item.name }}
+                {{ getLocalizedField(item) }}
               </div>
             </div>
           </div>
@@ -79,7 +79,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { formatCodeData, getWindowHeight } from '@/common/util';
+  import { formatCodeData, getLocalizedField, getWindowHeight } from '@/common/util';
   // import { systemCountMockData } from '../testData.js';
   export default {
     inject: {
@@ -127,6 +127,8 @@
       await this.fetchSystems();
     },
     methods: {
+      getLocalizedField,
+
       async fetchPageData () {
         await this.fetchSystems();
       },
@@ -217,7 +219,7 @@
         this.emptySystemData.tipType = 'search';
         this.systemList = this.systemListStorage.filter(
           (item) =>
-            item.name.indexOf(this.systemValue) > -1
+            getLocalizedField(item).toLowerCase().indexOf(this.systemValue.toLowerCase()) > -1
             || item.id.toLowerCase().indexOf(this.systemValue.toLowerCase()) > -1
         );
         if (!this.systemList.length) {

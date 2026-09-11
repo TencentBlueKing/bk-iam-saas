@@ -25,8 +25,8 @@
         <bk-option v-for="option in list"
           :key="option.id"
           :id="option.id"
-          :name="option.name">
-          <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${ optionMap(option) }`">{{ option.name }}</span>
+          :name="getLocalizedApprovalName(option)">
+          <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${ optionMap(option) }`">{{ getLocalizedApprovalName(option) }}</span>
         </bk-option>
         <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }" @click="handleOpenCreateLink" style="cursor: not-allowed;">
           <Icon bk type="plus-circle" />
@@ -40,6 +40,8 @@
   </div>
 </template>
 <script>
+  import { getLocalizedApprovalName } from '@/common/util';
+
   export default {
     name: '',
     props: {
@@ -72,7 +74,7 @@
       curSelectName () {
         if (this.list.length > 0 && this.value !== -1) {
           const data = this.list.find(item => item.id === this.value);
-          return data ? data.name || '' : '';
+          return data ? getLocalizedApprovalName(data) : '';
         }
         return '';
       },
@@ -80,7 +82,7 @@
         if (this.list.length > 0 && this.value !== -1) {
           const tempData = this.list.find(item => item.id === this.value);
           if (tempData && tempData.node_names) {
-            return `${this.$t(`m.approvalProcess['审批节点']`)}：${tempData.node_names.join(' -> ')}`;
+            return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.formatNodeNames(tempData.node_names)}`;
           }
           return '';
         }
@@ -144,9 +146,15 @@
       },
       optionMap (option) {
         if (option.node_names) {
-          return option.node_names.join(' -> ');
+          return this.formatNodeNames(option.node_names);
         }
-      }
+      },
+
+      formatNodeNames (nodeNames) {
+        return nodeNames.map(name => getLocalizedApprovalName(name)).join(' -> ');
+      },
+
+      getLocalizedApprovalName
     }
   };
 </script>

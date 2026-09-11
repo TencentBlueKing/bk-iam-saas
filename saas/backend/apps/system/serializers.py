@@ -16,6 +16,7 @@ from backend.common.serializers import HiddenSLZ
 class SystemSLZ(serializers.Serializer):
     id = serializers.CharField()
     name = serializers.CharField()
+    name_en = serializers.CharField(allow_blank=True)
     description = serializers.CharField()
     is_favorite = serializers.BooleanField(default=False)
 

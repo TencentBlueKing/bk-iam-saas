@@ -9,7 +9,9 @@
     >
       <bk-table-column :label="$t(`m.common['操作']`)">
         <template slot-scope="{ row }">
-          <span :title="row.action_name">{{ row.action_name }}</span>
+          <span :title="getLocalizedField(row, 'action_name')">
+            {{ getLocalizedField(row, 'action_name') }}
+          </span>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['所属系统']`)" prop="system_id">
@@ -56,6 +58,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { il8n } from '@/language';
+  import { getLocalizedField } from '@/common/util';
   import { SENSITIVITY_LEVEL_ENUM } from '@/common/constants';
   export default {
     props: {
@@ -83,7 +86,7 @@
       return (payload) => {
         const curSystem = this.allSystemList.find((item) => item.id === payload);
         if (curSystem) {
-          return curSystem.name;
+          return getLocalizedField(curSystem);
         }
         return '--';
       };
@@ -128,6 +131,7 @@
       }
     },
     methods: {
+      getLocalizedField
       // handleDelete (payload) {
       //   this.$emit('on-delete', payload);
       // }

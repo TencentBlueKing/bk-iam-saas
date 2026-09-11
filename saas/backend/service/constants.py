@@ -284,11 +284,16 @@ IAM_SUPPORT_PROCESSOR_TYPES = [
 ]
 
 
-# 支持配置默认流程的申请审批类型
-DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
+# 审批流程管理页面支持配置的默认流程类型
+DEFAULT_PROCESS_CONFIGURABLE_APPLICATION_TYPES = [
     ApplicationType.GRANT_ACTION.value,
     ApplicationType.JOIN_GROUP.value,
     ApplicationType.CREATE_GRADE_MANAGER.value,
+]
+
+# 权限交接使用 ITSM 内置流程，不在审批流程管理页面配置，避免缺少内置流程时导致整个配置列表加载失败
+DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
+    *DEFAULT_PROCESS_CONFIGURABLE_APPLICATION_TYPES,
     ApplicationType.HANDOVER.value,
 ]
 

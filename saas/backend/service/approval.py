@@ -20,7 +20,7 @@ from backend.common.error_codes import error_codes
 from backend.plugins.approval_process.base import ApprovalProcessProvider
 from backend.plugins.approval_process.itsm import ITSMApprovalProcessProvider
 
-from .constants import DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES, ApplicationType
+from .constants import DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES, ApplicationType, DEFAULT_PROCESS_CONFIGURABLE_APPLICATION_TYPES
 from .models import (
     ActionApprovalProcess,
     ApprovalProcess,
@@ -234,8 +234,8 @@ class ApprovalProcessService:
             )
 
     def list_default_process(self) -> List[DefaultApprovalProcess]:
-        """查询所有默认流程"""
+        """查询审批流程管理页面可配置的默认流程"""
         return [
             self.get_default_process(application_type)
-            for application_type in DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES
+            for application_type in DEFAULT_PROCESS_CONFIGURABLE_APPLICATION_TYPES
         ]

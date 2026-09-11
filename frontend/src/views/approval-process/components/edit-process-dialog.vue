@@ -16,7 +16,7 @@
         <bk-option v-for="option in list"
           :key="option.id"
           :id="option.id"
-          :name="option.name">
+          :name="getLocalizedApprovalName(option)">
         </bk-option>
       </bk-select>
       <template slot="footer">
@@ -38,6 +38,7 @@
 </template>
 <script>
   import lowerComponent from 'lower-component';
+  import { getLocalizedApprovalName } from '@/common/util';
   export default {
     name: '',
     components: {
@@ -91,6 +92,8 @@
       }
     },
     methods: {
+      getLocalizedApprovalName,
+
       handleSumbit () {
         this.$emit('on-submit', this.curProcessValue);
       },

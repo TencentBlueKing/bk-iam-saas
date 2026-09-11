@@ -55,7 +55,7 @@
               <bk-option v-for="option in list"
                 :key="option.id"
                 :id="option.id"
-                :name="option.name">
+                :name="getLocalizedApprovalName(option)">
               </bk-option>
             </bk-select>
           </section>
@@ -85,6 +85,7 @@
 </template>
 <script>
   import editProcessDialog from './edit-process-dialog';
+  import { getLocalizedApprovalName } from '@/common/util';
   export default {
     name: '',
     components: {
@@ -93,7 +94,7 @@
     filters: {
       proceeNameFilter (value, list) {
         const data = list.find(item => item.id === value);
-        if (data) return data.name;
+        if (data) return getLocalizedApprovalName(data);
         return '';
       }
     },
@@ -142,6 +143,8 @@
       }
     },
     methods: {
+      getLocalizedApprovalName,
+
       pageChange (page) {
         if (this.currentBackup === page) {
           return;
