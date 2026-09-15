@@ -15,6 +15,8 @@ def init_allow_list(apps, schema_editor):
     # 白名单列表
     system_id_allow_apis = {
         "bk_aidev": [ALLOW_ANY],
+        "auto-ops": [ALLOW_ANY],
+        "bk_vision": [ALLOW_ANY],
     }
 
     # 组装成Model对象
