@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="icon" href="<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
         <link rel="shortcut icon" href="<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
         <meta charset="utf-8">
         <title>权限中心 | 蓝鲸智云</title>
