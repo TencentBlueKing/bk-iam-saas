@@ -41,8 +41,8 @@
       <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
       <bk-table-column :label="$t(`m.sensitivityLevel['操作名称']`)">
         <template slot-scope="{ row }">
-          <span class="action-name" :title="row.action_name">
-            {{ row.action_name }}
+          <span class="action-name" :title="getLocalizedField(row, 'action_name')">
+            {{ getLocalizedField(row, 'action_name') }}
           </span>
         </template>
       </bk-table-column>
@@ -53,7 +53,9 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.sensitivityLevel['当前审批流程']`)">
         <template slot-scope="{ row }">
-          <span :title="row.process_name">{{ row.process_name || "--" }}</span>
+          <span :title="getLocalizedApprovalName(row, 'process_name')">
+            {{ getLocalizedApprovalName(row, 'process_name') || "--" }}
+          </span>
         </template>
       </bk-table-column>
       <bk-table-column
@@ -106,7 +108,13 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { xssFilter, formatCodeData, getWindowHeight } from '@/common/util';
+  import {
+    xssFilter,
+    formatCodeData,
+    getWindowHeight,
+    getLocalizedApprovalName,
+    getLocalizedField
+  } from '@/common/util';
   import { SENSITIVITY_LEVEL_ENUM } from '@/common/constants';
   import IamSearchSelect from '@/components/iam-search-select';
   import IamSensitivitySelect from './iam-sensitivity-select.vue';
@@ -211,6 +219,9 @@
       });
     },
     methods: {
+      getLocalizedApprovalName,
+      getLocalizedField,
+
       async fetchInitData () {
         await this.fetchSystems();
         await this.fetchSensitivityLevelList(true);
@@ -218,9 +229,9 @@
 
       async fetchSystems () {
         if (this.allSystemList.length) {
-          this.allSystemData = [...this.allSystemList].map(({ id, name }) => ({
-            value: id,
-            text: name
+          this.allSystemData = [...this.allSystemList].map(system => ({
+            value: system.id,
+            text: getLocalizedField(system)
           }));
           return;
         }
@@ -230,9 +241,9 @@
         }
         const result = await this.$store.dispatch('getSystemList', params);
         if (result && result.length) {
-          this.allSystemData = [...result].map(({ id, name }) => ({
-            value: id,
-            text: name
+          this.allSystemData = [...result].map(system => ({
+            value: system.id,
+            text: getLocalizedField(system)
           }));
         }
       },

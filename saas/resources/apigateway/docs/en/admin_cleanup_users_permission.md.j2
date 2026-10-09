@@ -1,0 +1,48 @@
+### Cleanup user permissions
+
+Asynchronously clean up the specified users' permission data in IAM, including:
+
+- Custom policies and temporary policies
+- User group memberships
+- Personnel template memberships
+- Super manager / system manager / grade manager / subset manager identities
+
+A successful response only means the cleanup tasks have been created; the actual cleanup runs asynchronously in the background. Currently only users (`type=user`) are supported; departments and groups are not supported. At least one user must be provided.
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|---|---|---|---|---|
+| type | string | body | yes | Subject type. Currently only `user` is supported |
+| id | string | body | yes | Username |
+| before_at | int | body | no | Cleanup timestamp in seconds. If provided, user groups, personnel templates, and manager identities created after this time are kept; custom policies and temporary policies are always fully cleaned |
+
+The request body is an array of objects.
+
+#### Request
+
+```json
+[
+  {
+    "type": "user",
+    "id": "alice",
+    "before_at": 1710000000
+  },
+  {
+    "type": "user",
+    "id": "bob"
+  }
+]
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

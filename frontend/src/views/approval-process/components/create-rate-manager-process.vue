@@ -10,12 +10,14 @@
       <bk-option v-for="option in list"
         :key="option.id"
         :id="option.id"
-        :name="option.name">
+        :name="getLocalizedApprovalName(option)">
       </bk-option>
     </bk-select>
   </div>
 </template>
 <script>
+  import { getLocalizedApprovalName } from '@/common/util';
+
   export default {
     name: '',
     props: {
@@ -30,6 +32,8 @@
       };
     },
     methods: {
+      getLocalizedApprovalName,
+
       handleProcessSelect (value, option) {
       }
     }
