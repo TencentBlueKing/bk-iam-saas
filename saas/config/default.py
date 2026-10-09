@@ -188,10 +188,23 @@ ENABLE_SWAGGER = env.bool("BKAPP_ENABLE_SWAGGER", default=False)
 # worker: python manage.py celery worker -l info
 # beat: python manage.py celery beat -l info
 IS_USE_CELERY = True
-# 连接 BROKER 超时时间
-BROKER_CONNECTION_TIMEOUT = 1  # 单位秒
-# CELERY 与 RabbitMQ 增加 60 秒心跳设置项
-BROKER_HEARTBEAT = 60
+# Broker 连接与重连。环境变量 max_retries=0 表示无限重试，避免 RabbitMQ 短暂故障后 Worker 退出。
+BROKER_CONNECTION_TIMEOUT = env.int("BKAPP_CELERY_BROKER_CONNECTION_TIMEOUT", default=5)  # 单位秒
+BROKER_CONNECTION_RETRY = env.bool("BKAPP_CELERY_BROKER_CONNECTION_RETRY", default=True)
+broker_connection_max_retries = env.int("BKAPP_CELERY_BROKER_CONNECTION_MAX_RETRIES", default=0)
+# Celery 5.1.2 会将该值直接传给 Kombu，因此需将 0 显式转为 None 才能真正无限重试。
+BROKER_CONNECTION_MAX_RETRIES = broker_connection_max_retries or None
+# 心跳用于及时发现已失效的 RabbitMQ 连接。
+BROKER_HEARTBEAT = env.int("BKAPP_CELERY_BROKER_HEARTBEAT", default=60)
+BROKER_HEARTBEAT_CHECKRATE = env.float("BKAPP_CELERY_BROKER_HEARTBEAT_CHECKRATE", default=2.0)
+# 任务发布端也需要重试，但保持有限次数，避免阻塞 Web 请求过久。
+CELERY_TASK_PUBLISH_RETRY = env.bool("BKAPP_CELERY_PUBLISH_RETRY", default=True)
+CELERY_TASK_PUBLISH_RETRY_POLICY = {
+    "max_retries": env.int("BKAPP_CELERY_PUBLISH_MAX_RETRIES", default=3),
+    "interval_start": env.float("BKAPP_CELERY_PUBLISH_RETRY_INTERVAL_START", default=1.0),
+    "interval_step": env.float("BKAPP_CELERY_PUBLISH_RETRY_INTERVAL_STEP", default=1.0),
+    "interval_max": env.float("BKAPP_CELERY_PUBLISH_RETRY_INTERVAL_MAX", default=3.0),
+}
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
 CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
 # 与周期任务配置的定时时区相关
@@ -226,6 +239,8 @@ CELERY_IMPORTS = (
     "backend.apps.handover.tasks",
 )
 ORGANIZATION_SYNC_CRONTAB = env.str("BKAPP_ORGANIZATION_SYNC_CRONTAB", default="0 0 * * *")  # 默认每天 0 时
+# 是否在一个整体事务中提交组织架构同步的 DB 变更；关闭后由 Django autocommit 分批提交
+ENABLE_ORGANIZATION_SYNC_TRANSACTION = env.bool("BKAPP_ENABLE_ORGANIZATION_SYNC_TRANSACTION", default=True)
 _org_sync_schedule = crontab_from_string(ORGANIZATION_SYNC_CRONTAB)
 
 CELERYBEAT_SCHEDULE = {

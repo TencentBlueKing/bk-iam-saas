@@ -12,7 +12,8 @@ specific language governing permissions and limitations under the License.
 import json
 import logging
 import traceback
-from typing import List
+from contextlib import contextmanager
+from typing import Iterator, List
 
 from celery import shared_task
 from django.conf import settings
@@ -40,6 +41,17 @@ from backend.util.json import json_dumps
 from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 
 logger = logging.getLogger("celery")
+
+
+@contextmanager
+def _organization_sync_transaction() -> Iterator[None]:
+    """根据配置决定组织架构同步是否使用整体事务。"""
+    if settings.ENABLE_ORGANIZATION_SYNC_TRANSACTION:
+        with transaction.atomic():
+            yield
+        return
+
+    yield
 
 
 @shared_task(ignore_result=True)
@@ -79,7 +91,7 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
         user_leader_service = DBUserLeaderSyncService()
 
         # 开始执行同步变更
-        with transaction.atomic():
+        with _organization_sync_transaction():
             services = [
                 user_sync_service,
                 department_sync_service,

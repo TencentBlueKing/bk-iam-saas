@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_noop
 
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
@@ -25,9 +25,12 @@ from .base import ApprovalProcessProvider
 class DefaultProcessNameEnum(ChoicesEnum):
     """默认流程名称枚举"""
 
-    DEFAULT = "默认审批流程"
-    GROUP = "用户组审批流程"
-    HANDOVER = "权限交接默认审批流程"
+    DEFAULT = gettext_noop("默认审批流程")
+    GROUP = gettext_noop("用户组审批流程")
+    HANDOVER = gettext_noop("权限交接默认审批流程")
+
+
+BUILTIN_APPROVAL_NODE_NAMES = {gettext_noop("分级管理员审批")}
 
 
 APPLICATION_TYPE_DEFAULT_PROCESS_DICT = {
@@ -79,7 +82,7 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
             if p.name == default_process_name:
                 return p
 
-        raise error_codes.INVALID_ARGS.format(_("ITSM未内置[{}]").format(default_process_name), True)
+        raise error_codes.INVALID_ARGS.format(_("ITSM未内置[{}]").format(_(default_process_name)), True)
 
     def get_process_nodes(self, process_id: int) -> List[ApprovalProcessNode]:
         """查询流程节点
@@ -94,7 +97,12 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
                 source = ProcessorSource.IAM.value
                 # 对于来源于IAM，需要检查角色是否满足
                 if _type not in IAM_SUPPORT_PROCESSOR_TYPES:
-                    raise error_codes.ITSM_PROCESSOR_NOT_SUPPORT.format(f"process_id: {process_id}, node:{node}")
+                    node_info = {**node}
+                    if node_info["name"] in BUILTIN_APPROVAL_NODE_NAMES:
+                        node_info["name"] = _(node_info["name"])
+                    raise error_codes.ITSM_PROCESSOR_NOT_SUPPORT.format(
+                        f"process_id: {process_id}, node:{node_info}"
+                    )
 
             process_nodes.append(
                 ApprovalProcessNode(id=node["id"], name=node["name"], processor_source=source, processor_type=_type)

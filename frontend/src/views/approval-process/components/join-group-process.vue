@@ -58,10 +58,10 @@
                 <bk-option v-for="option in list"
                   :key="option.id"
                   :id="option.id"
-                  :name="option.name">
+                  :name="getLocalizedApprovalName(option)">
                   <span style="display: block; line-height: 32px;"
-                    :title="`${$t(`m.approvalProcess['审批节点']`)}: ${option.node_names.join(' -> ')}`">
-                    {{ option.name }}
+                    :title="`${$t(`m.approvalProcess['审批节点']`)}: ${formatNodeNames(option.node_names)}`">
+                    {{ getLocalizedApprovalName(option) }}
                   </span>
                 </bk-option>
                 <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }"
@@ -115,7 +115,7 @@
   import { buildURLParams } from '@/common/url';
   import editProcessDialog from './edit-process-dialog';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, getLocalizedApprovalName } from '@/common/util';
   export default {
     name: '',
     components: {
@@ -125,7 +125,7 @@
     filters: {
       processNameFilter (value, list) {
         const data = list.find(item => item.id === value);
-        if (data) return data.name;
+        if (data) return getLocalizedApprovalName(data);
         return il8n('approvalProcess', '默认审批流程');
       }
     },
@@ -172,7 +172,7 @@
           return payload => {
               if (this.list.length > 0 && payload.process_id !== '') {
                   if (this.list.find(item => item.id === payload.process_id)) {
-                      return this.list.find(item => item.id === payload.process_id).name;
+                      return getLocalizedApprovalName(this.list.find(item => item.id === payload.process_id));
                   }
                 }
                 return this.$t(`m.approvalProcess['默认审批流程']`);
@@ -182,7 +182,7 @@
           return payload => {
               if (this.list.length > 0 && payload.process_id !== '') {
                   if (this.list.find(item => item.id === payload.process_id)) {
-                      return `${this.$t(`m.approvalProcess['审批节点']`)}: ${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
+                      return `${this.$t(`m.approvalProcess['审批节点']`)}: ${this.formatNodeNames(this.list.find(item => item.id === payload.process_id).node_names)}`;
                   } else {
                       return '';
                   }
@@ -239,6 +239,12 @@
       });
     },
     methods: {
+      getLocalizedApprovalName,
+
+      formatNodeNames (nodeNames) {
+        return nodeNames.map(name => getLocalizedApprovalName(name)).join(' -> ');
+      },
+
       refreshCurrentQuery () {
         const { limit, current } = this.pagination;
         const queryParams = {
