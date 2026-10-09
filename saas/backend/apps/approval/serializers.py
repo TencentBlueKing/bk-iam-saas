@@ -45,6 +45,7 @@ class ActionApprovalProcessQuerySLZ(serializers.Serializer):
 class ActionApprovalProcessSLZ(serializers.Serializer):
     action_id = serializers.CharField(label="操作ID")
     action_name = serializers.CharField(label="操作名称")
+    action_name_en = serializers.CharField(label="操作英文名称", allow_blank=True)
     system_id = serializers.CharField(label="系统ID")
     process_id = serializers.IntegerField(label="流程ID")
     process_name = serializers.CharField(label="流程名称")
