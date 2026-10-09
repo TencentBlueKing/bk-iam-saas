@@ -8,22 +8,20 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import time
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, FrozenSet, List
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.utils.functional import cached_property
 from pydantic import BaseModel
 
-from backend.apps.role.models import Role, RoleRelatedObject, RoleResourceRelation, RoleUser
-from backend.service.constants import ANY_ID, ProcessorNodeType, RoleRelatedObjectType, RoleType, SubjectType
+from backend.apps.role.models import Role, RoleResourceRelation
+from backend.service.constants import ANY_ID, ProcessorNodeType, RoleType
 from backend.service.models.approval import ApprovalProcessWithNodeProcessor
 from backend.util.uuid import gen_uuid
 
-from .group import GroupBiz
 from .policy import (
     ConditionBean,
     InstanceBean,
@@ -34,7 +32,7 @@ from .policy import (
     ResourceGroupBeanList,
 )
 from .resource import ResourceBiz, ResourceNodeAttributeDictBean, ResourceNodeBean
-from .role import RoleAuthorizationScopeChecker
+from .role import RoleAuthorizationScopeChecker, RoleBiz
 
 
 class PolicyProcess(BaseModel):
@@ -336,7 +334,7 @@ def copy_policy_by_instance_path(policy, resource_group, rrt, instance, path):
 class GradeManagerApproverHandler(PolicyProcessHandler):
     """分级管理员审批人"""
 
-    group_biz = GroupBiz()
+    role_biz = RoleBiz()
 
     def __init__(self, system_id: str) -> None:
         super().__init__(system_id)
@@ -344,6 +342,8 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
         # for cache
         self._resource_role_ids: Dict[ResourceNodeBean, List[int]] = {}
         self._role_id_checker: Dict[int, RoleAuthorizationScopeChecker] = {}
+        # 审批人查询缓存: role_ids -> 成员列表(过滤同步组过期成员后)
+        self._grade_manager_members: Dict[FrozenSet[int], List[str]] = {}
 
     def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
         # 返回的结果
@@ -377,6 +377,8 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
 
                 # 查询分级管理员的成员作为审批人
                 approvers = self._list_grade_manager_members_for_approver(role_ids)
+                if not approvers:
+                    continue
                 copied_process = deepcopy(policy_process.process)
                 copied_process.set_node_approver(
                     ProcessorNodeType.GRADE_MANAGER.value,
@@ -554,38 +556,9 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
         return resource_node_policy
 
     def _list_grade_manager_members_for_approver(self, role_ids: List[int]) -> List[str]:
-        """查询分级管理员的成员(所有者)作为审批人，过滤掉权限同步用户组中已过期的成员
-
-        管理空间(角色)的成员与权限同步用户组的成员是双向同步的，但用户组成员存在有效期，
-        成员过期后 RoleUser 不会同步删除(需等待清理任务)，所以查询审批人时需要过滤。
-        """
-
-        # 批量查询分级管理员的成员
-        role_members: Set[Tuple[int, str]] = set(
-            RoleUser.objects.filter(role_id__in=role_ids).values_list("role_id", "username")
-        )
-        if not role_members:
-            return []
-
-        # 批量查询分级管理员的权限同步用户组
-        sync_group_relations: List[Tuple[int, int]] = list(
-            RoleRelatedObject.objects.filter(
-                role_id__in=role_ids, object_type=RoleRelatedObjectType.GROUP.value, sync_perm=True
-            ).values_list("role_id", "object_id")
-        )
-        if not sync_group_relations:
-            # 没有权限同步用户组，成员不存在过期问题，直接返回
-            return list({username for _, username in role_members})
-
-        # 批量查询各同步用户组中已过期的成员
-        expired_at = int(time.time())
-        group_id_to_role_id: Dict[int, int] = {group_id: role_id for role_id, group_id in sync_group_relations}
-        for gs in self.group_biz.list_group_subject_before_expired_at_by_ids(list(group_id_to_role_id), expired_at):
-            if gs.subject.type != SubjectType.USER.value:
-                continue
-            # 只从该过期成员所属组对应的角色成员集合中删除
-            role_id = group_id_to_role_id[int(gs.group.id)]
-            role_members.discard((role_id, gs.subject.id))
-
-        # 提取 username 集合并返回
-        return list({username for _, username in role_members})
+        """查询分级管理员的成员 (所有者) 作为审批人 (过滤同步用户组过期成员)"""
+        # 同一申请单多个资源节点/实例的 role_ids 常有重叠，按 role_ids 缓存避免重复查询 DB 与 IAM。
+        cache_key = frozenset(role_ids)
+        if cache_key not in self._grade_manager_members:
+            self._grade_manager_members[cache_key] = self.role_biz.list_unexpired_grade_manager_members(role_ids)
+        return self._grade_manager_members[cache_key]

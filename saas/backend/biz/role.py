@@ -9,9 +9,10 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+import time
 from collections import defaultdict
 from textwrap import dedent
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
@@ -53,6 +54,7 @@ from backend.service.constants import (
     RoleType,
     SubjectType,
 )
+from backend.service.group import GroupService
 from backend.service.models import Attribute, Subject, System
 from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService, UserRole
 from backend.service.system import SystemService
@@ -130,8 +132,10 @@ class RoleScopeSystemActions(BaseModel):
 class RoleBiz:
     svc = RoleService()
     system_svc = SystemService()
+    group_svc = GroupService()
 
     get_role_by_group_id = RoleService.__dict__["get_role_by_group_id"]
+    get_parent_id = RoleService.__dict__["get_parent_id"]
     list_system_common_actions = RoleService.__dict__["list_system_common_actions"]
     list_user_role = RoleService.__dict__["list_user_role"]
     list_paging_user_role = RoleService.__dict__["list_paging_user_role"]
@@ -142,6 +146,43 @@ class RoleBiz:
     list_members_by_role_id = RoleService.__dict__["list_members_by_role_id"]
 
     transfer_groups_role = RoleService.__dict__["transfer_groups_role"]
+
+    def list_unexpired_grade_manager_members(self, role_ids: List[int]) -> List[str]:
+        """查询未过期的分级管理员成员
+
+        管理空间的成员与权限同步用户组的成员是双向同步的，用户组成员存在有效期，成员过期后不会同步删除 (需等待清理任务)，所以需要过滤。
+        """
+        # 批量查询分级管理员的成员
+        role_members: Set[Tuple[int, str]] = set(
+            RoleUser.objects.filter(role_id__in=role_ids).values_list("role_id", "username")
+        )
+        if not role_members:
+            return []
+
+        # 批量查询分级管理员的权限同步用户组
+        sync_group_relations: List[Tuple[int, int]] = list(
+            RoleRelatedObject.objects.filter(
+                role_id__in=role_ids, object_type=RoleRelatedObjectType.GROUP.value, sync_perm=True
+            ).values_list("role_id", "object_id")
+        )
+        if not sync_group_relations:
+            # 没有权限同步用户组，不存在过期成员，直接返回
+            return list({username for _, username in role_members})
+
+        # 批量查询各同步用户组中已过期的成员
+        expired_at = int(time.time())
+        group_id_to_role_id: Dict[int, int] = {group_id: role_id for role_id, group_id in sync_group_relations}
+        for gs in self.group_svc.list_group_subject_before_expired_at_by_ids(list(group_id_to_role_id), expired_at):
+            if gs.subject.type != SubjectType.USER.value:
+                continue
+
+            # 只从该成员对应的管理空间管理员中删除，未知 group 跳过
+            role_id = group_id_to_role_id.get(int(gs.group.id))
+            if role_id is None:
+                continue
+            role_members.discard((role_id, gs.subject.id))
+
+        return list({username for _, username in role_members})
 
     def get_role_scope_include_user(self, role_id: int, username: str) -> Optional[Role]:
         """
