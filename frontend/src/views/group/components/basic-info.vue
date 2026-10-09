@@ -16,18 +16,20 @@
           @blur="handleNameBlur"
           @change="handleNameChange" />
         <p class="name-empty-error" v-if="isShowNameError">{{ nameValidateText }}</p>
-        <iam-form-item :label="$t(`m.common['描述']`)">
-          <bk-input
-            :value="formData.description"
-            type="textarea"
-            :placeholder="$t(`m.verify['请输入']`)"
-            maxlength="255"
-            data-test-id="group_input_groupDesc"
-            @input="handleDescInput"
-            @blur="handleDescBlur"
-            @change="handleDescChange" />
-        </iam-form-item>
-      </iam-form-item></bk-form>
+      </iam-form-item>
+      <iam-form-item :label="$t(`m.common['描述']`)">
+        <bk-input
+          :value="formData.description"
+          type="textarea"
+          :placeholder="$t(`m.verify['请输入']`)"
+          maxlength="255"
+          data-test-id="group_input_groupDesc"
+          @input="handleDescInput"
+          @blur="handleDescBlur"
+          @change="handleDescChange"
+        />
+      </iam-form-item>
+    </bk-form>
   </div>
 </template>
 

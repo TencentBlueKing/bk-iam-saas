@@ -18,8 +18,28 @@
             :name="option.display_name">
           </bk-option>
         </bk-select>
+        <bk-select
+          v-if="enableAbacExtAttrAbility"
+          v-model="item.operator"
+          :clearable="false"
+          :disabled="formatDisabled(item)"
+          style="width: 120px; margin: 0 8px;"
+          @selected="handleOperatorSelected(...arguments, item)">
+          <bk-option
+            v-for="operator in formatOperators(item)"
+            :key="operator.id"
+            :id="operator.id"
+            :name="operator.name" />
+        </bk-select>
         <!-- 单独处理dbm系统业务个别属性id需要展示不同的组件 -->
-        <template v-if="isMemberSelector(item)">
+        <template v-if="isStringContains(item)">
+          <bk-input
+            v-model="item.inputValue"
+            class="sub-selector-content"
+            :disabled="formatDisabled(item)"
+            @change="handleInputChange(...arguments, item)" />
+        </template>
+        <template v-else-if="isMemberSelector(item)">
           <BkUserSelector
             ref="selector"
             class="sub-selector-content"
@@ -73,6 +93,7 @@
 
 <script>
   import { cloneDeep, debounce } from 'lodash';
+  import { mergeSelectedAttributeValues, syncAttributeMetadata } from '@/common/attribute';
   import { sleep } from '@/common/util';
   import Attribute from '@/model/attribute';
   import BkUserSelector from '@blueking/user-selector';
@@ -85,6 +106,12 @@
   const LOADING_ITEM = {
     id: '',
     display_name: ''
+  };
+  const OPERATOR_I18N_KEY_MAP = {
+    eq: '等于',
+    in: '属于',
+    starts_with: '开头是',
+    contains: '包含'
   };
   export default {
     components: {
@@ -109,6 +136,7 @@
     },
     data () {
       return {
+        enableAbacExtAttrAbility: String(window.ENABLE_ABAC_EXT_ATTR_ABILITY || 'false').toLowerCase() === 'true',
         userApi: window.BK_USER_API,
         attrValues: [],
         curOperateData: {},
@@ -118,6 +146,7 @@
           totalPage: 0
         },
         attrValueListMap: {},
+        attrValueLoadedMap: {},
         curToggleItem: '',
         curKeyWord: '',
         curSelectDom: null
@@ -126,8 +155,27 @@
     computed: {
       isMemberSelector () {
         return (payload) => {
-          return ['bk_cmdb'].includes(this.params.system_id) && ['operator', 'bk_bak_operator'].includes(payload.id);
+          return ['bk_cmdb'].includes(this.params.system_id)
+            && ['operator', 'bk_bak_operator'].includes(payload.id);
         };
+      },
+      isStringContains () {
+        return payload => payload.type === 'STRING'
+          && payload.operator === 'contains';
+      },
+      formatOperators () {
+        return payload => (payload.operators || ['eq']).map(operator => {
+          const normalizedOperator = typeof operator === 'string'
+            ? { id: operator, name: operator }
+            : operator;
+          const i18nKey = OPERATOR_I18N_KEY_MAP[normalizedOperator.id];
+          return {
+            ...normalizedOperator,
+            name: i18nKey
+              ? this.$t(`m.resource['${i18nKey}']`)
+              : normalizedOperator.name || normalizedOperator.id
+          };
+        });
       },
       formatDisabled () {
         return (payload) => {
@@ -152,9 +200,11 @@
             return;
           }
           this.attrValues = val;
-          const flag = Object.keys(this.attrValueListMap).length > 0;
           this.attrValues.forEach(async item => {
-            if (!flag && item.id) {
+            syncAttributeMetadata(item, this.list);
+            const options = mergeSelectedAttributeValues(item, this.attrValueListMap[item.id]);
+            this.$set(this.attrValueListMap, item.id, options);
+            if (!this.attrValueLoadedMap[item.id] && item.id && !this.isStringContains(item)) {
               await this.fetchValue(item);
             }
           });
@@ -169,12 +219,33 @@
                 this.$set(this.attrValueListMap, item.id, []);
               }
             });
+            this.attrValues.forEach(item => syncAttributeMetadata(item, val));
           }
         },
         immediate: true
       }
     },
     methods: {
+      handleInputChange (value, event, payload) {
+        const row = payload || event;
+        const inputValue = typeof value === 'string' ? value : row.inputValue;
+        row.inputValue = inputValue;
+        row.selecteds = inputValue ? [inputValue] : [];
+        row.values = inputValue ? [{ id: inputValue, name: inputValue }] : [];
+        this.trigger();
+      },
+
+      handleOperatorSelected (operator, option, row) {
+        row.operator = operator;
+        row.values = [];
+        row.selecteds = [];
+        row.inputValue = '';
+        if (!this.isStringContains(row)) {
+          this.resetPagination(row, '', true, false);
+        }
+        this.trigger();
+      },
+
       handleMemberChange (payload, row) {
         this.$set(row, 'selecteds', payload);
         if (!payload.length) {
@@ -218,6 +289,9 @@
       },
 
       async fetchValue (item) {
+        if (this.isStringContains(item)) {
+          return;
+        }
         item.loading = true;
         try {
           const res = await this.$store.dispatch('permApply/getResourceAttrValues', {
@@ -225,13 +299,17 @@
             limit: this.pagination.limit,
             offset: this.pagination.limit * (this.pagination.current - 1),
             attribute: item.id,
+            attribute_type: item.type,
+            operator: item.operator,
             keyword: ''
           });
           this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+          const results = mergeSelectedAttributeValues(item, res.data.results);
           if (this.pagination.totalPage > 1) {
-            res.data.results.push(LOADING_ITEM);
+            results.push(LOADING_ITEM);
           }
-          this.$set(this.attrValueListMap, item.id, res.data.results);
+          this.$set(this.attrValueListMap, item.id, results);
+          this.$set(this.attrValueLoadedMap, item.id, true);
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
@@ -259,13 +337,23 @@
         const curAttr = this.list.find(item => item.id === newVal);
         if (curAttr) {
           payload.name = curAttr.display_name || '';
+          payload.type = curAttr.type || 'STRING';
+          payload.operators = curAttr.operators || ['eq'];
+          payload.operator = this.formatOperators(payload)[0].id;
         }
-        if (this.attrValueListMap[payload.id] && this.attrValueListMap[payload.id].length < 1) {
+        payload.inputValue = '';
+        if (!this.isStringContains(payload)
+          && this.attrValueListMap[payload.id]
+          && this.attrValueListMap[payload.id].length < 1) {
           this.resetPagination(payload, '', true, false);
         }
+        this.trigger();
       },
 
       handleAttrValueToggle (val, index, payload) {
+        if (this.isStringContains(payload)) {
+          return;
+        }
         this.curSelectDom = this.$refs[`${payload.id}&${index}&valueRef`][0];
         const curOptionDom = this.curSelectDom.$refs.optionList;
         curOptionDom.addEventListener('scroll', this.handleScroll);
@@ -337,15 +425,19 @@
         const { limit, current } = this.pagination;
         try {
           const res = await this.$store.dispatch('permApply/getResourceAttrValues', {
-              ...this.params,
-              limit: limit,
-              offset: limit * (current - 1),
-              attribute: payload.id,
-              keyword
+            ...this.params,
+            limit: limit,
+            offset: limit * (current - 1),
+            attribute: payload.id,
+            attribute_type: payload.type,
+            operator: payload.operator,
+            keyword
           });
           if (isScrollRemote) {
             const len = this.attrValueListMap[payload.id].length;
-            this.attrValueListMap[payload.id].splice(len - 1, 0, ...res.data.results);
+            const currentIds = new Set(this.attrValueListMap[payload.id].map(item => String(item.id)));
+            const results = res.data.results.filter(item => !currentIds.has(String(item.id)));
+            this.attrValueListMap[payload.id].splice(len - 1, 0, ...results);
           } else {
             this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
             if (this.pagination.totalPage > 1) {
@@ -353,7 +445,10 @@
             } else {
               res.data.results = res.data.results.filter((item) => item.id !== '');
             }
-            this.attrValueListMap[payload.id] = cloneDeep(res.data.results);
+            this.attrValueListMap[payload.id] = cloneDeep(
+              mergeSelectedAttributeValues(payload, res.data.results)
+            );
+            this.$set(this.attrValueLoadedMap, payload.id, true);
           }
         } catch (e) {
           console.error(e);

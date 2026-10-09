@@ -9,6 +9,8 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+import json
+
 from django.conf import settings
 from rest_framework import serializers
 
@@ -20,6 +22,11 @@ class AncestorSLZ(serializers.Serializer):
 
     class Meta:
         ref_name = "ResourceAncestorSLZ"
+
+
+class IAMTopoNodeSLZ(serializers.Serializer):
+    type = serializers.CharField(label="资源类型")
+    id = serializers.CharField(label="资源ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
 
 
 class ResourceQuerySLZ(serializers.Serializer):
@@ -50,12 +57,31 @@ class ResourceAttributeQuerySLZ(serializers.Serializer):
     type = serializers.CharField(label="资源类型")
     limit = serializers.IntegerField(label="分页Limit", min_value=1)
     offset = serializers.IntegerField(label="分页offset", min_value=0)
+    _iam_topo_path_ = serializers.CharField(required=False, allow_blank=True, default="[]")
+
+    def validate__iam_topo_path_(self, value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value or "[]")
+            except (TypeError, ValueError) as error:
+                raise serializers.ValidationError("must be a valid JSON array") from error
+
+        path_slz = serializers.ListField(
+            child=serializers.ListField(child=IAMTopoNodeSLZ(), allow_empty=False), allow_empty=True
+        )
+        return path_slz.run_validation(value)
 
 
 class ResourceAttributeValueQuerySLZ(serializers.Serializer):
     system_id = serializers.CharField()
     type = serializers.CharField(label="资源类型")
     attribute = serializers.CharField()
+    attribute_type = serializers.ChoiceField(
+        choices=("STRING", "USER", "DEPT"), required=False, default="STRING"
+    )
+    operator = serializers.ChoiceField(
+        choices=("eq", "in", "starts_with", "contains"), required=False, default="eq"
+    )
     keyword = serializers.CharField(label="搜索关键词", required=False)
     limit = serializers.IntegerField(label="分页Limit", min_value=1, max_value=100)
     offset = serializers.IntegerField(label="分页offset", min_value=0)

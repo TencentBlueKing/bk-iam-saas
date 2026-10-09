@@ -326,12 +326,17 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
                 message=_("用户组 ({}) 不在当前用户身份可访问的范围内").format(group.id), replace=True
             )
 
+        # 获取排序参数
+        slz = SearchMemberSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        ordering = slz.validated_data.get("ordering", "")
+
         if request.query_params.get("keyword"):
             slz = SearchMemberSLZ(data=request.query_params)
             slz.is_valid(raise_exception=True)
             keyword = slz.validated_data["keyword"].lower()
 
-            group_members = self.group_biz.search_member_by_keyword(group.id, keyword)
+            group_members = self.group_biz.search_member_by_keyword(group.id, keyword, ordering)
 
             return Response({"results": [one.dict() for one in group_members]})
 
@@ -339,7 +344,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         limit = pagination.get_limit(request)
         offset = pagination.get_offset(request)
 
-        count, group_members = self.group_biz.list_paging_group_member(group.id, limit, offset)
+        count, group_members = self.group_biz.list_paging_group_member(group.id, limit, offset, ordering)
         return Response({"count": count, "results": [one.dict() for one in group_members]})
 
     @swagger_auto_schema(
@@ -351,7 +356,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
     @view_audit_decorator(GroupMemberCreateAuditProvider)
     @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_CREATE.label)
     def create(self, request, *args, **kwargs):
-        serializer = GroupAddMemberSLZ(data=request.data)
+        serializer = GroupAddMemberSLZ(data=request.data, context={"need_validate_permanent": True})
         serializer.is_valid(raise_exception=True)
 
         group = self.get_object()
@@ -650,7 +655,10 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
 
 class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
     permission_classes = [RolePermission]
-    action_permission = {"create": PermissionCodeEnum.MANAGE_GROUP.value}
+    action_permission = {
+        "create": PermissionCodeEnum.MANAGE_GROUP.value,
+        "destroy": PermissionCodeEnum.MANAGE_GROUP.value,
+    }
 
     pagination_class = None  # 去掉 swagger 中的 limit offset 参数
     queryset = Group.objects.all()
@@ -696,6 +704,12 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         group = get_object_or_404(self.queryset, pk=kwargs["id"])
         template_id = kwargs["template_id"]
         template = get_object_or_404(PermTemplate.objects.all(), pk=template_id)
+
+        role_checker = RoleObjectRelationChecker(request.role)
+        if not role_checker.check_group(group):
+            self.permission_denied(request, message=f"{request.role.type} role can not access group {group.id}")
+        if not role_checker.check_template(template):
+            self.permission_denied(request, message=f"{request.role.type} role can not access template {template.id}")
 
         PermTemplatePreUpdateLock.objects.raise_if_exists(template_id)
 

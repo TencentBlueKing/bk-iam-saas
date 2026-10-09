@@ -22,7 +22,7 @@ from backend.apps.role.serializers import GradeMangerCreateSLZ
 from backend.biz.application import ApplicationBiz
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
-from backend.common.time import PERMANENT_SECONDS, expired_at_display
+from backend.common.time import DEFAULT_EXPIRED_DURATION, PERMANENT_SECONDS, RENEW_EXPIRED_DURATION, expired_at_display
 from backend.service.constants import ApplicationType, SubjectType
 from backend.service.models import Subject
 
@@ -151,6 +151,12 @@ class ApplicationListSLZ(serializers.ModelSerializer):
             extra_info["system_name_en"] = system.get("name_en")
         elif obj.type in [ApplicationType.JOIN_GROUP.value, ApplicationType.RENEW_GROUP.value]:
             extra_info["group_count"] = len(obj.data["groups"])
+        elif obj.type == ApplicationType.HANDOVER.value:
+            data = obj.data or {}
+            handover_info = data.get("handover_info") or {}
+            extra_info["handover_to"] = data.get("handover_to", "")
+            # 交接对象数量: 用户组 + 角色 + 模板 + 自定义权限
+            extra_info["handover_object_count"] = sum(len(infos) for infos in handover_info.values())
         return extra_info
 
 
@@ -223,6 +229,15 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             subjects = SubjectInfoList(parse_obj_as(List[Subject], data["subject_scopes"])).subjects
             data["subject_scopes"] = [one.dict() for one in subjects]
 
+        # 对于权限交接申请
+        if obj.type == ApplicationType.HANDOVER.value:
+            raw_data = obj.data or {}
+            # 直接读取 handover_detail 字典
+            data = raw_data.get("handover_detail") or {}
+            data["handover_from"] = raw_data.get("handover_from", "")
+            data["handover_to"] = raw_data.get("handover_to", "")
+            data["warnings"] = raw_data.get("handover_warnings", [])
+
         return data
 
     def get_ticket_url(self, obj):
@@ -252,6 +267,14 @@ class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
     source_system_id = serializers.CharField(label="系统 ID", allow_blank=True, required=False, default="")
     applicants = serializers.ListField(label="权限获得者", child=ApplicantSLZ("获得者"), required=False, default=list)
 
+    # 用户组申请时，过期时间校验
+    def validate_expired_at(self, value):
+        super().validate_expired_at(value)
+        # 过期时间不能大于一年
+        if value > int(time.time()) + DEFAULT_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed one year")
+        return value
+
 
 class GradeManagerCreatedApplicationSLZ(GradeMangerCreateSLZ, ReasonSLZ):
     pass
@@ -262,7 +285,13 @@ class GradeManagerUpdateApplicationSLZ(GradeManagerCreatedApplicationSLZ):
 
 
 class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
-    pass
+    # 用户组续期申请时，过期时间校验
+    def validate_expired_at(self, value):
+        super().validate_expired_at(value)
+        # 续期场景：续期后的过期时间距当前时间不能超过两年
+        if value > int(time.time()) + RENEW_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed two years.")
+        return value
 
 
 class RenewGroupApplicationSLZ(ReasonSLZ):
@@ -274,6 +303,14 @@ class RenewGroupApplicationSLZ(ReasonSLZ):
 
 class IDExpiredAtSLZ(ExpiredAtSLZ):
     id = serializers.IntegerField(label="ID")
+
+    # 自定义权限续期申请时，过期时间校验
+    def validate_expired_at(self, value):
+        super().validate_expired_at(value)
+        # 续期场景：续期后的过期时间距当前时间不能超过两年
+        if value > int(time.time()) + RENEW_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed two years.")
+        return value
 
 
 class RenewPolicyApplicationSLZ(ReasonSLZ):

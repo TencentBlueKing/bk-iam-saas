@@ -107,6 +107,9 @@ export default {
         limit: 10000,
         offset: 0
       };
+      if (searchParams._iam_topo_path_) {
+        searchParams._iam_topo_path_ = JSON.stringify(searchParams._iam_topo_path_);
+      }
       return http.get(`${AJAX_URL_PREFIX}/resources/attributes/?${json2Query(searchParams)}`, config);
     },
 

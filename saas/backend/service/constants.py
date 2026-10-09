@@ -117,6 +117,7 @@ class RoleType(ChoicesEnum, LowerStrEnum):
         "rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
     )
     SUBSET_MANAGER = auto()
+    AUDIT_MANAGER = auto()  # 审计管理员
 
     _choices_labels = skip(
         (
@@ -125,6 +126,7 @@ class RoleType(ChoicesEnum, LowerStrEnum):
             (SYSTEM_MANAGER, "系统管理员"),
             (GRADE_MANAGER, "管理空间管理员"),
             (SUBSET_MANAGER, "二级管理空间管理员"),
+            (AUDIT_MANAGER, "审计管理员"),
         )
     )
 
@@ -223,6 +225,7 @@ class ApplicationType(ChoicesEnum, LowerStrEnum):
     CREATE_GRADE_MANAGER: enum = "create_rating_manager"
     UPDATE_GRADE_MANAGER: enum = "update_rating_manager"
     GRANT_TEMPORARY_ACTION = auto()
+    HANDOVER = auto()
 
     _choices_labels = skip(
         (
@@ -234,6 +237,7 @@ class ApplicationType(ChoicesEnum, LowerStrEnum):
             (CREATE_GRADE_MANAGER, "创建管理空间"),
             (UPDATE_GRADE_MANAGER, "修改管理空间"),
             (GRANT_TEMPORARY_ACTION, "临时权限申请"),
+            (HANDOVER, "权限交接"),
         )
     )
 
@@ -266,6 +270,9 @@ APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
     ),
     ApplicationType.CREATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
     ApplicationType.UPDATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
+    # 权限交接的审批人 (提单人上级) 由 ITSM 流程模板的 STARTER_LEADER 节点自行解析, 属于 OTHER 来源, 不需要 IAM 白名单约束, 故置为空元组
+    # 若要扩展管理员配置审批流程，需要再次追加对应 ProcessorNodeType
+    ApplicationType.HANDOVER.value: (),
 }
 
 
@@ -286,11 +293,18 @@ IAM_SUPPORT_PROCESSOR_TYPES = [
 ]
 
 
-# 支持配置默认流程的申请审批类型
-DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
+# 审批流程管理页面支持配置的默认流程类型
+DEFAULT_PROCESS_CONFIGURABLE_APPLICATION_TYPES = [
     ApplicationType.GRANT_ACTION.value,
     ApplicationType.JOIN_GROUP.value,
     ApplicationType.CREATE_GRADE_MANAGER.value,
+]
+
+# 后台支持获取默认流程的申请审批类型
+# 权限交接使用 ITSM 内置流程，不在审批流程管理页面配置，避免缺少内置流程时导致整个配置列表加载失败
+DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
+    *DEFAULT_PROCESS_CONFIGURABLE_APPLICATION_TYPES,
+    ApplicationType.HANDOVER.value,
 ]
 
 

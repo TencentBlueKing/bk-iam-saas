@@ -484,3 +484,31 @@ export const DS_TYPE = [
   'approval.group.update',
   'template.preupdate.create'
 ];
+
+// iam V3 ——> V4路由重定向
+export const IAMV4_ROUTES_ENUM = new Map([
+  [['apply'], 'self-manage/apply'],
+  [['myPerm', 'permTransfer', 'permRenewal'], 'permission/my-own/overview'],
+  [['myManageSpace'], 'space/my-own'],
+  [['myManageSpaceCreate'], 'space/create']
+]);
+
+// 所有管理员身份类型
+export const ALL_ROLES_MANAGERS = [
+  {
+    label: il8n('myApproval', '超级管理员'),
+    value: 'super_manager'
+  },
+  {
+    label: il8n('nav', '系统管理员'),
+    value: 'system_manager'
+  },
+  {
+    label: il8n('nav', '一级空间管理员'),
+    value: 'rating_manager'
+  },
+  {
+    label: il8n('nav', '二级空间管理员'),
+    value: 'subset_manager'
+  }
+];

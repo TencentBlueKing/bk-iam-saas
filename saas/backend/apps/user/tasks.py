@@ -8,11 +8,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
+import json
 import logging
 from datetime import timedelta
 from itertools import groupby
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlencode
 
 from celery import Task, current_app, shared_task
@@ -25,6 +25,7 @@ from django.utils import timezone
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.constants import NotificationTypeEnum
+from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject, RoleScope, RoleUser, ScopeSubject
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
@@ -32,14 +33,16 @@ from backend.biz.constants import StaffStatus
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleWithPermGroupBiz, get_user_expired_groups_policies
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz, get_global_notification_config
+from backend.biz.role import RoleBiz, RoleCheckBiz, get_global_notification_config
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.common.time import db_time, get_expired_at, need_run_expired_remind
 from backend.component import esb
 from backend.component.bkbot import send_iam_ticket
-from backend.service.constants import RoleType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.util.json import json_dumps
+from backend.util.time import timestamp_to_local
 from backend.util.url import url_join
 
 from .constants import UserPermissionCleanupRecordStatusEnum
@@ -186,12 +189,21 @@ def user_group_policy_expire_remind():
     # 2. 查询用户组成员过期
     group_biz = GroupBiz()
     group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_before)
+    role_check_biz = RoleCheckBiz()
     for gs in group_subjects:
         if gs.subject.type != SubjectType.USER.value:
             continue
 
         # 判断过期时间是否在区间内
         if gs.expired_at < expired_at_after:
+            continue
+
+        # 检查用户组对应的分级管理员是否启用
+        # 若分级管理员被禁用，或是二级管理空间且其一级管理空间被禁用，则不发送续期通知
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=gs.group.id
+        ).first()
+        if not relation or not role_check_biz.is_role_enabled(relation.role_id):
             continue
 
         username = gs.subject.id
@@ -274,8 +286,8 @@ class UserPermissionCleaner:
         self._record = record
         self._subject = Subject.from_username(username)
 
-    def clean(self):
-        # 有其他的任务在处理，忽略
+    def clean(self, before_at: Optional[int] = None):
+        # 有其他的任务在处理, 忽略
         if self._record.status == UserPermissionCleanupRecordStatusEnum.RUNNING.value:
             return
 
@@ -287,9 +299,9 @@ class UserPermissionCleaner:
 
         try:
             self._clean_policy()
-            self._clean_group()
-            self._clean_subject_group()
-            self._clean_role()
+            self._clean_group(before_at)
+            self._clean_subject_group(before_at)
+            self._clean_role(before_at)
         except Exception as e:  # pylint: disable=broad-except
             self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
             self._record.error_info = str(e)
@@ -320,20 +332,20 @@ class UserPermissionCleaner:
                     system_id, self._subject, [p.policy_id for p in temporary_policies]
                 )
 
-    def _clean_subject_group(self):
+    def _clean_subject_group(self, before_at: Optional[int] = None):
         """
         清理人员模版
         """
-        template_ids = list(
-            SubjectTemplateRelation.objects.filter(
-                subject_type=self._subject.type, subject_id=self._subject.id
-            ).values_list("template_id", flat=True)
-        )
+        query = SubjectTemplateRelation.objects.filter(subject_type=self._subject.type, subject_id=self._subject.id)
+        if before_at:
+            query = query.filter(created_time__lte=timestamp_to_local(before_at))
+
+        template_ids = list(query.values_list("template_id", flat=True))
 
         for template_id in template_ids:
             self.subject_template_biz.delete_members(template_id, [self._subject])
 
-    def _clean_group(self):
+    def _clean_group(self, before_at: Optional[int] = None):
         """
         清理用户组
         """
@@ -342,12 +354,14 @@ class UserPermissionCleaner:
         while True:
             _, groups = self.group_biz.list_paging_subject_group(self._subject, limit=1000)
             for group in groups:
+                if before_at and group.created_time.timestamp() > before_at:
+                    continue
                 self.group_biz.remove_members(str(group.id), [self._subject])
 
             if len(groups) < 1000:  # noqa: PLR2004
                 break
 
-    def _clean_role(self):
+    def _clean_role(self, before_at: Optional[int] = None):
         """
         清理角色
         """
@@ -355,12 +369,45 @@ class UserPermissionCleaner:
         # 查询所有的角色，按角色类型清理
         username = self._subject.id
         roles = self.role_biz.list_user_role(username)
+        role_ids = [role.id for role in roles]
+        if before_at:
+            role_ids = list(
+                RoleUser.objects.filter(
+                    role_id__in=role_ids,
+                    username=username,
+                    created_time__lte=timestamp_to_local(before_at),
+                ).values_list("role_id", flat=True)
+            )
+
+        roles = Role.objects.filter(id__in=role_ids)
+
         for role in roles:
             if role.type in (
                 RoleType.GRADE_MANAGER.value,
                 RoleType.SUBSET_MANAGER.value,
             ):
                 self.role_with_perm_group_biz.delete_role_member(role, username)
+
+                # 清理角色用户组冗余数据
+                RoleGroupMember.objects.filter(role_id=role.id, subject_id=username).delete()
+
+                # 清理授权范围
+                scope_subject = ScopeSubject.objects.filter(
+                    subject_type=SubjectType.USER.value, subject_id=username, role_id=role.id
+                ).first()
+                if scope_subject:
+                    scope = RoleScope.objects.filter(id=scope_subject.role_scope_id).first()
+                    if scope:
+                        content = json.loads(scope.content)
+                        scope.content = json_dumps(
+                            [
+                                one
+                                for one in content
+                                if not (one["type"] == SubjectType.USER.value and one["id"] == username)
+                            ]
+                        )
+                        scope.save(update_fields=["content"])
+                    scope_subject.delete()
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
@@ -372,11 +419,11 @@ class UserPermissionCleaner:
 
 
 @shared_task(ignore_result=True)
-def user_permission_clean(username: str):
+def user_permission_clean(username: str, before_at: int = None):
     """
     清理用户权限
     """
-    UserPermissionCleaner(username).clean()
+    UserPermissionCleaner(username).clean(before_at)
 
 
 @shared_task(ignore_result=True)

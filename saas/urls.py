@@ -20,6 +20,10 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
+# Monkey Patch: rest_framework.serializers.Serializer
+import backend.util.serializer_patch  # noqa
+from backend.common.vue import LoginSuccessView, VueTemplateView
+
 schema_view = get_schema_view(
     openapi.Info(
         title="IAM_APP API",
@@ -66,6 +70,8 @@ urlpatterns = [
                 re_path(
                     r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")
                 ),
+                # 为外部系统提供API
+                re_path(r"^external/", include("backend.api.external.urls")),
             ]
         ),
     ),

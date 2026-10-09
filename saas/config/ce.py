@@ -9,7 +9,10 @@ specific language governing permissions and limitations under the License.
 """
 
 import hashlib
+import os
+import random
 import ssl
+import string
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
@@ -111,26 +114,21 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": "",  # 多个本地内存缓存时才需要设置
-        "TIMEOUT": 60
-        * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30 分钟，特殊值 0 表示立刻过期，实际上就是不缓存
+        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30 分钟，特殊值 0 表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的 Key 的前缀
-        # 用于避免同一个缓存 Key 在不同 SaaS 版本之间存在差异导致读取的值非期望的，
-        # 由于内存缓存每次部署都会重置，所以不需要设置
-        # "VERSION": 1,
+        # "VERSION": 1,  # 用于避免同一个缓存 Key 在不同 SaaS 版本之间存在差异导致读取的值非期望的，由于内存缓存每次部署都会重置，所以不需要设置
         # "KEY_FUNCTION": "",  # Key 的生成函数，默认是 key_prefix:version:key
         # 内存缓存特有参数
         "OPTIONS": {
             "MAX_ENTRIES": 1000,  # 支持缓存的 key 最多数量，越大将会占用更多内存
-            # 当达到 MAX_ENTRIES 时被淘汰的部分条目，淘汰率是 1 / CULL_FREQUENCY，默认淘汰 1/3的缓存key
-            "CULL_FREQUENCY": 3,
+            "CULL_FREQUENCY": 3,  # 当达到 MAX_ENTRIES 时被淘汰的部分条目，淘汰率是 1 / CULL_FREQUENCY，默认淘汰 1/3的缓存key
         },
     },
     "redis": {
         "BACKEND": "django_redis.cache.RedisCache",
         # 若需要支持主从配置，则 LOCATION 为 List[master_url, slave_url]
         "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
-        "TIMEOUT": 60
-        * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30 分钟，特殊值 0 表示立刻过期，实际上就是不缓存
+        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30 分钟，特殊值 0 表示立刻过期，实际上就是不缓存
         "KEY_PREFIX": "bk_iam",  # 缓存的 Key 的前缀
         "VERSION": 1,  # 避免同一个缓存 Key 在不同 SaaS 版本之间存在差异导致读取的值非期望的
         # "KEY_FUNCTION": "",  # Key 的生成函数，默认是 key_prefix:version:key
@@ -148,8 +146,7 @@ CACHES = {
             # "SERIALIZER": "django_redis.serializers.pickle.PickleSerializer"
             # Redis 连接池配置
             "CONNECTION_POOL_KWARGS": {
-                # redis-py 默认不会关闭连接，尽可能重用连接，
-                # 但可能会造成连接过多，导致 Redis 无法服务，所以需要设置最大值连接数
+                # redis-py 默认不会关闭连接，尽可能重用连接，但可能会造成连接过多，导致 Redis 无法服务，所以需要设置最大值连接数
                 "max_connections": REDIS_MAX_CONNECTIONS
             },
         },
@@ -265,7 +262,6 @@ CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 # 站点 URL
 SITE_URL = env.str("BKPAAS_SUB_PATH", default="/")
-FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = env.str("BKPAAS_STATIC_URL", default=SITE_URL + "staticfiles/")
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
@@ -421,3 +417,6 @@ BK_PAAS_INNER_HOST = env.str("BK_PAAS2_URL", default=env.str("BK_PAAS_INNER_HOST
 
 # 对接审计中心相关配置
 BK_IAM_RESOURCE_API_HOST = env.str("BK_IAM_RESOURCE_API_HOST", default=APP_URL)
+
+# IAM V4 页面地址
+BK_IAM_V4_URL = env.str("BK_IAM_V4_URL", default="")

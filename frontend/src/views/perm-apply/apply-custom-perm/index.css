@@ -122,7 +122,7 @@
 
     .reason-wrapper {
         margin: 16px 0 20px 0 !important;
-        .perm-apply-reason-error {
+        /deep/ .perm-apply-reason-error {
             .bk-textarea-wrapper {
                 border-color: #ff5656;
             }
@@ -197,16 +197,16 @@
         margin-top: 16px;
     }
 }
-.applpForPermission,
-.noPermissionPage  {
+.applyForPermission,
+.noPermissionPage {
     .horizontal-item {
-        margin-bottom:0px
+        margin-bottom: 0px;
     }
     .horizontal-item .label {
-        display:none
+        display: none;
     }
     .horizontal-item .content {
-        max-width: calc(100%)
+        max-width: calc(100%);
     }
     .bk-form-radio .bk-radio-text {
         font-size: 14px;
@@ -308,7 +308,7 @@
         }
         .reason-wrapper {
             margin: 16px 0 20px 0 !important;
-            .perm-apply-reason-error {
+            /deep/ .perm-apply-reason-error {
                 .bk-textarea-wrapper {
                     border-color: #ff5656;
                 }

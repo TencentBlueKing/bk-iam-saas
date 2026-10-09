@@ -32,13 +32,20 @@ from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.biz.template import TemplateBiz
 from backend.common.serializers import GroupMemberSLZ, GroupSearchSLZ  # noqa
-from backend.common.time import PERMANENT_SECONDS, expired_at_display
+from backend.common.time import PERMANENT_SECONDS, RENEW_EXPIRED_DURATION, expired_at_display
 from backend.service.constants import ADMIN_USER, GroupMemberType, RoleRelatedObjectType
 from backend.service.group_saas_attribute import GroupAttributeService
 
 
 class SearchMemberSLZ(serializers.Serializer):
     keyword = serializers.CharField(label="搜索关键词", allow_null=False, required=False, default="")
+    ordering = serializers.ChoiceField(
+        label="排序方式",
+        choices=["expired_at", "-expired_at"],
+        allow_blank=True,
+        required=False,
+        default="",
+    )
 
 
 class GroupIdSLZ(serializers.Serializer):
@@ -147,8 +154,23 @@ class GroupAddMemberSLZ(serializers.Serializer):
         return value
 
     def validate_members(self, value):
-        # 屏蔽 admin 授权
-        return [m for m in value if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER)]
+        # 屏蔽 admin 授权，admin 不能被添加到用户组
+        if any(m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER for m in value):
+            raise serializers.ValidationError(_("admin 账号不能被添加到用户组"))
+        return value
+
+    def validate(self, attrs):
+        # Note: GroupAddMemberSLZ 是复用的，只有部分场景需要限制只允许部门成员设置过期时间为永久
+        need_validate_permanent = self.context.get("need_validate_permanent") or False
+        if need_validate_permanent and attrs["expired_at"] == PERMANENT_SECONDS:
+            invalid_members = [m for m in attrs["members"] if m["type"] != GroupMemberType.DEPARTMENT.value]
+            if invalid_members:
+                raise serializers.ValidationError(
+                    "when the expire time is permanent, all members must be departments. invalid member: %s",
+                    invalid_members,
+                )
+
+        return attrs
 
 
 class GroupsAddMemberSLZ(GroupAddMemberSLZ):
@@ -269,7 +291,12 @@ class GroupTransferSLZ(serializers.Serializer):
 
 
 class GroupMemberExpiredAtSLZ(GroupMemberSLZ, ExpiredAtSLZ):
-    pass
+    def validate_expired_at(self, value):
+        super().validate_expired_at(value)
+        # 续期场景：续期后的过期时间距当前时间不能超过两年
+        if value > int(time.time()) + RENEW_EXPIRED_DURATION:
+            raise serializers.ValidationError("The expiration date must not exceed two years.")
+        return value
 
 
 class GroupMemberUpdateExpiredAtSLZ(serializers.Serializer):

@@ -21,12 +21,13 @@ GET /api/v2/open/management/systems/demo/subset_managers/1/groups/?page_size=100
 
 | 字段 | 类型 | 描述 |
 |---|---|---|
-| id| int | 用户组ID | 
+| id| int | 用户组ID |
 | name| string | 用户组名称 |
 | description| string | 用户组描述 |
 | readonly| bool| 是否是只读用户组|
 | user_count| int| 用户组成员user数量|
 | department_count| int| 用户组成员department数量|
+| apply_disable| bool | 是否可被申请|
 
 ```json
 {
@@ -41,7 +42,8 @@ GET /api/v2/open/management/systems/demo/subset_managers/1/groups/?page_size=100
         "description": "用户组",
         "readonly": false,
         "user_count": 1,
-        "department_count": 1
+        "department_count": 1,
+        "apply_disable":true
       }
     ]
   }

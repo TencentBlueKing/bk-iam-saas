@@ -12,6 +12,7 @@ specific language governing permissions and limitations under the License.
 from backend.apps.organization.models import SubjectToDelete, User
 from backend.component import usermgr
 from backend.service.constants import SubjectType
+from backend.util.basic import chunked
 
 from .base import BaseSyncDBService
 
@@ -57,9 +58,8 @@ class DBUserSyncService(BaseSyncDBService):
         User.objects.bulk_create(created_users, batch_size=1000)
 
         # 移除待删除的用户
-        SubjectToDelete.objects.filter(
-            subject_type=SubjectType.USER.value, subject_id__in=[u.username for u in created_users]
-        ).delete()
+        for ids in chunked([i.username for i in created_users], 1000):
+            SubjectToDelete.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=ids).delete()
 
     def updated_handler(self):
         """关于更新用户，DB 的处理"""

@@ -165,9 +165,10 @@
         this.routeName = to.name;
         this.userGroupId = to.params.id;
         if (this.user.role && this.user.role.id > 0) {
-          window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
-            role_name: this.user.role.name
-          }))}`);
+          window.history.replaceState({}, '', `?${buildURLParams({
+            ...to.query,
+             role_name: this.user.role.name
+          })}`);
         }
         this.$store.commit('updateRoute', from.name);
         this.getRouteInstanceSearch({ routeName: to.name });
@@ -480,11 +481,15 @@
         line-height: 20px !important;
     }
 
-    .flex-between {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    .flex-align-center {
+      display: flex;
+      align-items: center;
+    }
 
+    .flex-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .user-org-perm-container {

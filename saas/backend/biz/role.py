@@ -556,6 +556,40 @@ class RoleCheckBiz:
                 _("系统 ({}): 可创建的分级管理员数量已超过最大值 {}").format(system_id, limit)
             )
 
+    def is_role_enabled(self, role_id: int, recursive: bool = True) -> bool:
+        """
+        检查角色是否启用
+
+        :param role_id: 角色ID
+        :param recursive: 是否递归检查父级角色，默认为True
+                         如果为True且角色是子集管理员，会同时检查其父级分级管理员是否启用
+        :return: 角色是否启用
+        """
+        role = Role.objects.filter(id=role_id).first()
+        if not role:
+            return False
+
+        # 检查角色本身是否启用
+        if not role.enabled:
+            return False
+
+        # 递归检查父级角色
+        if recursive and role.type == RoleType.SUBSET_MANAGER.value:
+            role_relation = RoleRelation.objects.filter(role_id=role_id).first()
+            if not role_relation:
+                return False
+
+            # 检查父级分级管理员是否存在且启用
+            parent_enabled = Role.objects.filter(
+                id=role_relation.parent_id,
+                type=RoleType.GRADE_MANAGER.value,
+                enabled=True,
+            ).exists()
+            if not parent_enabled:
+                return False
+
+        return True
+
 
 class RoleListQuery:
     system_svc = SystemService()
@@ -771,11 +805,17 @@ class RoleListQuery:
             type_order = Case(
                 When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
                 When(type=RoleType.SYSTEM_MANAGER.value, then=Value(2)),
-                When(type=RoleType.GRADE_MANAGER.value, then=Value(3)),
+                When(type=RoleType.AUDIT_MANAGER.value, then=Value(3)),
+                When(type=RoleType.GRADE_MANAGER.value, then=Value(4)),
             )
             queryset = (
                 Role.objects.filter(
-                    type__in=[RoleType.SUPER_MANAGER, RoleType.SYSTEM_MANAGER, RoleType.GRADE_MANAGER.value]
+                    type__in=[
+                        RoleType.SUPER_MANAGER.value,
+                        RoleType.SYSTEM_MANAGER.value,
+                        RoleType.AUDIT_MANAGER.value,
+                        RoleType.GRADE_MANAGER.value,
+                    ]
                 )
                 .alias(type_order=type_order)
                 .order_by("type_order", "-updated_time")

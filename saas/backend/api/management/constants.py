@@ -92,6 +92,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 权限模版
     V2_GRADE_MANAGER_TEMPLATE_LIST = auto()
     V2_GRADE_MANAGER_TEMPLATE_CREATE = auto()
+    V2_GRADE_MANAGER_TEMPLATE_UPDATE = auto()
 
     _choices_labels = skip(
         (
@@ -160,8 +161,9 @@ class ManagementAPIEnum(BaseAPIEnum):
             # 申请单取消
             (V2_APPLICATION_CANCEL, "[V2] 申请单取消"),
             # 权限模版
-            (V2_GRADE_MANAGER_TEMPLATE_LIST, "[V2] 获取分级管理员权限模版列表"),
-            (V2_GRADE_MANAGER_TEMPLATE_CREATE, "[V2] 创建分级管理员权限模版"),
+            (V2_GRADE_MANAGER_TEMPLATE_LIST, "[V2]获取分级管理员权限模版列表"),
+            (V2_GRADE_MANAGER_TEMPLATE_CREATE, "[V2]创建分级管理员权限模版"),
+            (V2_GRADE_MANAGER_TEMPLATE_UPDATE, "[V2]更新分级管理员权限模版"),
         )
     )
 
@@ -171,6 +173,7 @@ class VerifyAPIObjectTypeEnum(ChoicesEnum, LowerStrEnum):
 
     ROLE = auto()
     GROUP = auto()
+    TEMPLATE = auto()
 
 
 class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
@@ -182,17 +185,19 @@ class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
     GROUPS_IN_BODY = auto()
     SYSTEM_IN_PATH = auto()
     GROUP_IDS_IN_QUERY = auto()
+    TEMPLATE_IN_PATH = auto()
 
     _choices_labels = skip(
         (
-            (ROLE_IN_PATH, "在 URL 里的 role id 参数"),
-            (GROUP_IN_PATH, "在 URL 里的 group id 参数"),
-            (SYSTEM_IN_BODY, "在 body data 里的 system 参数"),
-            (SYSTEM_IN_QUERY, "在 get 请求 query 里的 system 参数"),
-            (GROUP_IDS_IN_BODY, "在 body data 里的 groups_ids 参数"),
-            (GROUPS_IN_BODY, "在 body data 里的 groups 参数"),
-            (SYSTEM_IN_PATH, "在路径里的 system 参数"),
-            (GROUP_IDS_IN_QUERY, "在 get 请求 query 里的 groups_ids 参数"),
+            (ROLE_IN_PATH, "在URL里的role id参数"),
+            (GROUP_IN_PATH, "在URL里的group id参数"),
+            (SYSTEM_IN_BODY, "在body data里的system参数"),
+            (SYSTEM_IN_QUERY, "在get请求query里的system参数"),
+            (GROUP_IDS_IN_BODY, "在body data里的groups_ids参数"),
+            (GROUPS_IN_BODY, "在body data里的groups参数"),
+            (SYSTEM_IN_PATH, "在路径里的system参数"),
+            (GROUP_IDS_IN_QUERY, "在get请求query里的groups_ids参数"),
+            (TEMPLATE_IN_PATH, "在路径里的template id参数"),
         )
     )
 
@@ -200,6 +205,7 @@ class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
 VerifyAPIParamSourceToObjectTypeMap = {
     VerifyApiParamLocationEnum.ROLE_IN_PATH.value: VerifyAPIObjectTypeEnum.ROLE.value,
     VerifyApiParamLocationEnum.GROUP_IN_PATH.value: VerifyAPIObjectTypeEnum.GROUP.value,
+    VerifyApiParamLocationEnum.TEMPLATE_IN_PATH.value: VerifyAPIObjectTypeEnum.TEMPLATE.value,
 }
 
 # 主要用于 ViewSet 里配置了 ManagementAPIPermission，

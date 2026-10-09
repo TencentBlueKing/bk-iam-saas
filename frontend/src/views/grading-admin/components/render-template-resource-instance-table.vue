@@ -55,7 +55,7 @@
                       :key="contentIndex">
                       <div class="content-name">{{ content.name }}</div>
                       <div class="content">
-                        <render-condition
+                        <IamRenderCondition
                           :value="content.value"
                           :is-empty="content.empty"
                           :can-view="item.actions[0].canView"
@@ -106,7 +106,7 @@
                           :key="contentIndex">
                           <div class="content-name">{{ content.name }}</div>
                           <div class="content">
-                            <render-condition
+                            <IamRenderCondition
                               :value="content.value"
                               :is-empty="content.empty"
                               :can-view="actionItem.canView"
@@ -177,12 +177,12 @@
 </template>
 <script>
   import _ from 'lodash';
-  import RenderCondition from '../../perm-apply/components/render-condition';
-  import RenderResource from '../../perm-apply/components/render-resource';
+  import IamRenderCondition from '@/components/iam-render-condition';
+  import RenderResource from '@/views/perm-apply/components/render-resource';
   export default {
     name: '',
     components: {
-      RenderCondition,
+      IamRenderCondition,
       RenderResource
     },
     props: {
@@ -453,7 +453,13 @@
                   ? resItem.condition.map(conItem => {
                     const { id, instance, attribute } = conItem;
                     const attributeList = (attribute && attribute.length > 0)
-                      ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                      ? attribute.map(({ id, name, type, operator, values }) => ({
+                        id,
+                        name,
+                        type: type || 'STRING',
+                        operator: operator || 'eq',
+                        values
+                      }))
                       : [];
 
                     const instanceList = (instance && instance.length > 0)
@@ -474,7 +480,8 @@
                     return {
                       id,
                       instances: instanceList,
-                      attributes: attributeList
+                      attributes: attributeList,
+                      attribute_aggregation: conItem.attribute_aggregation || 'AND'
                     };
                   })
                   : [];

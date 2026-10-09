@@ -50,6 +50,22 @@ urlpatterns = [
         ),
         name="role.super_manager_member",
     ),
+    # 审计管理员
+    path(
+        "audit_managers/",
+        views.AuditManagerViewSet.as_view({"get": "list", "post": "create"}),
+        name="audit_manager.list",
+    ),
+    path(
+        "audit_managers/batch/",
+        views.AuditManagerViewSet.as_view({"post": "batch_create"}),
+        name="audit_manager.batch_create",
+    ),
+    path(
+        "audit_managers/<str:pk>/",
+        views.AuditManagerViewSet.as_view({"delete": "destroy"}),
+        name="audit_manager.delete",
+    ),
     # 通用操作
     path(
         "common_actions/",

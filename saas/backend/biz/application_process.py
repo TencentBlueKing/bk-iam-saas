@@ -451,11 +451,22 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
 
     def _split_label_resource_policy(self, policy: PolicyBean) -> Dict[Any, PolicyBean]:
         """分离出需要查询分级管理员的节点与部分策略"""
+
+        # 只关联 1 个资源类型的操作查询资源审批人
+        if len(policy.list_thin_resource_type()) == 1:
+            return self._split_label_resource_policy_for_one_rt(policy)
+
+        # 关联 多个资源类型的操作查询资源审批人
+        if len(policy.list_thin_resource_type()) > 1:
+            return self._split_label_resource_policy_for_multi_rt(policy)
+
+        return {}
+
+    def _split_label_resource_policy_for_one_rt(self, policy: PolicyBean) -> Dict[Any, PolicyBean]:
+        """[单资源类型] 分离出需要查询分级管理员的节点与部分策略"""
+        assert len(policy.list_thin_resource_type()) == 1, "only for single resource type policy"
         # label resource -> part policy
         resource_node_policy: Dict[ResourceNodeBean, PolicyBean] = {}
-        # 只支持关联 1 个资源类型的操作查询资源审批人
-        if len(policy.list_thin_resource_type()) != 1:
-            return resource_node_policy
 
         for rg in policy.resource_groups:
             rrt: RelatedResourceBean = rg.related_resource_types[0]  # type: ignore
@@ -489,5 +500,52 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
                                     )
                                 ]
                             )
+
+        return resource_node_policy
+
+    def _split_label_resource_policy_for_multi_rt(self, policy: PolicyBean) -> Dict[Any, PolicyBean]:
+        """[多资源类型] 分离出需要查询分级管理员的节点与部分策略
+        Note: 由于后面判断在授权范围内后，会从原策略里减去“在授权范围内”的部分策略，
+              而多资源类型的策略，在相减时只有整组 resource_groups 完全一样时，才会被减去
+              所以只能按整组 resource_groups 拆分策略
+              另外这里只要有一个资源符合条件，就拆分出来，虽然会导致需要查询的分级管理员更多一些，但能更高概率匹配授权范围内的分级管理员
+        """
+        assert len(policy.list_thin_resource_type()) > 1, "only for multi resource type policy"
+        # label resource -> part policy
+        resource_node_policy: Dict[ResourceNodeBean, PolicyBean] = {}
+
+        for rg in policy.resource_groups:
+            assert isinstance(rg, ResourceGroupBean)
+            # 由于是多资源类型的策略，只要有一个符合条件就把整组 resource_groups 都算上
+            matched_resource_node = []
+            for rrt in rg.related_resource_types:
+                for condition in rrt.condition:
+                    # 忽略有属性的 condition
+                    if not condition.has_no_attributes():
+                        continue
+
+                    # 遍历所有的实例路径，筛选出有查询有实例审批人的实例
+                    for instance in condition.instances:
+                        for path in instance.path:
+                            first_node = path[0]
+                            if (first_node.system_id, first_node.type) not in settings.ROLE_RESOURCE_RELATION_TYPE_SET:
+                                continue
+
+                            matched_resource_node.append(ResourceNodeBean.parse_obj(first_node))
+
+            if not matched_resource_node:
+                continue
+
+            # Note: 只取第一个，避免重复拆分同一组 resource_groups
+            node = matched_resource_node[0]
+            if node not in resource_node_policy:
+                # copy part policy
+                resource_node_policy[node] = PolicyBean(
+                    resource_groups=ResourceGroupBeanList.parse_obj([rg.copy(deep=True)]),
+                    **policy.dict(exclude={"resource_groups"}),
+                )
+            else:
+                # 合并到已有的 policy 中
+                resource_node_policy[node].resource_groups.append(rg.copy(deep=True))
 
         return resource_node_policy

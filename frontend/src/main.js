@@ -27,7 +27,6 @@
 import './public-path';
 import '../static/lib.bundle.js';
 import Vue from 'vue';
-import VueDOMPurifyHTML from 'vue-dompurify-html';
 import App from './App.vue';
 import IframeEntry from './IframeEntry.vue';
 import router from './router/index';
@@ -47,6 +46,9 @@ import RenderVerticalBlock from './components/render-block/vertical.vue';
 import RenderSearch from './components/render-search/index.vue';
 import Icon from './components/icon';
 import { subEnv } from '@blueking/sub-saas/dist/main.js';
+import { BkXssFilterDirective } from '@blueking/xss-filter';
+import BkLoginUserInfo from '@blueking/login-userinfo/vue2/index.umd.min.js';
+
 import { i18n as I18n } from './language/i18n';
 import { language, il8n as il8nNew } from './language';
 import { bus } from './common/bus';
@@ -56,8 +58,10 @@ import './common/bkmagic';
 import './assets/iconfont/style.css';
 import '@icon-cool/bk-icon-bk-iam';
 import '@/directive';
+// 个人中心设置样式
+import '@blueking/login-userinfo/vue2/vue2.css';
 
-Vue.use(VueDOMPurifyHTML);
+Vue.use(BkXssFilterDirective);
 
 Vue.component('app-exception', Exception);
 Vue.component('app-auth', AuthComponent);
@@ -70,6 +74,7 @@ Vue.component('RenderVerticalBlock', RenderVerticalBlock);
 Vue.component('RenderSearch', RenderSearch);
 Vue.component('Icon', Icon);
 Vue.component('ExceptionEmpty', ExceptionEmpty);
+Vue.component('BkLoginUserInfo', BkLoginUserInfo);
 
 Vue.prototype.scrollToLocation = function ($ref) {
   const distance = ($ref && $ref.getBoundingClientRect().top) || 0;

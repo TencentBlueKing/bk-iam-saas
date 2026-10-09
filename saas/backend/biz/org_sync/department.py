@@ -17,6 +17,7 @@ from typing import Dict, List, Set, Tuple
 from backend.apps.organization.models import Department, DepartmentMember, SubjectToDelete
 from backend.component import usermgr
 from backend.service.constants import SubjectType
+from backend.util.basic import chunked
 
 from .base import BaseSyncDBService
 from .util import convert_list_for_mptt
@@ -73,9 +74,8 @@ class DBDepartmentSyncService(BaseSyncDBService):
             dept.save()
 
         # 移除待删除的部门
-        SubjectToDelete.objects.filter(
-            subject_type=SubjectType.DEPARTMENT.value, subject_id__in=[str(i.id) for i in created_departments]
-        ).delete()
+        for ids in chunked([str(i.id) for i in created_departments], 1000):
+            SubjectToDelete.objects.filter(subject_type=SubjectType.DEPARTMENT.value, subject_id__in=ids).delete()
 
     def deleted_handler(self):
         """关于删除部门，DB 的处理"""

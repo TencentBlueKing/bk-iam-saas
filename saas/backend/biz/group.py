@@ -278,6 +278,30 @@ class GroupBiz:
         """
         移除用户组成员
         """
+        # 在真正删除成员前，检查是否会导致对应角色没有管理员
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id
+        ).first()
+
+        if relation:
+            try:
+                role = Role.objects.get(id=relation.role_id)
+            except Role.DoesNotExist:
+                role = None
+
+            if role:
+                # 只关心用户类型的成员（username）
+                remove_usernames = [m.id for m in subjects if m.type == SubjectType.USER.value]
+
+                if remove_usernames:
+                    current_members = set(
+                        RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True)
+                    )
+                    # 计算删除后是否还剩管理员
+                    remaining = current_members - set(remove_usernames)
+                    if len(current_members) > 0 and len(remaining) == 0:
+                        # 阻止删除最后一个管理员
+                        raise error_codes.COMMON_ERROR.format(_("不能移除最后一个管理员"), True)
         self._remove_members(group_id, subjects)
 
         relation = RoleRelatedObject.objects.filter(
@@ -590,9 +614,11 @@ class GroupBiz:
 
         return group_member_beans
 
-    def list_paging_group_member(self, group_id: int, limit: int, offset: int) -> Tuple[int, List[GroupMemberBean]]:
-        """分页查询用户组成员，并给成员填充 name/full_named 等相关信息"""
-        count, relations = self.group_svc.list_paging_group_member(group_id, limit, offset)
+    def list_paging_group_member(
+        self, group_id: int, limit: int, offset: int, ordering: str = ""
+    ) -> Tuple[int, List[GroupMemberBean]]:
+        """分页查询用户组成员，并给成员填充name/full_named等相关信息"""
+        count, relations = self.group_svc.list_paging_group_member(group_id, limit, offset, ordering)
         return count, self._convert_to_group_members(relations)
 
     def list_paging_template_group_member(
@@ -812,11 +838,15 @@ class GroupBiz:
         queryset = Group.objects.filter(id__in=group_ids).only("name")
         return GroupNameDict(data={one.id: one.name for one in queryset})
 
-    def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
+    def search_member_by_keyword(self, group_id: int, keyword: str, ordering: str = "") -> List[GroupMemberBean]:
         """根据关键词 获取指定用户组成员列表"""
         maximum_number_of_member = 1000
-        _, group_members = self.list_paging_group_member(group_id=group_id, limit=maximum_number_of_member, offset=0)
-        return list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
+        _, group_members = self.list_paging_group_member(
+            group_id=group_id, limit=maximum_number_of_member, offset=0, ordering=ordering
+        )
+        hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
+
+        return hit_members
 
     def search_template_group_member_by_keyword(
         self, group_id: int, template_id: int, keyword: str
@@ -946,9 +976,25 @@ class GroupBiz:
 
         subject = Subject.from_group_id(group_id)
         for template in templates:
-            # Note: 同步授权，避免检查逻辑
-            # 这里主要是针对自定义授权，直接使用 policy_biz 提供的方法即可
-            self.policy_operation_biz.alter(template.system_id, subject, template.policies)
+            # 同步场景中，已有操作需要覆盖更新以保证实例精确一致；不存在操作则新增
+            exists_policies = parse_obj_as(
+                List[PolicyBean], self.policy_query_svc.list_by_subject(template.system_id, subject)
+            )
+            exists_action_ids = {p.action_id for p in exists_policies}
+
+            update_policies = []
+            create_policies = []
+            for p in template.policies:
+                p.set_expired_at(PERMANENT_SECONDS)
+                if p.action_id in exists_action_ids:
+                    update_policies.append(p)
+                else:
+                    create_policies.append(p)
+
+            if update_policies:
+                self.policy_operation_biz.update(template.system_id, subject, update_policies)
+            if create_policies:
+                self.policy_operation_biz.alter(template.system_id, subject, create_policies)
 
     def _trans_auth_scope_to_grant_templates(self, auth_scopes) -> List[GroupTemplateGrantBean]:
         """
@@ -999,7 +1045,7 @@ class GroupBiz:
 
             policy_ids = [action_policy_id[(system_id, action_id)] for action_id in system_action_ids[system_id]]
             if policy_ids:
-                self.policy_operation_biz.delete_by_ids(scope.system_id, subject, policy_ids)
+                self.policy_operation_biz.delete_by_ids(system_id, subject, policy_ids)
 
     def _update_sync_perm_group_member(self, role: Role, group_id: int):
         """

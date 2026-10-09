@@ -19,6 +19,8 @@ from celery.schedules import crontab
 from django.db.backends.mysql.features import DatabaseFeatures
 from django.utils.functional import cached_property
 
+from backend.util.crontab import crontab_from_string
+
 # connect mysql
 pymysql.install_as_MySQLdb()
 
@@ -96,6 +98,7 @@ INSTALLED_APPS = [
     "backend.api.admin",
     "backend.api.management",
     "backend.api.bkci",
+    "backend.api.external.staff_movement",
 ]
 
 # 登录中间件
@@ -238,10 +241,13 @@ CELERY_IMPORTS = (
     "backend.api.bkci.tasks",
     "backend.apps.handover.tasks",
 )
+ORGANIZATION_SYNC_CRONTAB = env.str("BKAPP_ORGANIZATION_SYNC_CRONTAB", default="0 0 * * *")  # 默认每天 0 时
+_org_sync_schedule = crontab_from_string(ORGANIZATION_SYNC_CRONTAB)
+
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
-        "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
+        "schedule": _org_sync_schedule,  # 根据环境变量设置的同步周期动态调整
     },
     "periodic_clean_subject_to_delete": {
         "task": "backend.apps.organization.tasks.clean_subject_to_delete",
@@ -435,7 +441,7 @@ APPLY_POLICY_ADD_INSTANCES_LIMIT = env.int("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIM
 # 临时权限一个操作最大数量
 TEMPORARY_POLICY_LIMIT = env.int("BKAPP_TEMPORARY_POLICY_LIMIT", default=10)
 # 最长已过期权限删除期限
-MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1 年
+MAX_EXPIRED_POLICY_DELETE_TIME = env.int("BKAPP_MAX_EXPIRED_POLICY_DELETE_TIME", default=365 * 24 * 60 * 60)
 # 最长已过期临时权限期限
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例 ID 最大长度，默认 36（已存在长度为 36 的数据）
@@ -444,6 +450,7 @@ MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=3
 SUBJECT_DELETE_DAYS = env.int("BKAPP_SUBJECT_DELETE_DAYS", default=30)
 
 # 前端页面功能开关
+ENABLE_ABAC_EXT_ATTR_ABILITY = env.bool("BKAPP_ENABLE_ABAC_EXT_ATTR_ABILITY", default=False)
 ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": env.bool("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", default=False),
     "enable_permission_handover": env.bool("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", default=True),
@@ -452,6 +459,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_organization_count": env.bool("BKAPP_ENABLE_FRONT_END_ORGANIZATION_COUNT", default=False),
     "enable_assistant": env.bool("BKAPP_ENABLE_FRONT_END_ASSISTANT", default=False),
     "enable_bk_notice": env.bool("BKAPP_ENABLE_BK_NOTICE", default=False),
+    "enable_abac_ext_attr_ability": ENABLE_ABAC_EXT_ATTR_ABILITY,
 }
 
 # Open API 接入 APIGW 后，需要对 APIGW 请求来源认证，使用公钥解开 jwt
@@ -492,6 +500,7 @@ ROLE_RESOURCE_RELATION_TYPE = [
 
 ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
 
+
 # 对接审计中心相关配置，包括注册权限模型到权限中心后台的配置
 BK_IAM_SYSTEM_ID = "bk_iam"
 if BK_IAM_HOST_TYPE == "direct":
@@ -506,17 +515,25 @@ BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
 
+
 # BCS 初始化 ROLE 网关 api 配置
 BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
 
+
 # BK BOT approval 审批机器人通知
 BK_BOT_APPROVAL_APIGW_URL = env.str("BK_BOT_APPROVAL_APIGW_URL", default="")
+
 
 # BK BOT approval 审批机器人通知
 BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL", default="")
 
 # 通知的豁免名单，企业内部分人员不接收通知
 BK_NOTIFICATION_EXEMPTION_USERS = env.list("BK_NOTIFICATION_EXEMPTION_USERS", default=[])
+
+# 不接收自定义权限续期通知的系统列表
+CUSTOM_POLICY_RENEWAL_NOTIFICATION_EXEMPTION_SYSTEMS = env.list(
+    "CUSTOM_POLICY_RENEWAL_NOTIFICATION_EXEMPTION_SYSTEMS", default=[]
+)
 
 # 文档地址
 BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/")
@@ -529,3 +546,22 @@ DEPARTMENT_IDS_NOT_ALLOWED_AS_GROUP_MEMBER = env.str("DEPARTMENT_IDS_NOT_ALLOWED
 
 # 问题反馈地址
 BK_CE_URL = env.str("BK_CE_URL", default="https://bk.tencent.com/s-mart/community")
+
+# 接入用户管理的接口 page_size 默认值
+USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1000)
+
+# 个人中心地址
+BK_PERSONAL_CENTER_URL = env.str("BK_PERSONAL_CENTER_URL", default="")
+
+# 是否开启超级管理员拥有所有权限配置
+ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING = env.bool(
+    "ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING", default=False
+)
+
+# PCG 离职交接相关配置
+PCG_RESIGN_APP_ID = env.str("PCG_RESIGN_APP_ID", default="")
+PCG_RESIGN_APP_SECRET = env.str("PCG_RESIGN_APP_SECRET", default="")
+PCG_DEPARTMENT_IDS = env.list("PCG_DEPARTMENT_IDS", cast=int, default=[])
+
+# 是否开启权限交接 ITSM 审批流程
+ENABLE_HANDOVER_APPROVAL = env.bool("BKAPP_ENABLE_HANDOVER_APPROVAL", default=False)

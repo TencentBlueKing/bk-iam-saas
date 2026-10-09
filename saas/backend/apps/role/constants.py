@@ -61,6 +61,9 @@ DEFAULT_ROLE_PERMISSIONS = {  # 超级管理员不能操作子集管理员
         PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
         PermissionCodeEnum.MANAGE_ROLE_GROUP_CONFIG.value,
     ],
+    RoleType.AUDIT_MANAGER.value: [
+        PermissionCodeEnum.AUDIT.value,
+    ],
 }
 
 

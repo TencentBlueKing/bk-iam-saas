@@ -52,7 +52,7 @@
               </bk-button>
             </div>
             <div class="group-container">
-              <render-condition
+              <IamRenderCondition
                 :ref="`condition_${$index}_aggregateRef`"
                 :value="formatDisplayValue(row)"
                 :is-empty="row.empty"
@@ -80,7 +80,7 @@
                     </template>
                   </div>
                   <div class="content">
-                    <render-condition
+                    <IamRenderCondition
                       :ref="`condition_${$index}_${contentIndex}_ref`"
                       :value="content.value"
                       :is-empty="content.empty"
@@ -172,7 +172,6 @@
                 <div class="mock-disabled-select">{{row.expired_display}}</div>
               </template>
               <template v-else>
-                <!-- 66{{row.expiredAtPlaceholder}}--{{user.timestamp}} -->
                 <bk-select
                   v-model="row.expired_at"
                   :clearable="false"
@@ -182,11 +181,12 @@
                   ext-popover-cls="iam-deadline-select-dropdown-content"
                   @toggle="handleExpiredToggle(...arguments, row)"
                   @selected="handleExpiredSelect(...arguments, row)">
-                  <bk-option v-for="option in durationList"
+                  <bk-option
+                    v-for="option in durationList"
                     :key="option.id"
                     :id="option.id"
-                    :name="option.name">
-                  </bk-option>
+                    :name="option.name"
+                  />
                   <div slot="extension" style="cursor: pointer;" @click.stop="handleOpenCustom(row, $index)">
                     <template v-if="!row.isShowCustom">
                       {{ $t(`m.common['自定义']`) }}
@@ -301,8 +301,8 @@
   import AggregationPolicy from '@/model/aggregation-policy';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import RenderResource from './render-resource';
-  import RenderCondition from './render-condition';
   import EffectTime from './effect-time';
   import SidesliderEffectTime from './sideslider-effect-time';
   import PreviewResourceDialog from './preview-resource-dialog';
@@ -324,7 +324,7 @@
     components: {
       RenderAggregateSideslider,
       RenderResource,
-      RenderCondition,
+      IamRenderCondition,
       PreviewResourceDialog,
       EffectTime,
       SidesliderEffectTime
@@ -579,6 +579,14 @@
                 // 防止切换的时候修改只读name
                 e.name = e.name.split('，')[0];
               }
+              // 处理申请权限下option不存在的选项
+              this.$nextTick(() => {
+                const expiredAtRef = this.$refs[`${e.id}&expiredAtRef`];
+                const isExistSelect = expiredAtRef && expiredAtRef.$refs && expiredAtRef.$refs.bkSelect;
+                if (isExistSelect && !expiredAtRef.selectedName && e.expired_at) {
+                  expiredAtRef.$refs.bkSelect.querySelector('.bk-select-name').textContent = e.expiredAtPlaceholder;
+                }
+              });
             });
             this.emptyResourceGroupsList = []; // 重置变量
             this.tableList = value;
@@ -1206,6 +1214,7 @@
           condition.push({
             id,
             attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
+            attribute_aggregation: item.attribute_aggregation || 'AND',
             instances: instance ? instance.filter(item => item.path.length > 0) : []
           });
         });
@@ -1247,6 +1256,7 @@
           condition.push({
             id,
             attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
+            attribute_aggregation: item.attribute_aggregation || 'AND',
             instances: instance ? instance.filter(item => item.path.length > 0) : []
           });
         });
@@ -1349,12 +1359,20 @@
           if (instances.length > 0) {
             tempCurData = [new Condition({ instances }, '', 'add')];
           }
-          if (tempCurData[0] === 'none') {
+          if (tempCurData.length > 0 && tempCurData[0] === 'none' && !this.curCopyNoLimited) {
             return;
           }
-          content.condition = _.cloneDeep(tempCurData);
+          if (content) {
+            content.condition = _.cloneDeep(tempCurData);
+          }
+          if (this.curCopyNoLimited && !content) {
+            payload.condition = [];
+            payload.isError = false;
+          }
         }
-        content.isError = false;
+        if (content) {
+          content.isError = false;
+        }
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
 
@@ -1665,7 +1683,13 @@
                       ? resItem.condition.map(conItem => {
                         const { id, instance, attribute } = conItem;
                         const attributeList = (attribute && attribute.length > 0)
-                          ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                          ? attribute.map(({ id, name, type, operator, values }) => ({
+                            id,
+                            name,
+                            type: type || 'STRING',
+                            operator: operator || 'eq',
+                            values
+                          }))
                           : [];
         
                         const instanceList = (instance && instance.length > 0)
@@ -1692,7 +1716,8 @@
                         return {
                           id,
                           instances: instanceList,
-                          attributes: attributeList
+                          attributes: attributeList,
+                          attribute_aggregation: conItem.attribute_aggregation || 'AND'
                         };
                       })
                       : [];
@@ -1750,7 +1775,9 @@
             }
           } else {
             const { actions, aggregateResourceType, instances, instancesDisplayData, isNoLimited } = item;
-            if (!isNoLimited && (instances.length < 1 || (instances.length === 1 && instances[0] === 'none'))) {
+            // 如果存在多个资源类型，只要有一项有值就允许提交
+            const isExistEmpty = aggregateResourceType.every(rs => ['', this.$t(`m.verify['请选择']`)].includes(rs.displayValue));
+            if (!isNoLimited && ((instances.length < 1 || (instances.length === 1 && instances[0] === 'none')) && isExistEmpty)) {
               actionList = _.cloneDeep(actions);
               item.isError = true;
               flag = true;

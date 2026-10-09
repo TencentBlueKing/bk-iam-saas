@@ -20,6 +20,17 @@
       </div>
     </div>
     <div class="user fr">
+      <div v-if="IAM_V4_URL" :class="`switch-vision-flag ${$i18n.locale}`">
+        <div class="switch-vision-text" @click="handleOpenNewIAM">
+          <Icon type="qiehuan" />
+          <span class="text">{{ $t(`m.common['切换新版']`) }}</span>
+        </div>
+        <div class="dropdown-panel">
+          <div class="item">
+            {{ $t(`m.common['切换至新版权限中心']`) }}
+          </div>
+        </div>
+      </div>
       <div class="help-flag">
         <Icon type="help-fill" />
         <div :class="[
@@ -59,57 +70,13 @@
           </div>
         </div>
       </div>
-      <p
-        class="user-name"
-        @click.stop="handleSwitchIdentity"
-        data-test-id="header_btn_triggerSwitchRole"
-      >
-        {{ user.username }}
-        <Icon
-          type="down-angle"
-          :class="['user-name-angle', { dropped: isShowUserDropdown }]"
-        />
+      <p class="user-name">
+        <UserInfo />
       </p>
-      <transition name="toggle-slide">
-        <section
-          class="iam-grading-admin-list-wrapper"
-          :style="style"
-          v-show="isShowGradingWrapper"
-          v-bk-clickoutside="handleClickOutSide"
-        >
-          <template>
-            <!-- <div class="operation auth-manager" v-if="roleList.length">
-                            <div class="user-dropdown-item " :title="$t(`m.nav['切换管理空间']`)" @click="handleManager">
-                                <Icon type="grade-admin" class="iam-manager-icon" />
-                                {{ $t(`m.nav['切换管理空间']`) }}
-                            </div>
-                        </div> -->
-            <div class="operation">
-              <div
-                class="user-dropdown-item"
-                :title="$t(`m.nav['退出登录']`)"
-                @click="handleLogout"
-              >
-                <!-- <Icon type="logout" /> -->
-                {{ $t(`m.nav['退出登录']`) }}
-              </div>
-            </div>
-          </template>
-        </section>
-        <!-- <template>
-                    <div class="operation right">
-                        <div class="user-dropdown-item " @click="handleLogout">
-                            <Icon type="logout" />
-                            {{ $t(`m.nav['注销']`) }}
-                        </div>
-                    </div>
-                </template> -->
-      </transition>
     </div>
     <system-log v-model="showSystemLog" />
   </header>
 </template>
-
 <script>
   import { mapGetters } from 'vuex';
   // import IamGuide from '@/components/iam-guide/index.vue';
@@ -117,12 +84,13 @@
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
   import { formatI18nKey, jsonpRequest, getManagerMenuPerm, navDocCenterPath } from '@/common/util';
-  import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
+  import { NEED_CONFIRM_DIALOG_ROUTER, IAMV4_ROUTES_ENUM } from '@/common/constants';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
   import SystemLog from '../system-log';
   import Cookies from 'js-cookie';
   import magicbox from 'bk-magic-vue';
   import logoSvg from '@/images/logo.svg';
+  import UserInfo from '@/components/user-info/index.vue';
 
   // 有选项卡的页面，user-group-detail 以及 perm-template-detail
   const getTabData = (routerName) => {
@@ -166,7 +134,8 @@
   export default {
     inject: ['reloadCurPage'],
     components: {
-      SystemLog
+      SystemLog,
+      UserInfo
       // IamGuide
     },
     props: {
@@ -180,9 +149,10 @@
     },
     data () {
       return {
+        IAM_V4_URL: window.BK_IAM_V4_URL,
+        BK_PERSONAL_CENTER_URL: window.BK_PERSONAL_CENTER_URL,
         isShowUserDropdown: false,
         showSystemLog: false,
-        isShowGradingWrapper: false,
         curIdentity: '',
         curRole: '',
         curRoleId: 0,
@@ -216,7 +186,7 @@
         navData: [
           { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: ['staff'] },
           { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: ['all_manager'] },
-          { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: ['super_manager'] },
+          { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: ['super_manager', 'audit_manager'] },
           { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: ['super_manager'] }
         ],
         defaultRouteList: ['myPerm', 'userGroup', 'audit', 'user', 'addGroupPerm'],
@@ -252,12 +222,6 @@
         'versionLogs'
       ]),
       ...mapGetters('userGlobalConfig', ['globalConfig']),
-      style () {
-        return {
-          // height: `${this.roleList.length ? this.curHeight : 46}px`
-          height: `46px`
-        };
-      },
       curAccountLogo () {
         return [].slice.call(this.user.username)[0].toUpperCase() || '-';
       },
@@ -275,6 +239,11 @@
         // 如果未获取到配置，使用默认logo
         const src = this.globalConfig.appLogo || logoSvg;
         return src;
+      },
+      userHeight () {
+        const itemHeight = 32;
+        const length = this.BK_PERSONAL_CENTER_URL ? 2 : 1;
+        return itemHeight * length;
       }
     },
     watch: {
@@ -308,7 +277,7 @@
         },
         immediate: true
       },
-      isShowGradingWrapper (value) {
+      isShowUserDropdown (value) {
         if (!value) {
           this.searchValue = '';
         }
@@ -386,7 +355,7 @@
         }
       },
       handleClickOutSide (e) {
-        this.isShowGradingWrapper = false;
+        this.isShowUserDropdown = false;
       },
 
       // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
@@ -424,6 +393,23 @@
 
       handleOpenSource () {
         window.open(`https://github.com/TencentBlueKing/bk-iam`);
+      },
+
+      handleOpenNewIAM () {
+        // 标记是否匹配到路由
+        let isMatched = false;
+        for (const [oldRoutes, newRoutes] of IAMV4_ROUTES_ENUM.entries()) {
+          // 检查跳转的v4路由是否存在于当前v3路由中
+          if (oldRoutes.includes(this.$route.name)) {
+            window.open(`${this.IAM_V4_URL}/${newRoutes}`, '_self');
+            isMatched = true;
+            break;
+          }
+        }
+        // 路由没匹配到执行默认跳转到v4权限申请页面
+        if (!isMatched) {
+          window.open(`${this.IAM_V4_URL}/permission/apply`, '_self');
+        }
       },
 
       back () {
@@ -537,7 +523,6 @@
         this.$set(currentData, 'active', true);
         this.$store.commit('updateIndex', index);
         window.localStorage.setItem('index', index);
-        this.isShowGradingWrapper = false;
         this.isShowUserDropdown = false;
         try {
           await this.$store.dispatch('role/updateCurrentRole', { id: currentData.id });
@@ -617,15 +602,7 @@
       },
 
       handleSwitchIdentity () {
-        // this.curHeight = document.getElementsByClassName('user-dropdown')[0].offsetHeight
-        this.isShowGradingWrapper = !this.isShowGradingWrapper;
-      },
-      
-      handleLogout () {
-        window.localStorage.removeItem('iam-header-title-cache');
-        window.localStorage.removeItem('iam-header-name-cache');
-        window.localStorage.removeItem('applyGroupList');
-        window.location = `${window.LOGIN_SERVICE_URL}/?c_url=${encodeURIComponent(window.location.href)}&is_from_logout=1`;
+        this.isShowUserDropdown = !this.isShowUserDropdown;
       },
 
       handleManager () {
@@ -651,7 +628,9 @@
       setTabRoleData () {
         const superManager = this.curRoleList.find((e) => e.type === 'super_manager');
         const systemManager = this.curRoleList.find((e) => e.type === 'system_manager');
-        const allManager = this.curRoleList.find((e) => e.type !== 'staff');
+        const auditManager = this.curRoleList.find((e) => e.type === 'audit_manager');
+        const manageSpaceRoleTypes = ['super_manager', 'system_manager', 'rating_manager', 'subset_manager'];
+        const allManager = this.curRoleList.find((e) => manageSpaceRoleTypes.includes(e.type));
         this.navData.forEach((element, i) => {
           element.active = i === this.index;
           const rolesMap = [
@@ -665,6 +644,12 @@
               () => element.type.includes('system_manager') && systemManager && !superManager,
               () => {
                 element = Object.assign(element, { id: systemManager.id, show: true });
+              }
+            ],
+            [
+              () => element.type.includes('audit_manager') && auditManager && !superManager,
+              () => {
+                element = Object.assign(element, { id: auditManager.id, show: true });
               }
             ],
             [
@@ -684,9 +669,11 @@
 
       setNavData () {
         this.$nextTick(() => {
+          const manageSpaceRoleTypes = ['super_manager', 'system_manager', 'rating_manager', 'subset_manager'];
+          const hasManageSpaceRole = this.roleList.some((item) => manageSpaceRoleTypes.includes(item.type));
           for (let i = 0; i < this.navData.length; i++) {
             if (this.navData[i].type.includes('all_manager')) {
-              this.navData[i].show = !!this.roleList.length;
+              this.navData[i].show = hasManageSpaceRole;
               break;
             }
           }

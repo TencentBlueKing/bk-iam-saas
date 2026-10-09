@@ -88,7 +88,7 @@
                   </bk-button>
                 </div>
                 <div class="content">
-                  <render-condition
+                  <IamRenderCondition
                     :ref="`condition_${$index}_aggregateRef`"
                     :value="formatDisplayValue(row)"
                     :is-empty="row.empty"
@@ -119,7 +119,7 @@
                         </template>
                       </div>
                       <div class="content">
-                        <render-condition
+                        <IamRenderCondition
                           data-test-id="group_input_resourceInstanceCondition"
                           :ref="`condition_${$index}_${contentIndex}_ref`"
                           :value="content.value"
@@ -246,8 +246,8 @@
   import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP } from '@/common/constants';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import RenderResource from './render-resource';
-  import RenderCondition from './render-condition';
   import PreviewResourceDialog from './preview-resource-dialog';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderDetail from '../common/render-detail';
@@ -260,9 +260,9 @@
       };
     },
     components: {
+      IamRenderCondition,
       RenderAggregateSideslider,
       RenderResource,
-      RenderCondition,
       PreviewResourceDialog,
       RenderResourcePopover,
       RenderDetail
@@ -1272,6 +1272,7 @@
           condition.push({
             id,
             attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
+            attribute_aggregation: item.attribute_aggregation || 'AND',
             instances: instance ? instance.filter(item => item.path.length > 0) : []
           });
         });
@@ -1694,7 +1695,13 @@
                       ? resItem.condition.map(conItem => {
                         const { id, instance, attribute } = conItem;
                         const attributeList = (attribute && attribute.length > 0)
-                          ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                          ? attribute.map(({ id, name, type, operator, values }) => ({
+                            id,
+                            name,
+                            type: type || 'STRING',
+                            operator: operator || 'eq',
+                            values
+                          }))
                           : [];
                         const instanceList = (instance && instance.length > 0)
                           ? instance.map(({ name, type, path, paths }) => {
@@ -1718,7 +1725,8 @@
                         return {
                           id,
                           instances: instanceList,
-                          attributes: attributeList
+                          attributes: attributeList,
+                          attribute_aggregation: conItem.attribute_aggregation || 'AND'
                         };
                       })
                       : [];
@@ -1840,7 +1848,13 @@
                       ? resItem.condition.map(conItem => {
                         const { id, instance, attribute } = conItem;
                         const attributeList = (attribute && attribute.length > 0)
-                          ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                          ? attribute.map(({ id, name, type, operator, values }) => ({
+                            id,
+                            name,
+                            type: type || 'STRING',
+                            operator: operator || 'eq',
+                            values
+                          }))
                           : [];
                         const instanceList = (instance && instance.length > 0)
                           ? instance.map(({ name, type, path, paths }) => {
@@ -1864,7 +1878,8 @@
                         return {
                           id,
                           instances: instanceList,
-                          attributes: attributeList
+                          attributes: attributeList,
+                          attribute_aggregation: conItem.attribute_aggregation || 'AND'
                         };
                       })
                       : [];
@@ -1968,7 +1983,13 @@
                         const { id, instance, attribute } = conItem;
                         const attributeList = (attribute && attribute.length > 0)
                           // eslint-disable-next-line max-len
-                          ? attribute.map(({ id, name, values }) => ({ id, name, values })) : [];
+                          ? attribute.map(({ id, name, type, operator, values }) => ({
+                            id,
+                            name,
+                            type: type || 'STRING',
+                            operator: operator || 'eq',
+                            values
+                          })) : [];
         
                         const instanceList = (instance && instance.length > 0)
                           ? instance.map(({ name, type, path, paths }) => {
@@ -1991,7 +2012,8 @@
                         return {
                           id,
                           instances: instanceList,
-                          attributes: attributeList
+                          attributes: attributeList,
+                          attribute_aggregation: conItem.attribute_aggregation || 'AND'
                         };
                       })
                       : [];

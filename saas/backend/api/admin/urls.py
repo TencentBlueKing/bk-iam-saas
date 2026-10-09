@@ -31,8 +31,14 @@ urlpatterns = [
     # 用户组授权
     path(
         "groups/<str:id>/policies/",
-        views.AdminGroupPolicyViewSet.as_view({"post": "create"}),
+        views.AdminGroupPolicyViewSet.as_view({"get": "list", "post": "create", "put": "update"}),
         name="open.admin.group_policy",
+    ),
+    # 批量创建模板
+    path(
+        "grade_managers/-/templates/",
+        views.AdminBatchGradeManagerTemplateViewSet.as_view({"post": "create"}),
+        name="open.admin.grade_managers.batch_template",
     ),
     # 模板
     path(
@@ -101,5 +107,11 @@ urlpatterns = [
         "cleanup/users/permission/",
         views.AdminSubjectPermissionCleanupViewSet.as_view({"delete": "cleanup"}),
         name="open.admin.subject.cleanup",
+    ),
+    # 组织架构同步
+    path(
+        "organization/sync/",
+        views.AdminOrganizationSyncViewSet.as_view({"post": "sync"}),
+        name="open.admin.organization.sync",
     ),
 ]

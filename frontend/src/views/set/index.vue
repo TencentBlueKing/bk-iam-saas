@@ -19,17 +19,20 @@
   import { mapGetters } from 'vuex';
   import SuperManager from './components/render-super-manager';
   import SystemManager from './components/render-system-manager';
+  import AuditManager from './components/render-audit-manager';
   export default {
     name: '',
     components: {
       SuperManager,
-      SystemManager
+      SystemManager,
+      AuditManager
     },
     data () {
       return {
         panels: [
           { name: 'SuperManager', label: this.$t(`m.myApproval['超级管理员']`) },
-          { name: 'SystemManager', label: this.$t(`m.nav['系统管理员']`) }
+          { name: 'SystemManager', label: this.$t(`m.nav['系统管理员']`) },
+          { name: 'AuditManager', label: this.$t(`m.set['审计管理员']`) }
         ],
         active: 'SuperManager',
         curRole: 'staff',

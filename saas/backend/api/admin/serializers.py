@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
+from celery.schedules import ParseException
 from rest_framework import serializers
 
 from backend.api.management.v2.serializers import ManagementGradeManagerGroupCreateSLZ
@@ -19,6 +19,7 @@ from backend.apps.role.serializers import BaseGradeMangerSLZ
 from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
 from backend.common.serializers import GroupMemberSLZ
 from backend.service.constants import GroupMemberType, RoleType
+from backend.util.crontab import crontab_from_string
 
 
 class AdminGroupBasicSLZ(serializers.ModelSerializer):
@@ -54,6 +55,10 @@ class AdminSubjectGroupSLZ(serializers.Serializer):
 
 class AdminGroupAuthorizationSLZ(GroupAuthorizationSLZ):
     pass
+
+
+class AdminGroupPolicyQuerySLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
 
 
 class AdminSystemProviderConfigSLZ(serializers.Serializer):
@@ -94,6 +99,26 @@ class SubjectSLZ(serializers.Serializer):
     # 注意, 当前只支持冻结用户, 不支持其他类型
     type = serializers.ChoiceField(label="Subject类型", choices=[("user", "用户")])
     id = serializers.CharField(label="SubjectID")
+    before_at = serializers.IntegerField(label="清理时间戳", required=False, default=None)
+
+    class Meta:
+        ref_name = "AdminSubjectSLZ"
+
+
+class AdminOrganizationSyncConfigSLZ(serializers.Serializer):
+    """组织架构同步配置"""
+
+    sync_crontab = serializers.CharField(
+        label="同步周期(crontab)",
+        required=False,
+        help_text="crontab 格式，如 '0 2 * * *' 表示每天凌晨2点。如不传则只触发同步",
+    )
+
+    def validate_sync_crontab(self, value):
+        try:
+            return crontab_from_string(value)
+        except (ParseException, ValueError) as e:
+            raise serializers.ValidationError(f"invalid crontab expression: {str(e)}")
 
 
 class FreezeSubjectResponseSLZ(serializers.Serializer):
@@ -115,3 +140,7 @@ class AdminTemplateCreateSLZ(TemplateCreateSLZ):
 
 class AdminTemplateIdSLZ(TemplateIdSLZ):
     pass
+
+
+class AdminGradeManagerTemplateBatchCreateSLZ(TemplateCreateSLZ):
+    role_ids = serializers.ListField(label="角色ID列表", child=serializers.IntegerField(label="角色ID"), allow_empty=False)

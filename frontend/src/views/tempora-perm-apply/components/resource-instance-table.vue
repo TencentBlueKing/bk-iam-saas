@@ -32,7 +32,7 @@
               </bk-button>
             </div>
             <div class="group-container">
-              <render-condition
+              <IamRenderCondition
                 :ref="`condition_${$index}_aggregateRef`"
                 :value="formatDisplayValue(row)"
                 :is-empty="row.empty"
@@ -60,7 +60,7 @@
                     </template>
                   </div>
                   <div class="content">
-                    <render-condition
+                    <IamRenderCondition
                       :ref="`condition_${$index}_${contentIndex}_ref`"
                       :value="content.value"
                       :is-empty="content.empty"
@@ -161,11 +161,12 @@
                   ext-popover-cls="iam-deadline-select-dropdown-content"
                   @toggle="handleExpiredToggle(...arguments, row)"
                   @selected="handleExpiredSelect(...arguments, row)">
-                  <bk-option v-for="option in durationList"
+                  <bk-option
+                    v-for="option in durationList"
                     :key="option.id"
                     :id="option.id"
-                    :name="option.name">
-                  </bk-option>
+                    :name="option.name"
+                  />
                   <div slot="extension" style="cursor: pointer;" @click.stop="handleOpenCustom(row)">
                     <template v-if="!row.isShowCustom">
                       {{ $t(`m.common['自定义']`) }}
@@ -267,12 +268,12 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
+  import IamRenderCondition from '@/components/iam-render-condition';
   import Condition from '@/model/condition';
   import Policy from '@/model/policy';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import RenderResource from './render-resource';
-  import RenderCondition from './render-condition';
   import EffectTime from './effect-time';
   import SidesliderEffectTime from './sideslider-effect-time';
   import PreviewResourceDialog from './preview-resource-dialog';
@@ -293,7 +294,7 @@
     components: {
       RenderAggregateSideslider,
       RenderResource,
-      RenderCondition,
+      IamRenderCondition,
       PreviewResourceDialog,
       EffectTime,
       SidesliderEffectTime
@@ -495,6 +496,14 @@
           } else {
             value.forEach(e => {
               e.name = e.name.split('，')[0];
+              // 处理申请权限下option不存在的选项
+              this.$nextTick(() => {
+                const expiredAtRef = this.$refs[`${e.id}&expiredAtRef`];
+                const isExistSelect = expiredAtRef && expiredAtRef.$refs && expiredAtRef.$refs.bkSelect;
+                if (isExistSelect && !expiredAtRef.selectedName && e.expired_at) {
+                  expiredAtRef.$refs.bkSelect.querySelector('.bk-select-name').textContent = e.expiredAtPlaceholder;
+                }
+              });
             });
             this.emptyResourceGroupsList = []; // 重置变量
             this.tableList = value;
@@ -1071,6 +1080,7 @@
           condition.push({
             id,
             attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
+            attribute_aggregation: item.attribute_aggregation || 'AND',
             instances: instance ? instance.filter(item => item.path.length > 0) : []
           });
         });
@@ -1112,6 +1122,7 @@
           condition.push({
             id,
             attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
+            attribute_aggregation: item.attribute_aggregation || 'AND',
             instances: instance ? instance.filter(item => item.path.length > 0) : []
           });
         });
@@ -1502,7 +1513,13 @@
                       ? resItem.condition.map(conItem => {
                         const { id, instance, attribute } = conItem;
                         const attributeList = (attribute && attribute.length > 0)
-                          ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                          ? attribute.map(({ id, name, type, operator, values }) => ({
+                            id,
+                            name,
+                            type: type || 'STRING',
+                            operator: operator || 'eq',
+                            values
+                          }))
                           : [];
         
                         const instanceList = (instance && instance.length > 0)
@@ -1529,7 +1546,8 @@
                         return {
                           id,
                           instances: instanceList,
-                          attributes: attributeList
+                          attributes: attributeList,
+                          attribute_aggregation: conItem.attribute_aggregation || 'AND'
                         };
                       })
                       : [];
