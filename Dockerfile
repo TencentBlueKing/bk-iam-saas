@@ -4,13 +4,13 @@ COPY frontend /
 WORKDIR /
 RUN npm install . && npm run build:ee
 
-FROM python:3.11.10-slim-bullseye
+FROM python:3.11.10-slim-bookworm
 USER root
 
-RUN rm /etc/apt/sources.list && \
-    echo "deb https://mirrors.tencent.com/debian bullseye main" >> /etc/apt/sources.list && \
-    echo "deb https://mirrors.tencent.com/debian-security bullseye-security main" >> /etc/apt/sources.list && \
-    echo "deb https://mirrors.tencent.com/debian bullseye-updates main" >> /etc/apt/sources.list
+RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources && \
+    echo "deb https://mirrors.tencent.com/debian bookworm main" >> /etc/apt/sources.list && \
+    echo "deb https://mirrors.tencent.com/debian-security bookworm-security main" >> /etc/apt/sources.list && \
+    echo "deb https://mirrors.tencent.com/debian bookworm-updates main" >> /etc/apt/sources.list
 
 RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://mirrors.tencent.com/pypi/simple/' > ~/.pip/pip.conf
 
