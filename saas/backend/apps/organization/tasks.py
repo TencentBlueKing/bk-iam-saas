@@ -179,8 +179,8 @@ def clean_subject_to_delete():
 
         if subjects:
             # 删除待删除的subject
-            SubjectToDelete.objects.filter(id__in=[one.id for one in subjects]).delete()
-
+            for ids in chunked([i.id for i in subjects], 1000):
+                SubjectToDelete.objects.filter(id__in=ids).delete()
             # 清理后台subject数据
             deleted_subjects = [{"type": SubjectType.USER.value, "id": one} for one in usernames]
             deleted_subjects.extend([{"type": SubjectType.DEPARTMENT.value, "id": one} for one in department_ids])

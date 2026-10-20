@@ -121,10 +121,10 @@ class Syncer:
             ).values_list("subject_id", flat=True)
         )
         if conflict_usernames:
-            SubjectToDelete.objects.filter(
-                subject_type=SubjectType.USER.value, subject_id__in=conflict_usernames
-            ).delete()
-
+            for ids in chunked(conflict_usernames, 1000):
+                SubjectToDelete.objects.filter(
+                    subject_type=SubjectType.USER.value, subject_id__in=ids
+                ).delete()
         # 后台只创建不冲突的用户（冲突用户在后台已存在，跳过）
         users_to_create = [
             {"type": "user", "id": user["username"], "name": user["display_name"]}
