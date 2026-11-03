@@ -52,6 +52,10 @@ class VueTemplateView(TemplateView):
                 "BK_IAM_V4_URL": settings.BK_IAM_V4_URL.rstrip("/"),
                 # 个人中心地址
                 "BK_PERSONAL_CENTER_URL": settings.BK_PERSONAL_CENTER_URL,
+                # 应用版本号
+                "BK_APP_VERSION": settings.BK_APP_VERSION,
+                # 前端 Trace 上报地址
+                "BK_TRACE_REPORT_URL": settings.BK_TRACE_REPORT_URL,
                 # 是否开启超级管理员拥有所有权限配置
                 "ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING": (
                     settings.ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING
