@@ -4,18 +4,12 @@ COPY frontend /
 WORKDIR /
 RUN npm install . && npm run build:ee
 
-FROM python:3.11.10-slim-bullseye
+FROM mirrors.tencent.com/blueking/python:3.11.10-ts4
 USER root
-
-RUN rm /etc/apt/sources.list && \
-    echo "deb https://mirrors.tencent.com/debian bullseye main" >> /etc/apt/sources.list && \
-    echo "deb https://mirrors.tencent.com/debian-security bullseye-security main" >> /etc/apt/sources.list && \
-    echo "deb https://mirrors.tencent.com/debian bullseye-updates main" >> /etc/apt/sources.list
 
 RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://mirrors.tencent.com/pypi/simple/' > ~/.pip/pip.conf
 
-RUN apt-get update && apt-get install -y gcc libssl-dev default-libmysqlclient-dev build-essential
-
+RUN dnf makecache && dnf install -y gcc openssl-devel mariadb-devel make
 
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
