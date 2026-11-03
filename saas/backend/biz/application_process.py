@@ -10,14 +10,14 @@ specific language governing permissions and limitations under the License.
 """
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Dict, List
+from typing import Any, Dict, FrozenSet, List
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.utils.functional import cached_property
 from pydantic import BaseModel
 
-from backend.apps.role.models import Role, RoleResourceRelation, RoleUser
+from backend.apps.role.models import Role, RoleResourceRelation
 from backend.service.constants import ANY_ID, ProcessorNodeType, RoleType
 from backend.service.models.approval import ApprovalProcessWithNodeProcessor
 from backend.util.uuid import gen_uuid
@@ -32,7 +32,7 @@ from .policy import (
     ResourceGroupBeanList,
 )
 from .resource import ResourceBiz, ResourceNodeAttributeDictBean, ResourceNodeBean
-from .role import RoleAuthorizationScopeChecker
+from .role import RoleAuthorizationScopeChecker, RoleBiz
 
 
 class PolicyProcess(BaseModel):
@@ -334,12 +334,16 @@ def copy_policy_by_instance_path(policy, resource_group, rrt, instance, path):
 class GradeManagerApproverHandler(PolicyProcessHandler):
     """分级管理员审批人"""
 
+    role_biz = RoleBiz()
+
     def __init__(self, system_id: str) -> None:
         super().__init__(system_id)
 
         # for cache
         self._resource_role_ids: Dict[ResourceNodeBean, List[int]] = {}
         self._role_id_checker: Dict[int, RoleAuthorizationScopeChecker] = {}
+        # 审批人查询缓存: role_ids -> 成员列表(过滤同步组过期成员后)
+        self._grade_manager_members: Dict[FrozenSet[int], List[str]] = {}
 
     def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
         # 返回的结果
@@ -372,7 +376,9 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
                     continue
 
                 # 查询分级管理员的成员作为审批人
-                approvers = list(set(RoleUser.objects.filter(role_id__in=role_ids).values_list("username", flat=True)))
+                approvers = self._list_grade_manager_members_for_approver(role_ids)
+                if not approvers:
+                    continue
                 copied_process = deepcopy(policy_process.process)
                 copied_process.set_node_approver(
                     ProcessorNodeType.GRADE_MANAGER.value,
@@ -548,3 +554,11 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
                 resource_node_policy[node].resource_groups.append(rg.copy(deep=True))
 
         return resource_node_policy
+
+    def _list_grade_manager_members_for_approver(self, role_ids: List[int]) -> List[str]:
+        """查询分级管理员的成员 (所有者) 作为审批人 (过滤同步用户组过期成员)"""
+        # 同一申请单多个资源节点/实例的 role_ids 常有重叠，按 role_ids 缓存避免重复查询 DB 与 IAM。
+        cache_key = frozenset(role_ids)
+        if cache_key not in self._grade_manager_members:
+            self._grade_manager_members[cache_key] = self.role_biz.list_unexpired_grade_manager_members(role_ids)
+        return self._grade_manager_members[cache_key]
