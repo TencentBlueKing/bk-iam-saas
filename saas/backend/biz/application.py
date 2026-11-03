@@ -78,7 +78,6 @@ from backend.service.models import (
     HandoverApplicationData,
     Subject,
 )
-from backend.service.role import RoleService
 from backend.service.system import SystemService
 
 from .application_process import (
@@ -168,7 +167,7 @@ class ApprovalProcessorBiz:
     当前只能查询IAM本身角色，后续需要扩展支持其他的再重新抽象该类
     """
 
-    svc = RoleService()
+    role_biz = RoleBiz()
 
     @cachedmethod(timeout=60)  # 缓存1分钟
     def get_super_manager_members(self) -> str:
@@ -184,14 +183,19 @@ class ApprovalProcessorBiz:
     def get_grade_manager_members_by_group_id(
         self, group_id: int, fallback_to_parent_if_empty: bool = True
     ) -> List[str]:
-        """获取分级管理员，如果为空，获取父级管理员"""
-        current_role = self.svc.get_role_by_group_id(group_id)
+        """获取未过期分级管理员 (过滤同步用户组过期成员)，如果为空 (或全部过期)，获取父级管理员"""
+        current_role = self.role_biz.get_role_by_group_id(group_id)
 
-        if fallback_to_parent_if_empty and not current_role.members:
-            parent_id = self.svc.get_parent_id(current_role.id)
-            return self.svc.list_members_by_role_id(parent_id)
+        # 过滤掉权限同步用户组中已过期的成员，避免过期拥有者作为审批人
+        members = self.role_biz.list_unexpired_grade_manager_members([current_role.id])
 
-        return current_role.members
+        if fallback_to_parent_if_empty and not members:
+            parent_id = self.role_biz.get_parent_id(current_role.id)
+            if parent_id:
+                # 父级管理员同样需要过滤过期成员
+                members = self.role_biz.list_unexpired_grade_manager_members([parent_id])
+
+        return members
 
 
 class ApprovedPassApplicationBiz:
