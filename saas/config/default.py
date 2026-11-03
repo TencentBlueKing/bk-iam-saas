@@ -553,6 +553,12 @@ USERMGR_DEFAULT_PAGE_SIZE = env.int("BKAPP_USERMGR_DEFAULT_PAGE_SIZE", default=1
 # 个人中心地址
 BK_PERSONAL_CENTER_URL = env.str("BK_PERSONAL_CENTER_URL", default="")
 
+# 应用版本号
+BK_APP_VERSION = env.str("BK_APP_VERSION", default="")
+
+# 前端 Trace 上报地址
+BK_TRACE_REPORT_URL = env.str("BK_TRACE_REPORT_URL", default="")
+
 # 是否开启超级管理员拥有所有权限配置
 ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING = env.bool(
     "ENABLE_ACCESS_SYSTEM_SUPER_PERMISSION_SETTING", default=False
