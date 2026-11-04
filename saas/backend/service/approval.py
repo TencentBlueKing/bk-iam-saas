@@ -20,7 +20,11 @@ from backend.common.error_codes import error_codes
 from backend.plugins.approval_process.base import ApprovalProcessProvider
 from backend.plugins.approval_process.itsm import ITSMApprovalProcessProvider
 
-from .constants import DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES, ApplicationType, DEFAULT_PROCESS_CONFIGURABLE_APPLICATION_TYPES
+from .constants import (
+    DEFAULT_PROCESS_CONFIGURABLE_APPLICATION_TYPES,
+    DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES,
+    ApplicationType,
+)
 from .models import (
     ActionApprovalProcess,
     ApprovalProcess,
