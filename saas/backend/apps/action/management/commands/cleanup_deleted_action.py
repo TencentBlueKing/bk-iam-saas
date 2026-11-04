@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 权限中心 (BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
@@ -23,7 +23,7 @@ from backend.apps.role.models import Role, RoleCommonAction, RoleScope
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
 from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.component import iam
-from backend.service.constants import RoleScopeType
+from backend.service.constants import ACTION_ALL, RoleScopeType
 from backend.service.models.subject import Subject
 from backend.service.policy.operation import PolicyOperationService
 from backend.util.json import json_dumps
@@ -66,9 +66,10 @@ def flush_bulk_update(model_cls, objs: list, fields: List[str], batch_size: int,
 
 def compute_to_remove(present: List[str], action_ids: Set[str], current_action_ids: Set[str]) -> Set[str]:
     """计算某一行数据里需要清理的 action"""
+    # Note: ACTION_ALL("*") 表示"该系统任意操作"，是授权范围/模板中的合法值，且不会出现在 Action 列表中，不能被清理
     if action_ids:
-        return {i for i in present if i in action_ids}
-    return {i for i in present if i and i not in current_action_ids}
+        return {i for i in present if i in action_ids and i != ACTION_ALL}
+    return {i for i in present if i and i != ACTION_ALL and i not in current_action_ids}
 
 
 def list_action_ids_in_system(system_id: str) -> Set[str]:
@@ -79,7 +80,7 @@ def list_action_ids_in_system(system_id: str) -> Set[str]:
 
 
 class Command(BaseCommand):
-    help = "清理指定系统下已删除 Action 的 SaaS 侧关联数据，默认仅清理 SaaS，--clean-backend 时尝试清理 IAM 后台。"
+    help = "清理指定系统下已删除 Action 的 SaaS 侧关联数据，默认仅清理 SaaS，--clean-backend 时尝试清理 IAM 后台。" "注意：若执行中途失败，修复原因后重新执行本命令即可。"
 
     policy_svc = PolicyOperationService()
 
@@ -100,6 +101,11 @@ class Command(BaseCommand):
         input_action_ids: str = options["action_ids"]
 
         action_ids = [a.strip() for a in input_action_ids.split(",") if a.strip()]
+        # ACTION_ALL 表示全部操作，不是真实 Action，若允许指定，会把授权范围等数据中的 "*" 一并清除
+        if ACTION_ALL in action_ids:
+            raise CommandError(
+                f'"{ACTION_ALL}" means all actions and is not a real Action, it cannot be specified in --action_ids'
+            )
         if not action_ids and not all_deleted:
             raise CommandError("to cleanup all deleted actions, please use the --all-deleted flag")
         auto_mode = not action_ids
@@ -115,14 +121,12 @@ class Command(BaseCommand):
             if invalid_ids:
                 raise CommandError(f"actions {format_list(invalid_ids)} still exist in iam, failed to cleanup")
 
-        # 自动检测模式下，空列表是危险信号，当非 dry-run 模式时，必须使用 --yes 才能继续执行
+        # 自动检测模式下，空列表说明 IAM 返回值异常，继续执行会把该系统全部关联数据清空，直接拒绝
         if auto_mode and not current_action_ids:
-            if not dry_run and not force:
-                raise CommandError(
-                    "iam reports NO action for this system; refusing to delete in case of empty/abnormal "
-                    "result. If you are absolutely sure, rerun with --all-deleted --yes (no --dry-run)."
-                )
-            self.warning("iam reports no action for this system, will wipe ALL SaaS related data!", dry_run)
+            raise CommandError(
+                "iam reports NO action for this system; refusing to cleanup in case of empty/abnormal result. "
+                "If you are sure some actions have been deleted, specify them explicitly with --action_ids."
+            )
 
         if auto_mode:
             self.info(
