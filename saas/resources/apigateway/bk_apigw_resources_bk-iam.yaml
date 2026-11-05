@@ -3398,7 +3398,7 @@ paths:
   /api/v1/open/admin/subjects/{subject_type}/{subject_id}/groups/:
     get:
       operationId: admin_list_subject_groups
-      description: 超管获取Subject 加入的用户组列表
+      description: 超管获取 Subject 加入的用户组列表
       tags:
         - open
       responses:
@@ -3422,6 +3422,34 @@ paths:
           resourcePermissionRequired: true
         disabledStages: [ ]
         descriptionEn:
+  /api/v1/open/admin/subjects/user/{subject_id}/policies/:
+    get:
+      operationId: admin_list_subject_policies
+      description: 超管获取用户的自定义权限列表（不含临时权限）
+      tags:
+        - open
+        - admin
+      responses:
+        default:
+          description: ""
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/admin/subjects/user/{subject_id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+        disabledStages: []
+        descriptionEn: Admin - List a user's custom policies (temporary policies excluded)
   /api/v1/open/admin/systems/{system_id}/provider_config/:
     get:
       operationId: admin_list_provider_config
@@ -3884,7 +3912,7 @@ paths:
   /api/v1/open/admin/organization/sync/:
     post:
       operationId: admin_organization_sync
-      description: 超管-触发组织架构同步（可选设置同步周期）
+      description: 超管 - 触发组织架构同步（可选设置同步周期）
       tags:
         - open
         - admin

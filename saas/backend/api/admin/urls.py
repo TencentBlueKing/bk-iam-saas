@@ -51,7 +51,13 @@ urlpatterns = [
         views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
         name="open.admin.subject_group",
     ),
-    # 系统列表 list(不分页, 或者分页, page_size不传默认100?)
+    # 用户的自定义权限列表
+    path(
+        "subjects/user/<str:subject_id>/policies/",
+        views.AdminSubjectPolicyViewSet.as_view({"get": "list"}),
+        name="open.admin.subject.policies",
+    ),
+    # 系统列表 list(不分页，或者分页，page_size 不传默认 100?)
     path(
         "systems/",
         views.AdminSystemViewSet.as_view({"get": "list"}),

@@ -2,6 +2,8 @@
 
 Delete the specified user's **custom policies** in the specified system (temporary policies excluded). Executes synchronously and returns the result so that the caller can verify the actual cleanup result.
 
+Before cleanup, use `subjects/user/{subject_id}/policies/` to list the user's custom policies and their `policy_id` values, which can be used as `policy_ids` here; after cleanup, verify the records via the audit events API (`audits/events/`, `type=user.policy.delete`, `username` is the cleaned user).
+
 `action_id` and `policy_ids` are mutually exclusive; exactly one of them must be passed:
 
 - Only `action_id`: clean up the user's policies of that action

@@ -23,6 +23,8 @@ from backend.api.admin.serializers import (
     AdminSubjectGroupCleanupSLZ,
     AdminSubjectGroupSLZ,
     AdminSubjectPolicyCleanupSLZ,
+    AdminSubjectPolicyQuerySLZ,
+    AdminSubjectPolicySLZ,
     FreezeSubjectResponseSLZ,
     SubjectRoleSLZ,
     SubjectSLZ,
@@ -37,6 +39,7 @@ from backend.audit.audit import log_user_blacklist_event, log_user_permission_cl
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
 from backend.biz.permission_cleanup import SubjectGroupPermissionCleanupBiz, SubjectPolicyPermissionCleanupBiz
+from backend.biz.policy import PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectBiz
 from backend.common.error_codes import error_codes
@@ -70,6 +73,36 @@ class AdminSubjectGroupViewSet(GenericViewSet):
         count, relations = self.group_biz.list_paging_subject_group(subject, limit=limit, offset=offset)
         results = [one.dict(include={"id", "name", "expired_at"}) for one in relations]
         return Response({"count": count, "results": results})
+
+
+class AdminSubjectPolicyViewSet(GenericViewSet):
+    """Subject的自定义权限"""
+
+    pagination_class = None
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"list": AdminAPIEnum.SUBJECT_POLICY_LIST.value}
+
+    policy_query_biz = PolicyQueryBiz()
+
+    @swagger_auto_schema(
+        operation_description="Subject 的自定义权限列表",
+        query_serializer=AdminSubjectPolicyQuerySLZ(label="查询参数"),
+        responses={status.HTTP_200_OK: AdminSubjectPolicySLZ(label="策略", many=True)},
+        tags=["admin.subject.policy"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = AdminSubjectPolicyQuerySLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        data = slz.validated_data
+
+        subject = Subject.from_username(kwargs["subject_id"])
+        action_ids = [data["action_id"]] if data.get("action_id") else None
+        policies = self.policy_query_biz.list_by_subject(data["system_id"], subject, action_ids)
+
+        return Response(AdminSubjectPolicySLZ(policies, many=True).data)
 
 
 class AdminSubjectRoleViewSet(GenericViewSet):
@@ -244,7 +277,7 @@ class AdminSubjectGroupCleanupViewSet(GenericViewSet):
         data = serializer.validated_data
 
         subject = Subject.from_username(data["username"])
-        removed, failed = self.biz.clean(request.user.username, subject, data["group_ids"])
+        removed, failed = self.biz.clean(subject, data["group_ids"])
 
         logger.info(
             "cleanup user groups: app_code=%s, username=%s, removed=%s, failed=%s",

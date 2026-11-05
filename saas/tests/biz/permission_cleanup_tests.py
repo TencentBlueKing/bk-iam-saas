@@ -33,24 +33,25 @@ class TestSubjectGroupPermissionCleanupBiz:
 
         biz.group_biz.remove_members.side_effect = remove_members
         with mock.patch("backend.biz.permission_cleanup.log_group_event") as log_event:
-            removed, failed = biz.clean("admin", SUBJECT, [1, 2, 3])
+            removed, failed = biz.clean(SUBJECT, [1, 2, 3])
 
         assert (removed, failed) == ([1, 3], [2])
         log_event.assert_called_once()
         assert log_event.call_args[0][2] == [1, 3]
-        assert log_event.call_args[1]["username"] == "admin"
+        # 不覆盖 username, 事件 username 即为被清理的用户，保证审计接口可按用户查询
+        assert "username" not in log_event.call_args[1]
 
     def test_all_failed_no_audit(self, biz):
         biz.group_biz.remove_members.side_effect = Exception("error")
         with mock.patch("backend.biz.permission_cleanup.log_group_event") as log_event:
-            removed, failed = biz.clean("admin", SUBJECT, [1])
+            removed, failed = biz.clean(SUBJECT, [1])
 
         assert (removed, failed) == ([], [1])
         log_event.assert_not_called()
 
     def test_audit_failed(self, biz):
         with mock.patch("backend.biz.permission_cleanup.log_group_event", side_effect=Exception("error")):
-            removed, failed = biz.clean("admin", SUBJECT, [1])
+            removed, failed = biz.clean(SUBJECT, [1])
 
         assert (removed, failed) == ([1], [])
 

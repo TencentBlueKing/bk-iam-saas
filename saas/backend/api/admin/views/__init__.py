@@ -19,6 +19,7 @@ from .subject import (
     AdminSubjectPermissionCleanupViewSet,
     AdminSubjectPermissionExistsViewSet,
     AdminSubjectPolicyCleanupViewSet,
+    AdminSubjectPolicyViewSet,
     AdminSubjectRoleViewSet,
 )
 from .system import AdminSystemProviderConfigViewSet, AdminSystemViewSet
@@ -38,6 +39,7 @@ __all__ = [
     "AdminSubjectPermissionCleanupViewSet",
     "AdminSubjectGroupCleanupViewSet",
     "AdminSubjectPolicyCleanupViewSet",
+    "AdminSubjectPolicyViewSet",
     "AdminSubjectPermissionExistsViewSet",
     "AdminTemplateViewSet",
     "AdminGroupPolicyViewSet",

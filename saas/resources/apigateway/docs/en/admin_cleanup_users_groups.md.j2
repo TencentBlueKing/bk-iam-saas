@@ -2,6 +2,8 @@
 
 Remove the specified user from the specified user groups (only the memberships are removed; the groups themselves are not deleted). Unlike the full asynchronous `cleanup/users/permission/` cleanup, this API executes **synchronously** and returns the result group by group, so the caller can verify the actual cleanup result.
 
+Before cleanup, use `subjects/user/{subject_id}/groups/` to list the groups the user has joined and their `id` values, which can be used as `group_ids` here; after cleanup, verify the records via the audit events API (`audits/events/`, `type=group.member.delete`, `username` is the cleaned user).
+
 #### Parameters
 
 | Field | Type | Location | Required | Description |

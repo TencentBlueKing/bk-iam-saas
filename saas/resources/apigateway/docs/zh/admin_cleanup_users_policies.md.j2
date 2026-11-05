@@ -2,6 +2,8 @@
 
 删除指定用户在指定系统下的**自定义权限**策略（不含临时权限）。同步执行并返回结果，调用方可据此核对实际清理结果。
 
+清理前可通过 `subjects/user/{subject_id}/policies/` 接口查询该用户的自定义权限及其 `policy_id`，作为本接口的 `policy_ids`；清理后可通过审计事件接口（`audits/events/`，`type=user.policy.delete`、`username` 为被清理用户）核对清理记录。
+
 `action_id` 与 `policy_ids` 互斥，必须且只能传递其中一个：
 
 - 只传 `action_id`：清理该用户在该操作下的策略

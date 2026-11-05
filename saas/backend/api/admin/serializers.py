@@ -15,6 +15,7 @@ from backend.api.admin.constants import SUBJECT_GROUP_CLEANUP_MAX_GROUP_IDS, SUB
 from backend.api.management.v2.serializers import ManagementGradeManagerGroupCreateSLZ
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ, GroupAuthorizationSLZ
+from backend.apps.policy.serializers import ResourceGroupSLZ
 from backend.apps.role.models import Role
 from backend.apps.role.serializers import BaseGradeMangerSLZ
 from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
@@ -145,6 +146,26 @@ class AdminTemplateIdSLZ(TemplateIdSLZ):
 
 class AdminGradeManagerTemplateBatchCreateSLZ(TemplateCreateSLZ):
     role_ids = serializers.ListField(label="角色ID列表", child=serializers.IntegerField(label="角色ID"), allow_empty=False)
+
+
+class AdminSubjectPolicyQuerySLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+    action_id = serializers.CharField(label="操作ID", required=False)
+
+
+class AdminSubjectPolicySLZ(serializers.Serializer):
+    """Subject的自定义权限（输出）"""
+
+    id = serializers.CharField(label="操作ID", source="action_id")
+    policy_id = serializers.IntegerField(label="策略ID")
+    type = serializers.CharField(label="操作类型")
+    name = serializers.CharField(label="操作名称", allow_blank=True)
+    name_en = serializers.CharField(label="操作名称(英文)", allow_blank=True)
+    description = serializers.CharField(label="操作描述", allow_blank=True)
+    description_en = serializers.CharField(label="操作描述(英文)", allow_blank=True)
+    expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
+    expired_display = serializers.CharField(label="过期时间展示")
+    resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"))
 
 
 class AdminSubjectGroupCleanupSLZ(serializers.Serializer):

@@ -2,6 +2,8 @@
 
 将指定用户移出指定的用户组（仅解除成员关系，不删除用户组本身）。与 `cleanup/users/permission/` 全量异步清理不同，本接口**同步执行**并逐组返回结果，调用方可据此核对实际清理结果。
 
+清理前可通过 `subjects/user/{subject_id}/groups/` 接口查询该用户已加入的用户组及其 `id`，作为本接口的 `group_ids`；清理后可通过审计事件接口（`audits/events/`，`type=group.member.delete`、`username` 为被清理用户）核对清理记录。
+
 #### Parameters
 
 | 字段 | 类型 | 位置 | 必须 | 描述 |

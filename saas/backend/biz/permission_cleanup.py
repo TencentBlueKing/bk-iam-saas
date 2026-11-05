@@ -30,7 +30,7 @@ class SubjectGroupPermissionCleanupBiz:
 
     group_biz = GroupBiz()
 
-    def clean(self, operator: str, subject: Subject, group_ids: List[int]) -> Tuple[List[int], List[int]]:
+    def clean(self, subject: Subject, group_ids: List[int]) -> Tuple[List[int], List[int]]:
         """
         将subject移出用户组, 返回移出成功与失败的用户组ID
         """
@@ -47,11 +47,11 @@ class SubjectGroupPermissionCleanupBiz:
 
         if removed:
             try:
+                # NOTE: 不传username, 事件username即为被清理的用户, 保证审计接口可按照用户查询到清理记录
                 log_group_event(
                     AuditType.GROUP_MEMBER_DELETE.value,
                     subject,
                     removed,
-                    username=operator,
                     source_type=AuditSourceType.OPENAPI.value,
                 )
             except Exception:  # pylint: disable=broad-except
