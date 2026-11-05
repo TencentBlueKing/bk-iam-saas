@@ -201,7 +201,8 @@ class ABACPolicyOperationService(PolicyCommonDBOperationService):
         # 4. 过滤出要删除策略的
         with transaction.atomic():
             self._delete_db_policies(system_id, subject, policy_ids)
-            iam.delete_policies(system_id, subject.type, subject.id, backend_policy_ids)
+            if backend_policy_ids:
+                iam.delete_policies(system_id, subject.type, subject.id, backend_policy_ids)
 
     def alter(
         self,
@@ -256,7 +257,12 @@ class ABACPolicyOperationService(PolicyCommonDBOperationService):
         ).only("id", "action_id")
 
         # 3. 计算出SaaS PolicyID 与 Backend PolicyID的映射
-        policy_id_map = {p.id: action_to_backend_policy_id_map[p.action_id] for p in db_policies}
+        # 跳过后台不存在的策略
+        policy_id_map = {
+            p.id: action_to_backend_policy_id_map[p.action_id]
+            for p in db_policies
+            if p.action_id in action_to_backend_policy_id_map
+        }
 
         return policy_id_map
 

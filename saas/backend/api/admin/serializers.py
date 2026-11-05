@@ -11,9 +11,11 @@ specific language governing permissions and limitations under the License.
 from celery.schedules import ParseException
 from rest_framework import serializers
 
+from backend.api.admin.constants import SUBJECT_GROUP_CLEANUP_MAX_GROUP_IDS, SUBJECT_POLICY_CLEANUP_MAX_POLICY_IDS
 from backend.api.management.v2.serializers import ManagementGradeManagerGroupCreateSLZ
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ, GroupAuthorizationSLZ
+from backend.apps.policy.serializers import ResourceGroupSLZ
 from backend.apps.role.models import Role
 from backend.apps.role.serializers import BaseGradeMangerSLZ
 from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ, TemplateListSchemaSLZ, TemplateListSLZ
@@ -144,3 +146,61 @@ class AdminTemplateIdSLZ(TemplateIdSLZ):
 
 class AdminGradeManagerTemplateBatchCreateSLZ(TemplateCreateSLZ):
     role_ids = serializers.ListField(label="角色ID列表", child=serializers.IntegerField(label="角色ID"), allow_empty=False)
+
+
+class AdminSubjectPolicyQuerySLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+    action_id = serializers.CharField(label="操作ID", required=False)
+
+
+class AdminSubjectPolicySLZ(serializers.Serializer):
+    """Subject的自定义权限（输出）"""
+
+    id = serializers.CharField(label="操作ID", source="action_id")
+    policy_id = serializers.IntegerField(label="策略ID")
+    type = serializers.CharField(label="操作类型")
+    name = serializers.CharField(label="操作名称", allow_blank=True)
+    name_en = serializers.CharField(label="操作名称(英文)", allow_blank=True)
+    description = serializers.CharField(label="操作描述", allow_blank=True)
+    description_en = serializers.CharField(label="操作描述(英文)", allow_blank=True)
+    expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
+    expired_display = serializers.CharField(label="过期时间展示")
+    resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"))
+
+
+class AdminSubjectGroupCleanupSLZ(serializers.Serializer):
+    username = serializers.CharField(label="用户名")
+    group_ids = serializers.ListField(
+        label="用户组ID列表",
+        child=serializers.IntegerField(label="用户组ID", min_value=1),
+        allow_empty=False,
+        max_length=SUBJECT_GROUP_CLEANUP_MAX_GROUP_IDS,
+    )
+
+    def validate_group_ids(self, value):
+        # 去重
+        return list(dict.fromkeys(value))
+
+
+class AdminSubjectPolicyCleanupSLZ(serializers.Serializer):
+    username = serializers.CharField(label="用户名")
+    system_id = serializers.CharField(label="系统ID")
+    action_id = serializers.CharField(label="操作ID", required=False)
+    policy_ids = serializers.ListField(
+        label="策略ID列表",
+        child=serializers.IntegerField(label="策略ID", min_value=1),
+        required=False,
+        allow_empty=False,
+        max_length=SUBJECT_POLICY_CLEANUP_MAX_POLICY_IDS,
+    )
+
+    def validate(self, attrs):
+        # action_id 与 policy_ids 必须且只能传递其中一个
+        if ("action_id" in attrs) == ("policy_ids" in attrs):
+            raise serializers.ValidationError("action_id 与 policy_ids 必须且只能传递其中一个")
+        return attrs
+
+
+class AdminSubjectCleanupResultSLZ(serializers.Serializer):
+    removed = serializers.ListField(label="清理成功的ID列表", child=serializers.IntegerField())
+    failed = serializers.ListField(label="清理失败的ID列表", child=serializers.IntegerField())

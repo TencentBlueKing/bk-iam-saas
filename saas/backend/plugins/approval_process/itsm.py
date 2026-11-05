@@ -10,7 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
-from django.utils.translation import gettext as _, gettext_noop
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
@@ -100,9 +101,7 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
                     node_info = {**node}
                     if node_info["name"] in BUILTIN_APPROVAL_NODE_NAMES:
                         node_info["name"] = _(node_info["name"])
-                    raise error_codes.ITSM_PROCESSOR_NOT_SUPPORT.format(
-                        f"process_id: {process_id}, node:{node_info}"
-                    )
+                    raise error_codes.ITSM_PROCESSOR_NOT_SUPPORT.format(f"process_id: {process_id}, node:{node_info}")
 
             process_nodes.append(
                 ApprovalProcessNode(id=node["id"], name=node["name"], processor_source=source, processor_type=_type)

@@ -51,7 +51,13 @@ urlpatterns = [
         views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
         name="open.admin.subject_group",
     ),
-    # 系统列表 list(不分页, 或者分页, page_size不传默认100?)
+    # 用户的自定义权限列表
+    path(
+        "subjects/user/<str:subject_id>/policies/",
+        views.AdminSubjectPolicyViewSet.as_view({"get": "list"}),
+        name="open.admin.subject.policies",
+    ),
+    # 系统列表 list(不分页，或者分页，page_size 不传默认 100?)
     path(
         "systems/",
         views.AdminSystemViewSet.as_view({"get": "list"}),
@@ -104,6 +110,18 @@ urlpatterns = [
         "cleanup/users/permission/",
         views.AdminSubjectPermissionCleanupViewSet.as_view({"delete": "cleanup"}),
         name="open.admin.subject.cleanup",
+    ),
+    # 清理用户的用户组
+    path(
+        "cleanup/users/groups/",
+        views.AdminSubjectGroupCleanupViewSet.as_view({"delete": "cleanup"}),
+        name="open.admin.subject.group.cleanup",
+    ),
+    # 清理用户的自定义权限
+    path(
+        "cleanup/users/policies/",
+        views.AdminSubjectPolicyCleanupViewSet.as_view({"delete": "cleanup"}),
+        name="open.admin.subject.policy.cleanup",
     ),
     # 组织架构同步
     path(
