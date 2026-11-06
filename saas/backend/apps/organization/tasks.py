@@ -69,27 +69,27 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
 
     try:
         # 1. SaaS 从用户管理同步组织架构
+        department_sync_service = DBDepartmentSyncService()
+        with transaction.atomic():
+            department_sync_service.sync_to_db()
+
         # 用户
         user_sync_service = DBUserSyncService()
-        # 部门
-        department_sync_service = DBDepartmentSyncService()
+        with transaction.atomic():
+            user_sync_service.sync_to_db()
+
         # 部门与用户关系
         department_member_sync_service = DBDepartmentMemberSyncService()
+        with transaction.atomic():
+            department_member_sync_service.sync_to_db()
+
         # 用户与Leader关系
         user_leader_service = DBUserLeaderSyncService()
+        with transaction.atomic():
+            user_leader_service.sync_to_db()
 
         # 开始执行同步变更
         with transaction.atomic():
-            services = [
-                user_sync_service,
-                department_sync_service,
-                department_member_sync_service,
-                user_leader_service,
-            ]
-            # 执行DB变更
-            for service in services:
-                service.sync_to_db()
-
             # 计算和同步部门的冗余数据
             DBDepartmentSyncExactInfo().sync_to_db()
 

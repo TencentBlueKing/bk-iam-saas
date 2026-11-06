@@ -97,7 +97,9 @@ class DBUserSyncService(BaseSyncDBService):
             return
 
         # TODO: 可添加其他流程后再真正的删除，只要 DB 里不删除，IAM 后台和 SaaS 都不受影响
-        User.objects.filter(id__in=deleted_user_ids).delete()
+        for batch in chunked(deleted_user_ids, 1000):
+            User.objects.filter(id__in=batch).delete()
+
         # TODO: DB 里其他表存在了被删的记录如何处理？不处理可能展示有些问题，比如权限模板授权表等等
 
         # TODO 删除用户所属角色的成员
