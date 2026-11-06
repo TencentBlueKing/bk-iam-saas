@@ -104,15 +104,24 @@ class SendRoleGroupExpireRemindMailTask(Task):
         params = {"source": "notification", "current_role_id": role.id, "role_type": role.type}
         url = self.base_url + "?" + urlencode(params)
         usernames = RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True)
-
+        mail_subject = settings.RENEWAL_MAIL_GROUP_SUBJECT
         if NotificationTypeEnum.MAIL.value in notification_types:
             mail_content = render_to_string(
                 "group_expired_mail.html",
-                {"groups": group_members, "role": role, "url": url, "index_url": settings.APP_URL},
+                {
+                    "groups": group_members,
+                    "role": role,
+                    "url": url,
+                    "index_url": settings.APP_URL,
+                    "mail_header": settings.RENEWAL_MAIL_HEADER,
+                    "mail_title": mail_subject,
+                    "mail_footer": settings.RENEWAL_MAIL_FOOTER,
+                    "show_renewal_action": settings.RENEWAL_MAIL_SHOW_RENEWAL_ACTION,
+                },
             )
 
             try:
-                esb.send_mail(",".join(usernames), "【蓝鲸权限中心】用户组成员续期提醒", mail_content)
+                esb.send_mail(",".join(usernames), mail_subject, mail_content)
             except Exception:  # pylint: disable=broad-except
                 logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
 
@@ -123,7 +132,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
             )
 
             data = {
-                "title": "**【蓝鲸权限中心】用户组成员续期提醒**",
+                "title": f"**{mail_subject}**",
                 "summary": content,
                 "approvers": ",".join(usernames),
                 "detail_url": url,

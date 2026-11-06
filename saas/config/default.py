@@ -565,3 +565,16 @@ PCG_DEPARTMENT_IDS = env.list("PCG_DEPARTMENT_IDS", cast=int, default=[])
 
 # 是否开启权限交接 ITSM 审批流程
 ENABLE_HANDOVER_APPROVAL = env.bool("BKAPP_ENABLE_HANDOVER_APPROVAL", default=False)
+
+# 续期提醒邮件：横幅、主题和末尾文字
+RENEWAL_MAIL_HEADER = env.str("BK_IAM_RENEWAL_MAIL_HEADER", default="蓝鲸权限中心")
+# 邮件主题同时用作 HTML title 与微信消息 title
+RENEWAL_MAIL_USER_SUBJECT = env.str(
+    "BK_IAM_RENEWAL_MAIL_USER_SUBJECT", default="【蓝鲸权限中心】权限续期提醒"
+)
+RENEWAL_MAIL_GROUP_SUBJECT = env.str(
+    "BK_IAM_RENEWAL_MAIL_GROUP_SUBJECT", default="【蓝鲸权限中心】用户组成员续期提醒"
+)
+RENEWAL_MAIL_FOOTER = env.str("BK_IAM_RENEWAL_MAIL_FOOTER", default="")
+# 独立控制底部续期按钮及同行提示是否显示
+RENEWAL_MAIL_SHOW_RENEWAL_ACTION = env.bool("BK_IAM_RENEWAL_MAIL_SHOW_RENEWAL_ACTION", default=True)
