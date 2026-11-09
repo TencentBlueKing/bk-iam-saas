@@ -411,7 +411,7 @@
               v-model="isConfirmMemberTips"
               class="confirm-tips-checkbox"
             >
-              {{ addMemberTips.confirmText }}
+              <label v-bk-xss-html="addMemberTips.confirmText" />
             </bk-checkbox>
             <bk-popover
               :content="addMemberTips.confirmTips"
@@ -2279,12 +2279,6 @@
 
   .confirm-tips-checkbox {
     margin-right: 12px;
-   
-    /deep/ .bk-checkbox-text {
-      color: #ea3636;
-      font-weight: 600;
-      margin-left: 8px;
-    }
   }
 
   .add-member-content-wrapper {
