@@ -1183,9 +1183,9 @@
 
       handleAddMember () {
         this.isShowAddMemberDialog = true;
-        // 蓝盾侧管理组用户组添加成员
-        if (this.isExternalApp && this.isAdminGroup && ['userGroupDetail'].includes(this.$route.name)) {
-          window.parent.postMessage({ type: 'IAM', code: 'admin_user_group_detail_add_member' }, '*');
+        // 蓝盾侧用户组添加成员
+        if (this.isExternalApp && ['userGroupDetail'].includes(this.$route.name)) {
+          window.parent.postMessage({ type: 'IAM', code: 'user_group_detail_add_member' }, '*');
         }
       },
 
