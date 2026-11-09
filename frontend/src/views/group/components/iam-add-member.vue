@@ -415,7 +415,7 @@
             </bk-checkbox>
             <bk-popover
               :content="addMemberTips.confirmTips"
-              :disabled="isExternalAppDisabled"
+              :disabled="!isShowAddMemberTips || (!!addMemberTips.confirmTips && isConfirmMemberTips)"
             >
               <bk-button theme="primary" :disabled="isNextStepDisabled" @click="handleNextStep">
                 {{ $t(`m.common['下一步']`) }}
@@ -661,12 +661,12 @@
       isShowAddMemberTips () {
         return this.isExternalApp && this.addMemberTips.showTips;
       },
-      // 蓝盾侧禁用下一步
+      // 蓝盾侧禁用下一步：提示显示且用户尚未勾选确认
       isExternalAppDisabled () {
-        return !this.isShowAddMemberTips && !this.isConfirmMemberTips;
+        return this.isShowAddMemberTips && !this.isConfirmMemberTips;
       },
       isNextStepDisabled () {
-        return this.isDisabled || this.isExternalAppDisabled;
+        return this.isDisabled || (this.isExternalAppDisabled && !!this.addMemberTips.confirmText);
       },
       isHasSearchResult () {
         return (this.searchedDepartment.length > 0 || this.searchedUsers.length > 0) && !this.treeLoading;
