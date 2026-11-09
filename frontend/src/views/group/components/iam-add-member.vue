@@ -661,9 +661,9 @@
       isShowAddMemberTips () {
         return this.isExternalApp && this.addMemberTips.showTips;
       },
-      // 蓝盾侧禁用下一步
+      // 蓝盾侧禁用下一步：提示显示且用户尚未勾选确认
       isExternalAppDisabled () {
-        return !this.isShowAddMemberTips && !this.isConfirmMemberTips;
+        return this.isShowAddMemberTips && !this.isConfirmMemberTips;
       },
       isNextStepDisabled () {
         return this.isDisabled || this.isExternalAppDisabled;
