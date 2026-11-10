@@ -3,12 +3,10 @@
     <bk-dialog
       v-model="isShowDialog"
       width="960"
-      title=""
       :mask-close="false"
       :close-icon="false"
-      draggable
       header-position="left"
-      ext-cls="iam-add-member-dialog"
+      :ext-cls="isShowAddMemberTips ? 'iam-add-member-dialog external-app-show-tips-wrapper' : 'iam-add-member-dialog'"
       @after-leave="handleAfterLeave"
     >
       <!-- eslint-disable max-len -->
@@ -2248,6 +2246,7 @@
 </script>
 <style lang="postcss" scoped>
 .iam-add-member-dialog {
+  
   .title {
     line-height: 26px;
     color: #313238;
@@ -2268,6 +2267,7 @@
       vertical-align: top;
     }
   }
+
   .limit-wrapper {
     float: left;
     margin-top: 5px;
@@ -2658,11 +2658,23 @@
 }
 
 /deep/ .bk-dialog-wrapper {
+
   .bk-dialog {
     top: 100px;
   }
+
   .bk-dialog-body {
     padding: 0 !important;
+  }
+
+  @media screen and (max-width: 1800px) {
+
+    &.external-app-show-tips-wrapper {
+      
+      .bk-dialog {
+        top: 34px;
+      }
+    }
   }
 }
 
