@@ -456,7 +456,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import { guid, formatCodeData, existValue, getParamsValue } from '@/common/util';
+  import { guid, formatCodeData, existValue, getParamsValue, xssFilter } from '@/common/util';
   import { NO_VERIFY_ORG_ROUTES } from '@/common/constants';
   import InfiniteTree from '@/components/infinite-tree';
   import dialogInfiniteList from '@/components/dialog-infinite-list';
@@ -901,6 +901,9 @@
         this.externalSource = query.source;
       }
     },
+    beforeDestroy () {
+      window.removeEventListener('message', this.fetchReceiveData);
+    },
     methods: {
       getDefaultSelect () {
         const list = [...this.hasSelectedManualDepartments, this.hasSelectedManualUsers];
@@ -937,18 +940,53 @@
       },
 
       // 接收蓝盾父页面回传的「添加成员」提示信息（文案/链接由蓝盾提供，IAM 仅渲染）
+      // 所有字段在入口处先经 XSS 白名单过滤，渲染侧再由 v-bk-xss-html 兜底；
+      // confirmTips 会经 bk-popover 以 innerHTML 注入，必须在此过滤
       fetchReceiveData (event) {
+        // 仅接受「自身组件自投递」或「直接父窗口（蓝盾）回传」，拦掉同页其他 iframe 伪造的消息
+        if (event.source !== window && event.source !== window.parent) {
+          return;
+        }
         const { code, data } = event.data || {};
         if (code !== 'add_member_tips' || !data || typeof data !== 'object') {
           return;
         }
         this.addMemberTips = {
           showTips: data.showTips || false,
-          tipsHtml: data.tipsHtml || '',
-          confirmText: data.confirmText || '',
-          confirmTips: data.confirmTips || ''
+          tipsHtml: this.sanitizeExternalHtml(String(data.tipsHtml || '')),
+          confirmText: this.sanitizeExternalHtml(String(data.confirmText || '')),
+          confirmTips: this.sanitizeExternalHtml(String(data.confirmTips || ''))
         };
         this.isConfirmMemberTips = false;
+      },
+
+      // 第三方（蓝盾）提供的 HTML：先经白名单过滤器（@blueking/xss-filter），再在 DOM 层补齐两类
+      // 默认过滤器未覆盖的风险：
+      // 1) <a href="javascript:"> 点击执行脚本 —— 白名单不过滤协议，需主动剥离；
+      // 2) target="_blank" 反向标签页劫持 —— 强制补充 rel="noopener noreferrer"
+      // 注意：白名单已限制 <img src> 仅允许 data:image base64、CSS 禁止 url()，故外部资源加载无需在此处理
+      sanitizeExternalHtml (html) {
+        const clean = xssFilter(html);
+        if (typeof document === 'undefined') {
+          return clean;
+        }
+        const container = document.createElement('div');
+        container.innerHTML = clean;
+        container.querySelectorAll('a').forEach((a) => {
+          const href = (a.getAttribute('href') || '').trim();
+          if (/^(javascript|vbscript|data):/i.test(href)) {
+            a.removeAttribute('href');
+          }
+          const target = (a.getAttribute('target') || '').toLowerCase();
+          if (target.includes('_blank')) {
+            const rel = (a.getAttribute('rel') || '')
+              .split(/\s+/)
+              .filter((r) => r && !['noopener', 'noreferrer'].includes(r));
+            rel.push('noopener', 'noreferrer');
+            a.setAttribute('rel', rel.join(' '));
+          }
+        });
+        return container.innerHTML;
       },
 
       handleSearchInput () {
