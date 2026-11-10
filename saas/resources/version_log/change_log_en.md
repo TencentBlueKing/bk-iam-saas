@@ -1,3 +1,15 @@
+<!-- 2026-11-10 -->
+# V1.10.66 Version Update Log
+
+### Features
+* Added a management command to clean up data related to deleted actions, covering policies, temporary policies, permission templates, approval processes, API allow lists, admin common actions and authorization scopes of the specified system, with dry-run support and optional cleanup of IAM backend policies
+* Added support for showing custom tips (HTML supported) provided by BlueKing CI when adding members to a user group, with an optional confirmation checkbox required before proceeding to the next step
+
+### Feature Enhancements
+* Improved the BlueKing CI add organization member dialog to adapt to small screens
+
+---
+
 <!-- 2026-11-03 -->
 # V1.10.65 Version Update Log
 
