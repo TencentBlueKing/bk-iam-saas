@@ -325,7 +325,7 @@
   import ClipboardJS from 'clipboard';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP, COPY_KEYS_ENUM } from '@/common/constants';
-  import { formatCodeData, xssFilter } from '@/common/util';
+  import { formatCodeData, xssFilter, existValue } from '@/common/util';
   import { bus } from '@/common/bus';
   import renderRenewalDialog from '@/components/render-renewal-dialog';
   import DeleteDialog from '../common/iam-confirm-dialog';
@@ -507,9 +507,8 @@
           const hasData = this.currentSelectList.length > 0;
           if (
             hasData
+            && this.isAdminGroup
             && ['userOrgPerm'].includes(this.tabActive)
-            && this.getGroupAttributes
-            && this.getGroupAttributes().source_from_role
           ) {
             const isAll = hasData && this.currentSelectList.length === this.userOrOrgCount;
             this.adminGroupTitle = isAll
@@ -549,8 +548,7 @@
       disabledGroup () {
         return () => {
           return (
-            this.getGroupAttributes
-            && this.getGroupAttributes().source_from_role
+            this.isAdminGroup
             && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
             && (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
           );
@@ -598,10 +596,10 @@
         return this.tableProps.filter((v) => v.visible);
       },
       isAdminGroup () {
-          return this.getGroupAttributes && this.getGroupAttributes().source_from_role;
+        return this.getGroupAttributes && this.getGroupAttributes().source_from_role;
       },
       isShowMemberTemplate () {
-          return !['staff'].includes(this.user.role.type) && !this.isAdminGroup;
+        return !['staff'].includes(this.user.role.type) && !this.isAdminGroup;
       },
       // 蓝盾场景
       isShowExternalMemberTemplate () {
@@ -610,6 +608,9 @@
       isExistMemberTemplate () {
         return this.externalSystemId
         ? this.isShowTab && this.isShowExternalMemberTemplate : this.isShowTab && this.isShowMemberTemplate;
+      },
+      isExternalApp () {
+        return existValue('externalApp') && this.externalSystemId;
       }
     },
     watch: {
@@ -1182,6 +1183,10 @@
 
       handleAddMember () {
         this.isShowAddMemberDialog = true;
+        // 蓝盾侧用户组添加成员
+        if (this.isExternalApp && ['userGroupDetail'].includes(this.$route.name)) {
+          window.parent.postMessage({ type: 'IAM', code: 'user_group_detail_add_member' }, '*');
+        }
       },
 
       handleCancelAdd () {
@@ -1474,11 +1479,10 @@
 
       async fetchMemberListCount () {
         // 搜索移除成员后，再去查询当前搜索的数据是不是最后一条
-        if (
-          (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
-          && this.getGroupAttributes
-          && this.getGroupAttributes().source_from_role
-          && this.keyword) {
+        if ((['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
+          && this.isAdminGroup
+          && this.keyword
+        ) {
           const selectParams = {
             id: this.id,
             offset: 0,

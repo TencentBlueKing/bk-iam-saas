@@ -392,6 +392,12 @@
           </template>
         </div>
       </div>
+      <!-- 蓝盾侧添加成员提示 -->
+      <div v-if="isShowAddMemberTips" class="add-member-tips">
+        <bk-alert type="warning">
+          <div slot="title" v-bk-xss-html="addMemberTips.tipsHtml"></div>
+        </bk-alert>
+      </div>
       <div slot="footer">
         <div v-if="showLimit" class="limit-wrapper">
           <bk-checkbox :true-value="true" :false-value="false" v-model="isAll">
@@ -400,9 +406,21 @@
         </div>
         <template v-if="showExpiredAt">
           <template v-if="isPrev">
-            <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">
-              {{ $t(`m.common['下一步']`) }}
-            </bk-button>
+            <bk-checkbox
+              v-if="isShowAddMemberTips"
+              v-model="isConfirmMemberTips"
+              class="confirm-tips-checkbox"
+            >
+              <label v-bk-xss-html="addMemberTips.confirmText" />
+            </bk-checkbox>
+            <bk-popover
+              :content="addMemberTips.confirmTips"
+              :disabled="!isShowAddMemberTips || (!!addMemberTips.confirmTips && isConfirmMemberTips)"
+            >
+              <bk-button theme="primary" :disabled="isNextStepDisabled" @click="handleNextStep">
+                {{ $t(`m.common['下一步']`) }}
+              </bk-button>
+            </bk-popover>
           </template>
           <template v-else>
             <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
@@ -439,14 +457,14 @@
 
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
+  import { guid, formatCodeData, existValue, getParamsValue } from '@/common/util';
+  import { NO_VERIFY_ORG_ROUTES } from '@/common/constants';
   import InfiniteTree from '@/components/infinite-tree';
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import IamMemberTemplateTable from '@/components/iam-member-template-table';
   import IamLimitOrgDialog from '@/components/iam-limit-org-dialog';
-  import { guid, formatCodeData, existValue, getParamsValue } from '@/common/util';
-  import { NO_VERIFY_ORG_ROUTES } from '@/common/constants';
-  import { mapGetters } from 'vuex';
 
   // 去除()以及之间的字符
   const getUsername = (str) => {
@@ -610,6 +628,15 @@
         // 模糊匹配的时候不需要默认勾选；仅当精确匹配的时候才默认勾选的数据
         exactSearchList: [],
         curId: 0,
+        // 蓝盾侧回传的「添加成员」提示信息
+        addMemberTips: {
+          tipsHtml: '',
+          confirmText: '',
+          confirmTips: '',
+          showTips: false
+        },
+        // 是否已勾选「我确认对方应当拥有这些权限」
+        isConfirmMemberTips: false,
         needMemberTempRoutes: ['userGroup', 'userGroupDetail', 'createUserGroup', 'cloneUserGroup'],
         regValue: /，|,|；|;|、|\\|\n|\s/
       };
@@ -629,6 +656,17 @@
       },
       isNextSureDisabled () {
         return this.expiredAt === 0;
+      },
+      // 蓝盾侧添加成员提示
+      isShowAddMemberTips () {
+        return this.isExternalApp && this.addMemberTips.showTips;
+      },
+      // 蓝盾侧禁用下一步：提示显示且用户尚未勾选确认
+      isExternalAppDisabled () {
+        return this.isShowAddMemberTips && !this.isConfirmMemberTips;
+      },
+      isNextStepDisabled () {
+        return this.isDisabled || (this.isExternalAppDisabled && !!this.addMemberTips.confirmText);
       },
       isHasSearchResult () {
         return (this.searchedDepartment.length > 0 || this.searchedUsers.length > 0) && !this.treeLoading;
@@ -814,6 +852,7 @@
         handler (value) {
           this.isShowDialog = !!value;
           if (this.isShowDialog) {
+            this.isConfirmMemberTips = false;
             if (!this.isExistMemberTemplate) {
               this.panels = this.panels.filter((item) => !['memberTemplate'].includes(item.name));
             }
@@ -855,6 +894,7 @@
       }
     },
     created () {
+      window.addEventListener('message', this.fetchReceiveData);
       const { name, query } = this.$route;
       if (name === 'gradingAdminCreate') {
         this.handleSave();
@@ -896,6 +936,21 @@
             });
           }
         });
+      },
+
+      // 接收蓝盾父页面回传的「添加成员」提示信息（文案/链接由蓝盾提供，IAM 仅渲染）
+      fetchReceiveData (event) {
+        const { code, data } = event.data || {};
+        if (code !== 'add_member_tips' || !data || typeof data !== 'object') {
+          return;
+        }
+        this.addMemberTips = {
+          showTips: data.showTips || false,
+          tipsHtml: data.tipsHtml || '',
+          confirmText: data.confirmText || '',
+          confirmTips: data.confirmTips || ''
+        };
+        this.isConfirmMemberTips = false;
       },
 
       handleSearchInput () {
@@ -1248,7 +1303,7 @@
           const departData = _.cloneDeep(this.manualValue.split(this.regValue));
           const departGroups = this.filterDepartList.filter((item) => departData.includes(item));
           if (departGroups.length) {
-            if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
+            if (this.isAdminGroup) {
               this.messageWarn(this.$t(`m.common['管理员组不能添加部门']`), 3000);
               this.getDiffSystemOrgData();
               this.fetchManualTableData();
@@ -2014,9 +2069,7 @@
       },
 
       handleNextStep () {
-        if (this.getGroupAttributes
-          && this.getGroupAttributes().source_from_role
-          && this.hasSelectedTemplates.length > 0) {
+        if (this.isAdminGroup && this.hasSelectedTemplates.length > 0) {
           this.messageWarn(this.$t(`m.common['管理员组不能添加人员模板']`), 3000);
           return;
         }
@@ -2029,9 +2082,7 @@
       },
 
       handleSave () {
-        if (this.getGroupAttributes
-          && this.getGroupAttributes().source_from_role
-          && this.hasSelectedTemplates.length > 0) {
+        if (this.isAdminGroup && this.hasSelectedTemplates.length > 0) {
           this.messageWarn(this.$t(`m.common['管理员组不能添加人员模板']`), 3000);
           return;
         }
@@ -2221,6 +2272,15 @@
     float: left;
     margin-top: 5px;
   }
+
+  .add-member-tips {
+    margin: 8px 24px;
+  }
+
+  .confirm-tips-checkbox {
+    margin-right: 12px;
+  }
+
   .add-member-content-wrapper {
     /* height: 383px; */
     height: 510px;
