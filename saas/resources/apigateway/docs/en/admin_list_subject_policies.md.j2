@@ -1,0 +1,48 @@
+### List a user's custom policies
+
+List the **custom policies** of the specified user in the specified system (temporary policies and group policies excluded).
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|---|---|---|---|---|
+| subject_id | string | path | yes | Username |
+| system_id | string | query | yes | System ID |
+| action_id | string | query | no | Action ID; only policies of this action are returned |
+
+#### Request
+
+```
+GET /api/v1/open/admin/subjects/user/zhangsan/policies/?system_id=bk_cmdb
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "OK",
+  "data": [
+    {
+      "id": "host_delete",
+      "policy_id": 123,
+      "type": "delete",
+      "name": "删除主机",
+      "name_en": "Delete Host",
+      "description": "",
+      "description_en": "",
+      "expired_at": 4102444800,
+      "expired_display": "永久",
+      "resource_groups": []
+    }
+  ]
+}
+```
+
+Field notes:
+
+- `policy_id`: SaaS policy ID
+- `id`: action ID
+- `resource_groups`: resource condition groups; empty means the action has no related resource instances (pure RBAC policy)

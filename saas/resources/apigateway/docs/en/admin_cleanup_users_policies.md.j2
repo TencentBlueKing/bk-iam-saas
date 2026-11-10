@@ -1,0 +1,50 @@
+### Cleanup a user's custom policies
+
+Delete the specified user's **custom policies** in the specified system (temporary policies excluded). Executes synchronously and returns the result so that the caller can verify the actual cleanup result.
+
+Before cleanup, use `subjects/user/{subject_id}/policies/` to list the user's custom policies and their `policy_id` values, which can be used as `policy_ids` here; after cleanup, verify the records via the audit events API (`audits/events/`, `type=user.policy.delete`, `username` is the cleaned user).
+
+`action_id` and `policy_ids` are mutually exclusive; exactly one of them must be passed:
+
+- Only `action_id`: clean up the user's policies of that action
+- Only `policy_ids`: clean up only the specified policies (SaaS-side policy IDs, at most 200)
+- Neither or both: a validation error is returned
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|---|---|---|---|---|
+| username | string | body | yes | Username |
+| system_id | string | body | yes | System ID |
+| action_id | string | body | no | Clean up only the policies of this action, mutually exclusive with policy_ids |
+| policy_ids | array[int] | body | no | IDs of the policies to clean up (SaaS-side), mutually exclusive with action_id, at most 200 |
+
+#### Request
+
+```json
+{
+  "username": "zhangsan",
+  "system_id": "bk_cmdb",
+  "action_id": "host_delete"
+}
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "OK",
+  "data": {
+    "removed": [123],
+    "failed": [456]
+  }
+}
+```
+
+Field notes:
+
+- `removed`: IDs of the policies deleted successfully
+- `failed`: IDs of the policies whose deletion failed (after the whole batch is rolled back, all valid policy IDs are included in this field)

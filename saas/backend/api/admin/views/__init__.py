@@ -14,9 +14,12 @@ from .organization import AdminOrganizationSyncViewSet
 from .role import AdminSuperManagerMemberViewSet, AdminSystemManagerMemberViewSet
 from .subject import (
     AdminSubjectFreezeViewSet,
+    AdminSubjectGroupCleanupViewSet,
     AdminSubjectGroupViewSet,
     AdminSubjectPermissionCleanupViewSet,
     AdminSubjectPermissionExistsViewSet,
+    AdminSubjectPolicyCleanupViewSet,
+    AdminSubjectPolicyViewSet,
     AdminSubjectRoleViewSet,
 )
 from .system import AdminSystemProviderConfigViewSet, AdminSystemViewSet
@@ -34,6 +37,9 @@ __all__ = [
     "AdminAuditEventViewSet",
     "AdminSubjectFreezeViewSet",
     "AdminSubjectPermissionCleanupViewSet",
+    "AdminSubjectGroupCleanupViewSet",
+    "AdminSubjectPolicyCleanupViewSet",
+    "AdminSubjectPolicyViewSet",
     "AdminSubjectPermissionExistsViewSet",
     "AdminTemplateViewSet",
     "AdminGroupPolicyViewSet",
