@@ -1,3 +1,28 @@
+<!-- 2026-11-03 -->
+# V1.10.65 Version Update Log
+
+### Features
+* Integrated the BkTrace data reporting plugin into the frontend, and exposed the app version and report URL settings to the frontend
+* Added enterprise space loading to the personal center in the v3 product navigation
+* Registered the admin user-permission cleanup API on API Gateway, with API documentation
+
+### Feature Enhancements
+* Made the single-transaction commit for organization sync configurable via an environment variable
+* Added broker reconnection and task publish retry for Celery with RabbitMQ, with parameters configurable via environment variables
+* Required resource permission on API Gateway for the APIs that query the user groups a user or department has joined, and increased the BCS project list timeout to 60 seconds
+* Improved the failure message for expired user group permissions during resignation handover
+* Pinned the frontend axios dependency version to prevent automatic upgrades
+* Switched the base image from Debian to TencentOS
+
+### Fixes
+* Fixed expired grading manager members from permission-synced user groups still being assigned as approvers
+* Fixed renewal reminder emails including user groups under disabled grading managers
+* Fixed all pages failing to load when no default ITSM approval process was configured
+* Fixed internationalization issues in ITSM approval nodes, approval process, and sensitivity level pages
+* Fixed incorrect font and misaligned text for the enterprise space in the personal center
+
+---
+
 <!-- 2026-07-20 -->
 # V1.10.64 Version Update Log
 

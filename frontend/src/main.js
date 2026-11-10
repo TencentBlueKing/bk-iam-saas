@@ -60,8 +60,18 @@ import '@icon-cool/bk-icon-bk-iam';
 import '@/directive';
 // 个人中心设置样式
 import '@blueking/login-userinfo/vue2/vue2.css';
+// 数据上报插件
+import BkTrace from '@blueking/bk-trace-core';
 
 Vue.use(BkXssFilterDirective);
+
+if (window.BK_TRACE_REPORT_URL) {
+  Vue.use(BkTrace, {
+    url: window.BK_TRACE_REPORT_URL,
+    appCode: window.BK_APP_CODE,
+    appVersion: window.BK_APP_VERSION
+  });
+}
 
 Vue.component('app-exception', Exception);
 Vue.component('app-auth', AuthComponent);
