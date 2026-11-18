@@ -149,7 +149,6 @@ class GroupBiz:
     # 直通的方法
     check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
     check_subject_groups_quota = GroupService.__dict__["check_subject_groups_quota"]
-    update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
     list_group_subject_before_expired_at_by_ids = GroupService.__dict__["list_group_subject_before_expired_at_by_ids"]
     list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
@@ -192,6 +191,20 @@ class GroupBiz:
                 self.subject_template_biz.create(
                     role, name, description, creator, subjects, readonly=True, source_group_id=group.id
                 )
+
+        return group
+
+    def update(self, group: Group, name: str, description: str, apply_disable: bool, updater: str) -> Group:
+        """
+        更新用户组信息
+        """
+        with transaction.atomic():
+            group = self.group_svc.update(group, name, description, apply_disable, updater)
+
+            # 同步变更关联的人员模版
+            SubjectTemplate.objects.filter(source_group_id=group.id).update(
+                name=name, description=description, updater=updater
+            )
 
         return group
 
@@ -924,7 +937,8 @@ class GroupBiz:
 
         # 更新用户组名称
         if group_name:
-            Group.objects.filter(id=relation.object_id).update(name=group_name, description=role.description)
+            group = Group.objects.get(id=relation.object_id)
+            self.update(group, group_name, role.description, group.apply_disable, user_id)
 
         # 4. 更新用户组的成员
         if sync_members:
