@@ -104,7 +104,12 @@ class BkITSMClient(BkApigwBaseClient):
         params = {"workflow_keys": workflow_keys}
 
         data = self._call(http_get_20x, url_path, params=params)
-        return data["items"][0]["activities"]
+        items = data.get("items") or []
+        if not items:
+            raise error_codes.REMOTE_REQUEST_ERROR.format(
+                f"ITSM workflow not found for workflow_keys: {workflow_keys}"
+            )
+        return items[0]["activities"]
 
     def create_ticket(
         self, workflow_key: str, form_data: Dict, operator: str, callback_url: str, callback_token: str
