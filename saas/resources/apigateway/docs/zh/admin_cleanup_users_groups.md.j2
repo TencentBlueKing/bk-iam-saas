@@ -1,0 +1,41 @@
+### 清理用户的用户组
+
+将指定用户移出指定的用户组（仅解除成员关系，不删除用户组本身）。与 `cleanup/users/permission/` 全量异步清理不同，本接口**同步执行**并逐组返回结果，调用方可据此核对实际清理结果。
+
+清理前可通过 `subjects/user/{subject_id}/groups/` 接口查询该用户已加入的用户组及其 `id`，作为本接口的 `group_ids`；清理后可通过审计事件接口（`audits/events/`，`type=group.member.delete`、`username` 为被清理用户）核对清理记录。
+
+#### Parameters
+
+| 字段 | 类型 | 位置 | 必须 | 描述 |
+|---|---|---|---|---|
+| username | string | body | 是 | 用户名 |
+| group_ids | array[int] | body | 是 | 用户组ID列表，最多 100 个（含重复 ID），重复 ID 自动去重 |
+
+#### Request
+
+```json
+{
+  "username": "zhangsan",
+  "group_ids": [1001, 1002]
+}
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "OK",
+  "data": {
+    "removed": [1001],
+    "failed": [1002]
+  }
+}
+```
+
+字段说明：
+
+- `removed`：移出调用成功的用户组 ID。注意该字段表示「移出调用成功」：用户并非成员的用户组（含重复调用）也会计入，并不代表实际删除了成员关系
+- `failed`：移出失败的用户组 ID（如后台调用异常），单组失败不影响其余

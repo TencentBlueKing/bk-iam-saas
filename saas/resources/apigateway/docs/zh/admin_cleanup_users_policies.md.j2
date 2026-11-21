@@ -1,0 +1,50 @@
+### 清理用户的自定义权限
+
+删除指定用户在指定系统下的**自定义权限**策略（不含临时权限）。同步执行并返回结果，调用方可据此核对实际清理结果。
+
+清理前可通过 `subjects/user/{subject_id}/policies/` 接口查询该用户的自定义权限及其 `policy_id`，作为本接口的 `policy_ids`；清理后可通过审计事件接口（`audits/events/`，`type=user.policy.delete`、`username` 为被清理用户）核对清理记录。
+
+`action_id` 与 `policy_ids` 互斥，必须且只能传递其中一个：
+
+- 只传 `action_id`：清理该用户在该操作下的策略
+- 只传 `policy_ids`：只清理指定策略（SaaS 侧策略 ID，最多 200 个）
+- 都不传或同时传：返回参数校验错误
+
+#### Parameters
+
+| 字段 | 类型 | 位置 | 必须 | 描述 |
+|---|---|---|---|---|
+| username | string | body | 是 | 用户名 |
+| system_id | string | body | 是 | 系统ID |
+| action_id | string | body | 否 | 只清理该操作对应的策略，与 policy_ids 互斥 |
+| policy_ids | array[int] | body | 否 | 指定要清理的策略ID列表（SaaS侧），与 action_id 互斥，最多 200 个 |
+
+#### Request
+
+```json
+{
+  "username": "zhangsan",
+  "system_id": "bk_cmdb",
+  "action_id": "host_delete"
+}
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "OK",
+  "data": {
+    "removed": [123],
+    "failed": [456]
+  }
+}
+```
+
+字段说明：
+
+- `removed`：成功删除的策略 ID
+- `failed`：删除失败的策略 ID（整批回滚后，全部有效策略 ID 计入此字段）

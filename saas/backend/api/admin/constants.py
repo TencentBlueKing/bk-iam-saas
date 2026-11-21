@@ -40,6 +40,7 @@ class AdminAPIEnum(BaseAPIEnum):
     # Subject
     SUBJECT_JOINED_GROUP_LIST = auto()
     SUBJECT_ROLE_LIST = auto()
+    SUBJECT_POLICY_LIST = auto()
 
     # System
     SYSTEM_LIST = auto()
@@ -84,6 +85,7 @@ class AdminAPIEnum(BaseAPIEnum):
             (TEMPLATE_CREATE, "新建模板"),
             (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
             (SUBJECT_ROLE_LIST, "获取Subject角色列表"),
+            (SUBJECT_POLICY_LIST, "获取Subject自定义权限列表"),
             (ROLE_SUPER_MANAGER_MEMBER_LIST, "获取超级管理员成员列表"),
             (ROLE_SYSTEM_MANAGER_MEMBER_LIST, "获取系统管理员及成员列表"),
             (AUDIT_EVENT_LIST, "获取审计事件列表"),
@@ -100,3 +102,9 @@ class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
     GROUP_IN_PATH = auto()
 
     _choices_labels = skip(((GROUP_IN_PATH, "在URL里的group id参数"),))
+
+
+# 单次最多清理的用户组数量
+SUBJECT_GROUP_CLEANUP_MAX_GROUP_IDS = 100
+# 单次最多清理的策略数量
+SUBJECT_POLICY_CLEANUP_MAX_POLICY_IDS = 200

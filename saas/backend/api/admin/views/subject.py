@@ -18,7 +18,17 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import AdminSubjectGroupSLZ, FreezeSubjectResponseSLZ, SubjectRoleSLZ, SubjectSLZ
+from backend.api.admin.serializers import (
+    AdminSubjectCleanupResultSLZ,
+    AdminSubjectGroupCleanupSLZ,
+    AdminSubjectGroupSLZ,
+    AdminSubjectPolicyCleanupSLZ,
+    AdminSubjectPolicyQuerySLZ,
+    AdminSubjectPolicySLZ,
+    FreezeSubjectResponseSLZ,
+    SubjectRoleSLZ,
+    SubjectSLZ,
+)
 from backend.api.authentication import ESBAuthentication
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import RoleUser
@@ -28,6 +38,8 @@ from backend.apps.user.tasks import user_permission_clean
 from backend.audit.audit import log_user_blacklist_event, log_user_permission_clean_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
+from backend.biz.permission_cleanup import SubjectGroupPermissionCleanupBiz, SubjectPolicyPermissionCleanupBiz
+from backend.biz.policy import PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectBiz
 from backend.common.error_codes import error_codes
@@ -61,6 +73,36 @@ class AdminSubjectGroupViewSet(GenericViewSet):
         count, relations = self.group_biz.list_paging_subject_group(subject, limit=limit, offset=offset)
         results = [one.dict(include={"id", "name", "expired_at"}) for one in relations]
         return Response({"count": count, "results": results})
+
+
+class AdminSubjectPolicyViewSet(GenericViewSet):
+    """Subject的自定义权限"""
+
+    pagination_class = None
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"list": AdminAPIEnum.SUBJECT_POLICY_LIST.value}
+
+    policy_query_biz = PolicyQueryBiz()
+
+    @swagger_auto_schema(
+        operation_description="Subject 的自定义权限列表",
+        query_serializer=AdminSubjectPolicyQuerySLZ(label="查询参数"),
+        responses={status.HTTP_200_OK: AdminSubjectPolicySLZ(label="策略", many=True)},
+        tags=["admin.subject.policy"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = AdminSubjectPolicyQuerySLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        data = slz.validated_data
+
+        subject = Subject.from_username(kwargs["subject_id"])
+        action_ids = [data["action_id"]] if data.get("action_id") else None
+        policies = self.policy_query_biz.list_by_subject(data["system_id"], subject, action_ids)
+
+        return Response(AdminSubjectPolicySLZ(policies, many=True).data)
 
 
 class AdminSubjectRoleViewSet(GenericViewSet):
@@ -208,6 +250,83 @@ class AdminSubjectPermissionCleanupViewSet(GenericViewSet):
         )
         logger.info("cleanup users permission: %s", serializer.data)
         return Response({}, status=status.HTTP_200_OK)
+
+
+class AdminSubjectGroupCleanupViewSet(GenericViewSet):
+    """清理用户的用户组"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {
+        "cleanup": AdminAPIEnum.SUBJECT_PERMISSION_CLEANUP.value,
+    }
+
+    pagination_class = None
+
+    biz = SubjectGroupPermissionCleanupBiz()
+
+    @swagger_auto_schema(
+        operation_description="清理用户的用户组",
+        request_body=AdminSubjectGroupCleanupSLZ(label="用户及其用户组信息"),
+        responses={status.HTTP_200_OK: AdminSubjectCleanupResultSLZ(label="清理结果")},
+        tags=["admin.subject.cleanup"],
+    )
+    def cleanup(self, request, *args, **kwargs):
+        serializer = AdminSubjectGroupCleanupSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        subject = Subject.from_username(data["username"])
+        removed, failed = self.biz.clean(subject, data["group_ids"])
+
+        logger.info(
+            "cleanup user groups: app_code=%s, username=%s, removed=%s, failed=%s",
+            request.bk_app_code,
+            subject.id,
+            removed,
+            failed,
+        )
+        return Response({"removed": removed, "failed": failed}, status=status.HTTP_200_OK)
+
+
+class AdminSubjectPolicyCleanupViewSet(GenericViewSet):
+    """清理用户的自定义权限"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {
+        "cleanup": AdminAPIEnum.SUBJECT_PERMISSION_CLEANUP.value,
+    }
+
+    pagination_class = None
+
+    biz = SubjectPolicyPermissionCleanupBiz()
+
+    @swagger_auto_schema(
+        operation_description="清理用户的自定义权限",
+        request_body=AdminSubjectPolicyCleanupSLZ(label="清理信息"),
+        responses={status.HTTP_200_OK: AdminSubjectCleanupResultSLZ(label="清理结果")},
+        tags=["admin.subject.cleanup"],
+    )
+    def cleanup(self, request, *args, **kwargs):
+        serializer = AdminSubjectPolicyCleanupSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        subject = Subject.from_username(data["username"])
+        removed, failed = self.biz.clean(
+            subject, data["system_id"], policy_ids=data.get("policy_ids"), action_id=data.get("action_id", "")
+        )
+
+        logger.info(
+            "cleanup user policies: app_code=%s, username=%s, system_id=%s, removed=%s, failed=%s",
+            request.bk_app_code,
+            subject.id,
+            data["system_id"],
+            removed,
+            failed,
+        )
+        return Response({"removed": removed, "failed": failed}, status=status.HTTP_200_OK)
 
 
 class AdminSubjectPermissionExistsViewSet(GenericViewSet):

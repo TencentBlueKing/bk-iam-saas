@@ -1,0 +1,48 @@
+### 获取用户的自定义权限列表
+
+查询指定用户在指定系统下的**自定义权限**（不含临时权限，不含用户组策略）。
+
+#### Parameters
+
+| 字段 | 类型 | 位置 | 必须 | 描述 |
+|---|---|---|---|---|
+| subject_id | string | path | 是 | 用户名 |
+| system_id | string | query | 是 | 系统ID |
+| action_id | string | query | 否 | 操作ID，只查询该操作对应的策略 |
+
+#### Request
+
+```
+GET /api/v1/open/admin/subjects/user/zhangsan/policies/?system_id=bk_cmdb
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "OK",
+  "data": [
+    {
+      "id": "host_delete",
+      "policy_id": 123,
+      "type": "delete",
+      "name": "删除主机",
+      "name_en": "Delete Host",
+      "description": "",
+      "description_en": "",
+      "expired_at": 4102444800,
+      "expired_display": "永久",
+      "resource_groups": []
+    }
+  ]
+}
+```
+
+字段说明：
+
+- `policy_id`：SaaS 侧策略 ID
+- `id`：操作 ID（action_id）
+- `resource_groups`：资源条件组，为空表示该操作无关联资源实例（纯 RBAC 策略）
