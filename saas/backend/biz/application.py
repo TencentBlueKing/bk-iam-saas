@@ -37,6 +37,7 @@ from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.constants import StaffStatus
+from backend.biz.personal_permission import PersonalPermissionBiz
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_permission_handover_lock
@@ -460,6 +461,18 @@ class ApprovedPassApplicationBiz:
                 all_group_map = {g.id: g.name for g in subject_groups}
                 group_names = ", ".join([all_group_map.get(gid, f"ID:{gid}") for gid in removed])
                 warnings.append(f"用户已不在用户组 {group_names} 中或已过期，已跳过")
+
+            # 审批期间 Role 可能重新标记个人权限，所属用户组不交接
+            personal_group_ids = PersonalPermissionBiz().filter_personal_group_by_ids(valid_group_ids)
+            if personal_group_ids:
+                ignored_group_ids = [gid for gid in valid_group_ids if gid in personal_group_ids]
+                valid_group_ids = [gid for gid in valid_group_ids if gid not in personal_group_ids]
+                logger.info(
+                    "[handover] approval filter personal permission groups, handover_from=%s, group_ids=%s",
+                    handover_from,
+                    ignored_group_ids,
+                )
+                warnings.append(f"个人权限用户组：{ignored_group_ids} 不可交接，已跳过")
             filtered_info["group_ids"] = valid_group_ids
 
         # 过滤 custom_policies：检查策略是否仍然存在（且未过期）

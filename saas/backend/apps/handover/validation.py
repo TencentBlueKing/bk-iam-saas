@@ -17,6 +17,7 @@ from rest_framework import serializers
 from backend.apps.role.models import RoleUser
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.biz.handover import GroupInfoProvider
+from backend.biz.personal_permission import PersonalPermissionBiz
 from backend.biz.policy import PolicyQueryBiz
 from backend.service.constants import SubjectType
 from backend.service.models.subject import Subject
@@ -38,6 +39,9 @@ class GroupInfoValidator(BaseHandoverValidator):
         self._provider = GroupInfoProvider(handover_from, group_ids)
 
     def validate(self):
+        # 个人权限组不可交接
+        personal_group_ids = PersonalPermissionBiz().filter_personal_group_by_ids(self.group_ids)
+
         # 校验用户是否在属于用户组
         now_ts = int(time.time())
         subject_group_id_set = {g.id for g in self._provider.subject_groups if g.expired_at > now_ts}
@@ -45,6 +49,8 @@ class GroupInfoValidator(BaseHandoverValidator):
         for _id in self.group_ids:
             if _id not in subject_group_id_set:
                 raise serializers.ValidationError("用户组: {} 不在当前用户的可交接范围内!".format(_id))
+            if _id in personal_group_ids:
+                raise serializers.ValidationError("个人权限用户组： {} 不可交接".format(_id))
 
 
 class CustomPolicyValidator(BaseHandoverValidator):

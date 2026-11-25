@@ -45,7 +45,9 @@ class RoleUpdateAuditProvider(BaseRoleDataProvider):
 
     @property
     def extra(self):
-        return {key: value for key, value in self.request.data.items() if key in {"name", "description"}}
+        return {
+            key: value for key, value in self.request.data.items() if key in {"name", "description", "is_personal"}
+        }
 
 
 class RoleDeleteAuditProvider(BaseRoleDataProvider):

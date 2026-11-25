@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 import time
 
 from drf_yasg.utils import swagger_auto_schema
@@ -29,9 +30,12 @@ from backend.apps.handover.views import HandoverViewSet
 from backend.audit.audit import log_group_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
+from backend.biz.personal_permission import PersonalPermissionBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.exception_handler import exception_handler
 from backend.service.models.subject import Subject
+
+logger = logging.getLogger("app")
 
 
 class GetAssetsViewSet(GenericViewSet):
@@ -43,6 +47,7 @@ class GetAssetsViewSet(GenericViewSet):
 
     group_biz = GroupBiz()
     policy_query_biz = PolicyQueryBiz()
+    personal_permission_biz = PersonalPermissionBiz()
 
     def handle_exception(self, exc):
         context = self.get_exception_handler_context()
@@ -69,6 +74,16 @@ class GetAssetsViewSet(GenericViewSet):
 
         subject = Subject.from_username(username=rtx)
         groups = self.group_biz.list_all_subject_group(subject=subject)
+
+        # 离职转岗场景下，不返回个人权限组
+        personal_group_ids = self.personal_permission_biz.filter_personal_group_by_ids([group.id for group in groups])
+        if personal_group_ids:
+            logger.info(
+                "[staff_movement] getAssets hide personal permission groups, rtx=%s, group_ids=%s",
+                rtx,
+                sorted(personal_group_ids),
+            )
+        groups = [group for group in groups if group.id not in personal_group_ids]
 
         systems = self.policy_query_biz.list_system_counter_by_subject(subject)
         assets = []
@@ -101,6 +116,7 @@ class ResignHandoverViewSet(HandoverViewSet):
 
     group_biz = GroupBiz()
     policy_query_biz = PolicyQueryBiz()
+    personal_permission_biz = PersonalPermissionBiz()
 
     def handle_exception(self, exc):
         context = self.get_exception_handler_context()
@@ -154,6 +170,9 @@ class ResignHandoverViewSet(HandoverViewSet):
         subject = Subject.from_username(activity_rtx)
         valid_group_ids = {g.id for g in self.group_biz.list_all_subject_group(subject) if g.expired_at > now_ts}
 
+        # 个人权限组不交接
+        asset_group_ids = [asset["id"] for asset in assets if asset["id"] != 0]
+        personal_group_ids = self.personal_permission_biz.filter_personal_group_by_ids(asset_group_ids)
         for asset in assets:
             if asset["id"] == 0:
                 policies = self.policy_query_biz.list_by_subject(asset["info"], subject)
@@ -165,6 +184,9 @@ class ResignHandoverViewSet(HandoverViewSet):
             else:
                 if asset["id"] not in valid_group_ids:
                     err_list.append({"fail_reason": "用户组权限已过期，无法更换负责人，只能删除权限", "info": asset})
+                    continue
+                if asset["id"] in personal_group_ids:
+                    err_list.append({"fail_reason": "个人权限用户组不可交接", "info": asset})
                     continue
                 handover_info["group_ids"].append(asset["id"])
 
@@ -181,6 +203,7 @@ class RecycleViewSet(ResignHandoverViewSet):
     group_biz = GroupBiz()
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
+    personal_permission_biz = PersonalPermissionBiz()
 
     @swagger_auto_schema(
         operation_description="PCG 权限交接 - 回收",
@@ -195,6 +218,11 @@ class RecycleViewSet(ResignHandoverViewSet):
         assets = serializer.validated_data["assets"]
         subject = Subject.from_username(activity_rtx)
         err_list = []
+
+        # 对用户组资产（id != 0）做批量判定
+        personal_group_ids = self.personal_permission_biz.filter_personal_group_by_ids(
+            [asset["id"] for asset in assets if asset["id"] != 0]
+        )
         for asset in assets:
             try:
                 if asset["id"] == 0:
@@ -211,6 +239,14 @@ class RecycleViewSet(ResignHandoverViewSet):
                     )
                 else:
                     # 用户组权限回收
+                    if asset["id"] in personal_group_ids:
+                        err_list.append(
+                            {
+                                "fail_reason": "个人权限用户组不可回收",
+                                "info": asset,
+                            }
+                        )
+                        continue
                     self.group_biz.remove_members(str(asset["id"]), [subject])
                     log_group_event(
                         AuditType.GROUP_MEMBER_DELETE.value,

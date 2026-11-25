@@ -87,6 +87,7 @@ class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, GradeMangerBase
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    is_personal = serializers.BooleanField(label="个人权限", required=False)
 
     class Meta:
         ref_name = "V1ManagementGradeManagerCreateSLZ"
@@ -95,6 +96,7 @@ class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, GradeMangerBase
 class ManagementGradeManagerUpdateSLZ(serializers.Serializer):
     name = serializers.CharField(label="分级管理员名称", max_length=128, required=False)
     description = serializers.CharField(label="描述", allow_blank=True, required=False)
+    is_personal = serializers.BooleanField(label="个人权限", required=False)
 
     authorization_scopes = serializers.ListField(
         label="可授权的权限范围",
@@ -117,6 +119,7 @@ class ManagementGradeManagerBasicInfoSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="分级管理员ID")
     name = serializers.CharField(label="分级管理员名称", max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
+    is_personal = serializers.BooleanField(label="个人权限")
 
     class Meta:
         ref_name = "V1ManagementGradeManagerBasicInfoSLZ"

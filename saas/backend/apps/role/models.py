@@ -44,6 +44,8 @@ class Role(BaseModel, BaseSystemHiddenModel):
     inherit_subject_scope = models.BooleanField("继承人员管理范围", default=False)
     sync_perm = models.BooleanField("同步角色权限", default=False)
     enabled = models.BooleanField("是否启用", default=True)
+    # 个人权限不可交接，离职后回收
+    is_personal = models.BooleanField("是否为个人权限", default=False)
 
     class Meta:
         verbose_name = "角色"

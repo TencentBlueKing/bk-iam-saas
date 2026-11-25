@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Type
 
@@ -24,6 +25,7 @@ from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.constants import HandoverTaskStatus
 from backend.biz.group import GroupBiz, SubjectGroupBean
 from backend.biz.helper import RoleWithPermGroupBiz
+from backend.biz.personal_permission import PersonalPermissionBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.subject_template import SubjectTemplateBiz
@@ -32,6 +34,8 @@ from backend.common.error_codes import error_codes
 from backend.common.lock import gen_permission_handover_lock
 from backend.service.constants import RoleType
 from backend.service.models.subject import Subject
+
+logger = logging.getLogger("app")
 
 
 class BaseHandoverDataProvider(ABC):
@@ -54,13 +58,15 @@ class GroupInfoProvider(BaseHandoverDataProvider):
 
     def get_info(self):
         """获取用户组简略信息，用于生成交接任务"""
+        # 个人权限组不生成交接子任务
+        personal_group_ids = PersonalPermissionBiz().filter_personal_group_by_ids(self.group_ids)
         # 从 subject_groups 中筛选出需要交接的组，避免额外查询数据库
         group_expired_at = {g.id: g.expired_at for g in self.subject_groups}
-        # 只返回在 group_ids 中的组信息
+        # 只返回在 group_ids 中的需要交接的组信息
         return [
             {"id": g.id, "name": g.name, "expired_at": group_expired_at.get(g.id)}
             for g in self.subject_groups
-            if g.id in self.group_ids
+            if g.id in self.group_ids and g.id not in personal_group_ids
         ]
 
     @cached_property
@@ -158,6 +164,19 @@ class GroupHandoverHandler(BaseHandoverHandler):
 
         self.group_id = object_detail["id"]
         self.expired_at = object_detail["expired_at"]
+
+    def handler(self):
+        # 执行前再次判定：提交/审批/排队期间 Role 可能重新标记。
+        if PersonalPermissionBiz().is_personal_group(int(self.group_id)):
+            logger.info(
+                "[handover] handler skip personal permission group, group_id=%s, handover_from=%s, handover_to=%s",
+                self.group_id,
+                self.remove_subject.id,
+                self.grant_subject.id,
+            )
+            self._set_status(status=HandoverTaskStatus.SUCCEED.value)
+            return True
+        return super().handler()
 
     def grant_permission(self):
         # TODO 需不需要校验？

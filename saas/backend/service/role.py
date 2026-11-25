@@ -114,6 +114,7 @@ class RoleInfo(PartialModel):
     inherit_subject_scope: bool = False
     sync_perm: bool = False
     enabled: bool = True
+    is_personal: Optional[bool] = None
     sync_subject_template: bool = False
 
     members: List[RoleMember]
@@ -222,6 +223,7 @@ class RoleService:
                 updater=creator,
                 source_system_id=info.source_system_id,
                 hidden=info.hidden,
+                is_personal=bool(info.is_personal),
             )
             role.save(force_insert=True)
 
@@ -295,6 +297,9 @@ class RoleService:
                 role.sync_perm = info.sync_perm
             if "enabled" in update_fields:
                 role.enabled = info.enabled
+            # 为 None 时不写字段，partial 入口或显式传 true/false 时才切换
+            if info.is_personal is not None:
+                role.is_personal = info.is_personal
 
             role.updater = updater
             role.save()
